@@ -148,7 +148,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 <Typography variant="body2" paragraph sx={{ color: '#e0e0e0' }}>
                   <span
                     style={{
-                      background: 'linear-gradient(165deg, #ffd000, #D32F2F)',
+                      background: 'linear-gradient(165deg, #ffd000, #FF0000)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       fontWeight: 600,
@@ -173,7 +173,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                           80% to{' '}
                           <span
                             style={{
-                              background: 'linear-gradient(165deg, #ffd000, #D32F2F)',
+                              background: 'linear-gradient(165deg, #ffd000, #FF0000)',
                               WebkitBackgroundClip: 'text',
                               WebkitTextFillColor: 'transparent',
                               fontWeight: 600,

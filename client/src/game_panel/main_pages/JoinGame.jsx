@@ -30,7 +30,6 @@ const PlayerModal = lazy(() => import('../modal/PlayerModal'));
 import {
   bet3,
   getRoomInfo,
-  updateUserStrategy,
   updateUserPrompt,
   getRpsBetItems,
   getQsBetItems,
@@ -744,7 +743,6 @@ const join = useCallback(
             showPlayerModal={showPlayerModal}
             creator_id={roomInfo.creator_id}
             pr={roomInfo.pr}
-            updateUserStrategy={updateUserStrategy}
             updateUserPrompt={updateUserPrompt}
             bankroll={gameState.bankroll}
             predictedBetAmount={gameState.predictedBetAmount}
@@ -782,6 +780,15 @@ const join = useCallback(
       <Box className="sub-panel">
         {!is_mobile && selectedMainTabIndex === 0 && (
           <Box>
+             <Suspense fallback={<LoadingFallback />}>
+              <RoomTokenDetails
+                solPrice={solPrice}
+                hosts={gameState.hosts}
+                progressPercentage={progressPercentage}
+                handleOpenPlayerModal={handleOpenPlayerModal}
+                roomInfo={roomInfo}
+              />
+            </Suspense>
             <Suspense fallback={<LoadingFallback />}>
               <CoHostModal
                 isDarkMode={isDarkMode}
@@ -802,15 +809,7 @@ const join = useCallback(
               />
             </Suspense>
 
-            <Suspense fallback={<LoadingFallback />}>
-              <RoomTokenDetails
-                solPrice={solPrice}
-                hosts={gameState.hosts}
-                progressPercentage={progressPercentage}
-                handleOpenPlayerModal={handleOpenPlayerModal}
-                roomInfo={roomInfo}
-              />
-            </Suspense>
+           
           </Box>
         )}
 

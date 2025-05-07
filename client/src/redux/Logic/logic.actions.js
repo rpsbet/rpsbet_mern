@@ -68,7 +68,7 @@ export const createRoom = (room_info, navigate) => async dispatch => {
 
     if (res.data.success) {
       dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      // dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       // dispatch({ type: SET_BALANCE, payload: res.data.newTransaction });
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
@@ -201,7 +201,7 @@ export const generateReactGameFromPrompt = (
     setGameCode(`
       import React from 'react';
       const App = () => {
-        return <div style={{ padding: '20px', color: 'red' }}>Failed to generate app: ${error.message}</div>;
+        return <div style={{ padding: '20px', color: '#FF0000' }}>Failed to generate app: ${error.message}</div>;
       };
       export default App;
     `);
@@ -411,14 +411,14 @@ export const bet3 = bet_info => async dispatch => {
           message: 'SLOW DOWN!'
         };
       } else if (res.data.betResult === -102) {
-        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
+        // dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
 
         return {
           status: 'failed',
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
+        // dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
         return {
           status: 'failed',
           message: 'SLOW DOWN BLUD!'
@@ -835,16 +835,6 @@ export const getRecentlyClosed = () => async dispatch => {
   }
 };
 
-export const getStrategies = () => async dispatch => {
-  try {
-    const res = await axios.get('/game/strategies');
-    if (res.data.success) {
-      dispatch({ type: STRATEGIES_LOADED, payload: res.data.strategies });
-    }
-  } catch (err) {
-  }
-};
-
 export const updateUserStrategy = (user_id, strategy) => async dispatch => {
   try {
     const res = await axios.patch(`/game/strategies/${user_id}`, { strategy });
@@ -924,12 +914,11 @@ export const getMyGames = (search_condition, callback) => async (dispatch) => {
   }
 };
 
-export const endGame = (room_id, callback) => async (dispatch, getState) => {
+export const endGame = (room_id, connectedAccount, callback) => async (dispatch, getState) => {
   try {
-    const res = await axios.post('/game/end_game', { room_id });
+    const res = await axios.post('/game/end_game', { room_id, connectedAccount });
 
     if (res.data.success) {
-      // Dispatch your new transaction & success message
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       dispatch({ type: MSG_SUCCESS, payload: "GAME HAS NOW ENDED" });
 
@@ -1305,9 +1294,9 @@ export const globalChatReceived = data => dispatch => {
   dispatch({ type: GLOBAL_CHAT_RECEIVED, payload: data });
 };
 
-export const getTransactions = ({ descriptionPrefix }) => async (dispatch) => {
+export const getRecentTransactions = ({ descriptionPrefix }) => async (dispatch) => {
   try {
-    const res = await axios.get('/game/transactions', {
+    const res = await axios.get('/game/recent-transactions', {
       params: { descriptionPrefix },
     });
     if (res.data.success) {

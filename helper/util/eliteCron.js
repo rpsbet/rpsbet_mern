@@ -413,5 +413,5 @@ cron.schedule('0 0 * * *', async () => {
 
 module.exports = {
   checkSubscriptionPayments,
-  distributeHoldersPool
+  // distributeHoldersPool
 };

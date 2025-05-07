@@ -483,7 +483,7 @@ function OfferLoanModal() {
                           >
                             <FontAwesomeIcon
                               icon={faExclamationTriangle}
-                              color="#D32F2F"
+                              color="#FF0000"
                             />
                             <Typography variant="body2" color="error">
                               PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X
@@ -651,7 +651,7 @@ function OfferLoanModal() {
                           <Typography
                             variant="body1"
                             sx={{
-                              color: 'red',
+                              color: '#FF0000',
                               fontWeight: 'bold',
                               textAlign: 'center',
                             }}
@@ -729,7 +729,7 @@ function OfferLoanModal() {
             <Box
               component="span"
               sx={{
-                color: '#D32F2F',
+                color: '#FF0000',
                 textDecoration: 'underline',
                 cursor: 'pointer',
               }}
@@ -755,14 +755,14 @@ function OfferLoanModal() {
               <ol style={{ paddingLeft: '20px' }}>
                 <li>
                   The loan amount is{' '}
-                  <Box component="span" sx={{ color: '#D32F2F' }}>
+                  <Box component="span" sx={{ color: '#FF0000' }}>
                     [{convertToCurrency(parseFloat(responseText), solPrice)}]
                   </Box>
                   .
                 </li>
                 <li>
                   The loan period is{' '}
-                  <Box component="span" sx={{ color: '#D32F2F' }}>
+                  <Box component="span" sx={{ color: '#FF0000' }}>
                     [{loanPeriodText}]
                   </Box>{' '}
                   days.
@@ -773,7 +773,7 @@ function OfferLoanModal() {
                 </li>
                 <li>
                   Interest may be applicable as per the agreed Interest Rate:{' '}
-                  <Box component="span" sx={{ color: '#D32F2F' }}>
+                  <Box component="span" sx={{ color: '#FF0000' }}>
                     [{parseFloat(interestRateText).toFixed(2)}%]
                   </Box>
                   .

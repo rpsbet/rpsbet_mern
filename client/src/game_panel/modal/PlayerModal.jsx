@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,6 +14,9 @@ import {
   Typography,
   ThemeProvider,
   CircularProgress,
+  Divider,
+  Paper,
+  Avatar as MuiAvatar,
 } from '@mui/material';
 import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon, Close as CloseIcon } from '@mui/icons-material';
 import { Connection, Transaction, PublicKey } from '@solana/web3.js';
@@ -25,6 +28,10 @@ import {
   faEnvelope,
   faCoins,
   faRobot,
+  faMedal,
+  faCalendarAlt,
+  faEye,
+  faCreditCard,
 } from '@fortawesome/free-solid-svg-icons';
 import TipModal from './TipModal';
 import axios from '../../util/Api';
@@ -155,7 +162,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { color, title, message: spendingMessage, progress: progressValue } = getStatusDetails(status);
-  const barStyle = { width: `${progressValue}%`, backgroundColor: progressValue <= 50 ? 'yellow' : 'red' };
+  const barStyle = { width: `${progressValue}%`, backgroundColor: progressValue <= 50 ? 'yellow' : '#FF0000' };
 
   const isOnline = onlineUserList.includes(selectedCreator);
   const isBot = username.toUpperCase().includes('BOT');
@@ -185,21 +192,20 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         dispatch(errorMsgBar('Wallet not connected. Please connect your wallet.'));
         return;
       }
-  
+
       setIsLoading(true);
-  
+
       // Get the connected wallet address
       let senderPubkey;
       try {
         senderPubkey = new PublicKey(await window.solana.publicKey.toString());
-        console.log('Connected wallet:', senderPubkey.toBase58());
       } catch (e) {
         console.error('Failed to get sender wallet:', e.message);
         setIsLoading(false);
         dispatch(errorMsgBar('Failed to access wallet address'));
         return;
       }
-  
+
       // 1. Request prepared transaction from backend
       const prepareResponse = await axios.post('/game/tip', {
         amount: tipAmtNum,
@@ -208,30 +214,20 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         senderWallet: senderPubkey.toBase58(),
         prepare: true,
       });
-  
+
       if (!prepareResponse.data.success || !prepareResponse.data.transaction) {
         console.error('Prepare response failed:', prepareResponse.data);
         setIsLoading(false);
         dispatch(errorMsgBar(prepareResponse.data.message || 'Failed to prepare transaction'));
         return;
       }
-  
+
       // 2. Initialize Solana connection
       const connection = new Connection(process.env.REACT_APP_PROVIDER_URL || 'https://api.mainnet-beta.solana.com', 'confirmed');
-      console.log('Frontend provider URL:', process.env.REACT_APP_PROVIDER_URL || 'https://api.mainnet-beta.solana.com');
-  
+
       // 3. Deserialize transaction
       const transaction = Transaction.from(Buffer.from(prepareResponse.data.transaction, 'base64'));
-      console.log('Deserialized transaction:', {
-        feePayer: transaction.feePayer.toBase58(),
-        recentBlockhash: transaction.recentBlockhash,
-        instructions: transaction.instructions.map((ix) => ({
-          programId: ix.programId.toBase58(),
-          keys: ix.keys.map((key) => key.pubkey.toBase58()),
-          data: ix.data.toString('hex'),
-        })),
-      });
-  
+
       // 4. Validate sender wallet
       if (transaction.feePayer.toBase58() !== senderPubkey.toBase58()) {
         console.error('Wallet mismatch:', {
@@ -242,14 +238,10 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         dispatch(errorMsgBar('Connected wallet does not match transaction sender'));
         return;
       }
-  
-      // 5. Sign and send transaction via Phantom
-      console.log('Requesting wallet signature...');
+
       const signedTransaction = await window.solana.signAndSendTransaction(transaction);
       const txtHash = signedTransaction.signature;
-      console.log('Transaction signature:', txtHash);
-  
-      // 6. Confirm transaction
+
       await connection.confirmTransaction(
         {
           signature: txtHash,
@@ -258,8 +250,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         },
         'confirmed'
       );
-      console.log('Transaction confirmed');
-  
+
       // 7. Notify backend of successful tip
       const result = await axios.post('/game/tip', {
         amount: tipAmtNum,
@@ -267,11 +258,11 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         message,
         txtHash,
       });
-  
+
       if (result.data.success) {
         dispatch(successMsgBar(result.data.message));
         dispatch(addNewTransaction(result.data.newTransaction));
-  
+
         // 8. Update Solana balance
         try {
           const solBalLamports = await connection.getBalance(senderPubkey);
@@ -280,7 +271,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         } catch (balanceError) {
           console.error('Failed to fetch Solana balance:', balanceError);
         }
-  
+
         setIsLoading(false);
         closeModal();
       } else {
@@ -311,11 +302,19 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
     const chatRoom = { _id: creatorId, username, avatar, accessory, rank, chatLogs: [] };
     dispatch(setChatRoomInfo(chatRoom));
     navigate(`/chat/${creatorId}`);
+    closeModal();
   };
 
   // Tabs
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  // Format date function
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   return (
@@ -330,190 +329,421 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               transform: 'translate(-50%, -50%)',
               color: '#fff',
               maxHeight: '90vh',
+              width: { xs: '95%', sm: '80%', md: '70%', lg: '60%' },
+              maxWidth: '900px',
               overflowY: 'auto',
               borderRadius: 2,
               boxShadow: 24,
-              p: 3,
-              background: 'rgba(0, 0, 0, 0.2)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               '@supports not (backdrop-filter: blur(10px))': {
-                background: 'rgba(0, 0, 0, 0.4)',
+                background: 'rgba(0, 0, 0, 0.85)',
               },
             }}
           >
-            {/* Modal Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" component="h2" className="modal-title title">
-                {isBot ? (
-                  <>
-                    <FontAwesomeIcon icon={faRobot} style={{ color: 'red', marginRight: 8 }} />
-                    Bot Card
-                  </>
-                ) : isSystem ? (
-                  <>
-                    <FontAwesomeIcon icon={faCog} style={{ color: 'grey', marginRight: 8 }} />
-                    ADMIN
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
-                    Player Card
-                  </>
-                )}
-              </Typography>
-              <Button color="error" onClick={closeModal}>×</Button>
-            </Box>
-            {/* Tabs */}
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              textColor="error"
-              indicatorColor="error"
-              sx={{ '& .MuiTabs-indicator': { backgroundColor: 'error.main', height: '3px' } }}
+            <Paper
+              elevation={3}
+              sx={{
+                background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 2,
+              }}
             >
-              <Tab label="Profile" />
-              <Tab label="Stats" />
-            </Tabs>
-            {/* Tab 0: Profile & Inventory */}
-            <Box sx={{ borderRadius: '0.3em', p: '20px' }}>
-              {activeTab === 0 && (
-                <Box>
-                  {/* Online/Offline */}
-                  <Box
-                    sx={{
-                      mb: 2,
-                      p: 1,
-                      borderRadius: 1,
-                      maxWidth: '90px',
-                      backgroundColor: '#6c757d26',
-                    }}
-                    className="player"
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center' }}
-                    >
-                      {isOnline ? 'online' : 'offline'}
-                      <i className={`online-status${isOnline ? ' online' : ''}`} />
-                    </Typography>
-                  </Box>
-                  {/* Avatar & Bio */}
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Box className="avatar-border" sx={{ display: 'inline-block' }}>
-                      <Avatar
-                        src={avatar || '/img/profile-thumbnail.svg'}
-                        accessory={accessory}
-                        user_id={creatorId}
-                        username={username}
-                        elite={elite}
-                        rank={rank}
-                        alt=""
-                      />
-                    </Box>
-                    <Typography variant="h5" sx={{ mt: 3 }}>
-                      {username}
-                    </Typography>
-                    <Box
-                      id="user-bio"
-                      sx={{ position: 'relative', mt: 2, borderBottom: '2px solid', borderTop: '2px solid' }}
-                    >
-                      {isBioUrl ? (
-                        <a
-                          href={bio}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ fontSize: '1.1em', color: isDarkMode ? '#e5e5e5' : '#333', textDecoration: 'none' }}
-                        >
-                          {bio}
-                        </a>
-                      ) : (
-                        <Typography variant="body1" sx={{ fontSize: '1.1em', color: isDarkMode ? '#e5e5e5' : '#333' }}>
-                          {bio}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                  <Box sx={{ borderRadius: '0.3em', p: '20px' }}>
-                    <Typography variant="h6" gutterBottom>
-                      A.K.A
-                    </Typography>
-                    {accounts.length === 0 ? (
-                      <p>No associated accounts found.</p>
-                    ) : (
-                      <Grid container spacing={1}>
-                        {accounts.map((acc, index) => {
-                          const displayed = isMobile ? shortenAddress(acc) : acc;
-                          return (
-                            <Grid item xs={12} key={index}>
-                              <Box display="flex" alignItems="center">
-                                <Chip label={displayed} variant="outlined" sx={{ mr: 1 }} />
-                                <IconButton
-                                  component="a"
-                                  href={`https://solscan.io/account/${acc}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  size="small"
-                                >
-                                  <LinkIcon fontSize="small" />
-                                </IconButton>
-                              </Box>
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                    )}
-                  </Box>
-                </Box>
-              )}
-              {/* Tab 1: Stats */}
-              {activeTab === 1 && (
-                <Box sx={{ mt: 2 }}>
-                  <StatisticsForm
-                    username={username}
-                    title={title}
-                    barStyle={barStyle}
-                    color={color}
-                    solPrice={solPrice}
-                    message={spendingMessage}
-                    dateJoined={dateJoined}
-                    last_seen={lastSeen}
-                    creditScore={creditScore}
-                    gameLogList={gameLogList}
-                    gameProfit={gameProfit}
-                    gamePlayed={gamePlayed}
-                    totalWagered={totalWagered}
-                    totalTraded={totalTraded}
-                    tradingProfit={tradingProfit}
-                    rank={rank}
-                  />
-                </Box>
-              )}
-            </Box>
-            {/* Footer */}
-            {userInfo._id !== creatorId && (
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
-                {/* <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={handleTip}
-                  disabled={isLoading}
-                  startIcon={
-                    isLoading ? (
-                      <CircularProgress size={20} color="inherit" />
-                    ) : (
-                      <FontAwesomeIcon icon={faMoneyBill} />
-                    )
-                  }
+              {/* Modal Header */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                  borderRadius: '8px 8px 0 0',
+                }}
+              >
+                <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
+                  {isBot ? (
+                    <>
+                      <FontAwesomeIcon icon={faRobot} style={{ color: '#FF0000', marginRight: 12 }} />
+                      Bot Profile
+                    </>
+                  ) : isSystem ? (
+                    <>
+                      <FontAwesomeIcon icon={faCog} style={{ color: 'grey', marginRight: 12 }} />
+                      ADMIN Profile
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faUser} style={{ marginRight: 12 }} />
+                      Player Profile
+                    </>
+                  )}
+                </Typography>
+                <IconButton
+                  onClick={closeModal}
+                  sx={{
+                    color: isDarkMode ? '#fff' : '#333',
+                    '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                  }}
                 >
-                  {isLoading ? 'Tipping...' : 'Tip'}
-                </Button> */}
-                <Button color="error" variant="outlined" onClick={handleOpenChat}>
-                  DM&nbsp;<FontAwesomeIcon icon={faEnvelope} />
-                </Button>
+                  <CloseIcon />
+                </IconButton>
               </Box>
-            )}
+
+              {/* Tabs */}
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                textColor="error"
+                indicatorColor="error"
+                variant="fullWidth"
+                sx={{
+                  '& .MuiTabs-indicator': { backgroundColor: 'error.main', height: '3px' },
+                  '& .MuiTab-root': { 
+                    fontSize: '1rem', 
+                    fontWeight: 500,
+                    color: isDarkMode ? '#ccc' : '#555',
+                    '&.Mui-selected': { color: '#ff0000' } 
+                  },
+                }}
+              >
+                <Tab label="Profile" />
+                <Tab label="Statistics" />
+              </Tabs>
+
+              {/* Tab Content */}
+              <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+                {/* Tab 0: Profile & Inventory */}
+                {activeTab === 0 && (
+                  <Grid container spacing={3}>
+                    {/* Left Column - Profile Image & Status */}
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {/* Online Status Badge */}
+                        <Box
+                          sx={{
+                            mb: 2,
+                            p: 1,
+                            borderRadius: '20px',
+                            backgroundColor: isOnline ? 'rgba(46, 204, 64, 0.2)' : 'rgba(255, 65, 54, 0.2)',
+                            border: `1px solid ${isOnline ? 'rgba(46, 204, 64, 0.5)' : 'rgba(255, 65, 54, 0.5)'}`,
+                            alignSelf: 'center',
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              color: isOnline ? '#2ecc40' : '#ff4136',
+                              fontWeight: 500,
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: '50%',
+                                backgroundColor: isOnline ? '#2ecc40' : '#ff4136',
+                                mr: 1,
+                              }}
+                            />
+                            {isOnline ? 'ONLINE' : 'OFFLINE'}
+                          </Typography>
+                        </Box>
+
+                        {/* Avatar Box - Larger Size */}
+                        <Box
+                          sx={{
+                            width: { xs: 180, sm: 220, md: 240 },
+                            height: { xs: 180, sm: 220, md: 240 },
+                            position: 'relative',
+                            mb: 3,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: '50%',
+                            padding: '4px',
+                            background: `linear-gradient(45deg, ${color || '#ff0000'}, transparent)`,
+                            boxShadow: `0 0 15px 5px ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                          }}
+                        >
+                          <Avatar
+                            src={avatar || '/img/profile-thumbnail.svg'}
+                            accessory={accessory}
+                            user_id={creatorId}
+                            username={username}
+                            elite={elite}
+                            rank={rank}
+                            alt={username}
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </Box>
+
+                        {/* Username */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 700,
+                            textAlign: 'center',
+                            mb: 2,
+                            color: isDarkMode ? '#fff' : '#333',
+                          }}
+                        >
+                          {username}
+                        </Typography>
+
+                        {/* Status/Title */}
+                        <Chip
+                          label={title}
+                          sx={{
+                            backgroundColor: color || 'primary.main',
+                            color: '#fff',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            mb: 3,
+                            padding: '20px 10px',
+                          }}
+                        />
+
+                        {/* Key Metrics */}
+                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                          <Grid item xs={6}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <FontAwesomeIcon icon={faCalendarAlt} style={{ marginBottom: 8, fontSize: '1.2rem' }} />
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Joined
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                {formatDate(dateJoined)}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <FontAwesomeIcon icon={faEye} style={{ marginBottom: 8, fontSize: '1.2rem' }} />
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Last Seen
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                {formatDate(lastSeen)}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          {/* <Grid item xs={6}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <FontAwesomeIcon icon={faMedal} style={{ marginBottom: 8, fontSize: '1.2rem' }} />
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Rank
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                {rank || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </Grid> */}
+                          {/* <Grid item xs={6}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <FontAwesomeIcon icon={faCreditCard} style={{ marginBottom: 8, fontSize: '1.2rem' }} />
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Credit Score
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                {creditScore || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </Grid> */}
+                        </Grid>
+                      </Box>
+                    </Grid>
+
+                    {/* Right Column - Bio & Accounts */}
+                    <Grid item xs={12} md={8}>
+                      {/* Bio Section */}
+                      <Box sx={{ mb: 4 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            mb: 2,
+                            pb: 1,
+                            borderBottom: '2px solid',
+                            borderColor: color || 'error.main',
+                          }}
+                        >
+                          About
+                        </Typography>
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            p: 3,
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                            borderRadius: 2,
+                            minHeight: '120px',
+                          }}
+                        >
+                          {isBioUrl ? (
+                            <a
+                              href={bio}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: '1.1rem',
+                                color: isDarkMode ? '#e5e5e5' : '#333',
+                                textDecoration: 'none',
+                                fontWeight: 500,
+                              }}
+                            >
+                              {bio}
+                            </a>
+                          ) : (
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontSize: '1.1rem',
+                                color: isDarkMode ? '#e5e5e5' : '#333',
+                                fontStyle: bio ? 'normal' : 'italic',
+                                fontWeight: 500,
+                              }}
+                            >
+                              {bio || 'No bio available'}
+                            </Typography>
+                          )}
+                        </Paper>
+                      </Box>
+
+                      {/* Accounts Section */}
+                      <Box sx={{ mb: 4 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            mb: 2,
+                            pb: 1,
+                            borderBottom: '2px solid',
+                            borderColor: color || 'error.main',
+                          }}
+                        >
+                          Associated Addresses
+                        </Typography>
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            p: 3,
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          {accounts.length === 0 ? (
+                            <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
+                              No associated accounts found
+                            </Typography>
+                          ) : (
+                            <Grid container spacing={2}>
+                              {accounts.map((acc, index) => {
+                                const displayed = isMobile ? shortenAddress(acc) : acc;
+                                return (
+                                  <Grid item xs={12} key={index}>
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        p: 1.5,
+                                        borderRadius: 1,
+                                        backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)',
+                                        },
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="body1"
+                                        sx={{
+                                          fontFamily: 'monospace',
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        {displayed}
+                                      </Typography>
+                                      <Box>
+                                        <IconButton
+                                          sx={{ ml: 1 }}
+                                          onClick={() => navigator.clipboard.writeText(acc)}
+                                          size="small"
+                                          color="primary"
+                                        >
+                                          <FileCopyIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton
+                                          component="a"
+                                          href={`https://solscan.io/account/${acc}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          size="small"
+                                          color="primary"
+                                        >
+                                          <LinkIcon fontSize="small" />
+                                        </IconButton>
+                                      </Box>
+                                    </Box>
+                                  </Grid>
+                                );
+                              })}
+                            </Grid>
+                          )}
+                        </Paper>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                )}
+
+                {/* Tab 1: Stats */}
+                {activeTab === 1 && (
+                  <Box sx={{ mt: 2 }}>
+                    <StatisticsForm
+                      username={username}
+                      title={title}
+                      barStyle={barStyle}
+                      color={color}
+                      solPrice={solPrice}
+                      message={spendingMessage}
+                      dateJoined={dateJoined}
+                      last_seen={lastSeen}
+                      creditScore={creditScore}
+                      gameLogList={gameLogList}
+                      gameProfit={gameProfit}
+                      gamePlayed={gamePlayed}
+                      totalWagered={totalWagered}
+                      totalTraded={totalTraded}
+                      tradingProfit={tradingProfit}
+                      rank={rank}
+                    />
+                  </Box>
+                )}
+              </Box>
+
+              {/* Footer */}
+              {userInfo._id !== creatorId && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: 2,
+                    p: 3,
+                    borderTop: '1px solid',
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                    borderRadius: '0 0 8px 8px',
+                  }}
+                >
+                  <Button color="error" variant="outlined" onClick={handleOpenChat}>
+                    DM&nbsp;<FontAwesomeIcon icon={faEnvelope} />
+                  </Button>
+                </Box>
+              )}
+            </Paper>
           </Box>
         </Modal>
       </ThemeProvider>

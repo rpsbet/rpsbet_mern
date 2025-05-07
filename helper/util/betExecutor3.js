@@ -326,7 +326,7 @@ const updateRoomAndEmitData = async (roomInfo, user, newTransactionAmount, req) 
 // Process Catsino.Fun (RPS Game)
 const processRpsGame = async (req, user, roomInfo, bet_amount, tax, newTransactionJ, newGameLog) => {
   let game_result = 0;
-  let newTransactionAmount = -bet_amount; // Deduct bet amount initially
+  let newTransactionAmount = 0; // Deduct bet amount initially
   let commission = roomInfo['tax'] + (user.elite === 'black' ? tax.value / 2 : tax.value);
   let pool_id = '';
   let message;
@@ -348,7 +348,6 @@ const processRpsGame = async (req, user, roomInfo, bet_amount, tax, newTransacti
     .sort({ created_at: -1 })
     .limit(50);
 
-  const allBetItems = [...reversedBetItems].reverse();
   const mostRecentItems = reversedBetItems.slice(0, 4);
 
   // Create new bet item if none exists
@@ -416,12 +415,11 @@ const processRpsGame = async (req, user, roomInfo, bet_amount, tax, newTransacti
       // Loss
       game_result = -1;
 
-      roomInfo['host_pr'] -= bet_amount;
-      roomInfo['user_bet'] -= bet_amount;
       roomInfo['user_bet'] += bet_amount * 2 * ((100 - tax.value) / 100);
       roomInfo['host_pr'] += bet_amount * 2 * ((100 - tax.value) / 100);
 
-      // Process game end if needed
+      newTransactionAmount -= bet_amount;
+
       pool_id = await processGameEndIfNeeded(roomInfo, req, user);
 
       // Set message
@@ -492,7 +490,7 @@ const processRpsGame = async (req, user, roomInfo, bet_amount, tax, newTransacti
 // Process Quick Shoot game
 const processQsGame = async (req, user, roomInfo, bet_amount, tax, newTransactionJ, newGameLog) => {
   let game_result = 0;
-  let newTransactionAmount = -bet_amount; // Deduct bet amount initially
+  let newTransactionAmount = 0; // Deduct bet amount initially
   let commission = roomInfo['tax'] + (user.elite === 'black' ? tax.value / 2 : tax.value);
   let pool_id = '';
   let message;
@@ -535,10 +533,10 @@ const processQsGame = async (req, user, roomInfo, bet_amount, tax, newTransactio
   if (Number(bet_item.qs) === req.body.selected_qs_position) {
     // Loss
     game_result = -1;
-
+    newTransactionAmount -= bet_amount;
     // Update room values
-    roomInfo['user_bet'] += parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
-    roomInfo['host_pr'] += parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
+    roomInfo['user_bet'] += bet_amount * ((100 - tax.value) / 100);
+    roomInfo['host_pr'] += bet_amount * ((100 - tax.value) / 100);
 
     // Process game end if needed
     pool_id = await processGameEndIfNeeded(roomInfo, req, user);
@@ -636,7 +634,7 @@ const processQsGame = async (req, user, roomInfo, bet_amount, tax, newTransactio
 const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransactionJ, newGameLog) => {
   const { result, multiplier } = req.body;
   let game_result = 0;
-  let newTransactionAmount = -bet_amount; // Deduct bet amount initially
+  let newTransactionAmount = 0; // Deduct bet amount initially
   let commission = roomInfo['tax'] + (user.elite === 'black' ? tax.value / 2 : tax.value);
   let pool_id = '';
   let message;
@@ -677,14 +675,13 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     // Loss
     game_result = -1;
 
-    roomInfo['host_pr'] -= bet_amount;
-    roomInfo['user_bet'] -= bet_amount;
     roomInfo['user_bet'] += bet_amount * ((100 - tax.value) / 100);
     roomInfo['host_pr'] += bet_amount * ((100 - tax.value) / 100);
 
     // Process game end if needed
     pool_id = await processGameEndIfNeeded(roomInfo, req, user);
 
+    newTransactionAmount -= bet_amount;
     // Set message
     message = new Notification({
       from: user,
@@ -991,11 +988,6 @@ const addToQueue = async (req, bot = false) => {
       user.gameProfit += newTransactionAmount;
       user.totalWagered += Math.abs(bet_item.bet_amount);
 
-      console.log(
-        'newTransactionAmount',
-        newTransactionAmount,
-      );
-
       if (newTransactionAmount > 0 && req.body.connectedAccount) {
         // Validate deposit transaction (check both pending and completed)
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000); // 15 minutes ago
@@ -1006,8 +998,6 @@ const addToQueue = async (req, bot = false) => {
           description: { $regex: '^(Joined)', $options: 'i' },
           created_at: { $gte: fifteenMinutesAgo },
         });
-
-        console.log('depositTransaction', depositTransaction);
 
         if (!depositTransaction) {
           console.warn(
@@ -1038,11 +1028,7 @@ const addToQueue = async (req, bot = false) => {
           connectedAccount: req.body.connectedAccount,
         });
         await saveDocumentWithRetry(newGameTransaction);
-
-      
       }
-
-      console.log('4');
 
       const host = await User.findOne({ _id: roomInfo['creator'] });
       if (host) {
@@ -1118,7 +1104,7 @@ const addToQueue = async (req, bot = false) => {
       // Save joiner transaction
       if (newTransactionAmount !== 0) {
         newTransactionJ.amount = newTransactionAmount;
-        await saveDocumentWithRetry(newTransactionJ);
+        // await saveDocumentWithRetry(newTransactionJ);
       }
 
       // Return response data
@@ -1132,7 +1118,6 @@ const addToQueue = async (req, bot = false) => {
         roomStatus: roomInfo.status,
         pool_id: pool_id,
       };
-
       return responseData;
     }
   } catch (err) {

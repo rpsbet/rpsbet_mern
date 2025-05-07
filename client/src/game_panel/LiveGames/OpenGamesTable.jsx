@@ -5,7 +5,6 @@ import {
   actionRoom,
   setRoomList,
   getRecentlyClosed,
-  getTransactions,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
 import {
@@ -180,18 +179,10 @@ function OpenGamesTable(props) {
   const handleFilterChange = useCallback(
     async (option) => {
       setFilter(option);
-      if (option === 'RECENTLY GRADUATED') {
+      if (option === 'RECENTLY MINTED') {
         setLoadingRecent(true);
         await dispatch(getRecentlyClosed());
         setLoadingRecent(false);
-      } else if (option === 'RECENTLY WD / DP') {
-        setLoadingTransactions(true);
-        const transactions = await dispatch(getTransactions({ descriptionPrefix: 'SOL ' }));
-        const filteredTransactions = transactions.filter((transaction) =>
-          Moment(transaction.created_at).isAfter(Moment().subtract(30, 'days'))
-        );
-        setRecentTransactions(filteredTransactions);
-        setLoadingTransactions(false);
       }
     },
     [dispatch],
@@ -210,7 +201,7 @@ function OpenGamesTable(props) {
   );
 
   const getColorClass = (value) => {
-    if (value > 0) return { bg: 'rgba(211, 47, 47, 0.15)', border: 'rgba(211, 47, 47, 0.4)', text: '#D32F2F' }; // Red for deposit
+    if (value > 0) return { bg: 'rgba(211, 47, 47, 0.15)', border: 'rgba(211, 47, 47, 0.4)', text: '#FF0000' }; // Red for deposit
     if (value === 0) return { bg: 'rgba(128, 128, 128, 0.15)', border: 'rgba(128, 128, 128, 0.4)', text: '#808080' }; // Grey for zero
     return { bg: 'rgba(3, 255, 59, 0.15)', border: 'rgba(3, 255, 59, 0.4)', text: '#03ff3b' }; // Green for withdrawal
   };
@@ -262,10 +253,10 @@ function OpenGamesTable(props) {
         />
         <Chip
           icon={<SchoolIcon sx={{ p: 0.5 }} />}
-          label="RECENTLY GRADUATED"
-          onClick={() => handleFilterChange('RECENTLY GRADUATED')}
-          color={filter === 'RECENTLY GRADUATED' ? 'error' : 'default'}
-          variant={filter === 'RECENTLY GRADUATED' ? 'filled' : 'outlined'}
+          label="RECENTLY MINTED"
+          onClick={() => handleFilterChange('RECENTLY MINTED')}
+          color={filter === 'RECENTLY MINTED' ? 'error' : 'default'}
+          variant={filter === 'RECENTLY MINTED' ? 'filled' : 'outlined'}
           clickable
         />
         {/* <Chip

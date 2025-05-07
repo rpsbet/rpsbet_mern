@@ -20,12 +20,36 @@ import {
   TextField,
   InputAdornment,
   Chip,
+  Paper,
+  LinearProgress,
+  IconButton,
+  Card,
+  CardContent,
+  Divider,
+  Grid,
+  TableContainer,
+  TableHead,
+  useTheme,
+  useMediaQuery,
+  Stack,
+  Badge,
+  Avatar,
 } from '@mui/material';
 import Lottie from 'react-lottie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMoneyCheckAlt, faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
+import {
+  faMoneyCheckAlt,
+  faThumbsUp,
+  faThumbsDown,
+  faSearch,
+  faFilter,
+  faSortAmountDown,
+  faSortAmountUp,
+  faArrowRight,
+  faLock,
+} from '@fortawesome/free-solid-svg-icons';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { Info } from '@mui/icons-material';
+import { Info, Close, Settings, Refresh, Tune, MonetizationOn } from '@mui/icons-material';
 
 import {
   getMyGames,
@@ -51,6 +75,8 @@ import animationData from '../LottieAnimations/add';
 
 function MyGamesTable() {
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Map state from Redux using useSelector
   const {
@@ -62,6 +88,7 @@ function MyGamesTable() {
     isLowGraphics,
     solPrice,
     my_games_loading,
+    connectedAccount,
     strategies,
   } = useSelector((state) => ({
     isDarkMode: state.auth.isDarkMode,
@@ -72,6 +99,7 @@ function MyGamesTable() {
     my_games_loading: state.logic.my_games_loading,
     socket: state.auth.socket,
     balance: state.auth.balance,
+    connectedAccount: state.auth.connectedAccount,
     user: state.auth.user,
     strategies: state.logic.strategies,
     solPrice: state.logic.solPrice,
@@ -87,6 +115,7 @@ function MyGamesTable() {
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState(0);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Payout
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
@@ -127,7 +156,7 @@ function MyGamesTable() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [fetchData]);
 
   const handleBankrollUpdate = useCallback(
     (data) => {
@@ -145,7 +174,7 @@ function MyGamesTable() {
         }),
       );
     },
-    [setMyGames],
+    [],
   );
 
   useEffect(() => {
@@ -181,24 +210,46 @@ function MyGamesTable() {
     }
   }, [gameCode, selectedRow]);
 
+  // ---------- Handlers ----------
+  const handleGameTypeChange = (type) => {
+    setSelectedGameType(type);
+    fetchData();
+  };
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilter(filter);
+  };
+
+  const handleSortChange = () => {
+    const newSort = selectedSort === 'asc' ? 'desc' : 'asc';
+    setSelectedSort(newSort);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   // ---------- CoHost ----------
   const handleCoHost = (row) => {
     setSelectedRow(row);
     setIsCoHostModalOpen(true);
   };
+
   const handleCloseCoHostModal = () => {
     setIsCoHostModalOpen(false);
   };
+
   const handleCoHostAmountChange = (e) => {
     setCoHostAmount(e.target.value);
   };
+
   const handleSendCoHost = useCallback(async () => {
     if (coHostAmount <= 0) {
-      dispatch(errorMsgBar('R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!'));
+      dispatch(errorMsgBar('Invalid amount: Value must be greater than 0'));
       return;
     }
     if (coHostAmount > balance) {
-      dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
+      dispatch(errorMsgBar('Insufficient funds: Amount exceeds available balance'));
       return;
     }
     try {
@@ -210,7 +261,7 @@ function MyGamesTable() {
         dispatch(errorMsgBar(result.message));
       }
     } catch (e) {
-      dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
+      dispatch(errorMsgBar('Room is currently busy, please try again later'));
     }
   }, [
     coHostAmount,
@@ -231,12 +282,15 @@ function MyGamesTable() {
     setPayoutAmount(amt);
     setIsPayoutModalOpen(true);
   };
+
   const handleClosePayoutModal = () => {
     setIsPayoutModalOpen(false);
   };
+
   const handlePayoutAmountChange = (e) => {
     setPayoutAmount(e.target.value);
   };
+
   const handlePaymentMethodChange = (e) => {
     const method = e.target.value;
     setPaymentMethod(method);
@@ -246,10 +300,11 @@ function MyGamesTable() {
       setPayoutAmount(0);
     }
   };
+
   const handleSendPayout = useCallback(async () => {
     if (payoutAmount <= 0) {
       dispatch(
-        errorMsgBar('R U FURR-REAL? HARD CAP AMOUNT MUST BE MORE THAN 0!'),
+        errorMsgBar('Error: Hard cap amount must be greater than 0'),
       );
       return;
     }
@@ -271,14 +326,14 @@ function MyGamesTable() {
 
   // ---------- RUG logic ----------
   const endRoom = useCallback(
-    async (winnings, room_id) => {
+    async (winnings, room_id, connectedAccount) => {
       setPressState((prev) => ({
         ...prev,
         [room_id]: { ...prev[room_id], closing: true },
       }));
 
       try {
-        await dispatch(endGame(room_id));
+        await dispatch(endGame(room_id, connectedAccount));
         setMyGames((prevGames) => prevGames.filter((g) => g._id !== room_id));
       } catch (error) {
         console.error('Error ending game:', error);
@@ -302,7 +357,7 @@ function MyGamesTable() {
         countdown -= updateInterval;
         if (countdown <= 0) {
           clearInterval(timer);
-          endRoom(winnings, room_id);
+          endRoom(winnings, room_id, connectedAccount);
           setPressState((prev) => ({
             ...prev,
             [room_id]: {
@@ -334,7 +389,7 @@ function MyGamesTable() {
         },
       }));
     },
-    [endRoom],
+    [endRoom, connectedAccount],
   );
 
   const handleButtonRelease = useCallback((room_id) => {
@@ -352,18 +407,14 @@ function MyGamesTable() {
   const handleSettingsIconClick = (event, row) => {
     event.preventDefault();
     event.stopPropagation();
-    // if (row.coHost) {
-      setSelectedRow(row);
-      setGameCode(row.gameCode || '');
-      setProxiedAssets(row.proxiedAssets || { 
-        audio: [],
-        theme: {},
-        background: {}
-      })
-      setSettingsPanelOpened(!settingsPanelOpened);
-    // } else {
-    //   dispatch(errorMsgBar('YOU MUST OWN 100% TO CHANGE MODEL.'));
-    // }
+    setSelectedRow(row);
+    setGameCode(row.gameCode || '');
+    setProxiedAssets(row.proxiedAssets || {
+      audio: [],
+      theme: {},
+      background: {}
+    });
+    setSettingsPanelOpened(!settingsPanelOpened);
   };
 
   const handleClickOutside = (e) => {
@@ -371,6 +422,14 @@ function MyGamesTable() {
       setSettingsPanelOpened(false);
     }
   };
+
+  // Filter games based on search term
+  const filteredGames = useMemo(() => {
+    return myGames.filter(game =>
+      game.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      game.ticker.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [myGames, searchTerm]);
 
   // ---------- Memoized SettingsRef ----------
   const settingsRefComponent = useMemo(() => {
@@ -396,8 +455,8 @@ function MyGamesTable() {
         onClose={() => setSettingsPanelOpened(false)}
         user_id={user?._id}
         user_credits={user.credits}
-        user_balance={balance} // Pass user_balance if required
-        creator_prompt={user?.prompt} // Pass creator_prompt if required
+        user_balance={balance}
+        creator_prompt={user?.prompt}
       />
     ) : null;
   }, [
@@ -431,511 +490,460 @@ function MyGamesTable() {
 
   // ---------- Render ----------
   return (
-    <Box className="my-open-games">
-      <Box className="filter-container overflowX">
-        {settingsRefComponent}
+    <Paper
+      elevation={3}
+      sx={{
+        borderRadius: 0,
+        overflow: 'hidden',
+        background: isDarkMode
+          ? 'rgba(18, 18, 20, 0.95)'
+          : 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+      }}
+    >
+      {/* Header Section */}
+      <Box
+        sx={{
+          p: 2,
+          background: isDarkMode
+            ? 'linear-gradient(90deg, rgba(32, 32, 36, 0.95) 0%, rgba(24, 24, 28, 0.95) 100%)'
+            : 'linear-gradient(90deg, rgba(245, 245, 247, 0.95) 0%, rgba(235, 235, 240, 0.95) 100%)',
+          borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+        }}
+      >
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={8}>
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+              Portfolio
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              <Chip
+                label="Open"
+                variant={selectedFilter === 'open' ? 'filled' : 'outlined'}
+                color={selectedFilter === 'open' ? 'error' : 'default'}
+                onClick={() => handleFilterChange('open')}
+              />
+              <Chip
+                label="Finished"
+                variant={selectedFilter === 'finished' ? 'filled' : 'outlined'}
+                color={selectedFilter === 'finished' ? 'error' : 'default'}
+                onClick={() => handleFilterChange('finished')}
+              />
+              <Chip
+                label={selectedSort === 'desc' ? 'Newest First' : 'Oldest First'}
+                variant="outlined"
+                icon={selectedSort === 'desc' ? <FontAwesomeIcon icon={faSortAmountDown} /> : <FontAwesomeIcon icon={faSortAmountUp} />}
+                onClick={handleSortChange}
+              />
+              {Object.keys(theme.gameTypes || {}).length > 0 && (
+                <Chip
+                  label={selectedGameType || 'All Games'}
+                  variant="outlined"
+                  icon={<FontAwesomeIcon icon={faFilter} />}
+                  onClick={() => { /* Implement game type filter dropdown */ }}
+                />
+              )}
+            </Stack>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search games..."
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FontAwesomeIcon icon={faSearch} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
+                },
+              }}
+            />
+          </Grid>
+        </Grid>
       </Box>
 
-      {my_games_loading ? (
-        <Box sx={{ p: 2 }}>
-          {[...Array(5)].map((_, i) => (
-            <Box
-              key={i}
-              sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center',
-                mb: 1,
-              }}
-            >
-              <Skeleton variant="rounded" width={40} height={40} />
-              <Skeleton variant="text" sx={{ width: '30%' }} />
-              <Skeleton variant="text" sx={{ width: '30%' }} />
-              <Skeleton variant="text" sx={{ width: '30%' }} />
-            </Box>
-          ))}
-        </Box>
-      ) : (
-        <Box className="table my-open-game-table" sx={{ p: 2 }}>
-          {myGames.length === 0 ? (
-            <Box
-              className="dont-have-game-msg"
-              sx={{ textAlign: 'center', mt: 2 }}
-            >
-              <Lottie options={defaultOptions} width={50} />
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                You Have No Games
-              </Typography>
-            </Box>
-          ) : (
-            <>
+      {/* Content Area */}
+      <Box sx={{ position: 'relative' }}>
+        {/* Settings Panel */}
+        {settingsRefComponent}
+
+        {/* Loading State */}
+        {my_games_loading ? (
+          <Box sx={{ p: 3 }}>
+            {[...Array(5)].map((_, i) => (
               <Box
-                className="table-header"
+                key={i}
                 sx={{
-                  width: '100%',
+                  display: 'flex',
+                  gap: 2,
                   alignItems: 'center',
-                  p: '10px 20px',
                   mb: 2,
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  // Optional: Apply glassmorphism to header for consistency
-                  background: isDarkMode
-                    ? 'rgba(0, 0, 0, 0.2)'
-                    : 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)', // For Safari
-                  border: isDarkMode
-                    ? '1px solid rgba(255, 255, 255, 0.2)'
-                    : '1px solid rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                 }}
               >
-                <Box className="table-cell room-id" sx={{ width: '17%' }}>
-                  ROOM
-                </Box>
-                <Box className="table-cell winnings" sx={{ width: '17%' }}>
-                  LIQUIDITY / PROGRESS
-                </Box>
-                <Box className="table-cell bet-info" sx={{ width: '17%' }}>
-                  EQUITY
-                  <Tooltip title="TO REACH RAYDIUM">
-                    <Info sx={{ width: 18, cursor: 'pointer' }} />
-                  </Tooltip>
-                </Box>
-                <Box className="table-cell winnings" sx={{ width: '17%' }}>
-                  LIKES / BATTLES
-                </Box>
-                <Box className="table-cell" sx={{ width: '15%' }} />
+                <Skeleton variant="circular" width={40} height={40} />
+                <Skeleton variant="rounded" sx={{ width: '95%', height: 60, borderRadius: 2 }} />
               </Box>
+            ))}
+          </Box>
+        ) : (
+          <Box sx={{ p: 2 }}>
+            {/* Empty State */}
+            {filteredGames.length === 0 ? (
+              <Card
+                variant="outlined"
+                sx={{
+                  textAlign: 'center',
+                  p: 4,
+                  borderRadius: 2,
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 35, 0.5)' : 'rgba(250, 250, 255, 0.5)',
+                }}
+              >
+                <Lottie options={defaultOptions} height={100} width={100} />
+                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                  No Games Found
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  You haven't created any games yet. Start by creating a new game.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="error"
+                  sx={{ mt: 2 }}
+                  onClick={() => { /* Navigate to create game */ }}
+                >
+                  Create New Game
+                </Button>
+              </Card>
+            ) : (
+              /* Game Cards List */
+              <Grid container spacing={2}>
+                {filteredGames.map((row, idx) => {
+                  const rowPress = pressState[row._id] || {};
+                  const isClosing = rowPress.closing || false;
+                  const isHolding = rowPress.holding || false;
+                  const timeLeft = rowPress.timeLeft || 0;
 
-              {myGames.map((row, idx) => {
-                const rowPress = pressState[row._id] || {};
-                const isClosing = rowPress.closing || false;
-                const isHolding = rowPress.holding || false;
-                const timeLeft = rowPress.timeLeft || 0;
+                  const bet = row.user_bet;
+                  const endgameAmount = row.endgame_amount;
+                  const bondingProgress = endgameAmount !== 0 ? (bet / endgameAmount) * 100 : 0;
 
-                const bet = row.user_bet;
-                const endgameAmount = row.endgame_amount;
-                const bondingProgress =
-                  endgameAmount !== 0 ? (bet / endgameAmount) * 100 : 0;
-
-                return (
-                  <Box
-                    key={row._id}
-                    className="table-row slide-in"
-                    sx={{
-                      animationDelay: `${idx * 0.1}s`,
-                      cursor: 'pointer',
-                      mb: 1,
-                      display: 'flex',
-                      flexDirection: 'row',
-                      // Glassmorphism styles
-                      background: isDarkMode
-                        ? 'rgba(0, 0, 0, 0.2)'
-                        : 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      WebkitBackdropFilter: 'blur(10px)', // For Safari
-                      border: isDarkMode
-                        ? '1px solid rgba(255, 255, 255, 0.2)'
-                        : '1px solid rgba(0, 0, 0, 0.2)',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                      // Fallback for browsers without backdrop-filter
-                      '@supports not (backdrop-filter: blur(10px))': {
-                        background: isDarkMode
-                          ? 'rgba(0, 0, 0, 0.4)'
-                          : 'rgba(255, 255, 255, 0.3)',
-                      },
-                      // Hover effect for interactivity
-                      '&:hover': {
-                        background: isDarkMode
-                          ? 'rgba(0, 0, 0, 0.3)'
-                          : 'rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-                      },
-                    }}
-                    onClick={() => (window.location.href = `/join/${row._id}`)}
-                  >
-                    <Box sx={{ width: '100%' }}>
-                      <Box className="table-cell room-id" sx={{ width: '17%' }}>
-                        <img
-                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                          alt=""
-                          className="game-type-icon"
-                        />
-                        <img
-                          src={row.image}
-                          alt=""
-                          className="game-type-icon"
-                        />
-                        {row.name + ' (' + row.ticker + ')'}
-                        {row.is_private && (
-                          <img
-                            src="/img/icon-lock.png"
-                            alt=""
-                            className="lock-icon"
-                          />
-                        )}
-                      </Box>
-                      <Box
-                        className="table-cell bet-info"
-                        sx={{ justifyContent: 'center', width: '17%' }}
-                      >
-                        <Chip
-                          label={
-                            <Typography variant="body2" component="span">
-                              {convertToCurrency(row.user_bet, solPrice)}
-                              <br className="mobile-only" />
-                              <Box component="span" sx={{ fontSize: '10px' }}>
-                                / {
-                                  !row.endgame_type
-                                    ? 'M'
-                                    : convertToCurrency(row.endgame_amount, solPrice)}
-                              </Box>
-                            </Typography>
-                          }
-                          color="warning"
-                          className="end-amount"
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontWeight: 'bold' }}
-                        />
-                        <Chip
-                          label={`${100 - bondingProgress.toFixed(2)}%`}
-                          color="error"
-                          className="end-amount"
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontWeight: 'bold', ml: 1 }}
-                        />
-                        {row.coHost && selectedFilter === 'open' && (
-                          <Box
-                            component="a"
-                            className="ml-1"
-                            sx={{
-                              color: '#D32F2F',
-                              cursor: 'pointer',
-                              borderRadius: '30px',
-                              display: 'inline-flex',
-                              verticalAlign: 'middle',
-                              mb: '4px',
-                            }}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handlePayout(row);
-                            }}
-                          />
-                        )}
-                      </Box>
-                      <Box
-                        className="table-cell winnings"
-                        sx={{ width: '17%' }}
-                      >
-                        <Chip
-                          label={`${row.share?.toFixed(2)}%`}
-                          color="success"
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontWeight: 'bold' }}
-                        />
-                      </Box>
-                      <Box
-                        className="table-cell likes-dislikes-battles"
+                  return (
+                    <Grid item xs={12} key={row._id}>
+                      <Card
                         sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: 2,
-                          width: '17%',
+                          borderRadius: 2,
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                          animation: `fadeIn 0.5s ${idx * 0.1}s both`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: 6,
+                          },
+                          backgroundColor: isDarkMode
+                            ? 'rgba(28, 28, 32, 0.8)'
+                            : 'rgba(255, 255, 255, 0.8)',
+                          backdropFilter: 'blur(8px)',
+                          border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
                         }}
+                        onClick={() => (window.location.href = `/join/${row._id}`)}
                       >
-                        <Tooltip title="Likes">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#fff' }}>
-                              {Array.isArray(row.likes) ? row.likes.length : 0}
-                            </Typography>
-                            <FontAwesomeIcon icon={faThumbsUp} />
-                          </Box>
-                        </Tooltip>
-                        <Tooltip title="Dislikes">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#fff' }}>
-                              {Array.isArray(row.dislikes) ? row.dislikes.length : 0}
-                            </Typography>
-                            <FontAwesomeIcon icon={faThumbsDown} />
-                          </Box>
-                        </Tooltip>
-                        <Tooltip title="Battles">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#fff' }}>
-                              {row.battles || 0}
-                            </Typography>
-                            <Battle width="20px" />
-                          </Box>
-                        </Tooltip>
-                      </Box>
-                      {row.game_type.short_name === 'Custom' && (
-                        <Box
-                          id='ai_mode'
-                          className="table-cell winnings desktop-only">
-                          <Tooltip title="UPGRADE GAME">
-                            <Box
-                              component="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleSettingsIconClick(e, row);
-                              }}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <AutoAwesomeIcon sx={{ p: '6px' }} />
-                            </Box>
-                          </Tooltip>
-                        </Box>
-                      )}
-                      <Box className="table-cell action desktop-only">
-                        {row.status === 'finished' ? (
-                          <Button
-                            className="btn_recreate"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              // Note: openRecreateModal is undefined; implement or remove
-                              // openRecreateModal(row);
-                            }}
-                          >
-                            RE-CREATE
-                          </Button>
-                        ) : (
-                          <Box>
-                            {isClosing ? (
-                              <Typography variant="body2" sx={{ color: 'red' }}>
-                                closing...
+                        <CardContent sx={{ p: 2 }}>
+                          <Grid container spacing={2} alignItems="center">
+                            {/* Game Info */}
+                            <Grid item xs={12} sm={4}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Avatar
+                                  sx={{
+                                    width: 48,
+                                    height: 48,
+                                    backgroundColor: isDarkMode ? 'rgba(60, 60, 70, 0.5)' : 'rgba(240, 240, 250, 0.5)',
+                                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                                  }}
+                                  alt={row.name}
+                                  src={row.image}
+                                >
+                                  <img
+                                    src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                                    alt=""
+                                    style={{ width: 20, height: 20 }}
+                                  />
+                                </Avatar>
+                                <Box>
+                                  <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                                    {row.name}
+                                    {row.is_private && (
+                                      <FontAwesomeIcon
+                                        icon={faLock}
+                                        style={{ marginLeft: 8, fontSize: 14, opacity: 0.7 }}
+                                      />
+                                    )}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {row.ticker}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Grid>
+
+                            {/* Liquidity & Progress */}
+                            <Grid item xs={6} sm={3}>
+                              <Typography variant="body2" color="text.secondary" gutterBottom>
+                                Liquidity / Hardcap
                               </Typography>
-                            ) : (
-                              <Box>
-                                {!row.coHost ? (
-                                  <></>
-                                ) : (
-                                  <Button
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {convertToCurrency(row.user_bet, solPrice)}
+                                  {row.endgame_type && (
+                                    <Typography component="span" variant="caption" color="text.secondary">
+                                      {' '}/{' '}{convertToCurrency(row.endgame_amount, solPrice)}
+                                    </Typography>
+                                  )}
+                                </Typography>
+                              </Box>
+                              <LinearProgress
+                                variant="determinate"
+                                value={bondingProgress}
+                                color='error'
+                                sx={{
+                                  height: 5,
+                                  borderRadius: 5,
+                                  mt: 0.5,
+                                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                }}
+                              />
+                            </Grid>
+
+                            {/* Equity */}
+                            <Grid item xs={6} sm={2}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                  Equity
+                                </Typography>
+                                <Tooltip title="Ownership percentage of room">
+                                  <Info sx={{ width: 14, height: 14, opacity: 0.7 }} />
+                                </Tooltip>
+                              </Box>
+                              <Chip
+                                label={`${row.share?.toFixed(2)}%`}
+                                color="success"
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontWeight: 'medium' }}
+                              />
+                            </Grid>
+
+                            {/* Social Stats */}
+                            <Grid item xs={6} sm={2}>
+                              <Typography variant="body2" color="text.secondary" gutterBottom>
+                                Engagement
+                              </Typography>
+                              <Stack direction="row" spacing={1}>
+                                <Tooltip title="Likes">
+                                  <Chip
+                                    size="small"
+                                    icon={<FontAwesomeIcon icon={faThumbsUp} style={{ fontSize: 12 }} />}
+                                    label={Array.isArray(row.likes) ? row.likes.length : 0}
                                     variant="outlined"
-                                    color="error"
-                                    disableElevation
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonClick(row.winnings, row._id);
-                                    }}
-                                    onMouseUp={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    onTouchStart={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonClick(row.winnings, row._id);
-                                    }}
-                                    onTouchEnd={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    onTouchCancel={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    style={
-                                      isHolding
-                                        ? { filter: 'hue-rotate(-10deg)' }
-                                        : {}
-                                    }
-                                  >
-                                    {isHolding ? (
-                                      <>
-                                        <Box
-                                          component="span"
-                                          sx={{
-                                            position: 'absolute',
-                                            zIndex: 2,
-                                          }}
-                                        >
-                                          {(timeLeft / 100).toFixed(1)}
+                                  />
+                                </Tooltip>
+                                <Tooltip title="Battles">
+                                  <Chip
+                                    size="small"
+                                    icon={<Battle width="12px" />}
+                                    label={row.battles || 0}
+                                    variant="outlined"
+                                  />
+                                </Tooltip>
+                              </Stack>
+                            </Grid>
+
+                            {/* Actions */}
+                            <Grid item xs={6} sm={1}>
+                              <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                                {row.game_type.short_name === 'Custom' && (
+                                  <Tooltip title="Game Settings">
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => handleSettingsIconClick(e, row)}
+                                      sx={{
+                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                        },
+                                      }}
+                                    >
+                                      <AutoAwesomeIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                {row.status === 'finished' ? (
+                                  <>
+                                  </>
+                                  // <Button
+                                  //   variant="outlined"
+                                  //   size="small"
+                                  //   startIcon={<Refresh />}
+                                  //   onClick={(e) => {
+                                  //     e.preventDefault();
+                                  //     e.stopPropagation();
+                                  //     // implement recreate
+                                  //   }}
+                                  // >
+                                  //   {isMobile ? '' : 'Recreate'}
+                                  // </Button>
+                                ) : (
+                                  row.coHost && (
+                                    <Button
+                                      variant="outlined"
+                                      color="error"
+                                      size="small"
+                                      disabled={isClosing}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleButtonClick(row.winnings, row._id);
+                                      }}
+                                      onMouseUp={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleButtonRelease(row._id);
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleButtonRelease(row._id);
+                                      }}
+                                      onTouchStart={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleButtonClick(row.winnings, row._id);
+                                      }}
+                                      onTouchEnd={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleButtonRelease(row._id);
+                                      }}
+                                      onTouchCancel={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleButtonRelease(row._id);
+                                      }}
+                                      sx={{
+                                        minWidth: isHolding ? 60 : 'auto',
+                                        transition: 'all 0.2s',
+                                        ...(isHolding && {
+                                          filter: 'hue-rotate(-10deg)',
+                                          transform: 'scale(1.05)',
+                                        }),
+                                        bgcolor: isDarkMode ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 0, 0, 0.05)',
+                                        borderColor: isDarkMode ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 0, 0, 0.3)',
+                                        '&:hover': {
+                                          bgcolor: isDarkMode ? 'rgba(255, 0, 0, 0.2)' : 'rgba(255, 0, 0, 0.1)',
+                                          borderColor: isDarkMode ? 'rgba(255, 0, 0, 0.7)' : 'rgba(255, 0, 0, 0.5)',
+                                        },
+                                      }}
+                                    >
+                                      {isHolding ? (
+                                        <>
                                           <Box
                                             component="span"
                                             sx={{
-                                              pt: '5px',
-                                              fontSize: 'xx-small',
+                                              position: 'absolute',
+                                              zIndex: 2,
+                                              fontWeight: 'bold',
                                             }}
                                           >
-                                            s
+                                            {(timeLeft / 100).toFixed(1)}
+                                            <Box component="span" sx={{ fontSize: 'xx-small', ml: 0.5 }}>
+                                              s
+                                            </Box>
                                           </Box>
-                                        </Box>
-                                        <Lottie options={pressHoldOptions} />
-                                      </>
-                                    ) : (
-                                      <>RUG</>
-                                    )}
-                                  </Button>
+                                          <Lottie options={pressHoldOptions} height={40} width={40} />
+                                        </>
+                                      ) : (
+                                        'RUG'
+                                      )}
+                                    </Button>
+                                  )
                                 )}
-                              </Box>
-                            )}
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                    <Box
-                      className="mobile-only"
-                      sx={{
-                        display: 'flex',
-                        width: '15% !important',
-                      }}
-                    >
-                      <Box
-                        className="table-cell action"
-                        sx={{
-                          width: 'auto',
-                          float: 'right',
-                          display: 'flex',
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Tooltip title="CHANGE AI MODEL">
-                          <Box
-                            id="ai_mode"
-                            component="a"
-                            sx={{
-                              borderRadius: '200px',
-                              cursor: 'pointer',
-                              p: '1px',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                            }}
-                            onClick={(e) => handleSettingsIconClick(e, row)}
-                          >
-                            <AutoAwesomeIcon />
-                          </Box>
-                        </Tooltip>
-                        {row.status === 'finished' ? (
-                          <Button
-                            className="btn_recreate"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              // Note: openRecreateModal is undefined; implement or remove
-                              // openRecreateModal(row);
-                            }}
-                          >
-                            RE-CREATE
-                          </Button>
-                        ) : (
-                          <Box>
-                            {isClosing ? (
-                              <Typography variant="body2" sx={{ color: 'red' }}>
-                                closing...
-                              </Typography>
-                            ) : (
-                              <Box>
-                                {!row.coHost ? (
-                                  <></>
-                                ) : (
-                                  <Button
-                                    variant="outlined"
-                                    color="error"
-                                    disableElevation
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonClick(row.winnings, row._id);
-                                    }}
-                                    onMouseUp={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    onTouchStart={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonClick(row.winnings, row._id);
-                                    }}
-                                    onTouchEnd={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    onTouchCancel={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleButtonRelease(row._id);
-                                    }}
-                                    style={
-                                      isHolding
-                                        ? { filter: 'hue-rotate(-10deg)' }
-                                        : {}
-                                    }
-                                  >
-                                    {isHolding ? (
-                                      <>
-                                        <Box
-                                          component="span"
-                                          sx={{
-                                            position: 'absolute',
-                                            zIndex: 2,
-                                          }}
-                                        >
-                                          {(timeLeft / 100).toFixed(1)}
-                                          <Box
-                                            component="span"
-                                            sx={{
-                                              pt: '5px',
-                                              fontSize: 'xx-small',
-                                            }}
-                                          >
-                                            s
-                                          </Box>
-                                        </Box>
-                                        <Lottie options={pressHoldOptions} />
-                                      </>
-                                    ) : (
-                                      <>RUG</>
-                                    )}
-                                  </Button>
+                                {/* {row.coHost && selectedFilter === 'open' && (
+                                  <Tooltip title="Adjust Hard Cap">
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handlePayout(row);
+                                      }}
+                                      sx={{
+                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                        },
+                                      }}
+                                    >
+                                      <MonetizationOn fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
                                 )}
-                              </Box>
-                            )}
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                  </Box>
-                );
-              })}
-            </>
-          )}
-        </Box>
-      )}
-      {/* <Dialog open={isCoHostModalOpen} onClose={handleCloseCoHostModal}>
+                                {row.coHost && selectedFilter === 'open' && (
+                                  <Tooltip title="Add Liquidity">
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleCoHost(row);
+                                      }}
+                                      sx={{
+                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                        },
+                                      }}
+                                    >
+                                      <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 14 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                )} */}
+                              </Stack>
+                            </Grid>
+                          </Grid>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      {/* CoHost Modal */}
+      <Dialog
+        open={isCoHostModalOpen}
+        onClose={handleCloseCoHostModal}
+        fullWidth
+        maxWidth="sm"
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            background: isDarkMode ? 'rgba(18, 18, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          },
+        }}
+      >
         <CoHostModal
           isDarkMode={isDarkMode}
           coHostAmount={coHostAmount}
@@ -950,36 +958,52 @@ function MyGamesTable() {
           input_only={false}
           solPrice={solPrice}
         />
-      </Dialog> */}
+      </Dialog>
+
+      {/* Payout Modal */}
       <Dialog
         open={isPayoutModalOpen}
         onClose={handleClosePayoutModal}
         fullWidth
+        maxWidth="sm"
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            background: isDarkMode ? 'rgba(18, 18, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          },
+        }}
       >
         <DialogTitle
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
+            borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           }}
         >
-          <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
-            <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
-            HARD CAP
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+            <FontAwesomeIcon icon={faMoneyCheckAlt} />
+            Adjust Hard Cap
           </Box>
-          <Button variant="text" color="error" onClick={handleClosePayoutModal}>
-            ×
-          </Button>
+          <IconButton
+            onClick={handleClosePayoutModal}
+            sx={{ color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}
+          >
+            <Close />
+          </IconButton>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pt: 2 }}>
           <Box sx={{ mb: 2 }}>
-            <Table>
+            <Table size="small">
               <TableBody>
                 <TableRow>
-                  <TableCell>
-                    <span>CURRENT PAYOUT:</span>
+                  <TableCell sx={{ borderBottom: 'none', color: 'text.secondary' }}>
+                    Current Payout:
                   </TableCell>
-                  <TableCell sx={{ color: '#ff8500' }}>
+                  <TableCell sx={{ borderBottom: 'none', color: 'warning.main' }}>
                     {selectedRow && selectedRow.endgame_type
                       ? convertToCurrency(selectedRow.endgame_amount, solPrice)
                       : 'MANUAL'}
@@ -988,59 +1012,68 @@ function MyGamesTable() {
               </TableBody>
             </Table>
           </Box>
+          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'medium' }}>
+            Payout Method
+          </Typography>
           <RadioGroup
-            aria-label="paymentMethod"
-            name="paymentMethod"
             value={paymentMethod}
             onChange={handlePaymentMethodChange}
+            sx={{ mb: 2 }}
           >
-            <Typography variant="h6" align="center" sx={{ mb: 1 }}>
-              Change Auto-Payout
-            </Typography>
             <FormControlLabel
               value="manual"
-              control={<Radio />}
-              label="MANUAL"
+              control={<Radio color="error" />}
+              label="Manual"
+              sx={{ '& .MuiFormControlLabel-label': { fontWeight: 'medium' } }}
             />
             <FormControlLabel
               value="automatic"
-              control={<Radio />}
-              label="AUTOMATIC"
+              control={<Radio color="error" />}
+              label="Automatic"
+              sx={{ '& .MuiFormControlLabel-label': { fontWeight: 'medium' } }}
             />
           </RadioGroup>
-          <Box sx={{ mt: 2 }}>
-            <TextField
-              color="error"
-              label="Amount"
-              value={payoutAmount}
-              type="number"
-              onChange={handlePayoutAmountChange}
-              variant="filled"
-              autoComplete="off"
-              fullWidth
-              disabled={paymentMethod === 'manual'}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">RPS</InputAdornment>
-                ),
-              }}
-            />
-          </Box>
+          <TextField
+            fullWidth
+            label="Payout Amount"
+            value={payoutAmount}
+            type="number"
+            onChange={handlePayoutAmountChange}
+            variant="outlined"
+            disabled={paymentMethod === 'manual'}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">RPS</InputAdornment>,
+              inputProps: { min: 0 },
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
+              },
+            }}
+          />
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" color="error" onClick={handleSendPayout}>
+        <DialogActions sx={{ p: 2, borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleSendPayout}
+            disabled={payoutAmount <= 0 && paymentMethod === 'automatic'}
+            sx={{ borderRadius: 2 }}
+          >
             Update
           </Button>
           <Button
             variant="outlined"
-            color="error"
+            color="inherit"
             onClick={handleClosePayoutModal}
+            sx={{ borderRadius: 2 }}
           >
             Cancel
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 }
 

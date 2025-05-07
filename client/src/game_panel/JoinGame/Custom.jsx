@@ -80,12 +80,6 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import styled from 'styled-components';
-import SendIcon from '@mui/icons-material/Send';
-import SaveIcon from '@mui/icons-material/Save';
-import LockIcon from '@mui/icons-material/Lock';
-import { green, yellow, blue, grey } from '@mui/material/colors';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import ChatIcon from '@mui/icons-material/Chat';
 import * as Babel from '@babel/standalone';
 import ImageResultModal from '../modal/ImageResultModal';
 import { convertToCurrency } from '../../util/conversion';
@@ -364,12 +358,12 @@ function Custom(props) {
         multiplier:
           result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
       });
-
+  
       const amount = resultData.amount || 0;
       const currencyElement = convertToCurrency(Math.abs(amount), solPrice);
       const sign = amount >= 0 ? '+' : '-';
       let soundToPlay = null;
-
+  
       if (resultData.betResult === 1) {
         soundToPlay = 'win';
       } else if (resultData.betResult === 0) {
@@ -377,29 +371,31 @@ function Custom(props) {
       } else {
         soundToPlay = 'lose';
       }
-
+  
       if (playSound && soundToPlay) {
         playSound(soundToPlay);
       }
-
+  
       const formattedResult = (
         <span
           style={{
             color: amount >= 0 ? '#00ff3a' : '#ff0000',
             fontSize: '1.2rem',
             fontWeight: 'bold',
-            textShadow: '0 0 10px rgba(0,0,0,0.5)',
           }}
         >
-          {sign} {currencyElement}
+          {sign} {currencyElement}{' '}
+          <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
+            ({Math.abs(amount).toFixed(4)} SOL)
+          </span>
         </span>
       );
-
+  
       onResultChange(formattedResult, false);
       onChangeState({
         gameResult: resultData.betResult,
       });
-
+  
       setGameStartedCount((prev) => prev + 1);
       hasDepositedRef.current = false; // Reset deposit flag after game ends
     },
@@ -933,7 +929,7 @@ function Custom(props) {
                         justifyContent: 'center',
                         alignItems: 'center',
                         height: '600px',
-                        color: 'red',
+                        color: '#FF0000',
                       }}
                     >
                       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -962,8 +958,7 @@ function Custom(props) {
                         justifyContent: 'center',
                         alignItems: 'center',
                         height: '600px',
-                        border: '1px solid #ccc',
-                        borderRadius: '8px',
+                   
                       }}
                     >
                       <Typography variant="body1" color="text.secondary">
@@ -1031,7 +1026,7 @@ function Custom(props) {
               alignItems: 'center',
             }}
           >
-            <Typography variant="subtitle2" sx={{ color: '#D32F2F' }}>
+            <Typography variant="subtitle2" sx={{ color: '#FF0000' }}>
               GAME ENDED
             </Typography>
             <br />
@@ -1049,7 +1044,7 @@ function Custom(props) {
                 </Box>
               </Typography>
             ) : (
-              <Typography>
+              <Typography sx={{ textAlign: 'center', color: '#fff'}}>
                 Pool is either being seeded, or the room has ended.
               </Typography>
             )}

@@ -8,12 +8,10 @@ const session = require('express-session');
 const socketController = require('./socketController.js');
 const helmet = require('helmet'); // Security headers middleware
 const bodyParser = require('body-parser');
+const redis = require('redis');
 const cronJob = require('./helper/util/createCronJob.js');
-const creditScoreCron = require('./helper/util/creditScoreCron.js');
-// const rentCron = require('./helper/util/rentCron.js');
 const eliteCron = require('./helper/util/eliteCron.js');
 const callCronJob = require('./helper/util/callBotCron.js');
-const withdrawalCron = require('./helper/util/withdrawalCron.js');
 const interestCron = require('./helper/util/interestCron.js');
 
 const app = express();
@@ -21,6 +19,26 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://catsino.fun',
 ];
+
+// -------------------- Redis Client Setup --------------------
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379', // Use env variable or default
+});
+
+redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+redisClient.on('connect', () => console.log('Connected to Redis'));
+
+// Connect to Redis
+(async () => {
+  try {
+    await redisClient.connect();
+  } catch (err) {
+    console.error('Failed to connect to Redis:', err);
+  }
+})();
+
+// Attach redisClient to app for access in routes
+app.set('redisClient', redisClient);
 
 
 // -------------------- Server Setup --------------------
@@ -43,11 +61,8 @@ const io = socketController.socketio(server, {
 });
 
 setTimeout(() => callCronJob.callCronJobs(io), 500);
-// setTimeout(() => rentCron.checkRentalPayments(io), 3000);
 setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
 setTimeout(() => cronJob.checkConfirmations(), 5000);
-setTimeout(() => creditScoreCron.checkOutstandingLoans(io), 7000); 
-setTimeout(() => withdrawalCron.resetWithdrawalLimits(), 9000);
 setTimeout(() => interestCron.updateRoomInterests(io), 11000);
 
 // Attach io instance to each request for easy access
@@ -151,6 +166,18 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something went wrong!');
 });
+
+// -------------------- Graceful Shutdown --------------------
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received. Closing server...');
+  server.close(() => {
+    console.log('Server closed');
+  });
+  await redisClient.quit(); // Close Redis connection
+  mongoose.disconnect();
+  process.exit(0);
+});
+
 
 // -------------------- Exports --------------------
 module.exports = { app, server, io };

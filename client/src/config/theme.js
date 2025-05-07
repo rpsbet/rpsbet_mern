@@ -22,125 +22,281 @@ export const getCustomTheme = (isDarkMode = true) =>
   createTheme({
     palette: {
       mode: isDarkMode ? 'dark' : 'light',
+      primary: {
+        main: '#00B0FF',
+        contrastText: '#ffffff',
+      },
+      secondary: {
+        main: '#00E676',
+        contrastText: '#000000',
+      },
       background: {
-        paper: '#080808',
+        default: isDarkMode ? '#121212' : '#f5f5f5',
+        paper: isDarkMode ? '#1E1E1E' : '#ffffff',
       },
       success: {
-        main: '#00ff3a', // Override success color
-        contrastText: '#fff', // Optional: Set contrast text color for readability
+        main: '#00ff3a',
+        contrastText: isDarkMode ? '#000000' : '#ffffff',
       },
+      error: {
+        main: '#ff0000',
+        contrastText: '#ffffff',
+      },
+      warning: {
+        main: '#FFC107',
+        contrastText: '#000000',
+      },
+      info: {
+        main: '#29B6F6',
+        contrastText: '#000000',
+      },
+      text: {
+        primary: isDarkMode ? '#ffffff' : '#212121',
+        secondary: isDarkMode ? '#CCCCCC' : '#757575',
+      },
+      divider: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
     },
     shape: {
-      borderRadius: 8, // Global border radius for components (fallback)
+      borderRadius: 8,
     },
     components: {
-      // Style for buttons
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            backgroundColor: isDarkMode ? '#121212' : '#f5f5f5',
+            color: isDarkMode ? '#ffffff' : '#212121',
+            // WebKit scrollbar styles (Chrome, Safari, Edge)
+            '&::-webkit-scrollbar': {
+              width: '8px',
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#ff0000', // Red scrollbar
+              borderRadius: '4px',
+              '&:hover': {
+                background: '#cc0000', // Darker red on hover
+              },
+            },
+            // Firefox scrollbar styles
+            scrollbarColor: '#ff0000 rgba(255, 255, 255, 0.1)', // thumb track
+            scrollbarWidth: 'thin',
+          },
+          // Ensure scrollable elements inherit scrollbar styles
+          '*': {
+            '&::-webkit-scrollbar': {
+              width: '8px',
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#ff0000',
+              borderRadius: '4px',
+              '&:hover': {
+                background: '#cc0000',
+              },
+            },
+            scrollbarColor: '#ff0000 rgba(255, 255, 255, 0.1)',
+            scrollbarWidth: 'thin',
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundColor: isDarkMode ? '#1E1E1E' : '#ffffff',
+            backgroundImage: 'none',
+          },
+        },
+        defaultProps: {
+          elevation: 3,
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            color: isDarkMode ? '#ffffff' : '#212121',
+          },
+        },
+      },
+      MuiSvgIcon: {
+        styleOverrides: {
+          root: {
+            color: 'inherit',
+          },
+        },
+      },
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: '8px !important', // Force border radius for buttons
-            textTransform: 'none', // Optional: Prevent uppercase text
+            borderRadius: 8,
+            textTransform: 'none',
+            fontWeight: 500,
+          },
+          contained: {
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
+            },
           },
         },
       },
-      // Style for input labels
       MuiInputLabel: {
         styleOverrides: {
           root: {
-            color: 'white',
+            color: isDarkMode ? '#CCCCCC' : '#757575',
+            '&.Mui-focused': {
+              color: isDarkMode ? '#00B0FF' : '#2196F3',
+            },
+            '&.Mui-error': {
+              color: (theme) => theme.palette.error.main,
+            },
           },
         },
       },
-      // Style for filled variant (for input text)
       MuiFilledInput: {
         styleOverrides: {
           root: {
-            borderRadius: '8px !important', // Force border radius for filled inputs
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5',
+            borderRadius: 8,
+            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#f5f5f5',
             '&:hover': {
-              backgroundColor: isDarkMode ? '#2a2a2a' : '#e0e0e0',
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0e0e0',
             },
             '&.Mui-focused': {
-              backgroundColor: isDarkMode ? '#2a2a2a' : '#e0e0e0',
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e0e0e0',
+            },
+            '&.Mui-error': {
+              borderColor: (theme) => theme.palette.error.main,
             },
           },
           input: {
-            color: 'white',
+            color: isDarkMode ? '#ffffff' : '#212121',
           },
         },
       },
-      // Style for InputAdornment (for "SOL")
       MuiInputAdornment: {
         styleOverrides: {
           root: {
-            color: 'white',
+            color: isDarkMode ? '#CCCCCC' : '#757575',
+            '&.Mui-error': {
+              color: (theme) => theme.palette.error.main,
+            },
           },
         },
       },
-      // Style for outlined inputs
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: '8px !important', // Force border radius for outlined inputs
+            borderRadius: 8,
             '& fieldset': {
-              borderColor: isDarkMode ? 'white' : '#666',
-              borderRadius: '8px !important', // Ensure fieldset respects border radius
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+              borderRadius: 8,
             },
             '&:hover fieldset': {
-              borderColor: isDarkMode ? 'white' : '#4caf50',
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#4caf50',
+              borderColor: isDarkMode ? '#00B0FF' : '#2196F3',
+            },
+            '&.Mui-error fieldset': {
+              borderColor: (theme) => theme.palette.error.main,
             },
           },
           input: {
-            color: 'white',
+            color: isDarkMode ? '#ffffff' : '#212121',
           },
         },
       },
-      // Style for standard inputs (MuiInput)
       MuiInput: {
         styleOverrides: {
           root: {
-            borderRadius: '8px !important', // Force border radius for standard inputs
+            borderRadius: 8,
             '&:before': {
-              borderRadius: '8px !important', // For underline in standard variant
+              borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+              borderRadius: 8,
             },
             '&:after': {
-              borderRadius: '8px !important', // For focused underline
+              borderBottomColor: isDarkMode ? '#00B0FF' : '#2196F3',
+              borderRadius: 8,
+            },
+            '&.Mui-error:after': {
+              borderColor: (theme) => theme.palette.error.main,
             },
           },
           input: {
-            color: 'white',
+            color: isDarkMode ? '#ffffff' : '#212121',
           },
         },
       },
-      // Style for TextField (to cover all variants)
       MuiTextField: {
         styleOverrides: {
           root: {
             '& .MuiFilledInput-root': {
-              borderRadius: '8px !important',
+              borderRadius: 8,
+              '&.Mui-error': {
+                borderColor: (theme) => theme.palette.error.main,
+              },
             },
             '& .MuiOutlinedInput-root': {
-              borderRadius: '8px !important',
+              borderRadius: 8,
               '& fieldset': {
-                borderRadius: '8px !important',
+                borderRadius: 8,
+              },
+              '&.Mui-error fieldset': {
+                borderColor: (theme) => theme.palette.error.main,
               },
             },
             '& .MuiInput-root': {
-              borderRadius: '8px !important',
+              borderRadius: 8,
+              '&.Mui-error:after': {
+                borderColor: (theme) => theme.palette.error.main,
+              },
             },
           },
         },
       },
-      // Style for Drawer to make MuiDrawer-paper background transparent
-      MuiDrawer: {
+      MuiFormHelperText: {
         styleOverrides: {
-          paper: {
-            backgroundColor: 'transparent', // Set Drawer paper background to transparent
+          root: {
+            color: isDarkMode ? '#ACACAC' : '#757575',
+            '&.Mui-error': {
+              color: (theme) => theme.palette.error.main,
+            },
           },
         },
       },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            color: isDarkMode ? '#ffffff' : '#616161',
+          },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(33, 33, 33, 0.9)',
+            color: isDarkMode ? '#212121' : '#ffffff',
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.2)',
+          },
+        },
+      },
+      // Removed MuiCircularProgress override to respect color prop
     },
   });

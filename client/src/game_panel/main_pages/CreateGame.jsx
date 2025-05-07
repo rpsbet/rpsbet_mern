@@ -1,16 +1,9 @@
-// CreateGame.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
   Drawer,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Checkbox,
-  FormControlLabel,
   Box,
   Tooltip,
   Typography,
@@ -18,12 +11,12 @@ import {
   Step,
   StepLabel,
   Paper,
+  CircularProgress, // Added CircularProgress import
 } from '@mui/material';
 import { sendSolDeposit } from '../../util/solana';
 import { ArrowForward, ArrowBack, Info } from '@mui/icons-material';
 import { getRank } from '../../util/getRank';
 import axios from '../../util/Api';
-import LoadingOverlay from 'react-loading-overlay';
 import Footer from './Footer';
 import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
@@ -36,27 +29,15 @@ import {
   createRoom,
   setGameMode,
   getGameTypeList,
-  getStrategies,
 } from '../../redux/Logic/logic.actions';
+import { styled } from '@mui/material/styles';
+
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import styled from 'styled-components';
 import { getCustomTheme } from '../../config/theme';
 import GameSelection from '../CreateGame/GameSelection';
-
-// Random GIF selection for loading animation
-const gifUrls = [
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif',
-];
-
-const getRandomGifUrl = () => {
-  const randomIndex = Math.floor(Math.random() * gifUrls.length);
-  return gifUrls[randomIndex];
-};
 
 const GlassContainer = styled(Box)`
   background: ${({ isDarkMode }) =>
@@ -74,6 +55,41 @@ const GlassContainer = styled(Box)`
   transition: all 0.3s ease;
 `;
 
+const GlassMuiButton = styled(Button)(({ theme, isDarkMode, isActive }) => ({
+  background: isActive
+    ? 'rgba(211, 47, 47, 0.8)'
+    : isDarkMode
+    ? 'rgba(255, 255, 255, 0.12)'
+    : 'rgba(255, 255, 255, 0.5)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+  border: `1px solid ${
+    isActive
+      ? 'rgba(211, 47, 47, 0.8)'
+      : isDarkMode
+      ? 'rgba(255, 255, 255, 0.08)'
+      : 'rgba(255, 255, 255, 0.5)'
+  }`,
+  color: isActive
+    ? 'white'
+    : isDarkMode
+    ? 'rgba(255, 255, 255, 0.9)'
+    : 'rgba(0, 0, 0, 0.8)',
+  fontWeight: isActive ? 600 : 400,
+  padding: '8px 16px',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  textTransform: 'none',
+  minWidth: '60px',
+  '&:hover': {
+    background: isDarkMode
+      ? 'rgba(211, 47, 47, 0.6)'
+      : 'rgba(211, 47, 47, 0.6)',
+    color: 'white',
+    border: '1px solid rgba(211, 47, 47, 0.6)',
+  },
+}));
 
 function CreateGame() {
   const dispatch = useDispatch();
@@ -131,10 +147,6 @@ function CreateGame() {
   const [qsGameType, setQsGameType] = useState(2);
   const [localBalance, setLocalBalance] = useState(balance);
 
-  // Confirmation dialog
-  const [openDialog, setOpenDialog] = useState(false);
-  const [skipConfirm, setSkipConfirm] = useState(localStorage.getItem('hideConfirmModal') === 'true');
-
   // Mobile responsiveness
   useEffect(() => {
     const handleResize = () => {
@@ -187,7 +199,7 @@ function CreateGame() {
     dispatch(setGameMode(gameTypeName));
     initializeGameType(gameTypeName, true);
 
-    return () => { };
+    return () => {};
   }, [dispatch, game_type_name, initializeGameType]);
 
   // Update game type when URL changes
@@ -306,7 +318,7 @@ function CreateGame() {
         return;
       }
       if (gameMode === 'Custom' && gameCode === '') {
-        dispatch(errorMsgBar("YOU DIDN'T GENERATE A GAME MOTHERFUCKER!"));
+        dispatch(errorMsgBar("YOU DIDN'T GENERATE A GAME MOTHERFUintoCKER!"));
         return;
       }
 
@@ -392,7 +404,7 @@ function CreateGame() {
   // Create room with image upload
   const createRoomWithDeposit = async () => {
     setCreatingRoom(true);
-  
+
     // Step 1: Trigger SOL deposit
     const depositResult = await sendSolDeposit(
       dispatch,
@@ -403,23 +415,20 @@ function CreateGame() {
       account,
       localBalance,
       () => {
-        console.log('Deposit successful');
-      },
-      () => {
         console.error('Deposit failed');
         setCreatingRoom(false);
       }
     );
-  
+
     if (!depositResult.success) {
       console.error('Deposit failed, aborting room creation');
       return;
     }
-  
+
     // Step 2: Proceed with image upload and room creation
     await createRoomWithImage();
   };
-  
+
   const createRoomWithImage = async () => {
     try {
       const saveImage = (imageSrc) => {
@@ -429,23 +438,23 @@ function CreateGame() {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = imageSrc;
-  
+
           img.onload = () => {
             const maxWidth = 250;
             let width = img.width;
             let height = img.height;
-  
+
             if (width > maxWidth) {
               height *= maxWidth / width;
               width = maxWidth;
             }
-  
+
             canvas.width = width;
             canvas.height = height;
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
-  
+
             canvas.toBlob((blob) => {
               if (blob) {
                 resolve(blob);
@@ -454,32 +463,32 @@ function CreateGame() {
               }
             }, 'image/png');
           };
-  
+
           img.onerror = (error) => {
             reject('Error processing image: ' + error);
           };
         });
       };
-  
+
       const resizedBlob = await saveImage(image);
       const formData = new FormData();
       formData.append('file', resizedBlob, 'resized-image.png');
-  
+
       const response = await axios.post('/game/upload-to-pinata', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
+
       if (response.status !== 200) {
         throw new Error('Server responded with non-200 status.');
       }
-  
+
       const { success, imageUrl, message } = response.data;
       if (!success || !imageUrl) {
         throw new Error(message || 'Upload failed, no imageUrl received.');
       }
-  
+
       const fullState = {
         game_type: gameType,
         game_mode: gameMode,
@@ -512,7 +521,7 @@ function CreateGame() {
         description,
         rps_game_type: rpsGameType,
       };
-  
+
       await dispatch(createRoom(fullState, navigate));
     } catch (error) {
       console.error('[Front-end] Error uploading/resizing image:', error);
@@ -520,18 +529,6 @@ function CreateGame() {
     } finally {
       setCreatingRoom(false);
     }
-  };
-  
-  const handleConfirm = async () => {
-    if (skipConfirm) {
-      localStorage.setItem('hideConfirmModal', 'true');
-    }
-    setOpenDialog(false);
-    await createRoomWithDeposit();
-  };
-
-  const handleCancel = () => {
-    setOpenDialog(false);
   };
 
   // Game type selection handler
@@ -583,71 +580,64 @@ function CreateGame() {
         />
 
         {gameMode === 'QS' && (
-          <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography
-                variant="h6"
-                component="h3"
-                className="game-sub-title"
+          <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography
+              variant="h6"
+              component="h3"
+              className="game-sub-title"
+              sx={{
+                fontWeight: 600,
+                position: 'relative',
+                color: isDarkMode ? '#fff' : '#000',
+                '&:after': {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: -6,
+                  left: 0,
+                  width: '40px',
+                  height: '3px',
+                  background: theme.palette.error.main,
+                  borderRadius: '2px',
+                },
+              }}
+            >
+              Choose a Game Type
+            </Typography>
+            <Tooltip
+              title="Select the multiplier of the player, 5x is typically the safest option for the Host."
+              placement="top"
+            >
+              <Info
                 sx={{
-                  fontWeight: 600,
-                  position: 'relative',
-                  color: isDarkMode ? '#fff' : '#000',
-                  '&:after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: -6,
-                    left: 0,
-                    width: '40px',
-                    height: '3px',
-                    background: theme.palette.error.main,
-                    borderRadius: '2px',
-                  },
+                  cursor: 'pointer',
+                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  '&:hover': { color: theme.palette.error.main },
+                  transition: 'color 0.2s ease',
+                }}
+              />
+            </Tooltip>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {[2, 3, 4, 5].map((i) => (
+              <GlassMuiButton
+                key={i}
+                isDarkMode={isDarkMode}
+                isActive={qsGameType === i}
+                onClick={() => {
+                  onChangeState({
+                    qs_game_type: i,
+                    max_return: betAmount * Number(i),
+                    public_bet_amount: convertToCurrency(betAmount * Number(i - 1), solPrice),
+                    selected_qs_position: 0,
+                  });
                 }}
               >
-                Choose a Game Type
-              </Typography>
-              <Tooltip
-                title="Select the multiplier of the player, 5x is typically the safest option for the Host."
-                placement="top"
-              >
-                <Info
-                  sx={{
-                    cursor: 'pointer',
-                    color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-                    '&:hover': { color: theme.palette.error.main },
-                    transition: 'color 0.2s ease',
-                  }}
-                />
-              </Tooltip>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-              {[2, 3, 4, 5].map((i) => (
-                <Button
-                  key={i}
-                  variant="outlined"
-                  isDarkMode={isDarkMode}
-                  isActive={qsGameType === i}
-                  onClick={() => {
-                    onChangeState({
-                      qs_game_type: i,
-                      max_return: betAmount * Number(i),
-                      public_bet_amount: convertToCurrency(betAmount * Number(i - 1), solPrice),
-                      selected_qs_position: 0,
-                    });
-                  }}
-                  sx={{
-                    minWidth: '60px',
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    fontWeight: 500,
-                  }}
-                >
-                  {i}x
-                </Button>
-              ))}
-            </Box>
-          </GlassContainer>
+                {i}x
+              </GlassMuiButton>
+            ))}
+          </Box>
+        </GlassContainer>
         )}
 
         <CoinInfo
@@ -698,8 +688,8 @@ function CreateGame() {
         step={step}
         child_step={childStep}
         isPlaying={isPlaying}
-        handleUrlChange={() => { }}
-        handleSubmit={() => { }}
+        handleUrlChange={() => {}}
+        handleSubmit={() => {}}
         handleDescriptionChange={handleDescriptionChange}
       />
     );
@@ -725,7 +715,7 @@ function CreateGame() {
             variant="outlined"
             isDarkMode={isDarkMode}
             isActive={false}
-            color='error'
+            color="error"
             startIcon={<ArrowBack />}
             onClick={onPrevButtonClicked}
             sx={{ borderRadius: '8px', textTransform: 'none' }}
@@ -741,17 +731,14 @@ function CreateGame() {
                 <StepLabel
                   StepIconProps={{
                     sx: {
-                      // Style for completed steps (tick mark)
                       '&.Mui-completed': {
-                        color: '#D32F2F', // Red color for the tick
+                        color: '#FF0000',
                       },
-                      // Optional: Style for active step (if you want the active step to have a red circle or other styling)
                       '&.Mui-active': {
-                        color: '#D32F2F', // Red for active step
+                        color: '#FF0000',
                       },
-                      // Optional: Style for inactive steps
                       '&:not(.Mui-completed):not(.Mui-active)': {
-                        color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', // Default for inactive steps
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
                       },
                     },
                   }}
@@ -774,18 +761,32 @@ function CreateGame() {
         {step === 2 ? (
           <Button
             variant="contained"
-            color='error'
+            color="error"
             isDarkMode={isDarkMode}
             isActive={true}
-            onClick={createRoomWithDeposit}
-            sx={{ borderRadius: '8px', textTransform: 'none' }}
+            onClick={() => createRoomWithDeposit()} // Open confirmation dialog
+            disabled={creatingRoom}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
           >
-            Create Room
+            {creatingRoom ? (
+              <>
+                <CircularProgress size={20} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                Creating...
+              </>
+            ) : (
+              'Create Room'
+            )}
           </Button>
         ) : (
           <Button
             variant="contained"
-            color='error'
+            color="error"
             isDarkMode={isDarkMode}
             isActive={true}
             endIcon={<ArrowForward />}
@@ -801,123 +802,75 @@ function CreateGame() {
 
   // Main render
   return (
-    <LoadingOverlay
-      className="custom-loading-overlay"
-      active={creatingRoom}
-      spinner={
-        <Box sx={{ textAlign: 'center' }}>
-          <img
-            src={getRandomGifUrl()}
-            alt="Random Spinner"
-            style={{
-              width: '60px',
-              display: 'block',
-              margin: '0 auto',
-              marginBottom: '16px',
-            }}
-          />
-          <Typography variant="body1" sx={{ color: isDarkMode ? '#fff' : '#000' }}>
-            Creating Battle Room...
-          </Typography>
-        </Box>
-      }
-    >
-      <Box className="main-game" isDarkMode={isDarkMode}>
-        {isMobile && selectedMobileTab === 'chat' && (
-          <Drawer
-            className="mat-chat"
-            variant="persistent"
-            anchor="left"
-            open={isDrawerOpen}
+    <Box className="main-game" isDarkMode={isDarkMode}>
+      {isMobile && selectedMobileTab === 'chat' && (
+        <Drawer
+          className="mat-chat"
+          variant="persistent"
+          anchor="left"
+          open={isDrawerOpen}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: '260px',
+              bgcolor: isDarkMode ? '#1E293B' : '#fff',
+              borderRight: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
+            },
+          }}
+        >
+          <ChatPanel />
+        </Drawer>
+      )}
+
+      <Box className="main-panel" sx={{ maxWidth: '1200px', mx: 'auto', width: '100%' }}>
+       
+
+        <Paper
+          elevation={0}
+          sx={{
+            background: 'transparent',
+            borderRadius: '16px',
+            pl: { xs: 2, md: 3 },
+            pr: { xs: 2, md: 3 },
+            mb: 4,
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
+            onClick={() => navigate('/')}
             sx={{
-              '& .MuiDrawer-paper': {
-                width: '260px',
-                bgcolor: isDarkMode ? '#1E293B' : '#fff',
-                borderRight: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
+              textTransform: 'none',
+              fontWeight: 500,
+              position: 'absolute',
+              p: isMobile ? '6px' : '8px 16px',
+              minWidth: isMobile ? 'auto' : undefined,
+              '& .MuiButton-startIcon': {
+                marginRight: isMobile ? 0 : '8px',
+                marginLeft: 0,
+              },
+              borderColor: 'error.main',
+              borderWidth: 1,
+              '&:hover': {
+                borderColor: 'error.dark',
               },
             }}
           >
-            <ChatPanel />
-          </Drawer>
-        )}
+            {isMobile ? null : 'Go Back'}
+          </Button>
+          <Box sx={{ mb: 3 }}>
+            <Summary shortVersion={false} />
+          </Box>
+          {step === 1 && step1()}
+          {step === 2 && step2()}
+        </Paper>
 
-        <Box className="main-panel" sx={{ maxWidth: '1200px', mx: 'auto', width: '100%' }}>
-          <Dialog open={openDialog} onClose={handleCancel}>
-            <DialogTitle>Confirm Game Settings</DialogTitle>
-            <DialogContent>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                Are you sure you want to create this game with the current settings?
-              </Typography>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={skipConfirm}
-                    onChange={(e) => setSkipConfirm(e.target.checked)}
-                    color="error"
-                  />
-                }
-                label="Don't show this confirmation again"
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleConfirm} variant="contained" color="error">
-                Confirm
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-
-          <Paper
-            elevation={0}
-            sx={{
-              background: 'transparent',
-              borderRadius: '16px',
-              pl: { xs: 2, md: 3 },
-              pr: { xs: 2, md: 3 },
-              mb: 4,
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
-              onClick={() => navigate('/')}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 500,
-                position: 'absolute',
-                p: isMobile ? '6px' : '8px 16px', // Smaller padding on mobile, standard otherwise
-                minWidth: isMobile ? 'auto' : undefined, // Prevent wide button on mobile
-                '& .MuiButton-startIcon': {
-                  marginRight: isMobile ? 0 : '8px', // Add spacing between icon and text for non-mobile
-                  marginLeft: 0, // Ensure no extra left margin
-                },
-                // Ensure consistent borders with theme
-                borderColor: 'error.main',
-                borderWidth: 1,
-                '&:hover': {
-                  borderColor: 'error.dark',
-                },
-              }}
-            >
-              {isMobile ? null : 'Go Back'} {/* Simplified text expression */}
-            </Button>
-            <Box sx={{ mb: 3 }}>
-
-              <Summary shortVersion={false} />
-            </Box>
-            {step === 1 && step1()}
-            {step === 2 && step2()}
-          </Paper>
-
-          {step !== 4 && actionPanel()}
-          <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
-        </Box>
-
-        <Footer className="footer" open={isDrawerOpen} />
+        {step !== 4 && actionPanel()}
+        <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
       </Box>
-    </LoadingOverlay>
+
+      <Footer className="footer" open={isDrawerOpen} />
+    </Box>
   );
 }
 

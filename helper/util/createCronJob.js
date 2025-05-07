@@ -28,13 +28,10 @@ async function checkConfirmations(io) {
     if (isProcessing) return;
     isProcessing = true;
 
-    // Store socket.io instance
-    let socketio = io;
-
     // --- Process Pending Deposits ---
     const pendingDeposits = await GameTransaction.find({
       status: 'pending',
-      description: { $regex: '^(Joined|Pumped)', $options: 'i' }
+      description: { $regex: '^(Joined|Pumped|Created)', $options: 'i' }
     });
 
     for (const transaction of pendingDeposits) {
@@ -68,7 +65,7 @@ async function checkConfirmations(io) {
       const depositSOL = depositLamports / LAMPORTS_PER_SOL;
 
       const epsilon = 0.00001;
-      const amountDiff = Math.abs(depositSOL - transaction.amount);
+      const amountDiff = Math.abs(depositSOL - Math.abs(transaction.amount));
 
       if (amountDiff <= epsilon) {
         const user = await User.findById(transaction.user);
@@ -78,7 +75,7 @@ async function checkConfirmations(io) {
         }
 
         transaction.status = 'completed';
-        transaction.amount = depositSOL;
+        transaction.amount = -  depositSOL;
         // user.balance += depositSOL;
 
         // Referral Logic
@@ -175,6 +172,7 @@ async function checkConfirmations(io) {
       $or: [
         { description: { $regex: '^winnings', $options: 'i' } },
         { description: { $regex: '^jeeted', $options: 'i' } },
+        { description: { $regex: '^rugged', $options: 'i' } },
       ],
     });
 

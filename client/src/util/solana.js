@@ -46,7 +46,6 @@ export const sendSolDeposit = async (
 
     // 3) Validate wallet
     if (!account?.publicKey) {
-      console.log("a")
       dispatch(errorMsgBar('Wallet not connected.'));
       onError();
       return { success: false };
@@ -71,6 +70,7 @@ export const sendSolDeposit = async (
     const signature = await window.solana.signAndSendTransaction(transaction);
     await connection.confirmTransaction(signature);
 
+    console.log("type, name±————", type, name)
     // 7) Notify backend of successful deposit
     const result = await axios.post('/stripe/sol_deposit', {
       account,
@@ -83,7 +83,6 @@ export const sendSolDeposit = async (
 
     if (result.data.success) {
       dispatch(successMsgBar(result.data.message));
-      console.log("result.data.newTransaction———————", result.data.newTransaction)
       dispatch(addNewTransaction(result.data.newTransaction));
 
       // 8) Fetch and update Solana balance

@@ -66,7 +66,7 @@ const StatisticsForm = (props) => {
   };
 
   const getHexagonColor = (score) => {
-    if (score < 1000) return 'red';
+    if (score < 1000) return '#FF0000';
     if (score === 1000) return 'white';
     return 'green';
   };
@@ -214,7 +214,7 @@ const StatisticsForm = (props) => {
                 </div>
               </TableCell>
             </TableRow>
-            <TableRow>
+            {/* <TableRow>
               <TableCell>
                 <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
                   CREDIT SCORE
@@ -249,7 +249,7 @@ const StatisticsForm = (props) => {
                   </svg>
                 </div>
               </TableCell>
-            </TableRow>
+            </TableRow> */}
           </TableBody>
         </Table>
       </div>

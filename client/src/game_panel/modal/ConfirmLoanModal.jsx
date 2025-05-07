@@ -276,7 +276,7 @@ const ConfirmLoanModal = () => {
                           />
 
                           {errorMessage && (
-                            <Box sx={{ color: 'red', fontSize: '0.875rem', mt: 1 }}>
+                            <Box sx={{ color: '#FF0000', fontSize: '0.875rem', mt: 1 }}>
                               {errorMessage}
                             </Box>
                           )}
@@ -331,7 +331,7 @@ const ConfirmLoanModal = () => {
                   <Box
                     component="span"
                     onClick={toggleExpand}
-                    sx={{ color: '#D32F2F', textDecoration: 'underline', cursor: 'pointer' }}
+                    sx={{ color: '#FF0000', textDecoration: 'underline', cursor: 'pointer' }}
                   >
                     terms and conditions:
                   </Box>
@@ -344,7 +344,7 @@ const ConfirmLoanModal = () => {
                         <td className="list-number">1.</td>
                         <td>
                           The loan amount is{' '}
-                          <Box component="span" sx={{ color: '#D32F2F' }}>
+                          <Box component="span" sx={{ color: '#FF0000' }}>
                             [{convertToCurrency(parseFloat(responseText), solPrice)}]
                           </Box>
                           .
@@ -353,7 +353,7 @@ const ConfirmLoanModal = () => {
                       <tr>
                         <td className="list-number">2.</td>
                         <td>
-                          The loan period is <Box component="span" sx={{ color: '#D32F2F' }}>
+                          The loan period is <Box component="span" sx={{ color: '#FF0000' }}>
                             [{loan_period}]
                           </Box>{' '}
                           days.
@@ -367,7 +367,7 @@ const ConfirmLoanModal = () => {
                         <td className="list-number">4.</td>
                         <td>
                           Interest may be applicable on the loan amount as per the agreed Interest Rate:{' '}
-                          <Box component="span" sx={{ color: '#D32F2F' }}>
+                          <Box component="span" sx={{ color: '#FF0000' }}>
                             [{(apy * 100).toFixed(1)}%]
                           </Box>
                           .

@@ -93,7 +93,6 @@ function SignupModal({ modalIsOpen, closeModal, openLoginModal }) {
   // React onSubmit handler
   const onSubmitForm = async (e) => {
     e.preventDefault();
-    console.log('Called onSubmitForm!');
     const token = await executeRecaptcha();
     setRecaptchaToken(token);
     if (!token) {

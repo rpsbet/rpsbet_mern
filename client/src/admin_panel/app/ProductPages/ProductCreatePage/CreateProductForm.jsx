@@ -123,14 +123,14 @@ function CreateProductForm({
                         alignItems: 'center',
                         bgcolor: 'rgba(255, 0, 0, 0.1)',
                         p: 1,
-                        borderLeft: '2px solid #D32F2F',
+                        borderLeft: '2px solid #FF0000',
                         borderRadius: 1,
                         mt: 1,
                       }}
                     >
                       <FontAwesomeIcon
                         icon={faExclamationTriangle}
-                        style={{ color: '#D32F2F', marginRight: '10px' }}
+                        style={{ color: '#FF0000', marginRight: '10px' }}
                       />
                       <Typography variant="body2">
                         PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE
@@ -305,7 +305,7 @@ function CreateProductForm({
             component="span"
             onClick={toggleExpand}
             sx={{
-              color: '#D32F2F',
+              color: '#FF0000',
               textDecoration: 'underline',
               cursor: 'pointer',
             }}

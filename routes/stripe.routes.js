@@ -597,7 +597,6 @@ const getJWTToken = async (email, password) => {
 router.post('/sol_deposit', auth, async (req, res) => {
   try {
     let { amount, txtHash, account, room_id, room_name, type } = req.body;
-
     if (!req.user?._id) {
       throw new Error('User not authenticated');
     }
@@ -610,7 +609,7 @@ router.post('/sol_deposit', auth, async (req, res) => {
     if (currentUser.isWithdrawing) {
       return res.json({
         success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
       });
     }
 
@@ -623,6 +622,19 @@ router.post('/sol_deposit', auth, async (req, res) => {
     if (!amount || !txtHash || !account) {
       console.error('Invalid input:', { amount, txtHash, account });
       return res.status(400).json({ success: false, message: 'Invalid input' });
+    }
+
+    // Validate type
+    const validTypes = ['join', 'pump', 'create_game'];
+    if (!validTypes.includes(type)) {
+      console.error('Invalid type:', type);
+      return res.status(400).json({ success: false, message: 'Invalid transaction type' });
+    }
+
+    // For create_game, room_id may be null since the room isn't created yet
+    if (type === 'create_game' && !room_name) {
+      console.error('Room name required for create_game');
+      return res.status(400).json({ success: false, message: 'Room name is required for creating a game' });
     }
 
     // Make sure this transaction hash hasn't been used before
@@ -638,16 +650,30 @@ router.post('/sol_deposit', auth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Deposit amount is invalid.' });
     }
 
-    console.log("room", room_id)
-    // Create a new transaction record
+    // Set transaction description based on type
+    let description;
+    switch (type) {
+      case 'join':
+        description = `Joined ${room_name}`;
+        break;
+      case 'pump':
+        description = `Pumped ${room_name}`;
+        break;
+      case 'create_game':
+        description = `Created ${room_name}`;
+        break;
+      default:
+        description = `Transaction for ${room_name}`;
+    }
+
     const newTransaction = new gameTransaction({
       user: currentUser._id,
-      amount: numericAmount,
-      description: type === 'join' ? `Joined ${room_name}` : `Pumped ${room_name}`,
+      amount: -numericAmount,
+      description,
       hash: txtHash,
-      room: room_id,
-      name: room_name,
-      status: 'pending'
+      room: room_id || null, // Allow null for create_game
+      room_name: room_name,
+      status: 'pending',
     });
     await newTransaction.save();
 
@@ -656,7 +682,7 @@ router.post('/sol_deposit', auth, async (req, res) => {
       user_id: currentUser._id,
       payment_method: 'Web3',
       payment_type: 'Deposit',
-      amount: numericAmount
+      amount: -numericAmount,
     });
     await receipt.save();
 
@@ -664,7 +690,7 @@ router.post('/sol_deposit', auth, async (req, res) => {
     if (!currentUser.accounts.includes(account.publicKey)) {
       currentUser.accounts.push(account.publicKey);
       await saveDocumentWithRetry(currentUser);
-      console.log("Added new wallet address to user:", account);
+      console.log('Added new wallet address to user:', account);
     }
 
     // Return success
@@ -672,7 +698,7 @@ router.post('/sol_deposit', auth, async (req, res) => {
       success: true,
       balance: currentUser.balance,
       newTransaction,
-      message: `Finalizing...`
+      message: `Creating Block...`,
     });
   } catch (err) {
     console.log('Error in sol_deposit:', err);
@@ -831,7 +857,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
     // Validate 'toAddress'
     const toAddress = req.body.addressTo;
     if (!toAddress) {
-      console.log("Invalid 'to' address");
       return res.json({ success: false, message: 'Invalid Solana wallet address.' });
     }
 

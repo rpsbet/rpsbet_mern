@@ -103,7 +103,7 @@ class RpsPriceChart extends Component {
                     <TrendingUpIcon style={{ color: '#4CAF50' }} />
                     <Typography variant="h6" style={{ marginLeft: '5px' }}>24h Price:</Typography>
                   </Box>
-                  <Typography variant="h6" style={{ fontWeight: 'bold', color: priceChanges.h24 >= 0 ? '#4CAF50' : '#D32F2F' }}>
+                  <Typography variant="h6" style={{ fontWeight: 'bold', color: priceChanges.h24 >= 0 ? '#4CAF50' : '#FF0000' }}>
                     {priceChanges.h24}%
                   </Typography>
                 </Grid>

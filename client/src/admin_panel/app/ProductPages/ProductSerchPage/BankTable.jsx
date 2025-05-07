@@ -143,7 +143,7 @@ const ProductCardActions = styled(CardActions)`
 
 // Helper for profit text color
 const ProfitSpan = styled.span`
-  color: ${(props) => (props.negative ? '#D32F2F' : '#4caf50')};
+  color: ${(props) => (props.negative ? '#FF0000' : '#4caf50')};
   font-weight: 600;
 `;
 

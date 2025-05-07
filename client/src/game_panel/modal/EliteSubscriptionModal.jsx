@@ -42,10 +42,10 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
 
 
   const getButtonText = useCallback((type) => {
-    if (type === 'red' && !user?.elite && !user?.elite_free_used) return 'Start Free Month';
+    if (type === '#FF0000' && !user?.elite && !user?.elite_free_used) return 'Start Free Month';
     if (!user?.elite) return 'Subscribe Now';
     if (type === user.elite) return 'Current Plan';
-    if (type === 'red' && user.elite === 'black') return 'Downgrade';
+    if (type === '#FF0000' && user.elite === 'black') return 'Downgrade';
     if (type === 'black' && user.elite === 'red') return 'Upgrade';
     return 'Subscribe Now';
   }, [user]);
@@ -60,7 +60,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
   }, [user?.balance]);
 
   const handlePurchaseSubscription = async (type) => {
-    if (type === 'red' && !user?.elite_free_used) {
+    if (type === '#FF0000' && !user?.elite_free_used) {
       setLoading((prev) => ({ ...prev, [type]: true }));
       await dispatch(purchaseEliteSubscription(type));
       setLoading((prev) => ({ ...prev, [type]: false }));
@@ -92,7 +92,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
   };
 
   const getSubscriptionPrice = useCallback((type) => {
-    if (type === 'red' && !user?.elite && !user?.elite_free_used) {
+    if (type === '#FF0000' && !user?.elite && !user?.elite_free_used) {
       return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', textDecoration: 'line-through' }}>
@@ -107,7 +107,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-          {type === 'red' ? '0.1' : '0.4'} <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
+          {type === '#FF0000' ? '0.1' : '0.4'} <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
         </Typography>
         <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary' }}>/month</Typography>
       </Box>
@@ -280,7 +280,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                   </Typography>
                 </Box>
                 <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                  {getSubscriptionPrice('red')}
+                  {getSubscriptionPrice('#FF0000')}
 
                   <Divider sx={{ my: 2 }} />
 
@@ -308,7 +308,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                 <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
                   <Button
                     variant="contained"
-                    onClick={() => handlePurchaseSubscription('red')}
+                    onClick={() => handlePurchaseSubscription('#FF0000')}
                     disabled={loading.red || !sufficientBalance.red || user?.elite === 'red'}
                     sx={{
                       bgcolor: '#d81719',
@@ -330,7 +330,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                     ) : !sufficientBalance.red ? (
                       'Not Enough Balance'
                     ) : (
-                      getButtonText('red')
+                      getButtonText('#FF0000')
                     )}
                   </Button>
                 </CardActions>

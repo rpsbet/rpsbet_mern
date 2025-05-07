@@ -2,7 +2,7 @@
 :root {
   --primary-color: #48ff00;
   /* Green */
-  --secondary-color: #D32F2F;
+  --secondary-color: #FF0000;
   /* Red */
   --white-color: #f9f9f9;
   /* White */
@@ -306,7 +306,7 @@ a:hover {
 }
 
 .tutorial p {
-  background: linear-gradient(#D32F2F, #dc3545);
+  background: linear-gradient(#FF0000, #dc3545);
   border-radius: 1em;
   padding: 10px 15px;
   position: relative;
@@ -533,12 +533,12 @@ h4.game_header {
 }
 
 .debt {
-  background-color: #D32F2F66 !important;
+  background-color: #FF000066 !important;
   margin-bottom: 5px !important;
 }
 
 .debt:hover {
-  background-color: #D32F2Fdd !important;
+  background-color: #FF0000dd !important;
   transition: 0.1s;
   transform: translateY(-2) !important;
 }
@@ -654,21 +654,13 @@ td {
   fill: #ff0003;
 }
 
-div.table.main-history-table .table-row .table-cell .avatar div {
-  border: unset !important;
-  box-shadow: unset !important;
-}
 
-div.table.main-history-table .table-row .table-cell .avatar,
+.history-row .player .avatar,
 .room img.game-type-icon {
-  width: 24px;
-  height: 24px;
+  width: 24px !important;
+  height: 24px !important;
   border-radius: 0.3em;
   margin-right: 5px;
-}
-
-.room img.game-type-icon {
-  padding: 4px;
 }
 
 div.table.my-chat-table {
@@ -867,14 +859,6 @@ div.table.my-chat-table .table-row .table-cell.message-date {
   font-weight: 700;
 }
 
-img.game-type-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 0.3em;
-  background: #7575754d;
-  margin-right: 10px;
-  padding: 6px;
-}
 
 .chat-line .avatar {
   overflow: visible !important;
@@ -1189,12 +1173,6 @@ input[type='number'] {
   color: unset !important;
 }
 
-
-.value {
-  font-size: 0.9rem !important;
-  text-align: right !important;
-}
-
 #my-products .value,
 #all-loans .value {
   color: #ff8500 !important;
@@ -1424,53 +1402,6 @@ table td.amount.red {
   background: transparent; /* Ensure the canvas container is transparent */
 }
 
-.pre-summary-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #080808;
-  margin-top: 0.25rem;
-  padding: 1.5em;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  width: 100%;
-  position: relative;
-}
-
-.game-page .pre-summary-panel > div {
-  background-repeat: no-repeat;
-  background-position: left center;
-  font-size: 16px;
-  font-weight: normal;
-  line-height: 32px;
-}
-
-.game-page .pre-summary-panel > div ~ div {
-  margin: 0 45px;
-}
-
-.pre-summary-panel.title {
-  overflow-x: auto !important;
-}
-
-.pre-summary-panel .data-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: space-between;
-  text-align: center;
-  max-width: 100px;
-  min-width: 150px !important;
-}
-
-.pre-summary-panel .label {
-  font-weight: bold;
-  font-size: 0.65em;
-  white-space: nowrap;
-  padding-top: 0px;
-}
-
 h6.score {
   background: #404040;
   color: var(--white-color);
@@ -1486,12 +1417,6 @@ h6.score {
   display: table;
   margin: -60px 100px 20px 220px;
   position: relative;
-}
-
-.pre-summary-panel .value {
-  font-size: 1.25rem;
-  font-weight: bold;
-  white-space: nowrap;
 }
 
 .pre-summary-panel div.room-id {
@@ -1637,13 +1562,6 @@ h6.score {
   width: 100%;
 }
 
-.create-game-panel .game-page .game-contents .game-info-panel button.active,
-.bet-amount button.active,
-.game-page .game-contents .game-info-panel #rps-radio button.active {
-  color: var(--white-color);
-  box-shadow: none !important;
-  border: 3px solid var(--yellow-color);
-}
 
 .game-page .game-contents .game-info-panel .edit-amount-panel {
   margin-bottom: 16px;
@@ -2193,7 +2111,7 @@ svg#delete:hover {
 }
 
 .chat-text a {
-  color: #D32F2F !important;
+  color: #FF0000 !important;
 }
 
 .chat-text a:hover {
@@ -2320,7 +2238,7 @@ svg#delete:hover {
   height: 56px !important;
   border-bottom: 3px solid #810000;
   border-top: 3px solid #fd5e5e;
-  background-color: #D32F2F;
+  background-color: #FF0000;
 }
 
 #drawer-btn:active {
@@ -2463,89 +2381,10 @@ div.table.my-chat-table .table-row .table-cell:last-child {
   height: 24px;
 }
 
-.leaderboards-page table {
-  margin-top: 16px;
-}
-
-.leaderboards-page table tr {
-  background-color: transparent;
-}
-
-.leaderboards-page table th {
-  border-top: none;
-  text-align: right;
-  white-space: nowrap;
-}
-
 table#balance-history td {
   border-bottom: none !important;
 }
 
-.leaderboards-page table td {
-  color: var(--white-color);
-  text-align: center;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.leaderboards-page table td div {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.data-item .label {
-  color: #aaa !important;
-  /* font-size: x-small; */
-}
-
-.data-item .value {
-  font-size: 0.9em !important;
-}
-
-.data-item .value.host {
-  margin: auto;
-}
-
-.data-item .avatar {
-  margin-right: unset !important;
-}
-
-.data-item .value.bankroll {
-  display: flex;
-  height: 30px;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-
-.leaderboards-page table th.player,
-.leaderboards-page table td.player {
-  text-align: left;
-}
-
-.leaderboards-page table th:first-child {
-  border-top-left-radius: 8px;
-}
-
-.leaderboards-page table th:last-child {
-  border-top-right-radius: 8px;
-}
-
-.leaderboards-page table tr:last-child td:first-child {
-  border-bottom-left-radius: 8px;
-}
-
-.leaderboards-page table tr:last-child td:last-child {
-  border-bottom-right-radius: 8px;
-}
-
-.leaderboards-page table tr:last-child td:last-child div {
-  border-bottom-right-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 .loading-spinner {
   border: 3px solid rgba(0, 0, 0, 0.1);
@@ -3019,7 +2858,7 @@ circle {
 .label.red-text,
 .red-text,
 .cell .red {
-  color: #D32F2F !important;
+  color: #FF0000 !important;
 }
 
 .green-text {
@@ -3041,7 +2880,7 @@ circle {
 
 .disclaimer-web2 {
   color: #ff5000;
-  background: #D32F2F33 !important;
+  background: #FF000033 !important;
 }
 
 .disclaimer-web3 {
@@ -3369,18 +3208,6 @@ circle {
   white-space: nowrap;
 }
 
-#balance {
-  height: 32px;
-  padding: 0px 0px 32px 8px;
-  line-height: 28px;
-  cursor: pointer;
-  background: #cbcbcb;
-  font-size: 1em;
-  font-weight: 600;
-  white-space: nowrap;
-  border: 1px solid #d81719;
-  border-radius: 0.3em;
-}
 
 #balance svg {
   color: #fff;
@@ -3642,7 +3469,7 @@ circle {
 .wheel {
   margin: 30px auto;
   border: 4px solid #f4f4f4;
-  box-shadow: 0px 2px 10px 5px #D32F2F;
+  box-shadow: 0px 2px 10px 5px #FF0000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3691,29 +3518,6 @@ circle {
   color: #f10000 !important;
 }
 
-.transaction-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  border-radius: 1em;
-}
-
-.transaction-table th,
-.transaction-table td {
-  padding: 2px 10px;
-  text-align: center;
-}
-
-.transaction-table th {
-  background: linear-gradient(#414141, #c4c4c4);
-  color: rgb(107, 107, 107);
-}
-
-.transaction-table .withdrawal {
-  background: linear-gradient(43deg, #ec4700, #dd5a5a);
-  color: #fffebd;
-}
-
 .blur {
   filter: blur(5px);
   transition: filter 0.1s ease;
@@ -3726,14 +3530,9 @@ circle {
   transform: translate(-50%, -50%);
   color: #f9f9f9;
   font-size: 22px;
-  background: #D32F2F;
+  background: #FF0000;
   border-radius: 1em;
   padding: 10px 20px;
-}
-
-.transaction-table .deposit {
-  background: linear-gradient(43deg, #0fb54c, #048f01);
-  color: #8cffad;
 }
 
 .modal-footer button.login {

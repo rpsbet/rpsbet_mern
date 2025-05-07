@@ -628,17 +628,45 @@ router.post('/set-referral', auth, async (req, res) => {
 router.get('/user', auth, async (req, res) => {
   try {
     const userId = req.user._id;
+    const cacheKey = `user:${userId}`;
 
+    // Get Redis client from app (set in server.js)
+    const redisClient = req.app.get('redisClient');
+
+    // Check cache
+    let cached;
+    try {
+      cached = await redisClient.get(cacheKey);
+    } catch (redisErr) {
+      console.error('Redis error, bypassing cache:', redisErr);
+    }
+
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+
+    // Fetch data from database
     const transactions = await Transaction.find({ user: userId })
       .sort({ created_at: -1 })
-      .limit(5);
+      .limit(5)
+      .lean(); // Optimize with lean
 
-    res.json({
+    const response = {
       success: true,
       user: req.user,
       transactions,
-    });
+    };
+
+    // Cache for 5 minutes
+    try {
+      await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+    } catch (redisErr) {
+      console.error('Failed to cache:', redisErr);
+    }
+
+    res.json(response);
   } catch (error) {
+    console.error('Error in /user:', error);
     res.json({ success: false, error: error.message });
   }
 });

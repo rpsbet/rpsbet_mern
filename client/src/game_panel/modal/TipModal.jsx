@@ -130,7 +130,7 @@ const TipModal = (
                   </TableRow>
                   <TableRow>
                     <TableCell>TIP AMOUNT:</TableCell>
-                    <TableCell style={{ color: 'red' }}>
+                    <TableCell style={{ color: '#FF0000' }}>
                       {convertToCurrency((+tipAmount || 0) * -1, solPrice)}
                     </TableCell>
                   </TableRow>

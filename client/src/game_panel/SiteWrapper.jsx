@@ -62,7 +62,7 @@ import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 import {
-  acCalculateRemainingLoans,
+  // acCalculateRemainingLoans,
   setCurrentOfferTargetInfo
 } from '../redux/Loan/loan.action';
 
@@ -109,16 +109,16 @@ const AllTransactionsModal = lazy(() => import('./modal/AllTransactionsModal.jsx
 const ProfileModal = lazy(() => import('./modal/ProfileModal'));
 const PlayerModal = lazy(() => import('./modal/PlayerModal'));
 const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal'));
-const MarketplaceModal = lazy(() => import('./modal/MarketplaceModal'));
-const BankModal = lazy(() => import('./modal/BankModal'));
-const DebtsModal = lazy(() => import('./modal/DebtsModal'));
+// const MarketplaceModal = lazy(() => import('./modal/MarketplaceModal'));
+// const BankModal = lazy(() => import('./modal/BankModal'));
+// const DebtsModal = lazy(() => import('./modal/DebtsModal'));
 const LeaderboardsModal = lazy(() => import('./modal/LeaderboardsModal'));
-const ConfirmTradeModal = lazy(() => import('./modal/ConfirmTradeModal'));
-const ConfirmLoanModal = lazy(() => import('./modal/ConfirmLoanModal'));
-const OfferLoanModal = lazy(() => import('./modal/OfferLoanModal'));
-const ListItemModal = lazy(() => import('./modal/ListItemModal'));
-const DeListItemModal = lazy(() => import('./modal/DeListItemModal'));
-const DeListLoanModal = lazy(() => import('./modal/DeListLoanModal'));
+// const ConfirmTradeModal = lazy(() => import('./modal/ConfirmTradeModal'));
+// const ConfirmLoanModal = lazy(() => import('./modal/ConfirmLoanModal'));
+// const OfferLoanModal = lazy(() => import('./modal/OfferLoanModal'));
+// const ListItemModal = lazy(() => import('./modal/ListItemModal'));
+// const DeListItemModal = lazy(() => import('./modal/DeListItemModal'));
+// const DeListLoanModal = lazy(() => import('./modal/DeListLoanModal'));
 const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal'));
 const LoginModal = lazy(() => import('./modal/LoginModal'));
 const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal'));
@@ -162,15 +162,39 @@ const darkTheme = createTheme({
   overrides: customTextFieldStyles
 });
 
-// Helper function to format timestamps
 function updateFromNow(items, timestampField = 'created_at') {
   if (!items) return [];
+
+  // Deep clone items to avoid mutating the original array
   const result = JSON.parse(JSON.stringify(items));
+
   for (let i = 0; i < result.length; i++) {
     if (result[i][timestampField]) {
-      result[i]['from_now'] = Moment(result[i][timestampField]).fromNow();
+      const fromNow = Moment(result[i][timestampField]).fromNow();
+
+      if (fromNow === 'a few seconds ago') {
+        result[i]['from_now'] = 'just now';
+      } else {
+        result[i]['from_now'] = fromNow
+          .replace(' a few', ' a few ')
+          .replace(' seconds', 's')
+          .replace(' minutes', 'm')
+          .replace(' hours', 'h')
+          .replace(' days', 'd')
+          .replace(' weeks', 'w')
+          .replace(' months', 'mo')
+          .replace(' years', 'y')
+          .replace('a second', '1s')
+          .replace('a minute', '1m')
+          .replace('an hour', '1h')
+          .replace('a day', '1d')
+          .replace('a week', '1w')
+          .replace('a month', '1mo')
+          .replace('a year', '1y')
+      }
     }
   }
+
   return result;
 }
 
@@ -250,8 +274,8 @@ function SiteWrapper({ children }) {
   const intervalRef = useRef(null);
   const isUnmountedRef = useRef(false);
 
-   // Initialize app on mount
-   useEffect(() => {
+  // Initialize app on mount
+  useEffect(() => {
     isUnmountedRef.current = false;
 
     const doMount = async () => {
@@ -265,7 +289,7 @@ function SiteWrapper({ children }) {
           dispatch(getUser()),
           dispatch(getNotifications()),
           initializeAudio(),
-          dispatch(acCalculateRemainingLoans()),
+          // dispatch(acCalculateRemainingLoans()),
         ]);
         setWebsiteLoading(false);
       } catch (error) {
@@ -300,7 +324,7 @@ function SiteWrapper({ children }) {
       transports: ['websocket'],
       withCredentials: true,
     });
-  
+
     // Promise to wait for socket connection
     const waitForConnection = new Promise((resolve, reject) => {
       newSocket.on('connect', () => {
@@ -312,11 +336,11 @@ function SiteWrapper({ children }) {
         reject(error);
       });
     });
-  
+
     // Set up event listeners
     const handleOnlineStatusUpdated = data => dispatch(updateOnlineUserList(data.user_list));
     newSocket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
-  
+
     let lastGlobalChat = null;
     const handleGlobalChat = data => {
       if (
@@ -331,16 +355,16 @@ function SiteWrapper({ children }) {
       dispatch(globalChatReceived(data));
     };
     newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
-  
+
     const handleUpdatedRoomList = data => {
       dispatch(setRoomList(data));
       dispatch(endLoading());
     };
     newSocket.on('ROOMS_UPDATED', handleUpdatedRoomList);
-  
+
     const handleRoomEnded = data => dispatch(removeRoomFromList(data.roomId));
     newSocket.on('ROOM_ENDED', handleRoomEnded);
-  
+
     // Wait for connection before dispatching socket
     waitForConnection
       .then(() => {
@@ -349,7 +373,7 @@ function SiteWrapper({ children }) {
       .catch(error => {
         console.error('Failed to connect socket:', error);
       });
-  
+
     return () => {
       newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
       newSocket.off('ROOMS_UPDATED', handleUpdatedRoomList);
@@ -359,7 +383,7 @@ function SiteWrapper({ children }) {
     };
   }, [dispatch, endpoint]);
 
-  
+
   const fetchSolanaBalance = useCallback(async (walletAddress) => {
     try {
       const response = await axios.get('/stripe/get_provider_url');
@@ -425,49 +449,46 @@ function SiteWrapper({ children }) {
     socket.on('UPDATE_BET_RESULT', handleBetResult);
 
     const handleSendNotification = data => {
-    console.log('Received SEND_NOTIFICATION:', data);
-    if (!isMuted || !notificationSounds) {
-      notificationSoundRef.current?.play();
-    }
-    if (isNotificationsAllowed && window.Notification) {
-      const options = { body: data.message, silent: false };
-      if (Notification.permission === 'granted') {
-        new Notification('New Notification', options);
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            dispatch(setNotificationsAllowed(true));
-            new Notification('New Notification', options);
-          }
-        });
+      if (!isMuted || !notificationSounds) {
+        notificationSoundRef.current?.play();
       }
-    }
-    dispatch(addNewNotification(data));
-  };
-  socket.on('SEND_NOTIFICATION', handleSendNotification);
+      if (isNotificationsAllowed && window.Notification) {
+        const options = { body: data.message, silent: false };
+        if (Notification.permission === 'granted') {
+          new Notification('New Notification', options);
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              dispatch(setNotificationsAllowed(true));
+              new Notification('New Notification', options);
+            }
+          });
+        }
+      }
+      dispatch(addNewNotification(data));
+    };
+    socket.on('SEND_NOTIFICATION', handleSendNotification);
 
-  const handleAddTransaction = async (data) => {
-    console.log('Received NEW_TRANSACTION:', data);
-    dispatch(addNewTransaction(data));
-    if (
-      connectedAccount &&
-      data.user === user._id &&
-      data.status === 'completed' &&
-      (data.description.startsWith('Joined') || data.description.startsWith('Pumped'))
-    ) {
-      console.log(`Fetching Solana balance for connectedAccount ${connectedAccount} due to transaction`);
-      await fetchSolanaBalance(connectedAccount);
-    }
-  };
-  socket.on('NEW_TRANSACTION', handleAddTransaction);
+    const handleAddTransaction = async (data) => {
+      dispatch(addNewTransaction(data));
+      if (
+        connectedAccount &&
+        data.user === user._id &&
+        data.status === 'completed' &&
+        (data.description.startsWith('Joined') || data.description.startsWith('Pumped'))
+      ) {
+        await fetchSolanaBalance(connectedAccount);
+      }
+    };
 
-  const handleBalanceUpdate = (data) => {
-    console.log('Received UPDATE_SOLANA_BALANCE:', data);
-    if (data.solanaBalance !== undefined) {
-      dispatch(setSolanaBalance({ solanaBalance: data.solanaBalance }));
-    }
-  };
-  socket.on('UPDATE_SOLANA_BALANCE', handleBalanceUpdate);
+    socket.on('NEW_TRANSACTION', handleAddTransaction);
+
+    const handleBalanceUpdate = (data) => {
+      if (data.solanaBalance !== undefined) {
+        dispatch(setSolanaBalance({ solanaBalance: data.solanaBalance }));
+      }
+    };
+    socket.on('UPDATE_SOLANA_BALANCE', handleBalanceUpdate);
 
 
     // Unread message count
@@ -979,10 +1000,10 @@ function SiteWrapper({ children }) {
                     }}
                   >
                     <Chip
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleBalanceClick(e);
-                    }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleBalanceClick(e);
+                      }}
                       color="error"
                       variant="outlined"
                       label={
@@ -1006,7 +1027,7 @@ function SiteWrapper({ children }) {
                             </Typography>
                           ) : (
                             <Typography variant="body2">
-                             {solanaBalance}
+                              {solanaBalance}
                             </Typography>
                           )}
                         </Box>
@@ -1323,7 +1344,7 @@ function SiteWrapper({ children }) {
                                 width: 8,
                                 height: 8,
                                 borderRadius: '50%',
-                                backgroundColor: 'red',
+                                backgroundColor: '#FF0000',
                               }}
                             />
                           )}
@@ -1437,7 +1458,7 @@ function SiteWrapper({ children }) {
                         winning amount
                       </Box>
                       {' - '}
-                      <Box component="span" sx={{ fontWeight: 'bold', color: '#D32F2F' }}>
+                      <Box component="span" sx={{ fontWeight: 'bold', color: '#FF0000' }}>
                         bet amount
                       </Box>
                       ) and receive less due to:
@@ -1520,8 +1541,8 @@ function SiteWrapper({ children }) {
                         >
                           <TableCell className={isPositive ? 'green-text' : 'red-text'}>
                             {isPositive
-                              ? `+ ${convertToCurrency(row.amount, solPrice)}`
-                              : `- ${convertToCurrency(Math.abs(row.amount), solPrice)}`}
+                              ? `+ ${parseFloat(row.amount).toFixed(4)} SOL (${convertToCurrency(row.amount, solPrice)})`
+                              : `- ${Math.abs(parseFloat(row.amount).toFixed(4))} SOL (${convertToCurrency(Math.abs(row.amount), solPrice)})`}
                           </TableCell>
                           <TableCell sx={{ color: '#fff' }}>{row.description}</TableCell>
                           <TableCell sx={{ color: '#fff' }}>
@@ -1656,7 +1677,7 @@ function SiteWrapper({ children }) {
             />
           </Suspense>
         )}
-        {showBankModal && (
+        {/* {showBankModal && (
           <Suspense fallback={<Typography>Loading Bank...</Typography>}>
             <BankModal
               modalIsOpen={showBankModal}
@@ -1678,7 +1699,7 @@ function SiteWrapper({ children }) {
               isDarkMode={isDarkMode}
             />
           </Suspense>
-        )}
+        )} */}
         {showLoginModal && (
           <Suspense fallback={<Typography>Loading Login...</Typography>}>
             <LoginModal
@@ -1687,7 +1708,7 @@ function SiteWrapper({ children }) {
             />
           </Suspense>
         )}
-        {showDebtsModal && (
+        {/* {showDebtsModal && (
           <Suspense fallback={<Typography>Loading Debts...</Typography>}>
             <DebtsModal
               modalIsOpen={showDebtsModal}
@@ -1695,12 +1716,12 @@ function SiteWrapper({ children }) {
               openDebtsModal={handleOpenDebtsModal}
             />
           </Suspense>
-        )}
-      
-        <Suspense fallback={''}>
+        )} */}
+
+        {/* <Suspense fallback={''}>
           <ListItemModal />
-        </Suspense>
-        <Suspense fallback={''}>
+        </Suspense> */}
+        {/* <Suspense fallback={''}>
           <DeListItemModal />
         </Suspense>
         <Suspense fallback={''}>
@@ -1714,7 +1735,7 @@ function SiteWrapper({ children }) {
         </Suspense>
         <Suspense fallback={''}>
           <OfferLoanModal solPrice={solPrice} socket={socket} />
-        </Suspense>
+        </Suspense> */}
         <Suspense fallback={''}>
           <GamePasswordModal />
         </Suspense>

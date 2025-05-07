@@ -448,51 +448,40 @@ function QuickShoot(props) {
     }
   }, [isPasswordCorrect, localSelectedQs, startedPlaying]);
 
-  // Join game function
   const joinGame = useCallback(
     async (position) => {
       onChangeState({ result: '' });
       setIsLoading(true);
-
+  
       try {
         const resultData = await join({
           bet_amount: parseFloat(bet_amount),
           selected_qs_position: position,
         });
-
+  
         playSound && playSound('ballKick');
-
-        let text;
-        let color;
-
+  
+        let style;
         if (resultData.betResult === 1) {
           playSound && playSound('win');
-          text = '+';
-          color = '#00ff3a';
+          style = { prefix: '+', color: '#00ff3a' }; // Win style
           changeBgColor && changeBgColor(resultData.betResult);
         } else {
-          text = '-';
-          color = '#f50000';
+          style = { prefix: '-', color: '#f50000' }; // Lose style
           playSound && playSound('lose');
           changeBgColor && changeBgColor(resultData.betResult);
         }
-
+  
         const currencyElement = convertToCurrency(Math.abs(resultData.amount), solPrice);
-
+  
         onChangeState({
           result: (
-            <>
-              <span
-                style={{
-                  color,
-                  fontSize: '1.2rem', // Updated font size to match QuickShoot
-                  fontWeight: 'bold',
-                  textShadow: '0 0 10px rgba(0,0,0,0.5)',
-                }}
-              >
-                {text} {currencyElement}
+            <span style={{ color: style.color, fontSize: '1.2rem', fontWeight: 'bold' }}>
+              {style.prefix} {currencyElement}{' '}
+              <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
+                ({Math.abs(resultData.amount).toFixed(4)} SOL)
               </span>
-            </>
+            </span>
           ),
           gameResult: resultData.betResult,
         });
@@ -802,7 +791,7 @@ function QuickShoot(props) {
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             >
-              <Typography variant="h5" sx={{ color: '#D32F2F', fontWeight: 'bold', mb: 2, textTransform: 'uppercase' }}>
+              <Typography variant="h5" sx={{ color: '#FF0000', fontWeight: 'bold', mb: 2, textTransform: 'uppercase' }}>
                 Game Ended
               </Typography>
 
@@ -835,7 +824,7 @@ function QuickShoot(props) {
                   </Button>
                 </Box>
               ) : (
-                <Typography variant="body1" sx={{ textAlign: 'center' }}>
+                <Typography variant="body1" sx={{ textAlign: 'center', color: '#fff'}}>
                   Pool is either being seeded, or the room has ended.
                 </Typography>
               )}

@@ -136,7 +136,7 @@ export class YouTubeVideo extends React.Component {
     };
 
     const sliderStyle = {
-      color: 'red'
+      color: '#FF0000'
     };
 
     return (

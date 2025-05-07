@@ -33,7 +33,6 @@ const AiPanel = ({ isDarkMode, playSound, bankroll, bet_amount, handle2xButtonCl
         predictedBetAmount={predictedBetAmount}
         creator_id={creator_id}
         room_id={roomId}
-        updateUserStrategy={updateUserStrategy}
         updateUserPrompt={updateUserPrompt}
         user_balance={user_balance}
         handleSwitchChange={handleSwitchChange}

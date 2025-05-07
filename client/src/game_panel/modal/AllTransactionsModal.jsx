@@ -18,13 +18,13 @@ import {
   MenuItem,
   CircularProgress,
   Skeleton,
-  Tooltip,
   Link,
+  Tooltip,
+  Chip,
 } from '@mui/material';
 
 import {
   Close as CloseIcon,
-  FileCopy as FileCopyIcon,
   FilterList as FilterListIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
@@ -32,6 +32,9 @@ import {
   CardGiftcard as CardGiftcardIcon,
   Sort as SortIcon,
   Search as SearchIcon,
+  Launch as LaunchIcon,
+  MeetingRoom as MeetingRoomIcon,
+  ContentCopy as ContentCopyIcon,
 } from '@mui/icons-material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -61,13 +64,12 @@ function AllTransactionsModal({
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
+  const [copiedTxHash, setCopiedTxHash] = useState(false);
 
-  // The actual filter, sort, and search values we’re using
+  // The actual filter, sort, and search values we're using
   const [filterType, setFilterType] = useState(null); // e.g. 'showTrades', 'showTips', etc.
   const [sortType, setSortType] = useState('date'); // e.g. 'date', 'amount'
   const [searchQuery, setSearchQuery] = useState(''); // e.g. a string to search in description
-
-  const [copiedRowId, setCopiedRowId] = useState(null);
 
   useEffect(() => {
     // On mount, load initial page if needed
@@ -127,6 +129,13 @@ function AllTransactionsModal({
     // Here, let's do immediate fetch:
     dispatch(getTransactions(1, filterType || '', sortType || 'date', value));
   };
+  
+  // Copy transaction hash to clipboard
+  const copyTxHash = (hash) => {
+    navigator.clipboard.writeText(hash);
+    setCopiedTxHash(true);
+    setTimeout(() => setCopiedTxHash(false), 2000);
+  };
 
   /**
    * Load more if scrolled to the bottom, if more pages are available
@@ -136,6 +145,7 @@ function AllTransactionsModal({
       dispatch(getTransactions(page + 1, filterType, sortType, searchQuery));
     }
   };
+
   /**
    * Called on scroll, checks if at bottom, triggers loadMore
    */
@@ -144,16 +154,6 @@ function AllTransactionsModal({
     if (scrollHeight - scrollTop === clientHeight) {
       handleLoadMore();
     }
-  };
-
-  /**
-   * Copy transaction ID to clipboard
-   */
-  const copyToClipboard = (id) => {
-    navigator.clipboard.writeText(id).then(() => {
-      setCopiedRowId(id);
-      setTimeout(() => setCopiedRowId(null), 1500);
-    });
   };
 
   // Decide which array to render:
@@ -184,7 +184,47 @@ function AllTransactionsModal({
     background: '#080808',
   };
 
+  // New styles for action buttons
+  const actionButtonStyle = {
+    minWidth: 'fit-content',
+    borderRadius: '8px',
+    fontWeight: 'medium',
+    transition: 'all 0.2s',
+    py: 0.5,
+    px: 1.5,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0.5,
+    fontSize: '0.75rem',
+  };
+
+  const viewButtonStyle = {
+    ...actionButtonStyle,
+    bgcolor: 'rgba(255, 236, 179, 0.15)',
+    color: '#ffecb3',
+    '&:hover': {
+      bgcolor: 'rgba(255, 236, 179, 0.25)',
+      transform: 'translateY(-2px)',
+    },
+  };
+
+  const joinButtonStyle = {
+    ...actionButtonStyle,
+    bgcolor: 'rgba(52, 152, 219, 0.15)',
+    color: '#5daefd',
+    '&:hover': {
+      bgcolor: 'rgba(52, 152, 219, 0.25)',
+      transform: 'translateY(-2px)',
+    },
+  };
+
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+
+  // Function to truncate transaction hash for display
+  const truncateHash = (hash) => {
+    if (!hash) return '';
+    return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -202,7 +242,7 @@ function AllTransactionsModal({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            width: { xs: '90vw', sm: '80vw', md: '70vw', lg: '65vw' },
             maxHeight: '90vh',
             overflowY: 'auto',
             borderRadius: 3,
@@ -291,8 +331,7 @@ function AllTransactionsModal({
                *    then show the table and possible spinner if loading more
                */
               <Box>
-                <Box
-                >
+                <Box>
                   {/* FILTER / SORT / SEARCH */}
                   <Box sx={filtersContainerStyle} className="filters">
                     {/* Filter Button */}
@@ -318,36 +357,29 @@ function AllTransactionsModal({
                         onClick={() => handleFilterClose('showDeposits')}
                         selected={filterType === 'showDeposits'}
                       >
-                        <ArrowUpwardIcon />
-                        &nbsp;Show Deposits
+                        <ArrowUpwardIcon sx={{ mr: 1 }} />
+                        Show Deposits
                       </MenuItem>
                       <MenuItem
                         onClick={() => handleFilterClose('showWithdrawals')}
                         selected={filterType === 'showWithdrawals'}
                       >
-                        <ArrowDownwardIcon />
-                        &nbsp;Show Withdrawals
+                        <ArrowDownwardIcon sx={{ mr: 1 }} />
+                        Show Withdrawals
                       </MenuItem>
                       <MenuItem
                         onClick={() => handleFilterClose('showTrades')}
                         selected={filterType === 'showTrades'}
                       >
-                        <SwapHorizIcon />
-                        &nbsp;Show Trades
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleFilterClose('showLoans')}
-                        selected={filterType === 'showLoans'}
-                      >
-                        <SwapHorizIcon />
-                        &nbsp;Show Loans
+                        <SwapHorizIcon sx={{ mr: 1 }} />
+                        Show Trades
                       </MenuItem>
                       <MenuItem
                         onClick={() => handleFilterClose('showTips')}
                         selected={filterType === 'showTips'}
                       >
-                        <CardGiftcardIcon />
-                        &nbsp;Show Tips
+                        <CardGiftcardIcon sx={{ mr: 1 }} />
+                        Show Tips
                       </MenuItem>
                     </Menu>
 
@@ -384,7 +416,7 @@ function AllTransactionsModal({
                       color="error"
                       onClick={handleSearchClick}
                     >
-                      SEARCH <SearchIcon sx={{ ml: 1 }} />
+                      Search <SearchIcon sx={{ ml: 1 }} />
                     </Button>
                     <Menu
                       anchorEl={searchAnchorEl}
@@ -399,7 +431,7 @@ function AllTransactionsModal({
                           value={searchQuery}
                           onChange={(e) => onSearchQueryChange(e.target.value)}
                           fullWidth
-                          placeholder="Search all transactions..."
+                          placeholder="Search all..."
                         />
                       </MenuItem>
                     </Menu>
@@ -418,7 +450,7 @@ function AllTransactionsModal({
                         {dataToRender.length === 0 ? (
                           // If array is empty but not loading => "No transactions"
                           <TableRow>
-                            <TableCell colSpan={6} align="center">
+                            <TableCell colSpan={5} align="center">
                               No transactions found
                             </TableCell>
                           </TableRow>
@@ -430,74 +462,104 @@ function AllTransactionsModal({
                                 sx={{
                                   color:
                                     transaction.status === 'waiting' ||
-                                      transaction.status === 'pending' ||
-                                      transaction.status === 'processing' ||
-                                      transaction.status === 'in_process'
+                                    transaction.status === 'pending' ||
+                                    transaction.status === 'processing' ||
+                                    transaction.status === 'in_process'
                                       ? '#888'
                                       : transaction.amount > 0
-                                        ? '#00ff3a' // greenish
-                                        : '#D32F2F', // reddish
+                                      ? '#00ff3a' // greenish
+                                      : '#FF0000', // reddish
                                 }}
                               >
                                 {transaction.amount > 0 ? (
                                   <>
-                                    +{' '}
-                                    {convertToCurrency(
-                                      transaction.amount,
-                                      solPrice,
-                                    )}
+                                    + {parseFloat(transaction.amount).toFixed(3)} SOL (
+                                    {convertToCurrency(transaction.amount, solPrice)})
                                   </>
                                 ) : (
                                   <>
-                                    -{' '}
-                                    {convertToCurrency(
-                                      Math.abs(transaction.amount),
-                                      solPrice,
-                                    )}
+                                    - {parseFloat(Math.abs(transaction.amount)).toFixed(3)} SOL (
+                                    {convertToCurrency(Math.abs(transaction.amount), solPrice)})
                                   </>
                                 )}
                               </TableCell>
                               <TableCell>
-                                {' '}
                                 {moment(transaction.created_at).fromNow()}
                               </TableCell>
                               <TableCell>{transaction.description}</TableCell>
-                              <TableCell>{transaction.status}</TableCell>
+                              <TableCell>
+                                <Chip 
+                                  label={transaction.status}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: 
+                                      transaction.status === 'completed' ? 'rgba(0, 255, 58, 0.15)' :
+                                      transaction.status === 'failed' ? 'rgba(255, 0, 0, 0.15)' :
+                                      'rgba(255, 255, 255, 0.15)',
+                                    color:
+                                      transaction.status === 'completed' ? '#00ff3a' :
+                                      transaction.status === 'failed' ? '#ff0000' :
+                                      '#ffffff',
+                                    borderRadius: '4px',
+                                    fontWeight: 500,
+                                  }}
+                                />
+                              </TableCell>
                               <TableCell>
                                 {transaction.hash ? (
-                                  <Link
-                                    href={`https://solscan.io/tx/${transaction.hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    sx={{
-                                      textDecoration: 'none',
-                                      color: '#ffecb3',
-                                      '&:hover': { color: '#fff' },
-                                    }}
-                                  >
-                                    View
-                                  </Link>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Tooltip title={transaction.hash} placement="top">
+                                      <Typography variant="body2" sx={{ color: '#888', fontSize: '0.75rem' }}>
+                                        {truncateHash(transaction.hash)}
+                                      </Typography>
+                                    </Tooltip>
+                                    
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                      <Tooltip title="Copy Transaction Hash">
+                                        <IconButton 
+                                          size="small" 
+                                          onClick={() => copyTxHash(transaction.hash)}
+                                          sx={{ color: '#888', p: 0.5 }}
+                                        >
+                                          <ContentCopyIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                      
+                                      <Tooltip title="View on Solscan">
+                                        <Button
+                                          component={Link}
+                                          href={`https://solscan.io/tx/${transaction.hash}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          sx={viewButtonStyle}
+                                        >
+                                          <LaunchIcon fontSize="small" />
+                                          View
+                                        </Button>
+                                      </Tooltip>
+                                    </Box>
+                                  </Box>
                                 ) : (
-                                  ''
+                                  <Typography variant="body2" sx={{ color: '#555', fontStyle: 'italic' }}>
+                                    No hash
+                                  </Typography>
                                 )}
                               </TableCell>
                               <TableCell>
-                                <Tooltip
-                                  title={
-                                    copiedRowId === transaction._id
-                                      ? 'Copied!'
-                                      : 'Copy ID'
-                                  }
-                                  placement="top"
-                                >
-                                  <IconButton
-                                    onClick={() =>
-                                      copyToClipboard(transaction._id)
-                                    }
+                                {transaction.room ? (
+                                  <Button
+                                    component={Link}
+                                    href={`/join/${transaction.room}`}
+                                    sx={joinButtonStyle}
+                                    startIcon={<MeetingRoomIcon />}
                                   >
-                                    <FileCopyIcon />
-                                  </IconButton>
-                                </Tooltip>
+                                    Join
+                                  </Button>
+                                ) : (
+                                  <Typography variant="body2" sx={{ color: '#555', fontStyle: 'italic' }}>
+                                    No room
+                                  </Typography>
+                                )}
                               </TableCell>
                             </TableRow>
                           ))
@@ -520,11 +582,44 @@ function AllTransactionsModal({
                 </Box>
               </Box>
             )}
+            
+            {/* Copied notification */}
+            <Snackbar
+              open={copiedTxHash}
+              autoHideDuration={2000}
+              onClose={() => setCopiedTxHash(false)}
+              message="Transaction hash copied to clipboard"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            />
           </Box>
         </Box>
       </Modal>
     </ThemeProvider>
   );
 }
+
+// Add Snackbar for copy notification
+const Snackbar = ({ open, autoHideDuration, onClose, message, anchorOrigin }) => {
+  return open ? (
+    <Box
+      sx={{
+        position: 'fixed',
+        bottom: anchorOrigin.vertical === 'bottom' ? 20 : 'auto',
+        top: anchorOrigin.vertical === 'top' ? 20 : 'auto',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        bgcolor: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        px: 3,
+        py: 1.5,
+        borderRadius: 1,
+        zIndex: 9999,
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      {message}
+    </Box>
+  ) : null;
+};
 
 export default AllTransactionsModal;

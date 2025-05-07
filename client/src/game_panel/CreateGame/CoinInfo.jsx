@@ -71,7 +71,7 @@ const GlassButton = styled.button`
 const GlassDropzone = styled(Box)`
   border: 2px dashed ${({ isDragging, isDarkMode }) =>
     isDragging
-      ? '#D32F2F'
+      ? '#FF0000'
       : isDarkMode
       ? 'rgba(255, 255, 255, 0.2)'
       : 'rgba(0, 0, 0, 0.2)'};

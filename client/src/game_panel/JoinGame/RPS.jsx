@@ -44,7 +44,7 @@ const RPS_OPTIONS = [
 // Game result styling constants
 const RESULT_STYLES = {
   WIN: { color: '#00ff3a', prefix: '+' },
-  DRAW: { color: 'grey', prefix: '-' },
+  DRAW: { color: 'grey', prefix: '+' },
   LOSE: { color: '#f50000', prefix: '-' },
 };
 
@@ -74,7 +74,6 @@ function RPS(props) {
     result,
     gameResult,
     bankroll,
-    updateUserStrategy,
     updateUserPrompt,
     is_private,
     updateSelectedRps,
@@ -216,20 +215,18 @@ function RPS(props) {
     }));
   }, [roomInfo.host_pr, roomInfo.status]);
 
-  // Join game logic - memoized to prevent recreation
   const joinGame = useCallback(
     async (chosenRps) => {
       if (!join) return;
-
+  
       setGameState(prev => ({ ...prev, isLoading: true }));
       onChangeState({ result: '' });
-
+  
       try {
         const resultData = await join({
           bet_amount: parseFloat(bet_amount),
           selected_rps: chosenRps,
         });
-console.log("resultData", resultData)
         let style;
         if (resultData.betResult === 1) {
           playSound && playSound('win');
@@ -244,16 +241,19 @@ console.log("resultData", resultData)
           playSound && playSound('lose');
           changeBgColor && changeBgColor(resultData.betResult);
         }
-
+  
         const currencyElement = convertToCurrency(
           Math.abs(resultData.amount),
           solPrice,
         );
-
+  
         onChangeState({
           result: (
             <span style={{ color: style.color, fontSize: '1.2rem', fontWeight: 'bold' }}>
-              {style.prefix} {currencyElement}
+              {style.prefix} {currencyElement}{' '}
+              <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
+                ({Math.abs(resultData.amount).toFixed(4)} SOL)
+              </span>
             </span>
           ),
           gameResult: resultData.betResult,
@@ -607,7 +607,6 @@ console.log("resultData", resultData)
                     <AiPanel
                       rpsbetitems={rpsbetitems}
                       onChangeState={onChangeState}
-                      updateUserStrategy={updateUserStrategy}
                       updateUserPrompt={updateUserPrompt}
                       strategies={strategies}
                       betting={betting}
@@ -642,7 +641,7 @@ console.log("resultData", resultData)
                   p: 4,
                 }}
               >
-                <Typography variant="h6" sx={{ color: '#D32F2F', fontWeight: 'bold', mb: 2 }}>
+                <Typography variant="h6" sx={{ color: '#FF0000', fontWeight: 'bold', mb: 2 }}>
                   GAME ENDED
                 </Typography>
 
@@ -665,7 +664,7 @@ console.log("resultData", resultData)
                     </Button>
                   </Box>
                 ) : (
-                  <Typography>
+                  <Typography sx={{ textAlign: 'center', color: '#fff'}}>
                     Pool is either being seeded, or the room has ended.
                   </Typography>
                 )}

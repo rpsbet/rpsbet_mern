@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Modal,
@@ -15,12 +15,22 @@ import {
   CircularProgress,
   ThemeProvider,
   useMediaQuery,
+  Paper,
+  Divider,
+  Container,
 } from '@mui/material';
-import { FileCopy as FileCopyIcon, Info as InfoIcon, Close as CloseIcon } from '@mui/icons-material';
+import { 
+  FileCopy as FileCopyIcon, 
+  Info as InfoIcon, 
+  Close as CloseIcon,
+  Edit as EditIcon,
+  ContentCopy as ContentCopyIcon,
+  CheckCircle as CheckCircleIcon
+} from '@mui/icons-material';
 import CircleIcon from '@mui/icons-material/Circle';
 import LinkIcon from '@mui/icons-material/Link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faEdit, faChartBar, faLink, faKey, faUserPlus, faUserCheck } from '@fortawesome/free-solid-svg-icons';
 
 import PlayerModal from './PlayerModal';
 import AvatarUpload from './upload/AvatarUpload';
@@ -36,7 +46,6 @@ import {
   setReferralCode,
 } from '../../redux/Auth/user.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
-
 import {
   acGetCustomerInfo,
   getSpendingHabit,
@@ -76,7 +85,6 @@ function ProfileModal({ modalIsOpen, closeModal }) {
   const [actorType, setActorType] = useState('Both');
   const [gameType, setGameType] = useState('All');
   const [timeType, setTimeType] = useState('24');
-
   const [rewardsState, setRewardsState] = useState(rewards || []);
   const [username, setUsername] = useState(initialUsername || '');
   const [link, setLink] = useState(initialLink || '');
@@ -85,52 +93,39 @@ function ProfileModal({ modalIsOpen, closeModal }) {
   const [referralUsernameState, setReferralUsernameState] = useState(referralUsername || '');
   const [referralInput, setReferralInput] = useState('');
   const [isReferralLoading, setIsReferralLoading] = useState(false);
-
   const [customerInfo, setCustomerInfo] = useState({});
   const [copied, setCopied] = useState(false);
-
   const [activeTab, setActiveTab] = useState(0);
   const [loadingState, setLoadingState] = useState(loading || false);
-
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
-
   const [status, setStatus] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [referredUser, setReferredUser] = useState(null);
-
   const [rank, setRank] = useState(totalWagered);
   const [newUsername, setNewUsername] = useState('');
   const [isNewUsernameModalOpen, setIsNewUsernameModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
-
-  // Stats form data
-  const [deposit, setDeposit] = useState(0);
-  const [withdraw, setWithdraw] = useState(0);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // New state for password modal
   const [gameProfit, setGameProfit] = useState(0);
   const [balance, setBalance] = useState(0);
   const [gamePlayed, setGamePlayed] = useState(0);
   const [totalTraded, setTotalTraded] = useState(0);
   const [tradingProfit, setTradingProfit] = useState(0);
   const [netProfit, setNetProfit] = useState(0);
-  const [averageProfit, setAverageProfit] = useState(0);
-  const [creditScore, setCreditScore] = useState(initialCreditScore);
-
   // Effects
   useEffect(() => {
     fetchSpendingHabit(_id);
     fetchCustomerInfoForRewards(rewardsState);
     fetchStatisticsData();
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     setLoadingState(loading);
   }, [loading]);
 
-  // Sync local state if userInfo changes
   useEffect(() => {
     setAvatar(userInfo.avatar);
     setUsername(userInfo.username);
@@ -225,7 +220,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
         return {
           color: '#ffc107',
           title: 'UNCONSCIOUS COMPETENT',
-          message: 'You’re doing fine, but there’s room for improvement.',
+          message: "You're doing fine, but there's room for improvement.",
           progress: 60,
         };
       case 'bad':
@@ -255,7 +250,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
   const { color, title, message: spendingMessage, progress: progressValue } = getStatusDetails(status);
   const barStyle = {
     width: `${progressValue}%`,
-    backgroundColor: progressValue <= 50 ? 'yellow' : 'green',
+    backgroundColor: progressValue <= 50 ? 'yellow' : '#FF0000',
   };
 
   const handleCopyToClipboard = (text) => {
@@ -271,12 +266,12 @@ function ProfileModal({ modalIsOpen, closeModal }) {
   const handleChangePassword = (e) => setPassword(e.target.value);
   const handleChangePasswordConfirmation = (e) => setPasswordConfirmation(e.target.value);
 
-  const saveUserInfo = async (e) => {
-    e.preventDefault();
+  const saveUserInfo = async () => {
     if (password !== passwordConfirmation) {
       dispatch(errorMsgBar(`PASSWORD CONFIRMATION DOESN'T MATCH NEW PASSWORD`));
       return;
     }
+    setLoadingState(true);
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -306,7 +301,10 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               const base64Avatar = reader.result;
               const is_success = await dispatch(changePasswordAndAvatar(password, base64Avatar));
               if (is_success) {
-                closeModal();
+                setIsPasswordModalOpen(false);
+                setPassword('');
+                setPasswordConfirmation('');
+                dispatch(getUser(true));
               }
             };
           },
@@ -317,6 +315,8 @@ function ProfileModal({ modalIsOpen, closeModal }) {
     } catch (error) {
       console.error('Error converting image to WebP:', error);
       dispatch(errorMsgBar('Failed to convert image. Please try again.'));
+    } finally {
+      setLoadingState(false);
     }
   };
 
@@ -348,7 +348,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
     }
     setLoadingState(true);
     try {
-      const result = await dispatch(_changeUserName(newUsername));
+      const result = await dispatch(changeUserName(newUsername));
       if (result.success) {
         setLoadingState(false);
         setIsNewUsernameModalOpen(false);
@@ -369,7 +369,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
     }
     setLoadingState(true);
     try {
-      const result = await dispatch(_changeLink(link));
+      const result = await dispatch(changeLink(link));
       if (result.success) {
         setLoadingState(false);
         setIsLinkModalOpen(false);
@@ -391,14 +391,16 @@ function ProfileModal({ modalIsOpen, closeModal }) {
     setShowPlayerModal(true);
     setSelectedCreator(creatorId);
   };
+
   const handleClosePlayerModal = () => {
     setShowPlayerModal(false);
   };
 
   const isBioUrl = /^https?:\/\//.test(link);
+
   const shortenAddress = (address) => {
     if (!address) return '';
-    return address.slice(0, 6) + '...' + address.slice(-6);
+    return address.slice(0, 12) + '...' + address.slice(-12);
   };
 
   return (
@@ -411,316 +413,478 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              color: '#fff', // Preserve text color conditional
+              color: '#fff',
               maxHeight: '90vh',
+              width: { xs: '95%', sm: '80%', md: '70%', lg: '60%' },
+              maxWidth: '900px',
               overflowY: 'auto',
               borderRadius: 2,
               boxShadow: 24,
-              p: 3,
-              // Glassmorphism styles (default dark mode colors)
-              background: 'rgba(0, 0, 0, 0.2)',
               backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)', // For Safari
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
-              // Fallback for browsers without backdrop-filter
               '@supports not (backdrop-filter: blur(10px))': {
-                background: 'rgba(0, 0, 0, 0.4)',
+                background: 'rgba(0, 0, 0, 0.85)',
               },
             }}
           >
-            <Box>
+            <Paper
+              elevation={3}
+              sx={{
+                background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 2,
+              }}
+            >
               {/* Header */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" component="h2" className="modal-title title">
-                  <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                }}
+              >
+                <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
+                  <FontAwesomeIcon icon={faUser} style={{ marginRight: 12 }} />
                   Your Profile
                 </Typography>
-                <Button
+                <IconButton
                   onClick={closeModal}
                   sx={{
-                    position: 'absolute',
-                    top: 10,
-                    right: 10,
-                    minWidth: 'auto',
-                    p: 1,
-                    bgcolor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
-                    borderRadius: '50%',
+                    color: isDarkMode ? '#fff' : '#333',
+                    '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
                   }}
                 >
                   <CloseIcon />
-                </Button>
+                </IconButton>
               </Box>
+
               {/* Tabs */}
               <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
                 textColor="error"
                 indicatorColor="error"
+                variant="fullWidth"
                 sx={{
                   '& .MuiTabs-indicator': { backgroundColor: 'error.main', height: '3px' },
+                  '& .MuiTab-root': {
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    color: isDarkMode ? '#ccc' : '#555',
+                    '&.Mui-selected': { color: '#ff0000' },
+                  },
                 }}
               >
-                <Tab label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <FontAwesomeIcon icon={faEdit} style={{ marginRight: 4 }} />
-                    Edit Profile
-                  </Box>
-                } />
-                <Tab label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <FontAwesomeIcon icon={faChartBar} style={{ marginRight: 4 }} />
-                    Stats
-                  </Box>
-                } />
+                <Tab
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <FontAwesomeIcon icon={faEdit} style={{ marginRight: 8 }} />
+                      Edit Profile
+                    </Box>
+                  }
+                />
+                <Tab
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <FontAwesomeIcon icon={faChartBar} style={{ marginRight: 8 }} />
+                      Stats
+                    </Box>
+                  }
+                />
               </Tabs>
-              {activeTab === 0 && (
-                <Box sx={{ p: '20px' }}>
-                  {loadingState ? (
-                    <CircularProgress color="error" />
-                  ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-                      <AvatarUpload
-                        setImageFilename={handleAvatarLoaded}
-                        darkMode={isDarkMode}
-                        rank={rank}
-                        username={username}
-                        accessory={accessory}
-                        elite={elite}
-                        avatar={avatar}
-                        user_id={_id}
-                      />
-                      <Box sx={{ mt: 3, borderBottom: '2px solid', textAlign: 'center', width: '100%' }}>
-                        <Typography variant="h5" sx={{ mt: 1, mb: 1 }}>{username}</Typography>
-                        {isBioUrl ? (
-                          <a
-                            href={link}
-                            style={{
-                              fontSize: '1.1em',
-                              color: isDarkMode ? '#e5e5e5' : '#333',
-                              textDecoration: 'none',
-                            }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {link}
-                          </a>
-                        ) : (
-                          <Typography variant="body1" sx={{ fontSize: '1.1em', color: isDarkMode ? '#e5e5e5' : '#333', mb: 2 }}>
-                            {link}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  )}
-                  <Box className="modal-edit-panel" sx={{ mt: 2 }}>
-                    <Box sx={{ mb: 2, p: '20px' }}>
-                      <Typography variant="h6" gutterBottom>A.K.A</Typography>
-                      {accounts.length === 0 ? (
-                        <p>No associated accounts found.</p>
-                      ) : (
-                        <Grid container spacing={1}>
-                          {accounts.map((acc, index) => {
-                            const displayed = isMobile ? shortenAddress(acc) : acc;
-                            const isConnected = connectedAccount?.toLowerCase() === acc.toLowerCase();
-                            return (
-                              <Grid item xs={12} key={index}>
-                                <Box display="flex" alignItems="center">
-                                  <Chip label={displayed} variant="outlined" sx={{ mr: 1 }} />
-                                  {isConnected && (
-                                    <CircleIcon sx={{ color: '#00ff3a', mr: 1 }} fontSize="xx-small" />
-                                  )}
-                                  <IconButton
-                                    component="a"
-                                    href={`https://solscan.io/account/${acc}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    size="small"
-                                  >
-                                    <LinkIcon fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </Grid>
-                            );
-                          })}
-                        </Grid>
-                      )}
-                    </Box>
-                    {!referralUsernameState && (
-                      <>
-                        <Typography variant="h6" gutterBottom>REFERRED BY</Typography>
-                        <TextField
-                          variant="filled"
-                          label="Enter Referral Code"
-                          color="error"
-                          value={referralInput}
-                          onChange={(e) => setReferralInput(e.target.value)}
-                          sx={{ mb: 1, width: '100%' }}
-                        />
-                        <Button
-                          sx={{ mb: 1, width: '100%' }}
-                          color="error"
-                          variant="outlined"
-                          onClick={handleSaveReferralCode}
-                          disabled={isReferralLoading}
+
+              {/* Tab Content */}
+              <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+                {/* Edit Profile Tab */}
+                {activeTab === 0 && (
+                  <Grid container spacing={3}>
+                    {/* Left Column - Profile Image & Status */}
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {/* Avatar Box */}
+                        <Box
+                          sx={{
+                            width: { xs: 180, sm: 220, md: 240 },
+                            height: { xs: 180, sm: 220, md: 240 },
+                            position: 'relative',
+                            mb: 3,
+                            borderRadius: '50%',
+                            padding: '4px',
+                            background: `linear-gradient(45deg, ${color || '#ff0000'}, transparent)`,
+                            boxShadow: `0 0 15px 5px ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                          }}
                         >
-                          {isReferralLoading ? <CircularProgress size={24} sx={{ color: '#000' }} /> : 'Save Referral Code'}
-                        </Button>
-                      </>
-                    )}
-                    {referralUsernameState && (
-                      <Typography variant="body2" sx={{ color: '#f44336', mt: 1, mb: 2 }}>
-                        REFERRED BY: <strong>{referralUsernameState}</strong>
-                      </Typography>
-                    )}
-                    <TextField
-                      color="error"
-                      variant="filled"
-                      label="YOUR REFERRAL CODE"
-                      value={referralCodeState}
-                      InputProps={{
-                        readOnly: true,
-                        endAdornment: (
-                          <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'} placement="top">
-                            <IconButton color="inherit" onClick={() => handleCopyToClipboard(referralCodeState)}>
-                              <FileCopyIcon />
+                          <AvatarUpload
+                            setImageFilename={handleAvatarLoaded}
+                            darkMode={isDarkMode}
+                            rank={rank}
+                            username={username}
+                            accessory={accessory}
+                            elite={elite}
+                            avatar={avatar}
+                            user_id={_id}
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </Box>
+
+                        {/* Username */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 700,
+                            textAlign: 'center',
+                            mb: 2,
+                            color: isDarkMode ? '#fff' : '#333',
+                          }}
+                        >
+                          {username}
+                          <IconButton
+                            size="small"
+                            color="error"
+                            sx={{ ml: 1 }}
+                            onClick={() => setIsNewUsernameModalOpen(true)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Typography>
+
+                        {/* Status/Title */}
+                        <Chip
+                          label={title}
+                          sx={{
+                            backgroundColor: color || 'primary.main',
+                            color: '#fff',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            mb: 3,
+                            padding: '20px 10px',
+                          }}
+                        />
+
+                        {/* Key Metrics */}
+                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                          <Grid item xs={12}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <FontAwesomeIcon icon={faUserCheck} style={{ marginBottom: 8, fontSize: '1.2rem' }} />
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Member Since
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                {new Date(dateJoined).toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        </Grid>
+
+                        {/* Security Section */}
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            mt: 3,
+                            p: 3,
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Button
+                            color="error"
+                            variant="contained"
+                            fullWidth
+                            onClick={() => setIsPasswordModalOpen(true)}
+                            sx={{ py: 1.5 }}
+                          >
+                            Change Password
+                          </Button>
+                        </Paper>
+                      </Box>
+                    </Grid>
+
+                    {/* Right Column - Bio & Accounts */}
+                    <Grid item xs={12} md={8}>
+                      {/* Bio Section */}
+                      <Box sx={{ mb: 4 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            mb: 2,
+                            pb: 1,
+                            borderBottom: '2px solid',
+                            borderColor: color || 'error.main',
+                          }}
+                        >
+                          About
+                        </Typography>
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            p: 3,
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                            borderRadius: 2,
+                            minHeight: '120px',
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {isBioUrl ? (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: '1.1rem',
+                                  color: isDarkMode ? '#e5e5e5' : '#333',
+                                  textDecoration: 'none',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {link}
+                              </a>
+                            ) : (
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  fontSize: '1.1rem',
+                                  color: isDarkMode ? '#e5e5e5' : '#333',
+                                  fontStyle: link ? 'normal' : 'italic',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {link || 'No bio available'}
+                              </Typography>
+                            )}
+                            <IconButton
+                              size="small"
+                              color="error"
+                              sx={{ ml: 1 }}
+                              onClick={() => setIsLinkModalOpen(true)}
+                            >
+                              <EditIcon fontSize="small" />
                             </IconButton>
-                          </Tooltip>
-                        ),
-                      }}
-                      sx={{ mb: 2, width: '100%' }}
-                    />
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Button
-                        color="error"
-                        variant="outlined"
-                        sx={{ flex: 1 }}
-                        onClick={handleReferrals}
-                      >
-                        See All Referrals
-                      </Button>
-                      <Tooltip
-                        title={
-                          <>
-                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                              HOW DO I EARN REFERRAL REWARDS?
+                          </Box>
+                        </Paper>
+                      </Box>
+
+                      {/* Accounts Section */}
+                      <Box sx={{ mb: 4 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            mb: 2,
+                            pb: 1,
+                            borderBottom: '2px solid',
+                            borderColor: color || 'error.main',
+                          }}
+                        >
+                          Associated Addresses
+                        </Typography>
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            p: 3,
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          {accounts.length === 0 ? (
+                            <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
+                              No associated accounts found
                             </Typography>
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                              Referral earnings depend on your referrals' deposit activity and are calculated based on
-                              <Box component="span" sx={{ fontWeight: 'bold', color: '#28a745' }}>
-                                &nbsp;1%&nbsp;
-                              </Box>
-                              of the deposit amount of your referred users.
-                            </Typography>
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                              For example, if your referral deposits
-                              <Box component="span" sx={{ fontWeight: 'bold' }}>
-                                &nbsp;{convertToCurrency(100, solPrice)}
-                              </Box>
-                              &nbsp;in total, you will earn 1% which is
-                              <Box component="span" sx={{ fontWeight: 'bold' }}>
-                                &nbsp;{convertToCurrency(1, solPrice)}
-                              </Box>
-                              .
-                            </Typography>
-                          </>
-                        }
-                        placement="top"
-                      >
-                        <InfoIcon sx={{ cursor: 'pointer', ml: 1 }} />
-                      </Tooltip>
-                    </Box>
-                    <TextField
-                      color="error"
-                      variant="filled"
-                      label="CHANGE BIO"
-                      value={link}
-                      InputProps={{ readOnly: true }}
-                      sx={{ mb: 1, width: '100%' }}
-                    />
-                    <Button
-                      color="error"
-                      variant="outlined"
-                      sx={{ mb: 2, width: '100%' }}
-                      onClick={() => setIsLinkModalOpen(true)}
-                    >
-                      CHANGE BIO
-                    </Button>
-                    <TextField
-                      color="error"
-                      variant="filled"
-                      label="USERNAME"
-                      value={username}
-                      InputProps={{ readOnly: true }}
-                      sx={{ mb: 1, width: '100%' }}
-                    />
-                    <Button
-                      color="error"
-                      variant="outlined"
-                      sx={{ mb: 2, width: '100%' }}
-                      onClick={() => setIsNewUsernameModalOpen(true)}
-                    >
-                      Change Username
-                    </Button>
-                    <TextField
-                      color="error"
-                      type="password"
-                      variant="filled"
-                      label="PASSWORD"
-                      autoComplete="off"
-                      value={password}
-                      onChange={handleChangePassword}
-                      sx={{ mb: 1, width: '100%' }}
-                    />
-                    <TextField
-                      color="error"
-                      type="password"
-                      variant="filled"
-                      label="CONFIRM PASSWORD"
-                      autoComplete="off"
-                      value={passwordConfirmation}
-                      onChange={handleChangePasswordConfirmation}
-                      sx={{ mb: 2, width: '100%' }}
+                          ) : (
+                            <Grid container spacing={2}>
+                              {accounts.map((acc, index) => {
+                                const displayed = isMobile ? shortenAddress(acc) : acc;
+                                const isConnected = connectedAccount?.toLowerCase() === acc.toLowerCase();
+                                return (
+                                  <Grid item xs={12} key={index}>
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        p: 1.5,
+                                        borderRadius: 1,
+                                        backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)',
+                                        },
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="body1"
+                                        sx={{
+                                          fontFamily: 'monospace',
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        {displayed}
+                                      </Typography>
+                                      <Box>
+                                        {isConnected && (
+                                          <Tooltip title="Connected Account" placement="top">
+                                            <CircleIcon sx={{ color: '#00ff3a', mr: 1 }} fontSize="small" />
+                                          </Tooltip>
+                                        )}
+                                        <IconButton
+                                          sx={{ ml: 1 }}
+                                          onClick={() => navigator.clipboard.writeText(acc)}
+                                          size="small"
+                                          color="primary"
+                                        >
+                                          <FileCopyIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton
+                                          component="a"
+                                          href={`https://solscan.io/account/${acc}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          size="small"
+                                          color="primary"
+                                        >
+                                          <LinkIcon fontSize="small" />
+                                        </IconButton>
+                                      </Box>
+                                    </Box>
+                                  </Grid>
+                                );
+                              })}
+                            </Grid>
+                          )}
+                        </Paper>
+                      </Box>
+
+                      {/* Referral Section */}
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            mb: 2,
+                            pb: 1,
+                            borderBottom: '2px solid',
+                            borderColor: color || 'error.main',
+                          }}
+                        >
+                          Referrals
+                        </Typography>
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            p: 3,
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <TextField
+                              color="error"
+                              size="small"
+                              variant="outlined"
+                              label="Your Referral Code"
+                              value={referralCodeState}
+                              InputProps={{
+                                readOnly: true,
+                                endAdornment: (
+                                  <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'} placement="top">
+                                    <IconButton
+                                      color="inherit"
+                                      onClick={() => handleCopyToClipboard(referralCodeState)}
+                                    >
+                                      {copied ? <CheckCircleIcon color="success" /> : <ContentCopyIcon />}
+                                    </IconButton>
+                                  </Tooltip>
+                                ),
+                              }}
+                              sx={{ mr: 2, flexGrow: 1 }}
+                            />
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              startIcon={<FontAwesomeIcon icon={faUserPlus} />}
+                              onClick={handleReferrals}
+                            >
+                              Referrals
+                            </Button>
+                          </Box>
+                          {!referralUsernameState && (
+                            <Box>
+                              <TextField
+                                variant="outlined"
+                                label="Enter Referral Code"
+                                color="error"
+                                size="small"
+                                fullWidth
+                                value={referralInput}
+                                onChange={(e) => setReferralInput(e.target.value)}
+                                sx={{ mb: 2 }}
+                              />
+                              <Button
+                                color="error"
+                                variant="outlined"
+                                fullWidth
+                                onClick={handleSaveReferralCode}
+                                disabled={isReferralLoading || !referralInput.trim()}
+                              >
+                                {isReferralLoading ? (
+                                  <CircularProgress size={24} color="error" />
+                                ) : (
+                                  'Apply Referral Code'
+                                )}
+                              </Button>
+                            </Box>
+                          )}
+                          {referralUsernameState && (
+                            <Chip
+                              icon={<FontAwesomeIcon icon={faUserCheck} />}
+                              label={`Referred by ${referralUsernameState}`}
+                              color="success"
+                              variant="outlined"
+                            />
+                          )}
+                        </Paper>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                )}
+
+                {/* Stats Tab */}
+                {activeTab === 1 && (
+                  <Box sx={{ mt: 2 }}>
+                    <StatisticsForm
+                      onDropdownChange={handleDropdownChange}
+                      username={username}
+                      dateJoined={dateJoined}
+                      // creditScore={creditScore}
+                      title={title}
+                      color={color}
+                      barStyle={barStyle}
+                      message={spendingMessage}
+                      actorType={actorType}
+                      gameType={gameType}
+                      timeType={timeType}
+                      gameProfit={gameProfit}
+                      balance={balance}
+                      gamePlayed={gamePlayed}
+                      netProfit={netProfit}
+                      totalWagered={totalWagered}
+                      rank={rank}
+                      solPrice={solPrice}
+                      totalTraded={totalTraded}
+                      tradingProfit={tradingProfit}
+                      // averageProfit={averageProfit}
                     />
                   </Box>
-                </Box>
-              )}
-              {activeTab === 1 && (
-                <Box
-                  className="user-statistics"
-                  sx={{ p: '20px' }}
-                >
-                  <StatisticsForm
-                    onDropdownChange={handleDropdownChange}
-                    username={username}
-                    dateJoined={dateJoined}
-                    creditScore={creditScore}
-                    title={title}
-                    color={color}
-                    barStyle={barStyle}
-                    message={spendingMessage}
-                    actorType={actorType}
-                    gameType={gameType}
-                    timeType={timeType}
-                    gameProfit={gameProfit}
-                    balance={balance}
-                    gamePlayed={gamePlayed}
-                    netProfit={netProfit}
-                    totalWagered={totalWagered}
-                    rank={rank}
-                    solPrice={solPrice}
-                    totalTraded={totalTraded}
-                    tradingProfit={tradingProfit}
-                    averageProfit={averageProfit}
-                  />
-                </Box>
-              )}
-            </Box>
+                )}
+              </Box>
+            </Paper>
           </Box>
         </Modal>
 
-        {/* NEW USERNAME MODAL */}
+        {/* New Username Modal */}
         <Modal open={isNewUsernameModalOpen} onClose={() => setIsNewUsernameModalOpen(false)}>
           <Box
             sx={{
@@ -728,51 +892,86 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
-              color: isDarkMode ? '#fff' : '#000',
-              width: '90vw',
-              maxWidth: 600,
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              borderRadius: 1,
-              p: 3,
+              color: '#fff',
+              width: { xs: '95%', sm: '50%' },
+              maxWidth: '500px',
+              borderRadius: 2,
+              overflow: 'hidden',
               boxShadow: 24,
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              '@supports not (backdrop-filter: blur(10px))': {
+                background: 'rgba(0, 0, 0, 0.85)',
+              },
             }}
           >
-            <Box>
+            <Paper
+              elevation={3}
+              sx={{
+                background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 2,
+              }}
+            >
               <Box
-                sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                }}
               >
-                <Typography variant="h6">ENTER NEW USERNAME</Typography>
-                <Button color="error" onClick={() => setIsNewUsernameModalOpen(false)}>
-                  ×
-                </Button>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
+                  Change Username
+                </Typography>
+                <IconButton
+                  onClick={() => setIsNewUsernameModalOpen(false)}
+                  sx={{
+                    color: isDarkMode ? '#fff' : '#333',
+                    '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
               </Box>
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ p: 3 }}>
                 <TextField
                   color="error"
-                  label="e.g. PUSSY_D3STROY3R"
+                  label="New Username (e.g., PUSSY_D3STROY3R)"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
-                  variant="filled"
+                  variant="outlined"
                   autoComplete="off"
                   inputProps={{ maxLength: 12 }}
-                  sx={{ width: '100%' }}
+                  fullWidth
+                  sx={{ mb: 3 }}
                 />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button
+                    color="error"
+                    variant="contained"
+                    onClick={changeUserName}
+                    disabled={loadingState}
+                  >
+                    {loadingState ? <CircularProgress size={24} color="inherit" /> : 'Update'}
+                  </Button>
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={() => setIsNewUsernameModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                <Button color="error" variant="outlined" onClick={changeUserName}>
-                  Update
-                </Button>
-                <Button color="error" variant="outlined" onClick={() => setIsNewUsernameModalOpen(false)}>
-                  Cancel
-                </Button>
-              </Box>
-            </Box>
+            </Paper>
           </Box>
         </Modal>
 
-        {/* LINK/BIO MODAL */}
+        {/* Bio/Link Modal */}
         <Modal open={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
           <Box
             sx={{
@@ -780,51 +979,188 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
-              color: isDarkMode ? '#fff' : '#000',
-              width: '90vw',
-              maxWidth: 600,
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              borderRadius: 1,
-              p: 3,
+              color: '#fff',
+              width: { xs: '95%', sm: '50%' },
+              maxWidth: '500px',
+              borderRadius: 2,
+              overflow: 'hidden',
               boxShadow: 24,
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              '@supports not (backdrop-filter: blur(10px))': {
+                background: 'rgba(0, 0, 0, 0.85)',
+              },
             }}
           >
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">ENTER NEW BIO</Typography>
-                <Button color="error" onClick={() => setIsLinkModalOpen(false)}>
-                  ×
-                </Button>
+            <Paper
+              elevation={3}
+              sx={{
+                background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
+                  Change Bio
+                </Typography>
+                <IconButton
+                  onClick={() => setIsLinkModalOpen(false)}
+                  sx={{
+                    color: isDarkMode ? '#fff' : '#333',
+                    '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
               </Box>
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ p: 3 }}>
                 <TextField
                   color="error"
-                  label="e.g. a link"
+                  label="Bio or Link (e.g., https://example.com)"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
-                  variant="filled"
+                  variant="outlined"
                   autoComplete="off"
                   multiline
                   maxRows={4}
                   inputProps={{ maxLength: 40 }}
-                  sx={{ width: '100%' }}
+                  fullWidth
+                  sx={{ mb: 3 }}
                 />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button
+                    color="error"
+                    variant="contained"
+                    onClick={changeBio}
+                    disabled={loadingState}
+                  >
+                    {loadingState ? <CircularProgress size={24} color="inherit" /> : 'Update'}
+                  </Button>
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={() => setIsLinkModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                <Button color="error" variant="outlined" onClick={changeBio}>
-                  Update
-                </Button>
-                <Button color="error" variant="outlined" onClick={() => setIsLinkModalOpen(false)}>
-                  Cancel
-                </Button>
+            </Paper>
+          </Box>
+        </Modal>
+        {/* End of Bio/Link Modal */}
+
+        {/* Password Modal */}
+        <Modal open={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: '#fff',
+              width: { xs: '95%', sm: '50%' },
+              maxWidth: '500px',
+              borderRadius: 2,
+              overflow: 'hidden',
+              boxShadow: 24,
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              '@supports not (backdrop-filter: blur(10px))': {
+                background: 'rgba(0, 0, 0, 0.85)',
+              },
+            }}
+          >
+            <Paper
+              elevation={3}
+              sx={{
+                background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
+                  Change Password
+                </Typography>
+                <IconButton
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  sx={{
+                    color: isDarkMode ? '#fff' : '#333',
+                    '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
               </Box>
-            </Box>
+              <Box sx={{ p: 3 }}>
+                <TextField
+                  color="error"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  size="medium"
+                  label="New Password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={handleChangePassword}
+                  sx={{ mb: 3 }}
+                />
+                <TextField
+                  color="error"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  size="medium"
+                  label="Confirm Password"
+                  autoComplete="new-password"
+                  value={passwordConfirmation}
+                  onChange={handleChangePasswordConfirmation}
+                  sx={{ mb: 3 }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button
+                    color="error"
+                    variant="contained"
+                    onClick={saveUserInfo}
+                    disabled={loadingState || !password || !passwordConfirmation}
+                  >
+                    {loadingState ? <CircularProgress size={24} color="inherit" /> : 'Update'}
+                  </Button>
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={() => setIsPasswordModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
           </Box>
         </Modal>
 
-        {/* REFERRALS MODAL */}
+        {/* Referrals Modal */}
         <Modal open={isReferralsModalOpen} onClose={() => setIsReferralsModalOpen(false)}>
           <Box
             sx={{
@@ -832,49 +1168,85 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              color: '#fff', // Preserve text color conditional
-              width: '90vw',
-              height: '80vh',
+              color: '#fff',
+              maxHeight: '90vh',
+              width: { xs: '95%', sm: '80%', md: '70%', lg: '60%' },
+              maxWidth: '900px',
               overflowY: 'auto',
               borderRadius: 2,
               boxShadow: 24,
-              p: 3,
-              // Glassmorphism styles (default dark mode colors)
-              background: 'rgba(0, 0, 0, 0.2)',
               backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)', // For Safari
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
-              // Fallback for browsers without backdrop-filter
               '@supports not (backdrop-filter: blur(10px))': {
-                background: 'rgba(0, 0, 0, 0.4)',
+                background: 'rgba(0, 0, 0, 0.85)',
               },
             }}
           >
-            {showPlayerModal && (
-              <PlayerModal
-                selectedCreator={selectedCreator}
-                modalIsOpen={showPlayerModal}
-                closeModal={handleClosePlayerModal}
-              />
-            )}
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">ALL REFERRALS</Typography>
-                <Button color="error" onClick={() => setIsReferralsModalOpen(false)}>
-                  ×
-                </Button>
+            <Paper
+              elevation={3}
+              sx={{
+                background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
+                  Your Referrals
+                </Typography>
+                <IconButton
+                  onClick={() => setIsReferralsModalOpen(false)}
+                  sx={{
+                    color: isDarkMode ? '#fff' : '#333',
+                    '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
               </Box>
-              <Box sx={{ mb: 2, p: '20px' }}>
-                <Grid container spacing={2}>
-                  {rewardsState.map((reward, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      {customerInfo[reward.user] && (
-                        <Grid container direction="column" alignItems="center">
-                          <Grid item>
-                            <a
-                              className="player"
+              <Box sx={{ p: 3 }}>
+                {showPlayerModal && (
+                  <PlayerModal
+                    selectedCreator={selectedCreator}
+                    modalIsOpen={showPlayerModal}
+                    closeModal={handleClosePlayerModal}
+                  />
+                )}
+                <Grid container spacing={3}>
+                  {rewardsState.length === 0 ? (
+                    <Grid item xs={12}>
+                      <Typography color="text.secondary" align="center">
+                        No referrals yet. Share your referral code to earn rewards!
+                      </Typography>
+                    </Grid>
+                  ) : (
+                    rewardsState.map((reward, index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        {customerInfo[reward.user] && (
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              background: isDarkMode
+                                ? 'rgba(40, 40, 40, 0.5)'
+                                : 'rgba(255, 255, 255, 0.7)',
+                              textAlign: 'center',
+                            }}
+                          >
+                            <Box
+                              sx={{ cursor: 'pointer' }}
                               onClick={() => handleOpenPlayerModal(customerInfo[reward.user]._id)}
-                              style={{ cursor: 'pointer' }}
                             >
                               <Avatar
                                 src={customerInfo[reward.user].avatar}
@@ -884,29 +1256,42 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                                 elite={customerInfo[reward.user].elite}
                                 accessory={customerInfo[reward.user].accessory}
                                 username={customerInfo[reward.user].username}
+                                sx={{ mx: 'auto', mb: 1, width: '90px' }}
                               />
-                            </a>
-                          </Grid>
-                          <Grid item>
-                            <Typography variant="body1">{customerInfo[reward.user].username}</Typography>
-                          </Grid>
-                        </Grid>
-                      )}
-                      <Box sx={{ border: '2px solid rgb(40, 167, 69)', borderRadius: '0.3em', p: '2px', textAlign: 'center', mt: 1 }}>
-                        <Typography variant="body2" sx={{ color: 'rgb(40, 167, 69)' }}>
-                          + {convertToCurrency(reward.amount, solPrice)}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  ))}
+                              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                {customerInfo[reward.user].username}
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                mt: 2,
+                                py: 1,
+                                px: 2,
+                                border: '2px solid rgb(40, 167, 69)',
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography variant="body2" sx={{ color: 'rgb(40, 167, 69)' }}>
+                                + {convertToCurrency(reward.amount, solPrice)}
+                              </Typography>
+                            </Box>
+                          </Paper>
+                        )}
+                      </Grid>
+                    ))
+                  )}
                 </Grid>
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={() => setIsReferralsModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </Box>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button color="error" variant="outlined" onClick={() => setIsReferralsModalOpen(false)}>
-                  Close
-                </Button>
-              </Box>
-            </Box>
+            </Paper>
           </Box>
         </Modal>
       </>

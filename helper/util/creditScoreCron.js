@@ -111,9 +111,9 @@ async function checkOutstandingLoans(io) {
   }
 }
 
-cron.schedule('00 00 * * *', async () => {
-  await checkOutstandingLoans();
-});
+// cron.schedule('00 00 * * *', async () => {
+//   await checkOutstandingLoans();
+// });
 
 module.exports = {
   checkOutstandingLoans,

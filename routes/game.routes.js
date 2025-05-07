@@ -16,12 +16,11 @@ const Item = require('../model/Item');
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
-const Strategy = require('../model/Strategy');
 const GameLog = require('../model/GameLog');
 const Receipt = require('../model/Receipt');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
-const  GameTransanction = require('../model/Transaction');
+const GameTransanction = require('../model/Transaction');
 const System = require('../model/SystemSetting');
 const RpsBetItem = require('../model/RpsBetItem');
 const QsBetItem = require('../model/QsBetItem');
@@ -73,25 +72,6 @@ router.get('/game_types', async (req, res) => {
       success: true,
       query: req.query,
       gameTypeList: gameTypes,
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err.message,
-    });
-  }
-});
-
-router.get('/strategies', async (req, res) => {
-  try {
-    const excludedStrategies = ['Markov', 'Adam'];
-    const strategies = await Strategy.find({
-      name: { $nin: excludedStrategies },
-    }).sort({ created_at: 1 });
-    res.json({
-      success: true,
-      query: req.query,
-      strategies: strategies,
     });
   } catch (err) {
     res.json({
@@ -1507,17 +1487,54 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 });
 
 router.get('/room/:id', async (req, res) => {
+  const roomId = req.params.id;
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+  const cacheKey = `room:${roomId}:limit:${limit}`;
+
+  // Get Redis client from app
+  const redisClient = req.app.get('redisClient');
+
+  // Check cache
+  let cached;
   try {
-    const room = await Room.findOne({ _id: req.params.id })
-      .populate({ path: 'game_type', model: GameType })
-      .populate({ path: 'joiners', model: User });
-    let gameLogQuery = GameLog.find({ room: room })
-      .sort({ created_at: 'desc' })
+    cached = await redisClient.get(cacheKey);
+  } catch (redisErr) {
+    console.error('Redis error, bypassing cache:', redisErr);
+  }
+
+  if (cached) {
+    return res.json(JSON.parse(cached));
+  }
+
+  try {
+    // Fetch room data
+    const room = await Room.findOne({ _id: roomId })
+      .select(
+        '_id name image ticker pool_id gameCode x_link tax website_link telegram_link ' +
+        'created_at likes dislikes creator hosts endgame_amount endgame_type description ' +
+        'joiners game_type bet_amount user_bet host_pr pr room_number battles qs_game_type ' +
+        'selectedStrategy qs_nation rps_game_type status is_private'
+      )
+      .populate({ path: 'game_type', model: GameType, select: 'game_type_name short_name' })
+      .populate({
+        path: 'joiners',
+        model: User,
+        select: '_id avatar username accessory elite totalWagered status'
+      })
+      .lean();
+
+    if (!room) {
+      return res.status(404).json({ success: false, err: 'Room not found' });
+    }
+
+    // Fetch game logs
+    let gameLogQuery = GameLog.find({ room: room._id })
+      .select('bet_amount created_at room game_type creator joined_user')
+      .sort({ created_at: -1 })
       .populate({
         path: 'room',
         model: Room,
-        select:
-          '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number likes dislikes game_type bet_amount user_bet host_pr created_at',
+        select: '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number likes dislikes game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -1534,79 +1551,89 @@ router.get('/room/:id', async (req, res) => {
         model: User,
         select: '_id avatar username accessory elite totalWagered',
       })
-      .limit(req.query.limit ? req.query.limit : 10);
+      .limit(limit)
+      .lean();
 
-    const totalGameLogsCount = await GameLog.countDocuments({ room });
-
+    const totalGameLogsCount = await GameLog.countDocuments({ room: room._id });
     const gameLogList = await gameLogQuery;
 
-    const creator = await User.findOne({ _id: room.creator });
-    const joiners = await User.find({ _id: { $in: room.joiners } });
+    // Fetch creator (already populated in room, no need for separate query)
+    const creator = room.creator;
 
+    // Joiners are already populated in room
+    const joiners = room.joiners;
+
+    // Convert game logs to history style
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
-    res.json({
+
+    const response = {
       success: true,
       query: req.query,
       roomInfo: {
-        _id: room['_id'],
-        name: room['name'],
-        image: room['image'],
-        ticker: room['ticker'],
-        pool_id: room['pool_id'],
-        gameCode: room['gameCode'],
-        x_link: room['x_link'],
-        tax: room['tax'],
-        website_link: room['website_link'],
-        telegram_link: room['telegram_link'],
-        created_at: room['created_at'],
-        likes: room['likes'],
-        dislikes: room['dislikes'],
-        creator_id: room['creator'],
-        username: creator['username'],
-        creator_avatar: creator['avatar'],
-        rank: creator['totalWagered'],
-        accessory: creator['accessory'],
-        elite: creator['elite'],
+        _id: room._id,
+        name: room.name,
+        image: room.image,
+        ticker: room.ticker,
+        pool_id: room.pool_id,
+        gameCode: room.gameCode,
+        x_link: room.x_link,
+        tax: room.tax,
+        website_link: room.website_link,
+        telegram_link: room.telegram_link,
+        created_at: room.created_at,
+        likes: room.likes,
+        dislikes: room.dislikes,
+        creator_id: creator,
+        username: creator?.username || '',
+        creator_avatar: creator?.avatar || '',
+        rank: creator?.totalWagered || 0,
+        accessory: creator?.accessory || '',
+        elite: creator?.elite || '',
         hosts: room.hosts.map((host) => ({
-          host: host['host'],
-          username: host['username'],
-          avatar: host['avatar'],
-          rank: host['rank'],
-          accessory: host['accessory'],
-          elite: host['elite'],
-          share: host['share'],
-          walletAddress: host['walletAddress'],
+          host: host.host,
+          username: host.username,
+          avatar: host.avatar,
+          rank: host.rank,
+          accessory: host.accessory,
+          elite: host.elite,
+          share: host.share,
+          walletAddress: host.walletAddress,
         })),
-        endgame_amount: room['endgame_amount'],
-        endgame_type: room['endgame_type'],
-        description: room['description'],
+        endgame_amount: room.endgame_amount,
+        endgame_type: room.endgame_type,
+        description: room.description,
         joiners: joiners,
-        game_type: room['game_type']['game_type_name'],
-        bet_amount: parseFloat(room['bet_amount']),
-        user_bet: parseFloat(room['user_bet']),
-        host_pr: room['host_pr'],
-        pr: room['pr'],
-        user_bet: room['user_bet'],
-        room_name: room['game_type']['short_name'] + '-' + room['room_number'],
-        total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
-        qs_game_type: room['qs_game_type'],
-        selectedStrategy: room['selectedStrategy'],
-        battles: room['battles'],
-        qs_nation: room['qs_nation'],
-        rps_game_type: room['rps_game_type'],
-        qs_game_type: room['qs_game_type'],
+        game_type: room.game_type?.game_type_name || '',
+        bet_amount: parseFloat(room.bet_amount || 0),
+        user_bet: parseFloat(room.user_bet || 0),
+        host_pr: room.host_pr,
+        pr: room.pr,
+        room_name: room.game_type?.short_name + '-' + room.room_number,
+        total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
+        qs_game_type: room.qs_game_type,
+        selectedStrategy: room.selectedStrategy,
+        battles: room.battles,
+        qs_nation: room.qs_nation,
+        rps_game_type: room.rps_game_type,
         room_history: roomHistory,
-        status: room['status'],
-        is_private: room['is_private'],
+        status: room.status,
+        is_private: room.is_private,
         game_log_list: gameLogList.map(({ bet_amount }) => bet_amount),
       },
       totalGameLogsCount: totalGameLogsCount,
-    });
+    };
+
+    // Cache for 1 minute
+    try {
+      await redisClient.setEx(cacheKey, 60, JSON.stringify(response));
+    } catch (redisErr) {
+      console.error('Failed to cache:', redisErr);
+    }
+
+    res.json(response);
   } catch (err) {
-    res.json({
-      success: false,
-      err: err.toString(),
-    });
+    console.error('Error in /room/:id:', err);
+    res.json({ success: false, err: err.toString() });
   }
 });
 
@@ -1964,18 +1991,42 @@ router.get('/count', async (req, res) => {
 });
 
 router.get('/rooms', async (req, res) => {
-  // game_type can still be used as a filter, default to 'All'
   const game_type = req.query.game_type || 'All';
+  const cacheKey = `rooms:${game_type}`;
+
+  // Get Redis client from app
+  const redisClient = req.app.get('redisClient');
+
+  // Check cache
+  let cached;
+  try {
+    cached = await redisClient.get(cacheKey);
+  } catch (redisErr) {
+    console.error('Redis error, bypassing cache:', redisErr);
+  }
+
+  if (cached) {
+    return res.json(JSON.parse(cached));
+  }
 
   try {
-    // We no longer pass "page" or do skip/limit
     const rooms = await getRoomList(game_type);
-    res.json({
+    const response = {
       success: true,
       query: req.query,
       roomList: rooms.rooms,
-    });
+    };
+
+    // Cache for 1 minute (rooms change more frequently)
+    try {
+      await redisClient.setEx(cacheKey, 60, JSON.stringify(response));
+    } catch (redisErr) {
+      console.error('Failed to cache:', redisErr);
+    }
+
+    res.json(response);
   } catch (err) {
+    console.error('Error in /rooms:', err);
     res.json({
       success: false,
       err: err.toString(),
@@ -1991,103 +2042,102 @@ const getRoomList = async (game_type) => {
 
   // If a specific short_name is requested (not "All"), filter by that
   if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type }).select(
-      '_id',
-    );
+    const gameType = await GameType.findOne({ short_name: game_type }).select('_id').lean();
     if (gameType) {
       search_condition.game_type = gameType._id;
     }
   }
 
   try {
-    // Return all matching rooms with no skip/limit
+    // Fetch rooms with lean for performance
     const preRooms = await Room.find(search_condition)
       .select(
-        '_id name ticker image description room_number likes dislikes' +
+        '_id name ticker image description room_number likes dislikes ' +
         'creator battles username joiners game_type qs_game_type is_private ' +
-        'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts',
+        'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts'
       )
       .populate({
         path: 'creator',
         model: 'rps_users',
         select: 'avatar totalWagered username accessory elite status',
       })
-      .populate({ path: 'game_type', model: 'rps_game_types' })
+      .populate({ path: 'game_type', model: 'rps_game_types', select: 'short_name' })
       .sort({ updated_at: -1 })
-      .limit(50);
-    // Build final list of rooms with joiner info
-    const result = await Promise.all(
-      preRooms.map(async (room) => {
-        try {
-          const joinerData = await Promise.all(
-            room.joiners.map(async (joinedUserId) => {
-              const user = await User.findOne({ _id: joinedUserId }).select(
-                'avatar totalWagered _id username accessory elite status',
-              );
-              return {
-                user_id: user._id,
-                avatar: user.avatar,
-                totalWagered: user.totalWagered,
-                accessory: user.accessory,
-                elite: user.elite,
-                username: user.username,
-                rank: user.totalWagered,
-              };
-            }),
-          );
+      .limit(50)
+      .lean(); // Use lean for faster queries
 
-          const temp = {
-            _id: room._id,
-            creator_id: room.creator ? room.creator._id : '',
-            joiners: room.joiners,
-            ticker: room.ticker || room.room_number,
-            joiners: joinerData.map((joiner) => ({
-              avatar: joiner.avatar,
-              rank: joiner.totalWagered,
-              username: joiner.username,
-              accessory: joiner.accessory,
-              elite: joiner.elite,
-              _id: joiner._id,
-            })),
-            rank: room.creator?.totalWagered || 0,
-            creator_avatar: room.creator?.avatar || '',
-            accessory: room.creator?.accessory || '',
-            elite: room.creator?.elite || '',
-            username: room.creator?.username || '',
-            creator_status: room.creator?.status || '',
-            game_type: room.game_type,
-            name: room.name,
-            description: room.description,
-            image: room.image,
-            qs_game_type: room.qs_game_type,
-            bet_amount: room.bet_amount,
-            pr: room.pr,
-            endgame_amount: room.endgame_amount,
-            host_pr: room.host_pr,
-            room_name: room.game_type.short_name + '-' + room.room_number,
-            total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
-            user_bet: parseFloat(room.user_bet),
-            is_private: room.is_private,
-            status: room.status,
-            index: room.room_number,
-            created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
-            updated_at: room.updated_at,
-            battles: room.battles,
-            likes: room.likes,
-            dislikes: room.dislikes,
-            hosts: room.hosts,
-            winnings: parseFloat(room.user_bet),
-          };
+    // Batch fetch joiner data
+    const joinerIds = [...new Set(preRooms.flatMap(room => room.joiners))];
+    const joinerUsers = await User.find({ _id: { $in: joinerIds } })
+      .select('avatar totalWagered _id username accessory elite status')
+      .lean();
 
-          return temp;
-        } catch (error) {
-          console.error('Error building room object:', error.toString());
-          return null;
-        }
-      }),
-    );
+    const joinerMap = joinerUsers.reduce((map, user) => {
+      map[user._id.toString()] = {
+        user_id: user._id,
+        avatar: user.avatar,
+        totalWagered: user.totalWagered,
+        accessory: user.accessory,
+        elite: user.elite,
+        username: user.username,
+        rank: user.totalWagered,
+      };
+      return map;
+    }, {});
 
-    const filteredResults = result.filter((r) => r !== null);
+    // Build final list of rooms
+    const result = preRooms.map(room => {
+      try {
+        const joinerData = room.joiners.map(joinedUserId => joinerMap[joinedUserId.toString()] || null).filter(Boolean);
+
+        return {
+          _id: room._id,
+          creator_id: room.creator ? room.creator._id : '',
+          joiners: joinerData.map(joiner => ({
+            avatar: joiner.avatar,
+            rank: joiner.totalWagered,
+            username: joiner.username,
+            accessory: joiner.accessory,
+            elite: joiner.elite,
+            _id: joiner.user_id,
+          })),
+          ticker: room.ticker || room.room_number,
+          rank: room.creator?.totalWagered || 0,
+          creator_avatar: room.creator?.avatar || '',
+          accessory: room.creator?.accessory || '',
+          elite: room.creator?.elite || '',
+          username: room.creator?.username || '',
+          creator_status: room.creator?.status || '',
+          game_type: room.game_type,
+          name: room.name,
+          description: room.description,
+          image: room.image,
+          qs_game_type: room.qs_game_type,
+          bet_amount: room.bet_amount,
+          pr: room.pr,
+          endgame_amount: room.endgame_amount,
+          host_pr: room.host_pr,
+          room_name: room.game_type?.short_name + '-' + room.room_number,
+          total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
+          user_bet: parseFloat(room.user_bet || 0),
+          is_private: room.is_private,
+          status: room.status,
+          index: room.room_number,
+          created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
+          updated_at: room.updated_at,
+          battles: room.battles,
+          likes: room.likes,
+          dislikes: room.dislikes,
+          hosts: room.hosts,
+          winnings: parseFloat(room.user_bet || 0),
+        };
+      } catch (error) {
+        console.error('Error building room object:', error.toString());
+        return null;
+      }
+    });
+
+    const filteredResults = result.filter(r => r !== null);
     return { rooms: filteredResults };
   } catch (error) {
     console.error('Error in getRoomList:', error);
@@ -2276,12 +2326,13 @@ router.post('/rooms', auth, async (req, res) => {
       game_result: -3000,
     });
 
-    const newTransaction = new GameTransanction({
-      user: req.user,
-      amount: -amountAfterFee,
-      description: 'created ' + (name || `${gameTypeDoc.short_name}-${room_number}`),
-      room: newRoom._id,
-    });
+    // const newTransaction = new GameTransanction({
+    //   user: req.user,
+    //   amount: -amountAfterFee,
+    //   description: 'Created ' + (name || `${gameTypeDoc.short_name}-${room_number}`),
+    //   room: newRoom._id,
+    //   status: 'pending'
+    // });
 
     // Update user
     const updatedUser = {
@@ -2296,7 +2347,6 @@ router.post('/rooms', auth, async (req, res) => {
       saveDocumentWithRetry(newGameLog),
       User.findByIdAndUpdate(_id, updatedUser),
       saveDocumentWithRetry(newRoom),
-      saveDocumentWithRetry(newTransaction),
       System.findOneAndUpdate(
         { name: 'platform_trading' },
         { $inc: { value: fee } }
@@ -2352,7 +2402,7 @@ router.post('/rooms', auth, async (req, res) => {
     res.json({
       success: true,
       message: 'room created',
-      newTransaction,
+      // newTransaction,
     });
   } catch (err) {
     console.error('Error creating room:', err);
@@ -2367,10 +2417,27 @@ router.post('/rooms', auth, async (req, res) => {
 router.get('/my_games', auth, async (req, res) => {
   try {
     const pageSize = 50;
-    const game_type = req.query.game_type ? req.query.game_type : 'All';
+    const game_type = req.query.game_type || 'All';
     const status = req.query.status;
-    const sort = req.query.sort ? req.query.sort : 'desc';
+    const sort = req.query.sort || 'desc';
+    const cacheKey = `my_games:${req.user._id}:${game_type}:${status}:${sort}`;
 
+    // Get Redis client from app
+    const redisClient = req.app.get('redisClient');
+
+    // Check cache
+    let cached;
+    try {
+      cached = await redisClient.get(cacheKey);
+    } catch (redisErr) {
+      console.error('Redis error, bypassing cache:', redisErr);
+    }
+
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+
+    // Fetch data from database
     const { rooms, count } = await getMyRooms(
       req.user._id,
       pageSize,
@@ -2378,13 +2445,24 @@ router.get('/my_games', auth, async (req, res) => {
       status,
       sort,
     );
-    res.json({
+
+    const response = {
       success: true,
       pageSize: pageSize,
       myGames: rooms,
       total: count,
-    });
+    };
+
+    // Cache for 5 minutes
+    try {
+      await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+    } catch (redisErr) {
+      console.error('Failed to cache:', redisErr);
+    }
+
+    res.json(response);
   } catch (err) {
+    console.error('Error in /my_games:', err);
     res.json({
       success: false,
       message: err.toString(),
@@ -2407,7 +2485,7 @@ const getMyRooms = async (
     search_condition.status = status;
   }
   if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type });
+    const gameType = await GameType.findOne({ short_name: game_type }, '_id');
     search_condition.game_type = gameType._id;
   }
   if (status === 'finished') {
@@ -2415,107 +2493,111 @@ const getMyRooms = async (
   }
 
   const rooms = await Room.find(search_condition)
-    .populate({ path: 'game_type', model: GameType })
-    .limit(pageSize);
+    .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_id' })
+    .select('_id creator name image ticker hosts creator host_pr room_number endgame_type endgame_amount is_private status created_at user_bet rps_list qs_list bet_amount selectedStrategy likes dislikes gameCode')
+    .limit(pageSize)
+    .lean(); // Use lean() for faster query execution
 
   const count = await Room.countDocuments(search_condition);
 
-  let result = [];
+  // Batch fetch creator details
+  const creatorIds = [...new Set(rooms.map(room => room.creator))];
+  const creators = await User.find({ _id: { $in: creatorIds } })
+    .select('avatar totalWagered accessory elite')
+    .lean();
 
-  for (const room of rooms) {
-    try {
-      const isCoHost = room.hosts.find(
-        (host) =>
-          host.host.toString() === user_id.toString() && host.share === 100,
-      );
-      const gameLogCount = await GameLog.countDocuments({ room: room._id });
-      const creatorDetails = await User.findById(room.creator).select(
-        'avatar totalWagered accessory',
-      );
-      const creatorAvatar = creatorDetails?.avatar || '';
-      const creatorTotalWagered = creatorDetails?.totalWagered || 0;
-      const creatorAccessory = creatorDetails?.accessory || '';
-      const creatorElite = creatorDetails?.elite || '';
+  const creatorMap = creators.reduce((map, creator) => {
+    map[creator._id.toString()] = creator;
+    return map;
+  }, {});
 
-      let temp = {
-        _id: room._id,
-        creator_id: room.creator,
-        name: room.name,
-        image: room.image,
-        ticker: room.ticker,
-        creator_avatar: creatorAvatar,
-        rank: creatorTotalWagered,
-        accessory: creatorAccessory,
-        elite: creatorElite,
-        game_type: room.game_type,
-        bet_amount: room.bet_amount,
-        rps_list: room.rps_list,
-        qs_list: room.qs_list,
-        user_bet: room.user_bet,
-        share: (() => {
-          const matchingHost = room.hosts.find(
-            (host) => host.host.toString() === user_id.toString(),
-          );
-          if (matchingHost) {
-            return matchingHost.share;
-          } else {
-            return 0;
-          }
-        })(),
-        pr: room.host_pr,
-        winnings: '',
-        index: room.room_number,
-        endgame_type: room.endgame_type,
-        endgame_amount: room.endgame_amount,
-        is_private: room.is_private,
-        status: room.status,
-        created_at: room.created_at,
-        coHost: isCoHost,
-        selectedStrategy: room.selectedStrategy,
-        // statistics: '',
-        net_profit: '',
-        battles: gameLogCount,
-        likes: room.likes,
-        dislikes: room.dislikes,
-        gameCode: room.gameCode,
-        hosts: room.hosts,
-      };
+  // Batch fetch game log counts
+  const roomIds = rooms.map(room => room._id);
+  const gameLogCounts = await GameLog.aggregate([
+    { $match: { room: { $in: roomIds } } },
+    { $group: { _id: '$room', count: { $sum: 1 } } }
+  ]);
 
-      if (gameLogCount === 0) {
-        temp.winnings = temp.bet_amount;
-      } else if (room.game_type.game_type_id === 1) {
-        // RPS
-        temp.winnings = room.user_bet;
-      } else if (room.game_type.game_type_id === 5) {
-        // Quick Shoot
-        temp.winnings = room.user_bet;
-      }
+  const gameLogMap = gameLogCounts.reduce((map, log) => {
+    map[log._id.toString()] = log.count;
+    return map;
+  }, {});
 
-      if (isCoHost) {
-        const hostShare = isCoHost.share;
-        temp.winnings = (hostShare / 100) * parseFloat(room.user_bet);
-        if (room.creator.toString() !== user_id.toString()) {
-          temp.coHost = isCoHost;
-        }
-      }
+  let result = rooms.map(room => {
+    const isCoHost = room.hosts.find(
+      (host) => host.host.toString() === user_id.toString() && host.share === 100
+    );
+    const creatorDetails = creatorMap[room.creator.toString()] || {};
+    const gameLogCount = gameLogMap[room._id.toString()] || 0;
 
-      result.push(temp);
-      if (sort === 'asc') {
-        result.sort((a, b) => a.created_at - b.created_at);
-      } else if (sort === 'desc') {
-        result.sort((a, b) => b.created_at - a.created_at);
-      } else if (sort === 'net_profit_asc') {
-        result.sort((a, b) => a.net_profit - b.net_profit);
-      } else if (sort === 'net_profit_desc') {
-        result.sort((a, b) => b.net_profit - a.net_profit);
-      } else if (sort === 'bets_asc') {
-        result.sort((a, b) => a.bets - b.bets);
-      } else {
-        result.sort((a, b) => b.bets - a.bets);
-      }
-    } catch (e) {
-      console.log(e.toString());
+    let temp = {
+      _id: room._id,
+      creator_id: room.creator,
+      name: room.name,
+      image: room.image,
+      ticker: room.ticker,
+      creator_avatar: creatorDetails.avatar || '',
+      rank: creatorDetails.totalWagered || 0,
+      accessory: creatorDetails.accessory || '',
+      elite: creatorDetails.elite || '',
+      game_type: room.game_type,
+      bet_amount: room.bet_amount,
+      rps_list: room.rps_list,
+      qs_list: room.qs_list,
+      user_bet: room.user_bet,
+      share: room.hosts.find(
+        (host) => host.host.toString() === user_id.toString()
+      )?.share || 0,
+      pr: room.host_pr,
+      winnings: '',
+      index: room.room_number,
+      endgame_type: room.endgame_type,
+      endgame_amount: room.endgame_amount,
+      is_private: room.is_private,
+      status: room.status,
+      created_at: room.created_at,
+      coHost: !!isCoHost,
+      selectedStrategy: room.selectedStrategy,
+      net_profit: '',
+      battles: gameLogCount,
+      likes: room.likes,
+      dislikes: room.dislikes,
+      gameCode: room.gameCode,
+      hosts: room.hosts,
+    };
+
+    if (gameLogCount === 0) {
+      temp.winnings = temp.bet_amount;
+    } else if (room.game_type.game_type_id === 1) {
+      temp.winnings = room.user_bet;
+    } else if (room.game_type.game_type_id === 5) {
+      temp.winnings = room.user_bet;
     }
+
+    if (isCoHost) {
+      const hostShare = isCoHost.share;
+      temp.winnings = (hostShare / 100) * parseFloat(room.user_bet);
+      if (room.creator.toString() !== user_id.toString()) {
+        temp.coHost = isCoHost;
+      }
+    }
+
+    return temp;
+  });
+
+  // Sorting
+  if (sort === 'asc') {
+    result.sort((a, b) => a.created_at - b.created_at);
+  } else if (sort === 'desc') {
+    result.sort((a, b) => b.created_at - a.created_at);
+  } else if (sort === 'net_profit_asc') {
+    result.sort((a, b) => a.net_profit - b.net_profit);
+  } else if (sort === 'net_profit_desc') {
+    result.sort((a, b) => b.net_profit - a.net_profit);
+  } else if (sort === 'bets_asc') {
+    result.sort((a, b) => a.bets - b.bets);
+  } else {
+    result.sort((a, b) => b.bets - a.bets);
   }
 
   return {
@@ -2563,7 +2645,6 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
-    // Validate connectedAccount
     if (!connectedAccount || !accounts || !accounts.includes(connectedAccount)) {
       return res.json({
         success: false,
@@ -2596,7 +2677,6 @@ router.post('/end_game', auth, async (req, res) => {
     }
 
     roomInfo.status = 'finished';
-    await saveDocumentWithRetry(roomInfo);
 
     const hostUpdates = [];
     const gameTransactions = []; // To store pending GameTransanction documents
@@ -2613,9 +2693,8 @@ router.post('/end_game', auth, async (req, res) => {
         // Validate deposit transaction (check both pending and completed)
         const depositTransaction = await GameTransanction.findOne({
           user: hostId,
-          room: roomId,
           status: { $in: ['pending', 'completed'] },
-          description: { $regex: '^(Pumped)', $options: 'i' },
+          description: { $regex: '^(Created)', $options: 'i' },
         });
 
         if (!depositTransaction) {
@@ -2625,7 +2704,7 @@ router.post('/end_game', auth, async (req, res) => {
           return res.json({
             success: false,
             message:
-              'No valid SOL deposit found within the last 15 minutes for this room. Please wait for your deposit to process and try again.',
+              'No valid SOL deposit found for this room. Please wait for your deposit to process and try again.',
             betResult: -1000,
           });
         }
@@ -2650,7 +2729,6 @@ router.post('/end_game', auth, async (req, res) => {
           });
         }
 
-        // Create a pending GameTransaction for the winnings
         const newGameTransaction = new GameTransanction({
           user: hostId,
           amount: amount,
@@ -2697,7 +2775,6 @@ router.post('/end_game', auth, async (req, res) => {
       game_result: -100,
     });
 
-    // Update the original GameTransanction to reflect the new logic
     const newTransactionC = new GameTransanction({
       user: userId,
       amount: (roomInfo.hosts[0].share / 100) * parseFloat(roomInfo.user_bet),
@@ -2708,6 +2785,7 @@ router.post('/end_game', auth, async (req, res) => {
     });
 
     await Promise.all([
+      saveDocumentWithRetry(roomInfo),
       saveDocumentWithRetry(newGameLog),
       saveDocumentWithRetry(newTransactionC),
     ]);
@@ -3361,14 +3439,12 @@ router.post('/jeet', auth, async (req, res) => {
 
     if (amountAfterFee > 0 && req.body.connectedAccount) {
       // Validate deposit transaction (check both pending and completed)
-      const depositTransaction = await  GameTransanction.findOne({
+      const depositTransaction = await GameTransanction.findOne({
         user: req.user._id,
         room: roomId,
         status: { $in: ['pending', 'completed'] },
         description: { $regex: '^(Pumped)', $options: 'i' },
       });
-
-      console.log('depositTransaction', depositTransaction);
 
       if (!depositTransaction) {
         console.warn(
@@ -3385,7 +3461,6 @@ router.post('/jeet', auth, async (req, res) => {
       // Validate connectedAccount as a Solana address
       try {
         const address = req.body.connectedAccount.trim(); // Remove whitespace
-        console.log("req.body.connectedAccount", address, "Type:", typeof address, "Length:", address.length);
         new PublicKey(address);
       } catch (error) {
         console.error("PublicKey error:", error.message);
@@ -3393,7 +3468,7 @@ router.post('/jeet', auth, async (req, res) => {
       }
 
       // Create a pending GameTransaction for the winnings
-      const newGameTransaction = new  GameTransanction({
+      const newGameTransaction = new GameTransanction({
         user: req.user._id,
         amount: amountAfterFee,
         description: `Jeeted ${roomInfo.name}`,
@@ -3873,7 +3948,7 @@ router.get('/candles/:room', async (req, res) => {
       });
     }
 
-    let transactions = await  GameTransanction.find({ room: room }).sort({
+    let transactions = await GameTransanction.find({ room: room }).sort({
       updated_at: 1,
     });
     // Start liquidity at 0 so the first candle open is 0.
@@ -4378,18 +4453,15 @@ router.post('/checkTokens', auth, async (req, res) => {
   });
 });
 
-router.get('/transactions', async (req, res) => {
+router.get('/recent-transactions', async (req, res) => {
   try {
     const { descriptionPrefix } = req.query;
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const transactions = await  GameTransanction.find({
+    const transactions = await GameTransanction.find({
       description: { $regex: `^${descriptionPrefix}`, $options: 'i' },
-      created_at: { $gte: thirtyDaysAgo },
     })
       .sort({ created_at: -1 })
-      .limit(20)
+      .limit(4)
       .populate({
         path: 'user',
         model: User,

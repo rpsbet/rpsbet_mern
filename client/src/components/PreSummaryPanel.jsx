@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import InfoIcon from '@mui/icons-material/Info';
 import WarningIcon from '@mui/icons-material/Warning';
 import Avatar from './Avatar';
@@ -21,14 +21,21 @@ import {
   faRobot,
   faCat,
   faShieldAlt,
+  faChevronLeft,
+  faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import {
-  Stack,
   Tooltip,
   Box,
   Typography,
   CircularProgress,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Paper,
+  ThemeProvider,
 } from '@mui/material';
+import { getCustomTheme } from '../config/theme';
 
 const PreSummaryPanel = (props) => {
   const {
@@ -59,316 +66,433 @@ const PreSummaryPanel = (props) => {
     bet_amount,
   } = props;
 
+  const scrollContainerRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Use custom theme
+  const customTheme = getCustomTheme(isDarkMode);
+
+  // Check scroll position to determine arrow visibility
+  const checkScrollPosition = () => {
+    const { current } = scrollContainerRef;
+    if (current) {
+      setShowLeftArrow(current.scrollLeft > 0);
+      setShowRightArrow(current.scrollLeft < current.scrollWidth - current.clientWidth - 10);
+      setScrollPosition(current.scrollLeft);
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      checkScrollPosition();
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', checkScrollPosition);
+      }
+    };
+  }, []);
+
+  // Handle scroll buttons
+  const handleScroll = (direction) => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = container.clientWidth * 0.75;
+      const newPosition =
+        direction === 'left' ? container.scrollLeft - scrollAmount : container.scrollLeft + scrollAmount;
+      container.scrollTo({
+        left: newPosition,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // Calculate returns for different game types
   const calculateQuickShootReturn = () => {
     if (qs_game_type && bet_amount) {
-      return (
-        (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
-        (1 - (roomInfo.tax + 5) / 100) -
-        bet_amount
-      );
+      return (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) * (1 - (roomInfo.tax + 5) / 100);
     }
     return 0;
   };
 
   const calculateRPSReturn = () => {
-    return bet_amount * 2 * ((100 - (roomInfo.tax + 5)) / 100) - bet_amount;
+    return bet_amount * 2 * ((100 - (roomInfo.tax + 5)) / 100);
   };
 
+  // LikeDislikeBar component
   const LikeDislikeBar = ({ likes = 0, dislikes = 0 }) => {
-    // Calculate total and percentages
     const total = likes + dislikes;
-    const likePercentage = total > 0 ? (likes / total) * 100 : 50; // Default to 50% if no votes
+    const likePercentage = total > 0 ? (likes / total) * 100 : 50;
     const dislikePercentage = total > 0 ? (dislikes / total) * 100 : 50;
-  
+
     return (
-      <Box className="data-item" >
-        {/* Label (unchanged) */}
-        <Typography variant="h6" className="label likes-dislikes" sx={{ mb: 1 }}>
+      <Box className="data-item" sx={{ minWidth: '180px' }}>
+        <Typography
+          variant="h6"
+          className="label likes-dislikes"
+          sx={{
+            mb: 1,
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: 'text.secondary', // #CCCCCC
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
           <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: 8 }} />
           Likes / Dislikes
         </Typography>
-  
-        {/* Like/Dislike Bar with Info Icon and Tooltip */}
-        <Tooltip
-          title={`Likes: ${likes} | Dislikes: ${dislikes} | Total votes: ${total}`}
+        {total === 0 ? (
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '1rem',
+              color: 'text.primary', // #ffffff
+            }}
+          >
+            No votes yet
+          </Typography>
+        ) : (
+          <Tooltip title={`${likes} likes, ${dislikes} dislikes (Total: ${total} votes)`}>
+            <Box
+              sx={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <Box
+                className="like-dislike-bar"
+                sx={{
+                  width: '100%',
+                  minWidth: 100,
+                  maxWidth: 300,
+                  height: 8,
+                  display: 'flex',
+                  overflow: 'hidden',
+                  borderRadius: '4px',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: `${likePercentage}%`,
+                    background: 'linear-gradient(to right, rgba(0, 255, 58, 0.7), rgba(0, 255, 58, 0.9))',
+                    transition: 'width 0.3s ease',
+                    height: '100%',
+                  }}
+                />
+                <Box
+                  sx={{
+                    width: `${dislikePercentage}%`,
+                    background: 'linear-gradient(to right, rgba(255, 0, 0, 0.7), rgba(255, 0, 0, 0.9))',
+                    transition: 'width 0.3s ease',
+                    height: '100%',
+                  }}
+                />
+              </Box>
+              <InfoIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            </Box>
+          </Tooltip>
+        )}
+      </Box>
+    );
+  };
+
+  // DataCard component
+  const DataCard = ({ icon, label, value, tooltip, warning = false, color = null, width = 180, children = null }) => {
+    return (
+      <Box
+        className="data-item"
+        sx={{
+          minWidth: `${width}px`,
+          borderRight: '1px solid rgba(255, 255, 255, 0.12)',
+          px: 2,
+          '&:last-child': {
+            borderRight: 'none',
+          },
+        }}
+      >
+        <Typography
+          variant="h6"
+          className={`label ${label.toLowerCase().replace(/\s+/g, '-')}`}
+          sx={{
+            mb: 1,
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: 'text.secondary',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
         >
+          <FontAwesomeIcon icon={icon} />
+          {label}
+        </Typography>
+        <Tooltip title={tooltip} placement="top" arrow>
           <Box
             sx={{
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: 1, // Space between bar and icon
+              gap: 1,
             }}
           >
-            {/* Bar Container */}
-            <Box
-              className="like-dislike-bar"
-              sx={{
-                width: '100%',
-                maxWidth: 300, // Adjust as needed
-                height: 10,
-                display: 'flex',
-                overflow: 'hidden',
-                borderRadius: '0.3em',
-              }}
-            >
-              {/* Likes Segment */}
-              <Box
+            {children || (
+              <Typography
+                variant="body1"
+                className="value"
                 sx={{
-                  width: `${likePercentage}%`,
-                  background: 'rgba(0, 255, 0, 0.5)', // Green for likes
-                  transition: 'width 0.3s ease',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  color: color || 'text.primary',
                 }}
-              />
-              {/* Dislikes Segment */}
-              <Box
-                sx={{
-                  width: `${dislikePercentage}%`,
-                  background: 'rgba(255, 0, 0, 0.5)', // Red for dislikes
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </Box>
-            {/* Info Icon */}
-            <InfoIcon sx={{ fontSize: 16 }} />
+              >
+                {value}
+              </Typography>
+            )}
+            {warning ? (
+              <WarningIcon sx={{ fontSize: 16, color: 'error.main' }} />
+            ) : (
+              <InfoIcon sx={{ fontSize: 16, color: 'text.secondary', opacity: 0.7 }} />
+            )}
           </Box>
         </Tooltip>
       </Box>
     );
   };
-  
 
   return (
-    <Stack direction="row" spacing={2}>
+    <ThemeProvider theme={customTheme}>
       <Box
-        className="pre-summary-panel title"
         sx={{
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: 'rgba(0, 0, 0, 0.4)',
-          },
+          position: 'relative',
+          width: '100%',
+          mb: 2,
+          overflow: 'hidden', // Prevent outer scrollbar
           '&::-webkit-scrollbar': {
-            display: 'none',
+            width: '8px',
+            height: '8px',
           },
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          overflow: 'hidden',
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#ff0000',
+            borderRadius: '4px',
+            '&:hover': {
+              background: '#cc0000',
+            },
+          },
+          scrollbarColor: '#ff0000 rgba(255, 255, 255, 0.1)',
+          scrollbarWidth: 'thin',
         }}
       >
-        {/* ROOM NAME */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label room-name">
-            <FontAwesomeIcon icon={faCat} style={{ marginRight: 8 }} /> Name /
-            Ticker
-          </Typography>
-          {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the name of the room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        {/* Left scroll button */}
+        {showLeftArrow && (
+          <IconButton
+            onClick={() => handleScroll('left')}
+            sx={{
+              position: 'absolute',
+              left: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              bgcolor: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(5px)',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.85)',
+              },
+              width: 40,
+              height: 40,
+              boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <FontAwesomeIcon icon={faChevronLeft} />
+          </IconButton>
+        )}
+
+        {/* Right scroll button */}
+        {showRightArrow && (
+          <IconButton
+            onClick={() => handleScroll('right')}
+            sx={{
+              position: 'absolute',
+              right: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              bgcolor: '_RGBA(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(5px)',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.85)',
+              },
+              width: 40,
+              height: 40,
+              boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <FontAwesomeIcon icon={faChevronRight} />
+          </IconButton>
+        )}
+
+        {/* Scroll indicator */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: -8,
+            left: 0,
+            right: 0,
+            height: 4,
+            bgcolor: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: 1,
+            overflow: 'hidden',
+            mx: 2,
+          }}
+        >
+          <Box
+            sx={{
+              height: '100%',
+              width: scrollContainerRef.current
+                ? `${(scrollContainerRef.current.clientWidth / scrollContainerRef.current.scrollWidth) * 100}%`
+                : '10%',
+              bgcolor: 'primary.main',
+              borderRadius: 1,
+              transition: 'transform 0.1s ease-out',
+              transform: scrollContainerRef.current
+                ? `translateX(${(scrollPosition / scrollContainerRef.current.scrollWidth) * 100 * (scrollContainerRef.current.scrollWidth / scrollContainerRef.current.clientWidth)}%)`
+                : 'translateX(0%)',
+            }}
+          />
+        </Box>
+
+        {/* Main scroll container */}
+        <Paper
+          elevation={3}
+          sx={{
+            bgcolor: 'rgb(17, 18, 19)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '16px 16px 0 0',
+            overflow: 'hidden',
+            '@supports not (backdrop-filter: blur(10px))': {
+              bgcolor: 'rgba(30, 30, 30, 0.5)',
+            },
+          }}
+        >
+          <Box
+            ref={scrollContainerRef}
+            sx={{
+              display: 'flex',
+              overflowX: 'auto',
+              py: 2,
+              '&::-webkit-scrollbar': {
+                width: '8px',
+                height: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#ff0000',
+                borderRadius: '4px',
+                '&:hover': {
+                  background: '#cc0000',
+                },
+              },
+              scrollbarColor: '#ff0000 rgba(255, 255, 255, 0.1)',
+              scrollbarWidth: 'thin',
+            }}
+          >
+            {/* ROOM NAME */}
+            <DataCard
+              icon={faCat}
+              label="Name / Ticker"
+              value={`${roomInfo?.name} `}
+              tooltip="Room name and associated ticker symbol"
+              width={200}
             >
-              <Typography variant="body1" className="value">
+              <Typography sx={{ fontSize: '1rem', fontWeight: 500, color: 'text.primary' }}>
                 {roomInfo?.name}{' '}
-                <span style={{ fontSize: 'x-small' }}>
+                <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'text.secondary' }}>
                   / ${roomInfo?.ticker}
                 </span>
               </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
-        
+            </DataCard>
 
-        {/* LIQUIDITY (already has a tooltip + icon logic) */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label">
-            <FontAwesomeIcon icon={faWater} style={{ marginRight: 8 }} />
-            Liquidity
-          </Typography>
-          <Tooltip
-            title={
-              isLowBankroll
-                ? `${parseFloat((Number(bankroll) || 0).toFixed(4))} SOL — LOW BANKROLL CAN CAUSE A BET TO FAIL`
-                : `${parseFloat((Number(bankroll) || 0).toFixed(3))} SOL`
-            }
-          >
-            <Box
-              className={`value ${isLowBankroll ? 'red-text' : ''}`}
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              {convertToCurrency(bankroll, solPrice)}
-              {!isLowBankroll ? (
-                <InfoIcon fontSize="small" sx={{ ml: 1 }} />
-              ) : (
-                <WarningIcon fontSize="small" sx={{ ml: 1 }} />
-              )}
-            </Box>
-          </Tooltip>
-        </Box>
-
-        {roomInfo.game_type !== 'Custom' && (
-
-          < Box className="data-item">
-            <Typography variant="h6" className="label your-max-return">
-              <FontAwesomeIcon icon={faDollarSign} style={{ marginRight: 8 }} />
-              Your Return
-            </Typography>
-            <Tooltip
-              title={
-                roomInfo.game_type === 'Quick Shoot' ? (
-                  <div>
-                    <span>EXPLANATION: </span>
-                    <p>
-                      Quick Shoot logic: (Bet Amount / (QS Game Type - 1) + Bet
-                      Amount), minus commission ({roomInfo.tax}%) and platform tax
-                      (1%).
-                    </p>
-                    <span>CALCULATION: </span>
-                    <div>
-                      {convertToCurrency(bet_amount, solPrice)} / (
-                      {qs_game_type - 1}) +{' '}
-                      {convertToCurrency(bet_amount, solPrice)} =
-                      {convertToCurrency(
-                        bet_amount / (qs_game_type - 1) + bet_amount,
-                        solPrice,
-                      )}
-                    </div>
-                    <div>
-                      -({roomInfo.tax} + 1)% ={' '}
-                      {convertToCurrency(calculateQuickShootReturn(), solPrice)}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <span>EXPLANATION: </span>
-                    <p>
-                      2x your Bet Amount, then deduct Host(s)'s(') commission
-                      (RTB), finally 1% platform tax.
-                    </p>
-                    <span>CALCULATION: </span>
-                    <div>
-                      {convertToCurrency(bet_amount, solPrice)} x 2 ={' '}
-                      {convertToCurrency(bet_amount * 2, solPrice)}
-                    </div>
-                    <div>
-                      -({roomInfo.tax} + 1)% ={' '}
-                      {convertToCurrency(calculateRPSReturn(), solPrice)}
-                    </div>
-                  </div>
-                )
+            {/* LIQUIDITY */}
+            <DataCard
+              icon={faWater}
+              label="Liquidity"
+              value={`${parseFloat(bankroll).toFixed(3)} SOL`}
+              tooltip={
+                isLowBankroll
+                  ? `Available liquidity: ${convertToCurrency(Number(bankroll), solPrice)} - Low liquidity may prevent bet execution`
+                  : `Available liquidity: ${convertToCurrency(Number(bankroll), solPrice)}`
               }
-            >
-              <Box
-                className="value"
-                sx={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  color:
-                    (roomInfo.game_type === 'Quick Shoot'
-                      ? calculateQuickShootReturn()
-                      : calculateRPSReturn()) > 0
-                      ? '#00ff3a'
-                      : 'red',
-                }}
-              >
-                {convertToCurrency(
-                  roomInfo.game_type === 'Quick Shoot'
-                    ? calculateQuickShootReturn()
-                    : calculateRPSReturn(),
-                  solPrice,
-                )}
-                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-              </Box>
-            </Tooltip>
-          </Box>
-        )}
-
-        {/* ROOM PROFIT (already has a tooltip) */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label net-profit">
-            <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: 8 }} />
-            Room Profit
-          </Typography>
-          <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-            <Box
-              className="value"
-              sx={{
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Typography
-                variant="body1"
-                className={`value ${isLowProfit ? 'green-text' : 'red-text'}`}
-                sx={{ mr: 1 }}
-              >
-                {isNaN(hostProfit - totalStakes)
-                  ? 'N/A'
-                  : convertToCurrency(hostProfit - totalStakes, solPrice)}
-              </Typography>
-              {isLowProfit ? (
-                <InfoIcon sx={{ color: '#00ff3a', fontSize: 16 }} />
-              ) : (
-                <WarningIcon sx={{ color: 'red', fontSize: 16 }} />
-              )}
-            </Box>
-          </Tooltip>
-        </Box>
-
-        {/* TAX (already has a tooltip) */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label commission">
-            <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />
-            Tax
-          </Typography>
-          <Tooltip title="Host's Room Tax. Minimum 1% goes to the platform.">
-            <Box
-              sx={{
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Typography
-                variant="body1"
-                className={`value ${isHighCommission ? 'red-text' : ''}`}
-                sx={{ display: 'flex', alignItems: 'center' }}
-              >
-                {roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`}
-                {!isHighCommission ? (
-                  <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-                ) : (
-                  <WarningIcon sx={{ color: 'red', fontSize: 16, ml: 1 }} />
-                )}
-              </Typography>
-            </Box>
-          </Tooltip>
-        </Box>
-
-        <Box className="data-item">
-          <Typography variant="h6" className="label created">
-            <FontAwesomeIcon
-              icon={faHandHoldingUsd}
-              style={{ marginRight: 8 }}
+              warning={isLowBankroll}
+              color={isLowBankroll ? '#ff4444' : 'text.primary'}
             />
-            Health
-          </Typography>
-          <Tooltip title="WHEN THIS GOES TO 0% THE GAME DIES AND IS CONVERTED TO A TRADEABLE TOKEN">
-            <Box
-              sx={{
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                mb: '-7.5px',
-                mr: '-20px',
-              }}
+
+            {/* RETURN */}
+            {roomInfo.game_type !== 'Custom' && (
+              <DataCard
+                icon={faDollarSign}
+                label="Return"
+                value={`${(roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn()).toFixed(4)} SOL`}
+                tooltip={
+                  roomInfo.game_type === 'Quick Shoot'
+                    ? 'Quick Shoot Return: (Bet / (Game Type - 1) + Bet) × (1 - Fees)'
+                    : 'RPS Return: (Bet × 2) × (1 - Fees)'
+                }
+                color={
+                  (roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn()) > 0
+                    ? '#03ff3b'
+                    : '#ff0000'
+                }
+              />
+            )}
+
+            {/* HOST PROFIT */}
+            <DataCard
+              icon={faBalanceScale}
+              label="Host Profit"
+              value={isNaN(hostProfit - totalStakes) ? 'N/A' : convertToCurrency(hostProfit - totalStakes, solPrice)}
+              tooltip="Net profit: Current bankroll - Initial bankroll"
+              warning={!isLowProfit}
+              color={isLowProfit ? '#03ff3b' : '#ff0000'}
+            />
+
+            {/* TAX */}
+            <DataCard
+              icon={faPercentage}
+              label="Tax"
+              value={roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`}
+              tooltip="Host's fees on winnings"
+              warning={isHighCommission}
+              color="text.primary"
+            />
+
+            {/* HEALTH */}
+            <DataCard
+              icon={faHandHoldingUsd}
+              label="Health"
+              tooltip="Room health percentage or Hard Cap value. At 0%, the game ends and converts to a tradeable token"
+              width={150}
             >
               <Box position="relative" display="inline-flex">
                 <CircularProgress
@@ -391,102 +515,58 @@ const PreSummaryPanel = (props) => {
                   <Typography
                     variant="caption"
                     component="div"
-                    sx={{ fontSize: '0.6em', fontWeight: 'bold' }}
+                    sx={{
+                      fontSize: '0.6rem',
+                      fontWeight: 'bold',
+                      color: 'text.primary',
+                    }}
                   >
-                    {`${100 - payoutPercentage}%`}
+                    {`${Math.round(100 - payoutPercentage)}%`}
                   </Typography>
                 </Box>
               </Box>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+            </DataCard>
 
-        {/* BATTLES */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label room-name">
-            <FontAwesomeIcon icon={faShieldAlt} style={{ marginRight: 8 }} />{' '}
-            Battles
-          </Typography>
-          {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the number of battles of this room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            {/* BATTLES */}
+            <DataCard
+              icon={faShieldAlt}
+              label="Battles"
+              value={battles}
+              tooltip="Total number of battles conducted in this room"
+              color="text.primary"
+            />
+
+            {/* LIKES / DISLIKES */}
+            <LikeDislikeBar likes={roomInfo?.likes?.length || 0} dislikes={roomInfo?.dislikes?.length || 0} />
+
+            {/* WIN CHANCE */}
+            {roomInfo.game_type !== 'Custom' && (
+              <DataCard
+                icon={faDice}
+                label="Win Chance"
+                value={`${winChance}%`}
+                tooltip="Estimated probability of winning based on game mechanics"
+                color="text.primary"
+              />
+            )}
+
+            {/* STAKING REWARDS */}
+            <DataCard
+              icon={faCoins}
+              label="Staking Rewards"
+              value={convertToCurrency(pr, solPrice)}
+              tooltip="Rewards distributed every 3 hours at 0.0001% of bankroll for public rooms"
+              color="#00fff5"
+            />
+
+            {/* CREATOR */}
+            <DataCard
+              icon={faUser}
+              label="Creator"
+              tooltip="Profile of the user who created this room"
+              width={150}
             >
-              <Typography variant="body1" className="value">
-                {battles}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
-
-        {/* LIKES / DISLIKES */}
-        <LikeDislikeBar
-          likes={roomInfo?.likes?.length || 0}
-          dislikes={roomInfo?.dislikes?.length || 0}
-        />
-
-        {/* WIN CHANCE */}
-        {roomInfo.game_type !== 'Custom' && (
-          <Box className="data-item">
-            <Typography variant="h6" className="label chance">
-              <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />
-              Win Chance
-            </Typography>
-            {/* Add a tooltip + info icon for the value */}
-            <Tooltip title="Probability of winning each battle, based on your strategy or random factors.">
-              <Box
-                sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <Typography variant="body1" className="value">
-                  {winChance}%
-                </Typography>
-                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-              </Box>
-            </Tooltip>
-          </Box>
-        )}
-
-        {/* INTEREST RECEIVED (already has a tooltip) */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label public-interest">
-            <FontAwesomeIcon icon={faCoins} style={{ marginRight: 8 }} />
-            Staking Rewards
-          </Typography>
-          <Typography variant="body1" className="value" component="div">
-            <Tooltip title="Paid every 3 hours at 0.0001% of the bankroll if the room is public.">
-              <Box
-                sx={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Typography component="span" sx={{ color: '#00fff5' }}>
-                  {convertToCurrency(pr, solPrice)}
-                </Typography>
-                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-              </Box>
-            </Tooltip>
-          </Typography>
-        </Box>
-
-        {/* CREATOR */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label host-display-name">
-            <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
-            Dev
-          </Typography>
-          <Tooltip title="The user who created this room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <a
-                className="player"
-                onClick={() => handleOpenPlayerModal(creator_id)}
-                style={{ textDecoration: 'none' }}
-              >
+              <Box onClick={() => handleOpenPlayerModal(creator_id)} sx={{ cursor: 'pointer' }}>
                 <Avatar
                   className="avatar"
                   src={creator_avatar}
@@ -498,89 +578,48 @@ const PreSummaryPanel = (props) => {
                   alt=""
                   darkMode={isDarkMode}
                 />
-              </a>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+              </Box>
+            </DataCard>
 
-        {/* STATUS */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label room-id">
-            <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: 8 }} />
-            Status
-          </Typography>
-          <Tooltip title="The current status of this room (e.g., open, finished, etc.)">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography variant="body1" className="value">
-                {status}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+            {/* STATUS */}
+            <DataCard
+              icon={faInfoCircle}
+              label="Status"
+              value={status}
+              tooltip="Current operational status of the room (e.g., Open, Paused, Finished)"
+              color="text.primary"
+            />
 
-        {/* CREATED */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label public-max-return">
-            <FontAwesomeIcon icon={faCalendarAlt} style={{ marginRight: 8 }} />
-            Created
-          </Typography>
-          <Tooltip title="When this room was created.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography variant="body1" className="value">
-                {Moment(roomInfo?.created_at).fromNow()}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+            {/* CREATED */}
+            <DataCard
+              icon={faCalendarAlt}
+              label="Created"
+              value={Moment(roomInfo?.created_at).fromNow()}
+              tooltip="Timestamp of when the room was created"
+              color="text.primary"
+            />
 
-        {/* STRATEGY */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label room-name">
-            <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> Game-Type
-          </Typography>
-          {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the Game-Type of the room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography id="ai_mode" variant="body1" className="value">
-                {roomInfo?.game_type}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+            {/* GAME TYPE */}
+            <DataCard
+              icon={faRobot}
+              label="Game Type"
+              value={roomInfo?.game_type}
+              tooltip="Type of game"
+              color="text.primary"
+            />
 
-        {/* ROOM ID */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label room-name">
-            <FontAwesomeIcon
+            {/* ROOM ID */}
+            <DataCard
               icon={faSortNumericUp}
-              style={{ marginRight: 8 }}
-            />{' '}
-            ID
-          </Typography>
-          {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the ID of the room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography variant="body1" className="value">
-                {roomInfo?.room_name}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+              label="ID"
+              value={roomInfo?.room_name}
+              tooltip="Unique identifier for this room"
+              color="text.primary"
+            />
+          </Box>
+        </Paper>
       </Box>
-    </Stack >
+    </ThemeProvider>
   );
 };
 

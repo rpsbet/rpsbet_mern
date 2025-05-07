@@ -15,11 +15,6 @@ import {
   TableRow,
   TableContainer,
   Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
   useMediaQuery,
   InputAdornment
 } from '@mui/material';
@@ -44,9 +39,6 @@ import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
-import SettingsIcon from '@mui/icons-material/Tune';
-import InfoIcon from '@mui/icons-material/Info';
-
 
 function CoHostModal({
   isDarkMode,
@@ -67,15 +59,12 @@ function CoHostModal({
   const socket = useSelector((state) => state.auth.socket);
   const trade_loading = useSelector((state) => state.logic.trade_loading);
 
-  // 1) We read the candles & transactions from Redux:
   const storeCandles = useSelector((state) => state.logic.candles);
   const transactions = useSelector((state) => state.logic.transactions);
 
-  // 2) Local states & references
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedTab, setSelectedTab] = useState('PUMP');
-  const [timeFrame, setTimeFrame] = useState('1m');
   const [localCoHostAmount, setLocalCoHostAmount] = useState(0.01);
 
   // For the chart
@@ -84,10 +73,8 @@ function CoHostModal({
   const chartInstanceRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const isSmallScreen = useMediaQuery('(max-width:1024px)');
-
 
   // ------------------ WATCH storeCandles from Redux ------------------
   useEffect(() => {
@@ -163,14 +150,12 @@ function CoHostModal({
   }, [localChartData]);
 
   // ------------------ SOCKET FOR REAL-TIME CANDLE? (Optional) ------------------
-  // If your socket also emits new candles, you'd merge them here
-  // For brevity, omitted or you can do something like:
+
   useEffect(() => {
     if (!selectedRow?._id || !socket) return;
     const candleEvent = `NEW_CANDLE_${selectedRow._id}`;
     const handleNewCandle = (data) => {
       // console.log("NEW CANDLE——————data", data)
-      // data = { newCandle: { ... } }
       dispatch(someActionToAppendCandle(data.newCandle));
     };
     socket.on(candleEvent, handleNewCandle);
@@ -178,14 +163,6 @@ function CoHostModal({
       socket.off(candleEvent, handleNewCandle);
     };
   }, [selectedRow?._id, socket]);
-
-  const handleDialogOpen = () => {
-    setDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-  };
 
   // ------------------ REMAINING LOGIC (Pump/Jeet, Table, etc.) ------------------
   const calculatePercentageChange = (current, original) => {
@@ -197,14 +174,6 @@ function CoHostModal({
     selectedRow.bet_amount
   );
 
-  /**
- * Simulate a Pump (Buy) action on the front end.
- * Mirrors the key logic from your /pump endpoint:
- *  - Mints new shares = netDeposit
- *  - Distributes a bonus fraction of those shares to existing holders
- *  - Gives the remainder to the buyer
- *  - Normalizes percentages so they sum to 100
- */
   function simulatePump({
     currentLiquidity,
     hosts,
@@ -294,13 +263,6 @@ function CoHostModal({
     };
   }
 
-  /**
-   * Simulate a Jeet (Sell) action on the front end.
-   * Mirrors the key logic from your /jeet endpoint:
-   *  - User sells `sharesToSell` shares
-   *  - There's a shockRatio that reduces other hosts' shares
-   *  - Recompute new total, normalize, etc.
-   */
   function simulateJeet({
     currentLiquidity,
     hosts,
@@ -573,7 +535,7 @@ function CoHostModal({
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '16px',
+          borderRadius: '0 0 16px 16px',
           '@supports not (backdrop-filter: blur(10px))': {
             background: 'rgba(0, 0, 0, 0.4)',
           },
@@ -629,7 +591,7 @@ function CoHostModal({
                             liquidityPercentageChange > 0
                               ? '#fff'
                               : liquidityPercentageChange < 0
-                                ? 'red'
+                                ? '#FF0000'
                                 : 'text.primary'
                         }}
                       >
@@ -640,7 +602,7 @@ function CoHostModal({
                           <TrendingUpOutlined sx={{ ml: 1, color: 'green' }} />
                         )}
                         {liquidityPercentageChange < 0 && (
-                          <TrendingDownOutlined sx={{ ml: 1, color: 'red' }} />
+                          <TrendingDownOutlined sx={{ ml: 1, color: '#FF0000' }} />
                         )}
                       </Typography>
                     </Box>
@@ -714,30 +676,7 @@ function CoHostModal({
             </Box>
           </Box>
         )}
-        {/* Dialog that appears when the gear icon is clicked */}
-        <Dialog open={dialogOpen} onClose={handleDialogClose}>
-          <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
-            Slippage — coming soon
-            <Tooltip
-              title="Tired of waiting for rooms to be less busy? Slippage comes soon to catsino.fun allowing you to trade seamlessly"
-              arrow
-            >
-              <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="inherit" />
-              </IconButton>
-            </Tooltip>
-          </DialogTitle>
-          <DialogContent>
-            <Typography>
-              Stay tuned! Slippage functionality is coming soon to allow you to trade seamlessly even during busy times.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button color="error" onClick={handleDialogClose}>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+
         {/* PUMP / JEET inputs */}
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
@@ -751,30 +690,6 @@ function CoHostModal({
             }}
           >
             <Summary shortVersion={!has_joined ? false : true} />
-
-            {/* Settings button with improved position and tooltip */}
-            {/* <Tooltip
-              title="Tired of waiting for rooms to be less busy? Slippage controls coming soon to catsino.fun"
-              arrow
-              placement="left"
-            >
-              <IconButton
-                size="small"
-                sx={{
-                  color: 'white',
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                  }
-                }}
-                onClick={handleDialogOpen}
-              >
-                <SettingsIcon fontSize="small" />
-              </IconButton>
-            </Tooltip> */}
 
             {/* Trade type selection with improved visuals */}
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
@@ -811,15 +726,15 @@ function CoHostModal({
                   textTransform: 'none',
                   borderRadius: 2,
                   height: 48,
-                  borderColor: selectedTab !== 'JEET' ? '#D32F2F' : '',
-                  color: selectedTab !== 'JEET' ? '#D32F2F' : '',
+                  borderColor: selectedTab !== 'JEET' ? '#FF0000' : '',
+                  color: selectedTab !== 'JEET' ? '#FF0000' : '',
                   fontSize: '1rem',
                   fontWeight: 'bold',
                   transition: 'all 0.2s ease'
                 }}
               >
                 JEET
-                <TrendingDownOutlined sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#D32F2F' }} />
+                <TrendingDownOutlined sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#FF0000' }} />
               </Button>
             </Box>
 
@@ -906,7 +821,7 @@ function CoHostModal({
             </Box>
 
             {/* Trade information table with improved visuals */}
-            <Paper elevation={0} sx={{ backgroundColor: 'rgba(0, 0, 0, 0.15)', borderRadius: 2, mt: 1, overflow: 'hidden' }}>
+            <Paper elevation={0} sx={{ backgroundColor: 'rgba(0, 0, 0, 0.15)', borderRadius: 0, mt: 1, overflow: 'hidden' }}>
               <Table>
                 <TableBody>
                   {!input_only && (
@@ -915,7 +830,7 @@ function CoHostModal({
                         <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
                           YOUR BALANCE:
                         </TableCell>
-                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: 'bold' }}>
+                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                           {convertToCurrency(balance, solPrice)}
                         </TableCell>
                       </TableRow>
@@ -923,7 +838,7 @@ function CoHostModal({
                         <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
                           CURRENT BANKROLL:
                         </TableCell>
-                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#ff8500', fontWeight: 'bold' }}>
+                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#ff8500' }}>
                           {selectedRow
                             ? convertToCurrency(parseFloat(selectedRow.user_bet || 0), solPrice)
                             : "N/A"}
@@ -935,86 +850,102 @@ function CoHostModal({
                   {/* BEFORE */}
                   <TableRow>
                     <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
-                      YOUR POSITION:
+                      CURRENT POSITION:
                     </TableCell>
                     <TableCell
                       align="right"
-                      sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#ff8500', whiteSpace: 'pre-wrap', fontWeight: 'bold' }}
+                      sx={{ borderBottom: 'none', whiteSpace: 'pre-wrap' }}
                     >
-                      {(() => {
-                        if (!Array.isArray(hosts) || !selectedRow) {
-                          return convertToCurrency(0, solPrice);
-                        }
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        color="warning"
+                      >
+                        {(() => {
+                          if (!Array.isArray(hosts) || !selectedRow) {
+                            return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
+                          }
 
-                        // Check if current user is a host
-                        const existingHost = hosts.find((h) => h.host === user?._id);
-                        if (!existingHost) {
-                          return convertToCurrency(0, solPrice);
-                        }
+                          // Check if current user is a host
+                          const existingHost = hosts.find((h) => h.host === user?._id);
+                          if (!existingHost) {
+                            return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
+                          }
 
-                        // Show % and absolute stake
-                        const currentBankroll = parseFloat(selectedRow.user_bet) || 0;
-                        const pct = existingHost.share.toFixed(2);
-                        const absStake = (existingHost.share / 100) * currentBankroll;
+                          // Show % and absolute stake
+                          const currentBankroll = parseFloat(selectedRow.user_bet) || 0;
+                          const pct = existingHost.share.toFixed(2);
+                          const absStake = (existingHost.share / 100) * currentBankroll;
 
-                        return `${pct}%\n(${convertToCurrency(absStake, solPrice)} / ${absStake.toFixed(
-                          6
-                        )} SOL)`;
-                      })()}
+                          return `${pct}% / ${absStake.toFixed(6)} SOL (${convertToCurrency(absStake, solPrice)})`;
+                        })()}
+                      </Typography>
                     </TableCell>
                   </TableRow>
 
                   {/* AFTER - with visual distinction */}
-                  <TableRow sx={{ backgroundColor: 'rgba(255, 0, 0, 0.1)' }}>
-                    <TableCell sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
-                      AFTER TRADE:
+                  <TableRow sx={{ backgroundColor: 'rgba(114, 114, 114, 0.1)' }}>
+                    <TableCell sx={{ color: 'text.secondary' }}>
+                      PROJECTED POSITION:
                     </TableCell>
                     <TableCell
                       align="right"
-                      sx={{ color: '#ff8500', whiteSpace: 'pre-line', fontWeight: 'bold' }}
+                      sx={{ color: '#ff8500', whiteSpace: 'pre-line', fontWeight: 700, fontSize: '0.875rem' }}
                     >
                       {(() => {
                         // Guard checks
-                        if (!selectedRow || !Array.isArray(hosts)) return '0%';
+                        if (!selectedRow || !Array.isArray(hosts)) {
+                          return (
+                            <>
+                              0% / 0.000000 SOL (<span style={{ color: 'grey' }}>{convertToCurrency(0, solPrice)}</span>)
+                            </>
+                          );
+                        }
 
                         const currentBankroll = parseFloat(selectedRow.user_bet || 0);
-                        if (!currentBankroll) return '0%';
+                        if (!currentBankroll) {
+                          return (
+                            <>
+                              0% / 0.000000 SOL (<span style={{ color: 'grey' }}>{convertToCurrency(0, solPrice)}</span>)
+                            </>
+                          );
+                        }
 
                         // Convert user input to a float
                         const inputValue = parseFloat(coHostAmount || '0');
                         if (inputValue <= 0) {
-                          // If user didn't input anything > 0, there's no difference from "BEFORE".
-                          return '0%';
+                          return (
+                            <>
+                              0% / 0.000000 SOL (<span style={{ color: 'grey' }}>{convertToCurrency(0, solPrice)}</span>)
+                            </>
+                          );
                         }
 
                         // Decide which "simulate" to run
                         if (selectedTab === 'PUMP') {
                           // Simulate Pump
-                          const {
-                            userFinalSharePct,
-                            userFinalAbsolute,
-                          } = simulatePump({
+                          const { userFinalSharePct, userFinalAbsolute } = simulatePump({
                             currentLiquidity: currentBankroll,
                             hosts,
                             userId: user?._id,
-                            deposit: inputValue, // user is depositing coHostAmount
-                            commissionPct: 2.5,  // adapt to your real fee
-                            bonusFraction: 0.12, // adapt to your real bonus fraction
+                            deposit: inputValue,
+                            commissionPct: 2.5,
+                            bonusFraction: 0.12,
                           });
 
                           const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
                           const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
                           const displaySol = userFinalAbsolute.toFixed(6);
-                          return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
+                          return (
+                            <>
+                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.75rem' }}> / {displaySol} SOL ({displayCurrency})</span>
+                            </>
+                          );
                         } else {
                           // Simulate Jeet
                           const sharesToSell = inputValue;
 
-                          const {
-                            userFinalSharePct,
-                            userFinalAbsolute,
-                            error,
-                          } = simulateJeet({
+                          const { userFinalSharePct, userFinalAbsolute, error } = simulateJeet({
                             currentLiquidity: currentBankroll,
                             hosts,
                             userId: user?._id,
@@ -1024,13 +955,17 @@ function CoHostModal({
                           });
 
                           if (error) {
-                            return error; // e.g. "Not enough shares"
+                            return error;
                           }
 
                           const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
                           const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
                           const displaySol = userFinalAbsolute.toFixed(6);
-                          return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
+                          return (
+                            <>
+                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.75rem' }}>/ {displaySol} SOL ({displayCurrency})</span>
+                            </>
+                          );
                         }
                       })()}
                     </TableCell>
@@ -1041,7 +976,7 @@ function CoHostModal({
 
             {/* Fee information */}
             <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
-              {selectedTab === 'PUMP' ? 'Trading fee: 2.5%' : 'Trading fee: 2.5%'}
+              {selectedTab === 'PUMP' ? 'Trading fee: 5%' : 'Trading fee: 5%'}
             </Typography>
           </Box>
         )}

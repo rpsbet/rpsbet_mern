@@ -255,7 +255,7 @@ const Comments = ({ roomId }) => {
                   textTransform: 'none',
                   borderRadius: 1,
                   '&:hover': {
-                    background: '#d32f2f',
+                    background: '#FF0000',
                     boxShadow: '0 4px 16px rgba(211, 47, 47, 0.3)',
                   },
                 }}

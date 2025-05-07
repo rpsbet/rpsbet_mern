@@ -325,7 +325,6 @@ function TabbedContent(props) {
                 background: 'rgba(0, 0, 0, 0.2)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: '12px',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             >
@@ -386,7 +385,7 @@ function TabbedContent(props) {
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: '#D32F2F',
+                          backgroundColor: '#FF0000',
                         }}
                       />
                     </motion.div>
@@ -401,7 +400,7 @@ function TabbedContent(props) {
           <Paper
             square
             variant="inherit"
-            sx={{ backgroundColor: 'transparent', position: 'relative', mb: 1 }}
+            sx={{ backgroundColor: '#111213', position: 'relative', mb: 1, border: '1px solid #414242' }}
             className="join-game-panel"
           >
             {/* Result Display for Mobile */}
@@ -590,7 +589,7 @@ function TabbedContent(props) {
     return (
       <div className="tabs-container">
         <Tabs
-          TabIndicatorProps={{ style: { background: '#D32F2F' } }}
+          TabIndicatorProps={{ style: { background: '#FF0000' } }}
           value={selectedTab}
           onChange={handleTabChange}
           textColor="inherit"

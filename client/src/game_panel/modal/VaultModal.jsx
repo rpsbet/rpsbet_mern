@@ -258,13 +258,13 @@ function VaultModal({ modalIsOpen, closeModal }) {
                       const isWithdrawal = transaction?.description.includes('withdrawal');
                       return (
                         <TableRow key={index}>
-                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#D32F2F' }}>
+                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#FF0000' }}>
                             {isWithdrawal ? '-' : '+'}
                           </TableCell>
-                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#D32F2F' }}>
+                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#FF0000' }}>
                             {convertToCurrency(transaction?.amount, solPrice)}
                           </TableCell>
-                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#D32F2F' }}>
+                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#FF0000' }}>
                             {new Date(transaction?.created_at).toLocaleString()}
                           </TableCell>
                         </TableRow>

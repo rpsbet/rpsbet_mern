@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   setHighlightedRooms,
@@ -9,32 +9,53 @@ import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
-import { Tooltip, Skeleton, Box, Typography } from '@mui/material';
+import {
+  Tooltip,
+  Skeleton,
+  Box,
+  Typography,
+  useTheme,
+  alpha
+} from '@mui/material';
 import PlayerModal from '../modal/PlayerModal';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
-// Helper function for "time ago"
-const customFromNow = (date) => {
+/**
+ * Formats a timestamp into a human-readable "time ago" string
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted time string (e.g. "5m ago")
+ */
+const formatTimeAgo = (date) => {
   const now = Moment();
   const duration = Moment.duration(now.diff(date));
+
   if (duration.asSeconds() < 60) return `${Math.round(duration.asSeconds())}s ago`;
   if (duration.asMinutes() < 60) return `${Math.round(duration.asMinutes())}m ago`;
   if (duration.asHours() < 24) return `${Math.round(duration.asHours())}h ago`;
   return `${Math.round(duration.asDays())}d ago`;
 };
 
-const theme = getCustomTheme();
+/**
+ * Updates the "from now" property for all history items
+ * @param {Array} history - History items array
+ * @returns {Array} Updated history items with refreshed timestamps
+ */
+const updateTimestamps = (history) => {
+  if (!history || !Array.isArray(history)) return [];
 
-// Rebuilds the 'from now' for each log
-const updateFromNow = (history) =>
-  history.map((item) => ({
+  return history.map((item) => ({
     ...item,
-    from_now: customFromNow(Moment(item.created_at)),
+    from_now: formatTimeAgo(Moment(item.created_at)),
   }));
+};
 
+/**
+ * HistoryTable component displays a real-time transaction history
+ * with filtering and interactive elements
+ */
 function HistoryTable({
   socket: propSocket,
   history: propHistory,
@@ -42,29 +63,35 @@ function HistoryTable({
   solPrice: propSolPrice,
 }) {
   const dispatch = useDispatch();
+  const theme = useTheme();
 
-  // Map state from Redux using useSelector
-  const { socket, history, userId, solPrice } = useSelector((state) => ({
+  // Get values from Redux store
+  const {
+    socket: reduxSocket,
+    history: reduxHistory,
+    userId: reduxUserId,
+    solPrice: reduxSolPrice
+  } = useSelector((state) => ({
     socket: state.auth.socket,
     history: state.logic.history,
     userId: state.auth.user?._id,
     solPrice: state.logic.solPrice,
   }));
 
-  // Use prop values if provided, otherwise fall back to Redux state
-  const effectiveSocket = propSocket !== undefined ? propSocket : socket;
-  const effectiveHistory = propHistory !== undefined ? propHistory : history;
-  const effectiveUserId = propUserId !== undefined ? propUserId : userId;
-  const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
+  // Use prop values if provided, otherwise use Redux state
+  const socket = propSocket ?? reduxSocket;
+  const initialHistory = propHistory ?? reduxHistory;
+  const userId = propUserId ?? reduxUserId;
+  const solPrice = propSolPrice ?? reduxSolPrice;
 
-  // Local State
-  const [historyState, setHistory] = useState(updateFromNow(effectiveHistory));
-  const [rawLogs, setRawLogs] = useState(effectiveHistory);
+  // Local state
+  const [rawLogs, setRawLogs] = useState(initialHistory || []);
+  const [historyState, setHistoryState] = useState([]);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [copiedRowId, setCopiedRowId] = useState(null);
 
-  // Fetch site settings
+  // Fetch settings once on component mount
   const fetchSettings = useCallback(async () => {
     try {
       await dispatch(getSettings());
@@ -73,406 +100,432 @@ function HistoryTable({
     }
   }, [dispatch]);
 
-  // Build final message with JSX
-  const buildFinalMessage = (logItem) => {
-    if (!effectiveSolPrice) {
+  /**
+   * Renders avatar with player information
+   * @param {Object} userObj - User data object
+   * @returns {JSX.Element|null} Avatar component or null if no user
+   */
+  const renderAvatar = useCallback((userObj) => {
+    if (!userObj?._id) return null;
+
+    return (
+      <Box
+        component="a"
+        onClick={() => handleOpenPlayerModal(userObj._id)}
+        sx={{
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center'
+        }}
+      >
+        <Avatar
+          user_id={userObj._id}
+          src={userObj.avatar}
+          username={userObj.username}
+          rank={userObj.totalWagered}
+          accessory={userObj.accessory}
+          elite={userObj.elite}
+          alt={userObj.username || ''}
+          className="avatar"
+          style={{
+            display: 'inline-block',
+            marginRight: 8,
+            verticalAlign: 'middle',
+          }}
+        />
+      </Box>
+    );
+  }, []);
+
+  /**
+   * Renders room information with ticker and image
+   * @param {Object} roomObj - Room data object
+   * @returns {JSX.Element|null} Room info component or null
+   */
+  const renderRoomInfo = useCallback((roomObj) => {
+    if (!roomObj?._id) return null;
+
+    const displayRoom = `(${roomObj.ticker})`;
+
+    return (
+      <Box
+        component="a"
+        href={`/join/${roomObj._id}`}
+        sx={{
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          textDecoration: 'none',
+          '&:hover': {
+            textDecoration: 'underline',
+          }
+        }}
+        className="room"
+      >
+        <img
+          src={roomObj.image}
+          alt={roomObj.ticker || 'room'}
+          className="game-type-icon"
+          loading="lazy"
+          style={{
+            display: 'inline-block',
+            marginLeft: 6,
+            marginRight: 4,
+            width: 16,
+            height: 16
+          }}
+        />
+        <Typography
+          variant="body2"
+          sx={{
+            mr: 0.5,
+            color: '#fff'
+          }}
+        >
+          {displayRoom}
+        </Typography>
+      </Box>
+    );
+  }, [theme.palette.text.primary]);
+
+  /**
+   * Builds message content based on log action type
+   * @param {Object} logItem - Log data object
+   * @returns {JSX.Element} Formatted message content
+   */
+  const buildFinalMessage = useCallback((logItem) => {
+    if (!solPrice) {
       return 'Loading price...';
     }
 
-    const betAmt = convertToCurrency(logItem.bet_amount, effectiveSolPrice);
-    const winnings = convertToCurrency(logItem.winnings, effectiveSolPrice);
-    const userBet = convertToCurrency(logItem.user_bet, effectiveSolPrice);
-    const displayRoom = `(${logItem.room?.ticker})`;
-
+    const betAmt = convertToCurrency(logItem.bet_amount, solPrice);
+    const winnings = convertToCurrency(logItem.winnings, solPrice);
     const joinedUser = logItem.joined_user || {};
     const creator = logItem.creator || {};
 
-    const renderRoomInfo = (roomObj) => {
-      if (!roomObj._id) return null;
-      return (
-        <Box
-          component="a"
-          href={`/join/${roomObj._id}`}
+    // Common style for all messages
+    const messageStyles = {
+      fontSize: '0.8rem',
+      fontWeight: 500,
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 1,
+      whiteSpace: 'nowrap',
+      textOverflow: 'ellipsis'
+    };
+
+    // Highlight amounts with different colors based on action
+    const getAmountColor = (action) => {
+      switch (action) {
+        case 'won':
+        case 'split':
+          return '#00ff3a';
+        case 'lost':
+        case 'rugged':
+        case 'jeet':
+          return theme.palette.error.main;
+        default:
+          return theme.palette.info.main;
+      }
+    };
+
+    const AmountText = ({ children, action }) => (
+
+        <Typography
+          component="span"
           sx={{
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            color: getAmountColor(action),
+            fontWeight: 700
           }}
-          className="room"
         >
-          <img
-            src={roomObj.image}
-            alt={roomObj.image}
-            className="game-type-icon"
-            style={{ display: 'inline-block', marginLeft: 6, marginRight: 4 }}
-          />
-          <Typography variant="body2" sx={{ mr: 0.5 }}>
-            {displayRoom}
-          </Typography>
-        </Box>
-      );
-    };
+          {children}
+        </Typography>
 
-    const renderAvatar = (userObj) => {
-      if (!userObj?._id) return null;
+
+    );
+
+  switch (logItem.action) {
+    case 'won': {
+      const totalWin = convertToCurrency(logItem.winnings, solPrice);
       return (
-        <Box
-          component="a"
-          onClick={() => handleOpenPlayerModal(userObj._id)}
-          sx={{ cursor: 'pointer' }}
-          className=""
-        >
-          <Avatar
-            user_id={userObj._id}
-            src={userObj.avatar}
-            username={userObj.username}
-            rank={userObj.totalWagered}
-            accessory={userObj.accessory}
-            elite={userObj.elite}
-            alt=""
-            className="avatar"
-            style={{
-              display: 'inline-block',
-              marginRight: 8,
-              verticalAlign: 'middle',
-            }}
-          />
+        <Box sx={messageStyles}>
+          {renderAvatar(joinedUser)} won <AmountText action="won">{totalWin}</AmountText> in {renderRoomInfo(logItem.room)}
         </Box>
       );
-    };
+    }
+    case 'receivedAutoPayout':
+      return (
+        <Box sx={messageStyles}>
+          Raydium Pool seeded for {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+    case 'created':
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(creator)} created {renderRoomInfo(logItem.room)} with <AmountText action="created">{betAmt}</AmountText>
+        </Box>
+      );
+    case 'rugged':
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(creator)} rugged <AmountText action="rugged">{winnings}</AmountText> in {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+    case 'split': {
+      const splitAmt = convertToCurrency(logItem.bet_amount * 2, solPrice);
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(joinedUser)} split <AmountText action="split">{splitAmt}</AmountText> in {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+    }
+    case 'lost':
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(joinedUser)} lost <AmountText action="lost">{betAmt}</AmountText> in {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+    case 'jeet':
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(creator)} Jeeted <AmountText action="jeet">{betAmt}</AmountText> in {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+    case 'pumped':
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(creator)} Pumped <AmountText action="pumped">{betAmt}</AmountText> in {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+    case 'withdrew':
+      return (
+        <Box sx={messageStyles}>
+          {renderAvatar(creator)} withdrew <AmountText action="withdrew">{betAmt}</AmountText>
+        </Box>
+      );
+    default:
+      return (
+        <Box sx={messageStyles}>
+          Action: {logItem.action || 'None'}, Amount: {renderRoomInfo(logItem.room)}
+        </Box>
+      );
+  }
+}, [renderAvatar, renderRoomInfo, solPrice, theme.palette]);
 
-    switch (logItem.action) {
-      case 'won': {
-        const totalWin = convertToCurrency(logItem.winnings, effectiveSolPrice);
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(joinedUser)} won {totalWin} in {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      }
-      case 'receivedAutoPayout': {
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            Raydium Pool seeded for {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      }
-      case 'created':
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(creator)} created {renderRoomInfo(logItem.room)} with {betAmt}
-          </Box>
-        );
-      case 'rugged':
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(creator)} rugged {winnings} in {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      case 'split': {
-        const splitAmt = convertToCurrency(logItem.bet_amount * 2, effectiveSolPrice);
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(joinedUser)} split {splitAmt} in {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      }
-      case 'lost':
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(joinedUser)} lost {betAmt} in {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      case 'jeet':
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(creator)} Jeeted {betAmt} in {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      case 'pumped':
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(creator)} Pumped {betAmt} in {renderRoomInfo(logItem.room)}
-          </Box>
-        );
-      case 'withdrew':
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            {renderAvatar(creator)} withdrew {betAmt}
-          </Box>
-        );
-      default:
-        return (
-          <Box
-            sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            Action: {logItem.action || 'None'}, Amount: {renderRoomInfo(logItem.room)}
-          </Box>
-        );
+// Socket event handler for new logs
+const handleNewLog = useCallback((data) => {
+  const newLogArray = data?.newLog;
+  if (!newLogArray || !Array.isArray(newLogArray)) return;
+
+  const [firstLog] = newLogArray;
+  if (firstLog?.room?._id) {
+    dispatch(setHighlightedRooms([firstLog.room._id]));
+
+    // Clear highlighted rooms after a short delay
+    setTimeout(() => {
+      dispatch(clearHighlightedRooms());
+    }, 200);
+  }
+
+  setRawLogs(newLogArray);
+}, [dispatch]);
+
+// Set up socket connection
+useEffect(() => {
+  if (socket) {
+    socket.on('NEW_LOG', handleNewLog);
+  }
+
+  return () => {
+    if (socket) {
+      socket.off('NEW_LOG', handleNewLog);
     }
   };
+}, [socket, handleNewLog]);
 
-  // Update history when rawLogs or solPrice changes
-  useEffect(() => {
-    if (!rawLogs || rawLogs.length === 0) {
-      setHistory([]);
-      return;
-    }
-    const updated = rawLogs.map((item) => ({
-      ...item,
-      finalMsg: buildFinalMessage(item),
-    }));
-    setHistory(updateFromNow(updated));
-  }, [rawLogs, effectiveSolPrice]);
+// Initial setup
+useEffect(() => {
+  fetchSettings();
+}, [fetchSettings]);
 
-  // Socket event handler
-  const handleNewLog = (data) => {
-    const newLogArray = data?.newLog;
-    if (!newLogArray || !Array.isArray(newLogArray)) return;
+// Update history when initialHistory changes
+useEffect(() => {
+  setRawLogs(initialHistory || []);
+}, [initialHistory]);
 
-    const [firstLog] = newLogArray;
-    if (firstLog?.room?._id) {
-      dispatch(setHighlightedRooms([firstLog.room._id]));
-      setTimeout(() => {
-        dispatch(clearHighlightedRooms());
-      }, 200);
-    }
+// Update history with timestamps and final messages when rawLogs change
+useEffect(() => {
+  if (!rawLogs || rawLogs.length === 0) {
+    setHistoryState([]);
+    return;
+  }
 
-    setRawLogs(newLogArray);
-  };
+  const updated = rawLogs.map((item) => ({
+    ...item,
+    finalMsg: buildFinalMessage(item),
+    from_now: formatTimeAgo(Moment(item.created_at))
+  }));
 
-  const setupSocketConnection = useCallback(() => {
-    if (effectiveSocket) {
-      effectiveSocket.on('NEW_LOG', handleNewLog);
-    }
-  }, [effectiveSocket]);
+  setHistoryState(updated);
+}, [rawLogs, buildFinalMessage]);
 
-  const disconnectSocket = useCallback(() => {
-    if (effectiveSocket) {
-      effectiveSocket.off('NEW_LOG', handleNewLog);
-    }
-  }, [effectiveSocket]);
+// Filter out duplicate entries by ID
+const uniqueHistory = useMemo(() => {
+  if (!historyState.length) return [];
 
-  useEffect(() => {
-    fetchSettings();
-    setupSocketConnection();
-    return () => disconnectSocket();
-  }, [fetchSettings, setupSocketConnection, disconnectSocket]);
-
-  // Sync rawLogs with initialHistory from props/Redux
-  useEffect(() => {
-    setRawLogs(effectiveHistory);
-  }, [effectiveHistory]);
-
-  const handleOpenPlayerModal = (creatorId) => {
-    setShowPlayerModal(true);
-    setSelectedCreator(creatorId);
-  };
-
-  const handleClosePlayerModal = () => {
-    setShowPlayerModal(false);
-    setSelectedCreator(null);
-  };
-
-  const copyToClipboard = (rowId) => {
-    navigator.clipboard.writeText(rowId).then(() => {
-      setCopiedRowId(rowId);
-      setTimeout(() => setCopiedRowId(null), 1500);
-    });
-  };
-
-  const uniqueHistory = historyState.filter(
+  return historyState.filter(
     (row, index, self) => index === self.findIndex((t) => t._id === row._id)
   );
+}, [historyState]);
 
-  return (
-    <ThemeProvider theme={theme}>
+// Player modal handlers
+const handleOpenPlayerModal = useCallback((creatorId) => {
+  setShowPlayerModal(true);
+  setSelectedCreator(creatorId);
+}, []);
 
-      <Box className="overflowX">
-        <Box className="table main-history-table">
-          {historyState?.length === 0 && (
-            <Box className="dont-have-game-msg" sx={{ width: '100%' }}>
-              <Skeleton variant="rectangular" sx={{ width: '100%', height: 10 }} />
-            </Box>
-          )}
+const handleClosePlayerModal = useCallback(() => {
+  setShowPlayerModal(false);
+  setSelectedCreator(null);
+}, []);
 
-          {uniqueHistory.map((row, key) => {
-            const isUserInvolved =
-              row.creator?._id === effectiveUserId || row.joined_user?._id === effectiveUserId;
+// Copy ID to clipboard
+const copyToClipboard = useCallback((rowId) => {
+  navigator.clipboard.writeText(rowId).then(() => {
+    setCopiedRowId(rowId);
+    setTimeout(() => setCopiedRowId(null), 1500);
+  });
+}, []);
 
-            return (
-              <Box
-                key={row._id}
-                className={`table-row ${isUserInvolved ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''
-                  }`}
-                sx={{
-                  animationDelay: `${key * 0.1}s`,
-                  filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
-                  // Glassmorphism styles (default dark mode colors)
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)', // For Safari
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                  // Fallback for browsers without backdrop-filter
-                  '@supports not (backdrop-filter: blur(10px))': {
-                    background: 'rgba(0, 0, 0, 0.4)',
-                  },
-                  // Hover effect for interactivity
-                  '&:hover': {
-                    background: 'rgba(0, 0, 0, 0.3)',
-                    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-                  },
-                  // Adjust history-background for slight differentiation
-                  '&.history-background': {
-                    background: 'rgba(0, 0, 0, 0.25)',
-                    '@supports not (backdrop-filter: blur(10px))': {
-                      background: 'rgba(0, 0, 0, 0.45)',
-                    },
-                  },
-                }}
-              >
-                <Box>
-                  <Box className="table-cell" sx={{ padding: '10px' }}>
-                    <div className="desktop-only">{row.finalMsg || '...'}</div>
-                    <div className="mobile-only">{row.finalMsg || '...'}</div>
-                  </Box>
+// Row styles based on user involvement and theme
+const getRowStyles = useCallback((rowIndex, status) => {
+  return {
+    padding: '10px 12px',
+    animationDelay: `${rowIndex * 0.05}s`,
+    opacity: status !== 'open' ? 0.75 : 1,
+    background: alpha(theme.palette.error.main, 0.08),
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    borderRadius: '8px',
+    border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+    transition: 'all 0.2s ease',
+    boxShadow: `0 2px 8px ${alpha(theme.palette.error.main, 0.15)}`,
+    '@supports not (backdrop-filter: blur(10px))': {
+      background: alpha(theme.palette.error.main, 0.15)
+    },
+    '&:hover': {
+      background: alpha(theme.palette.error.main, 0.12),
+      boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.25)}`,
+      transform: 'translateY(-1px)'
+    },
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  };
+}, [theme]);
+// Styles for time display
+const timeDisplayStyles = useMemo(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  fontSize: '0.7rem',
+  color: alpha(theme.palette.text.secondary, 0.8),
+  whiteSpace: 'nowrap',
+  marginLeft: '8px',
+  '& svg': {
+    fontSize: '0.7rem',
+    marginRight: '4px'
+  }
+}), [theme]);
 
-                  <Box className="table-cell row-copy" sx={{ p: '10px' }}>
-                    <Tooltip
-                      title={copiedRowId === row._id ? 'COPIED ID!' : 'COPY BET ID'}
-                      placement="top"
-                    >
-                      <Box
-                        component="a"
-                        sx={{ padding: '5px', cursor: 'pointer' }}
-                        onClick={() => copyToClipboard(row._id)}
-                      >
-                        <FileCopyIcon sx={{ width: 12 }} />
-                      </Box>
-                    </Tooltip>
-
-                    {/* {row.from_now && row.from_now.split('').map((char, i) => (
-                    <Box
-                      component="span"
-                      key={i}
-                      sx={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}
-                    >
-                      {char}
-                    </Box>
-                  ))}
-                   
-                  <FontAwesomeIcon icon={faStopwatch} /> */}
-                  </Box>
-                </Box>
-              </Box>
-            );
-          })}
-        </Box>
-
-        {showPlayerModal && (
-          <PlayerModal
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-            selectedCreator={selectedCreator}
-          />
-        )}
+// Loading skeleton
+const renderSkeleton = useMemo(() => (
+  <Box >
+    {[].map((i) => (
+      <Box key={i}>
+        <Skeleton variant="rectangular" sx={{ borderRadius: '8px' }} />
       </Box>
-    </ThemeProvider>
+    ))}
+  </Box>
+), []);
 
-  );
+return (
+  <ThemeProvider theme={getCustomTheme()}>
+    <Box
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {(!uniqueHistory || uniqueHistory.length === 0) && renderSkeleton}
+
+        {uniqueHistory.map((row, index) => {
+          const isUserInvolved =
+            row.creator?._id === userId || row.joined_user?._id === userId;
+
+          return (
+            <Box
+              key={row._id}
+              className={`history-row ${index < 50 ? 'slide-in' : ''}`}
+              sx={getRowStyles(isUserInvolved, index, row.status)}
+            >
+              <Box sx={{ flexGrow: 1 }}>
+                {row.finalMsg || (
+                  <Skeleton variant="text" sx={{ width: '80%', }} />
+                )}
+              </Box>
+
+              {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Tooltip
+                    title={copiedRowId === row._id ? 'Copied!' : 'Copy ID'}
+                    placement="top"
+                  >
+                    <Box
+                      component="button"
+                      sx={{
+                        border: 'none',
+                        background: 'transparent',
+                        padding: '4px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: theme.palette.text.secondary,
+                        opacity: 0.6,
+                        transition: 'opacity 0.2s',
+                        '&:hover': {
+                          opacity: 1
+                        }
+                      }}
+                      onClick={() => copyToClipboard(row._id)}
+                    >
+                      <FileCopyIcon sx={{ width: 14, height: 14 }} />
+                    </Box>
+                  </Tooltip>
+
+                  <Box sx={timeDisplayStyles}>
+                    <FontAwesomeIcon icon={faStopwatch} />
+                    <Typography variant="caption">
+                      {row.from_now || ''}
+                    </Typography>
+                  </Box>
+                </Box> */}
+            </Box>
+          );
+        })}
+      </Box>
+
+      {showPlayerModal && (
+        <PlayerModal
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+          selectedCreator={selectedCreator}
+        />
+      )}
+    </Box>
+  </ThemeProvider>
+);
 }
 
-export default HistoryTable;
+export default React.memo(HistoryTable);
