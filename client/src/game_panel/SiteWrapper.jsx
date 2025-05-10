@@ -101,24 +101,14 @@ import {
 } from '../redux/Logic/logic.actions';
 
 // Lazy-loaded components
-const CatsinoModalOverlay = lazy(() => import('../game_panel/main_pages/CatsinoModalOverlay.jsx'));
 const HistoryTable = lazy(() => import('../game_panel/LiveGames/HistoryTable.jsx'));
 const SettingsModal = lazy(() => import('./modal/SettingsModal.jsx'));
 const BonusModal = lazy(() => import('./modal/BonusModal.jsx'));
 const AllTransactionsModal = lazy(() => import('./modal/AllTransactionsModal.jsx'));
 const ProfileModal = lazy(() => import('./modal/ProfileModal'));
 const PlayerModal = lazy(() => import('./modal/PlayerModal'));
-const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal'));
-// const MarketplaceModal = lazy(() => import('./modal/MarketplaceModal'));
-// const BankModal = lazy(() => import('./modal/BankModal'));
-// const DebtsModal = lazy(() => import('./modal/DebtsModal'));
+const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal'));;
 const LeaderboardsModal = lazy(() => import('./modal/LeaderboardsModal'));
-// const ConfirmTradeModal = lazy(() => import('./modal/ConfirmTradeModal'));
-// const ConfirmLoanModal = lazy(() => import('./modal/ConfirmLoanModal'));
-// const OfferLoanModal = lazy(() => import('./modal/OfferLoanModal'));
-// const ListItemModal = lazy(() => import('./modal/ListItemModal'));
-// const DeListItemModal = lazy(() => import('./modal/DeListItemModal'));
-// const DeListLoanModal = lazy(() => import('./modal/DeListLoanModal'));
 const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal'));
 const LoginModal = lazy(() => import('./modal/LoginModal'));
 const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal'));
@@ -242,7 +232,6 @@ function SiteWrapper({ children }) {
   const [anchorElGameLog, setAnchorElGameLog] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
-  const [runTutorial, setRunTutorial] = useState(false);
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
   const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -251,16 +240,12 @@ function SiteWrapper({ children }) {
   const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
   const [isLive, setIsLive] = useState(false);
-  const [blurValue, setBlurValue] = useState(3);
-  const [currentGif, setCurrentGif] = useState('');
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [websiteLoading, setWebsiteLoading] = useState(true);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [showDebtsModal, setShowDebtsModal] = useState(false);
-  const [bonusCheck, setBonusCheck] = useState(false);
-  const [highlightedRooms, setHighlightedRooms] = useState(new Set());
   const [eliteModalOpen, setEliteModalOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
   const [showAllGameLogs, setShowAllGameLogs] = useState(false);
@@ -328,7 +313,6 @@ function SiteWrapper({ children }) {
     // Promise to wait for socket connection
     const waitForConnection = new Promise((resolve, reject) => {
       newSocket.on('connect', () => {
-        console.log('Socket connected:', newSocket.id);
         resolve();
       });
       newSocket.on('connect_error', (error) => {
@@ -577,8 +561,6 @@ function SiteWrapper({ children }) {
 
   const handleBalanceClick = e => setAnchorElGameLog(e.currentTarget);
   const handleCloseGameLog = () => setAnchorElGameLog(null);
-  const handleMouseEnter = index => setHoverTabIndex(index);
-  const handleMouseLeave = () => setHoverTabIndex(-1);
   const toggleAllTransactions = () => setShowAllGameLogs(prev => !prev);
 
   const handleLogout = clearToken => {
@@ -607,8 +589,6 @@ function SiteWrapper({ children }) {
   const handleClosePlayerModal = () => setShowPlayerModal(false);
   const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
   const handleCloseHowToPlayModal = () => setShowHowToPlayModal(false);
-  const handleOpenMarketplaceModal = () => setShowMarketplaceModal(true);
-  const handleCloseMarketplaceModal = () => setShowMarketplaceModal(false);
   const handleOpenBankModal = () => setShowBankModal(true);
   const handleCloseBankModal = () => setShowBankModal(false);
   const handleOpenLeaderboardsModal = () => setShowLeaderboardsModal(true);
@@ -621,9 +601,6 @@ function SiteWrapper({ children }) {
   const handleCloseEliteSubscriptionModal = () => {
     setEliteModalOpen(false);
   };
-
-  const handleOpenDebtsModal = () => setShowDebtsModal(true);
-  const handleCloseDebtsModal = () => setShowDebtsModal(false);
   const handleOpenSettingsModal = () => setShowSettingsModal(true);
   const handleCloseSettingsModal = () => setShowSettingsModal(false);
   const handleBonusModal = () => setShowBonusModal(true);
@@ -635,7 +612,6 @@ function SiteWrapper({ children }) {
     dispatch(selectMainTab(1));
   };
 
-  // Helper function for notification messages
   function appendCurrencyBracket(message, amount) {
     if (!amount) return message;
     const amountStr = String(amount);
@@ -826,23 +802,7 @@ function SiteWrapper({ children }) {
           </DialogContent>
         </Dialog>
       )}
-      {isLive && tokenModalOpen && (
-        <Suspense fallback={''}>
-          <CatsinoModalOverlay
-            currentGif={currentGif}
-            blurValue={blurValue}
-            halloween={halloween}
-            handleCountdownButtonClick={() => {
-              navigate('/investors');
-              closeTokenModal();
-            }}
-            handleYoutubeButtonClick={() => {
-              handleOpenLoginModal();
-              closeTokenModal();
-            }}
-          />
-        </Suspense>
-      )}
+      
       <Suspense fallback={''}>
         <EliteSubscriptionModal
           user={user}
@@ -897,30 +857,6 @@ function SiteWrapper({ children }) {
             <div className="header_action_panel">
               {user ? (
                 <>
-                  {/* <Box
-                    component="a"
-                    href="#"
-                    className="desktop-only action-icon"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleOpenBankModal();
-                    }}
-                    id="btn_bank"
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: '#ffffff',
-                      mx: 1.5,
-                      '&:hover': {
-                        color: '#ff3030',
-                      }
-                    }}
-                  >
-                    <AccountBalanceOutlined fontSize="medium" />
-                  </Box> */}
-
                   <Box
                     component="a"
                     href="#"
@@ -1191,17 +1127,7 @@ function SiteWrapper({ children }) {
                       <ListItemText primary="BONUS" />
                     </MenuItem>
                     <Divider />
-                    {/* <MenuItem
-                      onClick={() => {
-                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
-                      }}
-                      sx={{ color: '#ffffff' }}
-                    >
-                      <ListItemIcon>
-                        <MonetizationOn fontSize="small" sx={{ color: '#ffd700' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="BUY $RPS 🚀" />
-                    </MenuItem> */}
+                  
                     <MenuItem
                       onClick={() => {
                         handleLogout(true);
@@ -1677,29 +1603,6 @@ function SiteWrapper({ children }) {
             />
           </Suspense>
         )}
-        {/* {showBankModal && (
-          <Suspense fallback={<Typography>Loading Bank...</Typography>}>
-            <BankModal
-              modalIsOpen={showBankModal}
-              closeModal={handleCloseBankModal}
-              player_name={userName}
-              balance={balance}
-              isDarkMode={isDarkMode}
-              remainingLoans={remainingLoans}
-            />
-          </Suspense>
-        )}
-        {showMarketplaceModal && (
-          <Suspense fallback={<Typography>Loading Marketplace...</Typography>}>
-            <MarketplaceModal
-              modalIsOpen={showMarketplaceModal}
-              closeModal={handleCloseMarketplaceModal}
-              player_name={userName}
-              balance={balance}
-              isDarkMode={isDarkMode}
-            />
-          </Suspense>
-        )} */}
         {showLoginModal && (
           <Suspense fallback={<Typography>Loading Login...</Typography>}>
             <LoginModal
@@ -1708,34 +1611,7 @@ function SiteWrapper({ children }) {
             />
           </Suspense>
         )}
-        {/* {showDebtsModal && (
-          <Suspense fallback={<Typography>Loading Debts...</Typography>}>
-            <DebtsModal
-              modalIsOpen={showDebtsModal}
-              closeModal={handleCloseDebtsModal}
-              openDebtsModal={handleOpenDebtsModal}
-            />
-          </Suspense>
-        )} */}
-
-        {/* <Suspense fallback={''}>
-          <ListItemModal />
-        </Suspense> */}
-        {/* <Suspense fallback={''}>
-          <DeListItemModal />
-        </Suspense>
-        <Suspense fallback={''}>
-          <ConfirmTradeModal />
-        </Suspense>
-        <Suspense fallback={''}>
-          <DeListLoanModal />
-        </Suspense>
-        <Suspense fallback={''}>
-          <ConfirmLoanModal />
-        </Suspense>
-        <Suspense fallback={''}>
-          <OfferLoanModal solPrice={solPrice} socket={socket} />
-        </Suspense> */}
+       
         <Suspense fallback={''}>
           <GamePasswordModal />
         </Suspense>

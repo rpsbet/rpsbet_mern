@@ -17,7 +17,7 @@ import { faDice, faClock, faBolt } from '@fortawesome/free-solid-svg-icons';
 import { yellow, blue, grey } from '@mui/material/colors';
 import Lottie from 'react-lottie';
 import progress from '../game_panel/LottieAnimations/progress.json';
-import cat from '../game_panel/LottieAnimations/blob.json';
+import LoadingComponent from './LoadingComponent';
 import Moment from 'moment';
 import { motion } from 'framer-motion';
 import RPS from '../game_panel/JoinGame/RPS';
@@ -311,89 +311,7 @@ function TabbedContent(props) {
       case 0: {
         // "Play" Tab
         if (!roomInfo || !roomInfo.game_type) {
-          return (
-            <Box
-              square="true"
-              className="join-game-panel"
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '400px',
-                width: '100%',
-                background: 'rgba(0, 0, 0, 0.2)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 3,
-                  width: '100%',
-                  maxWidth: '300px',
-                }}
-              >
-                {/* Cat Lottie Animation */}
-                <Box sx={{ filter: 'invert(1) scale(-1)', width: '120px', height: '120px' }}>
-                  <Lottie
-                    options={{
-                      loop: isLowGraphics ? false : true,
-                      autoplay: isLowGraphics ? false : true,
-                      animationData: cat,
-                      
-                      rendererSettings: {
-                        preserveAspectRatio: 'xMidYMid slice'
-                      }
-                    }}
-                  />
-                </Box>
-
-                {/* Loading Text */}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#fff',
-                    fontWeight: 500,
-                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                    mb: 1
-                  }}
-                >
-                  Loading game...
-                </Typography>
-
-                {/* Pulsing Dots */}
-                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0.3, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        duration: 0.8,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                        delay: i * 0.2
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          backgroundColor: '#FF0000',
-                        }}
-                      />
-                    </motion.div>
-                  ))}
-                </Box>
-              </Box>
-            </Box>
-          );
+          return <LoadingComponent />;
         }
 
         return (

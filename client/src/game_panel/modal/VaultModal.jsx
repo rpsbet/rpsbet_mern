@@ -21,7 +21,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import CountUp from 'react-countup';
+// import CountUp from 'react-countup';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import {
@@ -219,7 +219,7 @@ function VaultModal({ modalIsOpen, closeModal }) {
                 <Chip
                   label={
                     <Typography variant="h5" component="span" sx={{ fontSize: '1.2rem', p: 2 }}>
-                      <CountUp
+                      {/* <CountUp
                         start={0}
                         end={vaultBal}
                         duration={1.5}
@@ -227,7 +227,7 @@ function VaultModal({ modalIsOpen, closeModal }) {
                         decimals={2}
                         useEasing
                         useGrouping
-                      />{' '}
+                      />{' '} */}
                       SOL (${(vaultBal * solPrice).toFixed(2)})
                     </Typography>
                   }

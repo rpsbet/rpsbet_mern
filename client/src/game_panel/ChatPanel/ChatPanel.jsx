@@ -22,7 +22,7 @@ import {
   Gif,
   Clear,
   ChatOutlined,
-  ChatBubbleOutlineOutlined,
+  Public,
 } from '@mui/icons-material';
 
 import GlobalChat from './GlobalChat';
@@ -357,10 +357,6 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
               color: '#FF0000',
             },
           },
-          '& .MuiTab-label': {
-            marginBottom: '8px !important',
-          },
-          paddingBottom: '8px',
         },
       }}
     >
@@ -380,7 +376,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
       <Tab
         className="custom-tab"
         icon={
-          <ChatBubbleOutlineOutlined
+          <Public
             sx={{
               color: hoverTabIndex === 1 || selectedTabIndex === 1 ? 'white' : 'grey',
               transition: 'color 0.3s ease',

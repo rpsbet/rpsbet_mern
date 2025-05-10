@@ -78,7 +78,7 @@ router.post('/phantom', async (req, res) => {
     // 2) If not found, create a new user
     // e.g. let's default username to the last 6 chars of the wallet
     const lastSix = walletAddress.slice(-6);
-    const username = `RPS_${lastSix}`;
+    const username = `CAT_${lastSix}`;
 
     const newUser = new User({
       username,

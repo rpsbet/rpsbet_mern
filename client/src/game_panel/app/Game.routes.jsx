@@ -1,17 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Routes, Route, useParams, useLocation } from 'react-router-dom';
-import { Box, LinearProgress } from '@mui/material';
+import { Box } from '@mui/material';
 
-import CreateGame from '../main_pages/CreateGame';
 import SiteWrapper from '../SiteWrapper';
-import MainPage from '../main_pages/MainPage';
-import JoinGame from '../main_pages/JoinGame';
-import ChatPage from '../MyGames/ChatPage';
-import LeaderboardsModal from '../modal/LeaderboardsModal';
-import MyGames from '../MyGames/MyGamesTable';
-import ChatPanel from '../ChatPanel/ChatPanel';
 import { getSolToUsdPrice } from '../../redux/Logic/logic.actions';
+import LoadingComponent from '../../components/LoadingComponent';
+
+const CreateGame = lazy(() => import('../main_pages/CreateGame'));
+const MainPage = lazy(() => import('../main_pages/MainPage'));
+const JoinGame = lazy(() => import('../main_pages/JoinGame'));
+const ChatPage = lazy(() => import('../MyGames/ChatPage'));
+const LeaderboardsModal = lazy(() => import('../modal/LeaderboardsModal'));
+// MyGames is likely part of MainPage or another lazy-loaded component
+const ChatPanel = lazy(() => import('../ChatPanel/ChatPanel'));
 
 function GameMainRoute() {
   const isDrawerOpen = useSelector((state) => state.auth.isDrawerOpen);
@@ -76,9 +78,20 @@ function GameMainRoute() {
           <Routes>
             <Route
               path="chat/:id"
-              element={<ChatPanel highlightChatId={params.id} />}
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <ChatPanel highlightChatId={params.id} />
+                </Suspense>
+              }
             />
-            <Route path="*" element={<ChatPanel />} />
+            <Route
+              path="*"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <ChatPanel />
+                </Suspense>
+              }
+            />
           </Routes>
         </Box>
       )}
@@ -86,13 +99,62 @@ function GameMainRoute() {
       <Box sx={{ overflowY: 'auto' }}>
         <SiteWrapper>
           <Routes>
-            <Route path="create/:game_type_name" element={<CreateGame />} />
-            <Route path="create" element={<CreateGame />} />
-            <Route path="join/:id" element={<JoinGame />} />
-            <Route path="chat/:id" element={<ChatPage />} />
-            <Route path="leaderboards" element={<LeaderboardsModal />} />
-            <Route path="portfolio" element={<MainPage />} />
-            <Route path="/" element={<MainPage />} />
+            <Route
+              path="create/:game_type_name"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <CreateGame />
+                </Suspense>
+              }
+            />
+            <Route
+              path="create"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <CreateGame />
+                </Suspense>
+              }
+            />
+            <Route
+              path="join/:id"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <JoinGame />
+                </Suspense>
+              }
+            />
+            <Route
+              path="chat/:id"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <ChatPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="leaderboards"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <LeaderboardsModal />
+                </Suspense>
+              }
+            />
+            <Route
+              path="portfolio"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <MainPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <MainPage />
+                </Suspense>
+              }
+            />
           </Routes>
         </SiteWrapper>
       </Box>

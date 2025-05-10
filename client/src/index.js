@@ -10,7 +10,6 @@ import store from './redux/store';
 import App from './App';
 import MessageBar from './components/MessageBar';
 import './index.css';
-import './dark.css';
 
 // Add global CSS to remove ripple effect
 const globalStyles = `

@@ -75,7 +75,6 @@ const socketManager = createSocketManager();
  */
 async function globalChatSend(io, data) {
   try {
-    console.log('Processing GLOBAL_CHAT_SEND:', data);
     const {
       sender,
       senderId,
@@ -103,7 +102,6 @@ async function globalChatSend(io, data) {
         messageType: replyTo.messageType,
         time: moment(replyTo.created_at).format('HH:mm'),
       };
-      console.log('Formatted replyTo:', formattedReplyTo);
     }
     
     const chat = new Chat({
@@ -120,7 +118,6 @@ async function globalChatSend(io, data) {
     });
     
     const savedChat = await chat.save();
-    console.log(`Saved chat message: ${savedChat._id}`);
     
     const chatData = {
       sender,
@@ -258,7 +255,6 @@ function setupSocketIO(server) {
     socket.on('disconnect', () => {
       const userId = socketManager.removeSocketByInstance(socket);
       if (userId) {
-        console.log(`Broadcasting online users update after disconnect of user ${userId}`);
         broadcastOnlineUsers(io);
       }
     });

@@ -297,6 +297,9 @@ function LoginModal({ modalIsOpen, closeModal }) {
               autoComplete="email"
               autoFocus
               disabled={isLoading}
+              InputLabelProps={{
+                style: { color: theme.palette.error.main } // Apply error color to the label
+              }}
               sx={{ mb: 2 }}
               InputProps={{
                 sx: { borderRadius: 1.5 }
@@ -320,6 +323,9 @@ function LoginModal({ modalIsOpen, closeModal }) {
               disabled={isLoading}
               InputProps={{
                 sx: { borderRadius: 1.5 }
+              }}
+              InputLabelProps={{
+                style: { color: theme.palette.error.main } // Apply error color to the label
               }}
             />
             

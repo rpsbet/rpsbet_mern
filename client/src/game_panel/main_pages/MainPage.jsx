@@ -36,7 +36,6 @@ import verified from '../LottieAnimations/verified.json';
 const MyGamesTable = lazy(() => import('../MyGames/MyGamesTable'));
 const OpenGamesTable = lazy(() => import('../LiveGames/OpenGamesTable'));
 const HistoryTable = lazy(() => import('../LiveGames/HistoryTable'));
-const BankPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx'));
 const ChatPanel = lazy(() => import('../ChatPanel/ChatPanel'));
 const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModal'));
 

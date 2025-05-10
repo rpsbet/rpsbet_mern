@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Modal,
   Accordion,
@@ -8,7 +8,7 @@ import {
   ListItem,
   List,
   Box,
-  Link,
+  Link, // Link component is imported but not used in the provided JSX. Will keep if intended for future use.
   Button,
   ListItemText,
   ListItemAvatar,
@@ -19,59 +19,324 @@ import {
   useMediaQuery
 } from '@mui/material';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Close as CloseIcon } from '@mui/icons-material'
+import { Close as CloseIcon } from '@mui/icons-material';
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
 import CasinoIcon from "@mui/icons-material/Casino";
 import CardGiftcard from "@mui/icons-material/CardGiftcard";
 import QuestionMark from "@mui/icons-material/QuestionMark";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
+// LockOpenIcon is imported but not used. Will keep if intended.
+// import LockOpenIcon from "@mui/icons-material/LockOpen";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXTwitter, faTelegram } from "@fortawesome/free-brands-svg-icons";
 
-function HowToPlayModal({ modalIsOpen, closeModal }) {
-  const CONTRACT_ADDRESS = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+const CONTRACT_ADDRESS = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+
+// --- Memoized Content Components for Accordion Sections ---
+
+const HowItWorksContent = React.memo(() => (
+  <>
+    <Typography variant="body2" paragraph sx={{ color: '#e0e0e0' }}>
+      <span
+        style={{
+          background: 'linear-gradient(165deg, #ffd000, #FF0000)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontWeight: 600,
+        }}
+      >
+        Catsino.fun
+      </span>{' '}
+      empowers <strong>creators</strong> to raise funds through engaging games! 🎮
+    </Typography>
+    <List sx={{ pl: 1 }}>
+      {[
+        { id: 'hw1', number: '1️⃣', title: 'Create a Game', desc: 'Choose RPS, Quick Shoot, or Custom.' },
+        { id: 'hw2', number: '2️⃣', title: 'Raise Funds', desc: 'Players bet or invest in your game.' },
+        { id: 'hw3', number: '3️⃣', title: 'Cash Out Anytime', desc: 'Secure gains or stay for bigger rewards.' },
+        { id: 'hw4', number: '4️⃣', title: 'Game Graduates', desc: 'Converts to a tradeable token once funded.' },
+        {
+          id: 'hw5',
+          number: '5️⃣',
+          title: 'Liquidity Locked',
+          desc: (
+            <>
+              80% to{' '}
+              <span
+                style={{
+                  background: 'linear-gradient(165deg, #ffd000, #FF0000)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 600,
+                }}
+              >
+                Raydium
+              </span>{' '}
+              forever, 20% shared with holders.
+            </>
+          ),
+        },
+      ].map((item) => (
+        <ListItem
+          key={item.id}
+          sx={{
+            alignItems: 'flex-start',
+            py: 1,
+            '&:hover': { background: 'rgba(255, 255, 255, 0.05)' },
+          }}
+        >
+          <ListItemAvatar>
+            <Avatar
+              sx={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#ffd700',
+                fontSize: '1.2rem',
+                width: 36,
+                height: 36,
+              }}
+            >
+              {item.number}
+            </Avatar>
+          </ListItemAvatar>
+          <ListItemText
+            primary={<Typography sx={{ fontWeight: 600, color: '#ffffff' }}>{item.title}</Typography>}
+            secondary={<Typography sx={{ color: '#b0b0b0' }}>{item.desc}</Typography>}
+          />
+        </ListItem>
+      ))}
+    </List>
+    <Typography variant="body2" sx={{ color: '#e0e0e0', mt: 1 }}>
+      💡 <strong>Want more?</strong> Explore AI tools, staking rewards, loans, and beyond!
+    </Typography>
+  </>
+));
+
+const GamesContent = React.memo(() => (
+  <>
+    {/* Custom */}
+    <Typography
+      variant="subtitle1"
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: '#ffffff', mb: 1 }}
+    >
+      <CasinoIcon sx={{ color: '#ff9800' }} /> Custom
+    </Typography>
+    <Typography variant="body2" sx={{ color: '#e0e0e0', mb: 0.5 }}>
+      <strong>🎯 Objective:</strong> Win creator-designed games to earn multipliers (varies by game).
+    </Typography>
+    <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mt: 1 }}>
+      🕹️ Gameplay:
+    </Typography>
+    <List dense>
+      {[
+        'Enter a predetermined Bet Amount.',
+        'Follow unique rules set by the game creator.',
+        'Win to earn a multiplier on your bet.',
+      ].map((text, index) => (
+        <ListItem key={`custom-rule-${index}`} sx={{ py: 0.5 }}>
+          <ListItemIcon sx={{minWidth: '30px'}}>
+            <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '1rem' }} />
+          </ListItemIcon>
+          <ListItemText
+            primary={<Typography variant="body2" sx={{ color: '#b0b0b0' }}>{text}</Typography>}
+          />
+        </ListItem>
+      ))}
+    </List>
+
+    <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+    {/* Quick Shoot */}
+    <Typography
+      variant="subtitle1"
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: '#ffffff', mb: 1 }}
+    >
+      <SportsSoccerIcon sx={{ color: '#2196f3' }} /> Quick Shoot
+    </Typography>
+    <Typography variant="body2" sx={{ color: '#e0e0e0', mb: 0.5 }}>
+      <strong>🎯 Objective:</strong> Score past the AI keeper.
+    </Typography>
+    <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mt: 1 }}>
+      🕹️ Gameplay:
+    </Typography>
+    <List dense>
+      {[
+        'Enter a predetermined Bet Amount.',
+        'Choose a direction to shoot against the AI keeper.',
+        'Score to win 1.25x to 4x your Bet Amount.',
+      ].map((text, index) => (
+        <ListItem key={`qs-rule-${index}`} sx={{ py: 0.5 }}>
+          <ListItemIcon sx={{minWidth: '30px'}}>
+            <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '1rem' }} />
+          </ListItemIcon>
+          <ListItemText
+            primary={<Typography variant="body2" sx={{ color: '#b0b0b0' }}>{text}</Typography>}
+          />
+        </ListItem>
+      ))}
+    </List>
+
+    <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+    {/* RPS */}
+    <Typography
+      variant="subtitle1"
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: '#ffffff', mb: 1 }}
+    >
+      <CardGiftcard sx={{ color: '#f06292' }} /> RPS (Rock Paper Scissors)
+    </Typography>
+    <Typography variant="body2" sx={{ color: '#e0e0e0', mb: 0.5 }}>
+      <strong>🎯 Objective:</strong> Predict the correct hand gesture.
+    </Typography>
+    <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mt: 1 }}>
+      🕹️ Gameplay:
+    </Typography>
+    <List dense>
+      {[
+        'Enter a predetermined Bet Amount.',
+        'Choose "Rock", "Paper", or "Scissors" against the AI.',
+        'Win based on: Rock > Scissors, Scissors > Paper, Paper > Rock.',
+      ].map((text, index) => (
+        <ListItem key={`rps-rule-${index}`} sx={{ py: 0.5 }}>
+          <ListItemIcon sx={{minWidth: '30px'}}>
+            <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '1rem' }} />
+          </ListItemIcon>
+          <ListItemText
+            primary={<Typography variant="body2" sx={{ color: '#b0b0b0' }}>{text}</Typography>}
+          />
+        </ListItem>
+      ))}
+    </List>
+  </>
+));
+
+const FeesContent = React.memo(() => (
+  <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 600 }}>
+    💸 <strong>5% fee (2.5% for Black Elite members)</strong> on all transactions except tipping & loans.
+  </Typography>
+));
+
+const GetHelpContent = React.memo(() => (
+  <>
+    <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 600, mb:1 }}>
+      Need assistance? Contact us via:
+    </Typography>
+    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}> {/* Increased gap slightly */}
+      <Button
+        variant="outlined"
+        sx={{
+          color: '#ffffff',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          textTransform: 'none',
+          '&:hover': {
+            borderColor: '#ffffff',
+            background: 'rgba(255, 255, 255, 0.1)',
+          },
+        }}
+        startIcon={<FontAwesomeIcon icon={faXTwitter} />}
+        onClick={() => window.open('https://x.com/catsinofun', '_blank', 'noopener,noreferrer')}
+        aria-label="Visit Catsino on Twitter"
+      >
+        Twitter / X
+      </Button>
+      <Button
+        variant="outlined"
+        sx={{
+          color: '#ffffff',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          textTransform: 'none',
+          '&:hover': {
+            borderColor: '#ffffff',
+            background: 'rgba(255, 255, 255, 0.1)',
+          },
+        }}
+        startIcon={<FontAwesomeIcon icon={faTelegram} />}
+        onClick={() => window.open('https://t.me/catsinofun', '_blank', 'noopener,noreferrer')}
+        aria-label="Join Catsino on Telegram"
+      >
+        Telegram
+      </Button>
+    </Box>
+  </>
+));
+
+// --- Static data for Accordion sections ---
+const accordionSections = [
+  {
+    id: 'how-it-works',
+    title: '🚀 How It Works',
+    ContentComponent: HowItWorksContent,
+  },
+  {
+    id: 'games',
+    title: '🎮 Games',
+    ContentComponent: GamesContent,
+  },
+  {
+    id: 'fees',
+    title: '💸 Fees',
+    ContentComponent: FeesContent,
+  },
+  {
+    id: 'get-help',
+    title: '📞 Get Help',
+    ContentComponent: GetHelpContent,
+  },
+];
+
+
+function HowToPlayModalComponent({ modalIsOpen, closeModal }) {
   const [copiedTooltipOpen, setCopiedTooltipOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isTablet = useMediaQuery("(max-width: 1024px)");
-  const isDesktop = useMediaQuery("(min-width: 1025px)");
+  const isDesktop = useMediaQuery("(min-width: 1025px)"); // This is equivalent to !isMobile && !isTablet if breakpoints are contiguous
 
-  const handleCopyAddress = async () => {
+  const handleCopyAddress = useCallback(async () => {
+    if (!navigator.clipboard) {
+        // Fallback for environments where clipboard API is not available (e.g. insecure contexts)
+        console.warn('Clipboard API not available.');
+        // You could implement a textarea-based copy fallback here if needed
+        return;
+    }
     try {
       await navigator.clipboard.writeText(CONTRACT_ADDRESS);
       setCopiedTooltipOpen(true);
-      setTimeout(() => {
+      const timerId = setTimeout(() => {
         setCopiedTooltipOpen(false);
       }, 1500);
+      // It's good practice to clear timeout if component unmounts,
+      // but for a short-lived tooltip, it's often omitted.
+      // For robustness: return () => clearTimeout(timerId); (would need useEffect for this)
     } catch (err) {
       console.error('Failed to copy address', err);
+      // Optionally show an error tooltip/message to the user
     }
-  };
+  }, []); // No dependencies as CONTRACT_ADDRESS is constant and setCopiedTooltipOpen is stable
 
-  const shortenAddress = (address) => {
+  const shortenedAddress = useMemo(() => {
     if (isMobile) {
-      return `${address.slice(0, 5)}...${address.slice(-4)}`;
+      return `${CONTRACT_ADDRESS.slice(0, 5)}...${CONTRACT_ADDRESS.slice(-4)}`;
     } else if (isTablet) {
-      return `${address.slice(0, 10)}...${address.slice(-6)}`;
-    } else if (isDesktop) {
-      return `${address.slice(0, 18)}...${address.slice(-22)}`;
+      return `${CONTRACT_ADDRESS.slice(0, 10)}...${CONTRACT_ADDRESS.slice(-6)}`;
     }
-    return address;
-  };
+    // else if (isDesktop) // This can be the default case
+    return `${CONTRACT_ADDRESS.slice(0, 18)}...${CONTRACT_ADDRESS.slice(-22)}`;
+    // return CONTRACT_ADDRESS; // Fallback if none match, though one always should
+  }, [isMobile, isTablet]); // isDesktop is derived, so not needed if logic is mutually exclusive
+
 
   return (
     <Modal
-      open={modalIsOpen || false}
+      open={modalIsOpen || false} // Ensure open is always boolean
       onClose={closeModal}
       closeAfterTransition
-      sx={{ zIndex: 1300 }}
+      sx={{ zIndex: 1300 }} // Existing styling
       BackdropProps={{
-        style: { backgroundColor: 'rgba(0, 0, 0, 0.85)' },
+        style: { backgroundColor: 'rgba(0, 0, 0, 0.85)' }, // Existing styling
       }}
     >
       <Box
-        sx={{
+        sx={{ // Existing styling preserved
           position: 'absolute',
           top: '50%',
           left: '50%',
@@ -81,13 +346,11 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
           overflowY: 'auto',
           borderRadius: 3,
           p: { xs: 2, sm: 3, md: 4 },
-          // Glassmorphism
           background: 'rgba(30, 30, 30, 0.3)',
           backdropFilter: 'blur(15px)',
           WebkitBackdropFilter: 'blur(15px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-          // Fallback
           '@supports not (backdrop-filter: blur(15px))': {
             background: 'rgba(30, 30, 30, 0.6)',
           },
@@ -109,6 +372,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography
             variant="h5"
+            component="h2" // Good for semantics
             sx={{
               fontWeight: 700,
               color: '#ffffff',
@@ -123,16 +387,18 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
          
             <Button
               onClick={closeModal}
-              sx={{
+              aria-label="Close how to play modal" // Accessibility
+              sx={{ // Existing styling
                 position: 'absolute',
-                top: 10,
-                right: 10,
+                top: { xs: 12, sm: 16, md: 20 }, // Responsive positioning
+                right: { xs: 12, sm: 16, md: 20 },
                 minWidth: 'auto',
-                p: 1,
+                p: 0.8, // Adjusted padding
                 bgcolor: 'rgba(0,0,0,0.5)',
                 color: 'white',
                 '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
                 borderRadius: '50%',
+                zIndex: 1 // Ensure it's above other header content if any overlap
               }}
             >
               <CloseIcon />
@@ -140,313 +406,18 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
         </Box>
 
         {/* ACCORDIONS */}
-        {[
-          {
-            title: '🚀 How It Works',
-            content: (
-              <>
-                <Typography variant="body2" paragraph sx={{ color: '#e0e0e0' }}>
-                  <span
-                    style={{
-                      background: 'linear-gradient(165deg, #ffd000, #FF0000)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Catsino.fun
-                  </span>{' '}
-                  empowers <strong>creators</strong> to raise funds through engaging games! 🎮
-                </Typography>
-
-                <List sx={{ pl: 1 }}>
-                  {[
-                    { number: '1️⃣', title: 'Create a Game', desc: 'Choose RPS, Quick Shoot, or Custom.' },
-                    { number: '2️⃣', title: 'Raise Funds', desc: 'Players bet or invest in your game.' },
-                    { number: '3️⃣', title: 'Cash Out Anytime', desc: 'Secure gains or stay for bigger rewards.' },
-                    { number: '4️⃣', title: 'Game Graduates', desc: 'Converts to a tradeable token once funded.' },
-                    {
-                      number: '5️⃣',
-                      title: 'Liquidity Locked',
-                      desc: (
-                        <>
-                          80% to{' '}
-                          <span
-                            style={{
-                              background: 'linear-gradient(165deg, #ffd000, #FF0000)',
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              fontWeight: 600,
-                            }}
-                          >
-                            Raydium
-                          </span>{' '}
-                          forever, 20% shared with holders.
-                        </>
-                      ),
-                    },
-                  ].map((item, index) => (
-                    <ListItem
-                      key={index}
-                      sx={{
-                        alignItems: 'flex-start',
-                        py: 1,
-                        '&:hover': { background: 'rgba(255, 255, 255, 0.05)' },
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: '#ffd700',
-                            fontSize: '1.2rem',
-                            width: 36,
-                            height: 36,
-                          }}
-                        >
-                          {item.number}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={<Typography sx={{ fontWeight: 600, color: '#ffffff' }}>{item.title}</Typography>}
-                        secondary={<Typography sx={{ color: '#b0b0b0' }}>{item.desc}</Typography>}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-
-                <Typography variant="body2" sx={{ color: '#e0e0e0' }}>
-                  💡 <strong>Want more?</strong> Explore AI tools, staking rewards, loans, and beyond!
-                </Typography>
-              </>
-            ),
-          },
-          // {
-          //   title: '💰 $RPS Token',
-          //   content: (
-          //     <>
-          //       <List dense>
-          //         <ListItem sx={{ py: 1 }}>
-          //           <ListItemIcon>
-          //             <CheckCircleIcon sx={{ color: '#4caf50' }} />
-          //           </ListItemIcon>
-          //           <Typography sx={{ color: '#ffffff', fontWeight: 600 }}>
-          //             Holders earn <strong>10% of platform fees</strong>! 💸
-          //           </Typography>
-          //         </ListItem>
-          //         <ListItem sx={{ py: 1 }}>
-          //           <ListItemIcon>
-          //             <LockOpenIcon sx={{ color: '#2196f3' }} />
-          //           </ListItemIcon>
-          //           <Typography sx={{ color: '#ffffff', fontWeight: 600 }}>
-          //             Unlock <strong>all AI models</strong> with <strong>2.5M $RPS</strong>. 🔓
-          //           </Typography>
-          //         </ListItem>
-          //       </List>
-
-          //       <Box sx={{ mt: 2, textAlign: 'center' }}>
-          //         <Typography sx={{ fontWeight: 600, color: '#ffffff', mb: 1 }}>
-          //           🔗 Contract Address
-          //         </Typography>
-          //         <Tooltip
-          //           title="Copied!"
-          //           open={copiedTooltipOpen}
-          //           disableFocusListener
-          //           disableHoverListener
-          //           disableTouchListener
-          //           placement="top"
-          //           arrow
-          //         >
-          //           <Typography
-          //             variant="body2"
-          //             sx={{
-          //               cursor: 'pointer',
-          //               display: 'flex',
-          //               alignItems: 'center',
-          //               justifyContent: 'center',
-          //               gap: 1,
-          //               color: '#2196f3',
-          //               p: 1,
-          //               borderRadius: 1,
-          //               background: 'rgba(255, 255, 255, 0.05)',
-          //               '&:hover': {
-          //                 background: 'rgba(255, 255, 255, 0.1)',
-          //                 color: '#42a5f5',
-          //               },
-          //             }}
-          //             onClick={handleCopyAddress}
-          //           >
-          //             <ContentCopyIcon fontSize="small" />
-          //             <Link underline="none" sx={{ color: 'inherit' }}>
-          //               {shortenAddress(CONTRACT_ADDRESS)}
-          //             </Link>
-          //           </Typography>
-          //         </Tooltip>
-          //       </Box>
-          //     </>
-          //   ),
-          // },
-          {
-            title: '🎮 Games',
-            content: (
-              <>
-                {/* Custom */}
-                <Typography
-                  variant="subtitle1"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: '#ffffff', mb: 1 }}
-                >
-                  <CasinoIcon sx={{ color: '#ff9800' }} /> Custom
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#e0e0e0' }}>
-                  <strong>🎯 Objective:</strong> Win creator-designed games to earn multipliers (varies by game).
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mt: 1 }}>
-                  🕹️ Gameplay:
-                </Typography>
-                <List dense>
-                  {[
-                    'Enter a predetermined Bet Amount.',
-                    'Follow unique rules set by the game creator.',
-                    'Win to earn a multiplier on your bet.',
-                  ].map((text, index) => (
-                    <ListItem key={index} sx={{ py: 0.5 }}>
-                      <ListItemIcon>
-                        <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '1rem' }} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={<Typography variant="body2" sx={{ color: '#b0b0b0' }}>{text}</Typography>}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-
-                {/* Quick Shoot */}
-                <Typography
-                  variant="subtitle1"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: '#ffffff', mt: 2 }}
-                >
-                  <SportsSoccerIcon sx={{ color: '#2196f3' }} /> Quick Shoot
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#e0e0e0' }}>
-                  <strong>🎯 Objective:</strong> Score past the AI keeper.
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mt: 1 }}>
-                  🕹️ Gameplay:
-                </Typography>
-                <List dense>
-                  {[
-                    'Enter a predetermined Bet Amount.',
-                    'Choose a direction to shoot against the AI keeper.',
-                    'Score to win 1.25x to 4x your Bet Amount.',
-                  ].map((text, index) => (
-                    <ListItem key={index} sx={{ py: 0.5 }}>
-                      <ListItemIcon>
-                        <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '1rem' }} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={<Typography variant="body2" sx={{ color: '#b0b0b0' }}>{text}</Typography>}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-
-                <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-
-                {/* RPS */}
-                <Typography
-                  variant="subtitle1"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: '#ffffff' }}
-                >
-                  <CardGiftcard sx={{ color: '#f06292' }} /> RPS (Rock Paper Scissors)
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#e0e0e0' }}>
-                  <strong>🎯 Objective:</strong> Predict the correct hand gesture.
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff', mt: 1 }}>
-                  🕹️ Gameplay:
-                </Typography>
-                <List dense>
-                  {[
-                    'Enter a predetermined Bet Amount.',
-                    'Choose "Rock", "Paper", or "Scissors" against the AI.',
-                    'Win based on: Rock > Scissors, Scissors > Paper, Paper > Rock.',
-                  ].map((text, index) => (
-                    <ListItem key={index} sx={{ py: 0.5 }}>
-                      <ListItemIcon>
-                        <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '1rem' }} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={<Typography variant="body2" sx={{ color: '#b0b0b0' }}>{text}</Typography>}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </>
-            ),
-          },
-          {
-            title: '💸 Fees',
-            content: (
-              <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 600 }}>
-                💸 <strong>5% fee (2.5% for Black Elite members)</strong> on all transactions except tipping & loans.
-              </Typography>
-            ),
-          },
-          {
-            title: '📞 Get Help',
-            content: (
-              <>
-                <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 600 }}>
-                  Need assistance? Contact us via:
-                </Typography>
-                <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      color: '#ffffff',
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                      textTransform: 'none',
-                      '&:hover': {
-                        borderColor: '#ffffff',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                      },
-                    }}
-                    startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-                    onClick={() => window.open('https://x.com/catsinofun', '_blank')}
-                  >
-                    Twitter
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      color: '#ffffff',
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                      textTransform: 'none',
-                      '&:hover': {
-                        borderColor: '#ffffff',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                      },
-                    }}
-                    startIcon={<FontAwesomeIcon icon={faTelegram} />}
-                    onClick={() => window.open('https://t.me/catsinofun', '_blank')}
-                  >
-                    Telegram
-                  </Button>
-                </Box>
-              </>
-            ),
-          },
-        ].map((section, index) => (
+        {accordionSections.map(({ id, title, ContentComponent }) => (
           <Accordion
-            key={index}
-            sx={{
+            key={id} // Use stable ID from data
+            defaultExpanded={id === 'how-it-works'} // Optionally expand the first item by default
+            sx={{ // Existing styling
               background: 'rgba(40, 40, 40, 0.4)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: 2,
               mb: 1.5,
-              '&:before': { display: 'none' }, // Remove default MUI divider
+              '&:before': { display: 'none' },
               transition: 'all 0.3s ease',
               '&:hover': {
                 background: 'rgba(50, 50, 50, 0.5)',
@@ -459,9 +430,11 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
           >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon sx={{ color: '#ffffff' }} />}
-              sx={{
+              aria-controls={`${id}-content`} // Accessibility
+              id={`${id}-header`} // Accessibility
+              sx={{ // Existing styling
                 background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: 'inherit',
+                borderRadius: 'inherit', // Use parent's border radius for top corners when closed
                 transition: 'all 0.3s ease',
                 '&:hover': {
                   background: 'rgba(255, 255, 255, 0.1)',
@@ -472,7 +445,8 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
               }}
             >
               <Typography
-                variant="h6"
+                variant="h6" // Keep as h6, or adjust if main title is h2
+                component="h3" // Good for semantics within an h2 modal title
                 sx={{
                   fontWeight: 600,
                   color: '#ffffff',
@@ -481,24 +455,49 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                   gap: 1,
                 }}
               >
-                {section.title}
+                {title}
               </Typography>
             </AccordionSummary>
             <AccordionDetails
-              sx={{
+              sx={{ // Existing styling
                 background: 'rgba(30, 30, 30, 0.2)',
-                borderRadius: '0 0 8px 8px',
-                p: 3,
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)', // Add subtle top border for details
+                borderRadius: '0 0 8px 8px', // Ensure bottom corners are rounded
+                p: {xs: 1.5, sm: 2, md: 3}, // Responsive padding
                 color: '#e0e0e0',
               }}
             >
-              {section.content}
+              <ContentComponent />
             </AccordionDetails>
           </Accordion>
         ))}
+        {/* <Box sx={{ mt: 3, p: 2, background: 'rgba(0,0,0,0.2)', borderRadius: 2, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#b0b0b0', mb: 1 }}>
+                Contract Address:
+            </Typography>
+            <Tooltip title={copiedTooltipOpen ? "Copied!" : "Copy Address"} placement="top" open={copiedTooltipOpen} arrow>
+                <Button
+                    onClick={handleCopyAddress}
+                    variant="text"
+                    sx={{ 
+                        color: '#ffffff', 
+                        textTransform: 'none', 
+                        fontFamily: 'monospace',
+                        fontSize: '0.9rem',
+                        p: '4px 8px',
+                        '&:hover': { background: 'rgba(255,255,255,0.1)'}
+                    }}
+                    startIcon={<ContentCopyIcon sx={{fontSize: '1rem'}}/>}
+                >
+                    {shortenedAddress}
+                </Button>
+            </Tooltip>
+        </Box> */}
       </Box>
     </Modal>
   );
 }
 
+// Memoize the component
+const HowToPlayModal = React.memo(HowToPlayModalComponent);
 export default HowToPlayModal;

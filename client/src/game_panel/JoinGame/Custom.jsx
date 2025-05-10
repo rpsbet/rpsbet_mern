@@ -153,7 +153,7 @@ function Custom(props) {
   } = props;
 
   // Local state
-  const [intervalId, setIntervalId] = useState(null);
+  const [isWalletPopupActive, setIsWalletPopupActive] = useState(false);
   const [gameStartedCount, setGameStartedCount] = useState(0);
   const [poolId, setPoolId] = useState(roomInfo.pool_id);
   const [players, setPlayers] = useState([]);
@@ -330,6 +330,12 @@ function Custom(props) {
         () => {
           console.error('[Custom] Solana deposit failed');
           onChangeState({ betting: false });
+        },
+        () => {
+          setIsWalletPopupActive(true); // Set popup active when it opens
+        },
+        () => {
+          setIsWalletPopupActive(false); // Set popup inactive when it closes
         }
       );
 
@@ -358,12 +364,12 @@ function Custom(props) {
         multiplier:
           result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
       });
-  
+
       const amount = resultData.amount || 0;
       const currencyElement = convertToCurrency(Math.abs(amount), solPrice);
       const sign = amount >= 0 ? '+' : '-';
       let soundToPlay = null;
-  
+
       if (resultData.betResult === 1) {
         soundToPlay = 'win';
       } else if (resultData.betResult === 0) {
@@ -371,11 +377,11 @@ function Custom(props) {
       } else {
         soundToPlay = 'lose';
       }
-  
+
       if (playSound && soundToPlay) {
         playSound(soundToPlay);
       }
-  
+
       const formattedResult = (
         <span
           style={{
@@ -390,12 +396,12 @@ function Custom(props) {
           </span>
         </span>
       );
-  
+
       onResultChange(formattedResult, false);
       onChangeState({
         gameResult: resultData.betResult,
       });
-  
+
       setGameStartedCount((prev) => prev + 1);
       hasDepositedRef.current = false; // Reset deposit flag after game ends
     },
@@ -938,6 +944,7 @@ function Custom(props) {
                       <Typography>{componentError}</Typography>
                     </Box>
                   ) : GameComponent ? (
+                    <>
                     <Box
                       sx={{
                         width: '100%',
@@ -947,10 +954,36 @@ function Custom(props) {
                           maxWidth: '100%',
                           objectFit: 'contain',
                         },
+                        filter: isWalletPopupActive ? 'blur(5px)' : 'none',
+                        pointerEvents: isWalletPopupActive ? 'none' : 'auto',
                       }}
                     >
                       <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} Physics={Physics} />
                     </Box>
+                      {isWalletPopupActive && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            zIndex: 5,
+                            pointerEvents: 'auto',
+                          }}
+                        >
+                          <CircularProgress color="error" />
+                          <Typography sx={{ mt: 2, color: 'white', fontWeight: 'bold' }}>
+                            Confirm Transaction in Wallet...
+                          </Typography>
+                        </Box>
+                      )}
+                      </>
                   ) : (
                     <Box
                       sx={{
@@ -958,7 +991,7 @@ function Custom(props) {
                         justifyContent: 'center',
                         alignItems: 'center',
                         height: '600px',
-                   
+
                       }}
                     >
                       <Typography variant="body1" color="text.secondary">
@@ -1044,7 +1077,7 @@ function Custom(props) {
                 </Box>
               </Typography>
             ) : (
-              <Typography sx={{ textAlign: 'center', color: '#fff'}}>
+              <Typography sx={{ textAlign: 'center', color: '#fff' }}>
                 Pool is either being seeded, or the room has ended.
               </Typography>
             )}
