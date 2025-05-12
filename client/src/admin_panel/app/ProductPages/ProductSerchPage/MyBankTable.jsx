@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
+
 import { convertToCurrency } from '../../../../util/conversion';
 import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -140,10 +141,10 @@ const MyBankTable = () => {
   // Sorting logic
   const sortedLeaderboards = data
     ? [...data].sort((a, b) => {
-        const aValue = a[sortCriteria];
-        const bValue = b[sortCriteria];
-        return sortCriteria === 'asc' ? aValue - bValue : bValue - aValue;
-      })
+      const aValue = a[sortCriteria];
+      const bValue = b[sortCriteria];
+      return sortCriteria === 'asc' ? aValue - bValue : bValue - aValue;
+    })
     : [];
 
   return (
@@ -340,8 +341,9 @@ const MyBankTable = () => {
                                 <span>Created</span>
                               </Box>
                             </TableCell>
+
                             <TableCell sx={{ borderBottom: 'none' }}>
-                              {moment(row.created_at).fromNow()}
+                              {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
                             </TableCell>
                           </TableRow>
                         </TableBody>

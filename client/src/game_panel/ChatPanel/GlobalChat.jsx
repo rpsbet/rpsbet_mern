@@ -5,14 +5,11 @@ import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
 import { Skeleton, Box, ButtonBase, CircularProgress } from '@mui/material';
-import Moment from 'moment'; // Consider if Moment is a large dep and if native Date methods suffice
 
-// Helper to parse message content safely for GIFs
 const safeParseJSON = (jsonString, defaultValue = null) => {
   if (typeof jsonString !== 'string') return defaultValue;
   try {
     const parsed = JSON.parse(jsonString);
-    // Ensure it has a content property for GIFs
     return parsed && typeof parsed.content === 'string' ? parsed : defaultValue;
   } catch (e) {
     console.warn("Failed to parse JSON string:", jsonString, e);
@@ -187,14 +184,12 @@ function GlobalChatComponent(props) {
     setSelectedMessage,
     isDarkMode: propIsDarkMode,
     emojis, // Assuming emojis is an array of { command: string, url: string, alt: string }
-    // socket, // If handleSendMessage is to be used, socket should be a prop or from Redux
   } = props;
 
-  const dispatch = useDispatch(); // Keep if used for other actions not shown
   const reduxUser = useSelector((state) => state.auth.user);
   const reduxIsDarkMode = useSelector((state) => state.auth.isDarkMode);
   const reduxGlobalChatList = useSelector((state) => state.logic.globalChatList);
-  const socket = useSelector((state) => state.auth.socket); // Assuming socket is needed for handleSendMessage
+  const socket = useSelector((state) => state.auth.socket);
 
   // Effective values: Prioritize props, then Redux, then sensible defaults
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : reduxIsDarkMode;
@@ -329,57 +324,7 @@ function GlobalChatComponent(props) {
     }
   }, [selectedMessage, setSelectedMessage]);
 
-  // This function relies on `socket` which needs to be available in this scope (e.g., via props or Redux)
-  // If this component is purely for display, this function might belong in the parent (ChatPanel)
-  const handleSendMessage = useCallback(async (messageContent) => {
-    if (!socket || !reduxUser?._id) {
-        console.warn("Socket or user not available for sending message.");
-        return; // Or dispatch an error
-    }
-
-    // Construct the full message object as expected by the backend/socket event
-    const messageToSend = {
-      sender: reduxUser.username, // Assuming username is the display name
-      senderId: reduxUser._id,
-      avatar: reduxUser.avatar,
-      accessory: reduxUser.accessory,
-      elite: reduxUser.elite,
-      rank: reduxUser.totalWagered, // Or relevant rank property
-      message: messageContent, // This is just the text/content
-      // messageType: 'text', // Explicitly set type if not just text
-      // replyTo: selectedMessage?.sender ? selectedMessage : null, // Include reply context if any
-      time: Moment().format('HH:mm'), // Client-side time, server might override
-    };
-
-    const tempMessage = {
-      ...messageToSend,
-      isPending: true,
-    };
-
-    setChatList((prev) => [...prev, tempMessage]);
-    setPendingMessages((prev) => [...prev, tempMessage]); // Add to pending
-
-    try {
-      socket.emit('GLOBAL_CHAT_SEND', messageToSend); // Send the fully structured message
-      // Optimistically assume success for removing pending flag,
-      // actual message from socket event should replace it or confirm it.
-      // Backend should echo the message back with its final ID and timestamp.
-      // The logic to remove from pendingMessages might be better handled when the message is confirmed from the server.
-      // For now, we'll keep it simple:
-      // setTimeout(() => { // Simulate ack from server
-      //   setPendingMessages((prev) => prev.filter((pending) => pending.time !== tempMessage.time || pending.senderId !== tempMessage.senderId ));
-      // }, 1000); // Remove after a delay, or better, on actual ack.
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setChatList((prev) => prev.filter((chat) => chat !== tempMessage)); // Remove if send fails immediately
-      setPendingMessages((prev) => prev.filter((pending) => pending.time !== tempMessage.time || pending.senderId !== tempMessage.senderId ));
-    }
-  }, [socket, reduxUser, /* selectedMessage (if replyTo is included) */]);
-
-
-  // Deduplication: This runs on every render.
-  // If chatList source can guarantee uniqueness, this can be removed.
-  // The Set should be defined outside map, and items pushed to a new array.
+  
   const uniqueMessagesToRender = useMemo(() => {
     const uniqueSet = new Set();
     const result = [];

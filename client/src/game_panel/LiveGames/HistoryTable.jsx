@@ -5,10 +5,14 @@ import {
   clearHighlightedRooms,
 } from '../../redux/Logic/logic.actions';
 import { getSettings } from '../../redux/Setting/setting.action';
-import Moment from 'moment';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStopwatch } from '@fortawesome/free-solid-svg-icons';
-import FileCopyIcon from '@mui/icons-material/FileCopy';
+import {
+  differenceInSeconds,
+  differenceInMinutes,
+  differenceInHours,
+  differenceInDays,
+  isValid,
+} from 'date-fns';
+
 import {
   Tooltip,
   Skeleton,
@@ -29,28 +33,40 @@ import { getCustomTheme } from '../../config/theme';
  * @returns {string} Formatted time string (e.g. "5m ago")
  */
 const formatTimeAgo = (date) => {
-  const now = Moment();
-  const duration = Moment.duration(now.diff(date));
+  const now = new Date();
+  const dateObj = new Date(date);
 
-  if (duration.asSeconds() < 60) return `${Math.round(duration.asSeconds())}s ago`;
-  if (duration.asMinutes() < 60) return `${Math.round(duration.asMinutes())}m ago`;
-  if (duration.asHours() < 24) return `${Math.round(duration.asHours())}h ago`;
-  return `${Math.round(duration.asDays())}d ago`;
+  if (!isValid(dateObj)) return 'Invalid Date';
+
+  const seconds = differenceInSeconds(now, dateObj);
+  if (seconds < 60) return `${Math.round(seconds)}s ago`;
+
+  const minutes = differenceInMinutes(now, dateObj);
+  if (minutes < 60) return `${Math.round(minutes)}m ago`;
+
+  const hours = differenceInHours(now, dateObj);
+  if (hours < 24) return `${Math.round(hours)}h ago`;
+
+  const days = differenceInDays(now, dateObj);
+  return `${Math.round(days)}d ago`;
 };
+
+const updateTimestamps = (history) => {
+  if (!history || !Array.isArray(history)) return [];
+
+  return history.map((item) => ({
+    ...item,
+    from_now: formatTimeAgo(item.created_at),
+  }));
+};
+
 
 /**
  * Updates the "from now" property for all history items
  * @param {Array} history - History items array
  * @returns {Array} Updated history items with refreshed timestamps
  */
-const updateTimestamps = (history) => {
-  if (!history || !Array.isArray(history)) return [];
 
-  return history.map((item) => ({
-    ...item,
-    from_now: formatTimeAgo(Moment(item.created_at)),
-  }));
-};
 
 /**
  * HistoryTable component displays a real-time transaction history
@@ -354,7 +370,6 @@ useEffect(() => {
   setRawLogs(initialHistory || []);
 }, [initialHistory]);
 
-// Update history with timestamps and final messages when rawLogs change
 useEffect(() => {
   if (!rawLogs || rawLogs.length === 0) {
     setHistoryState([]);
@@ -364,7 +379,7 @@ useEffect(() => {
   const updated = rawLogs.map((item) => ({
     ...item,
     finalMsg: buildFinalMessage(item),
-    from_now: formatTimeAgo(Moment(item.created_at))
+    from_now: formatTimeAgo(item.created_at),
   }));
 
   setHistoryState(updated);

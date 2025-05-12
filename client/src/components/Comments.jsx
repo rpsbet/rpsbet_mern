@@ -15,10 +15,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { getCommentsForRoom, createComment, deleteComment } from '../redux/Logic/logic.actions';
 import Avatar from './Avatar';
 import PlayerModal from '../game_panel/modal/PlayerModal';
-import Moment from 'moment';
+import { formatDistanceToNow, parse } from 'date-fns';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
-import { setFocused } from '../redux/Auth/user.actions.js';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../config/theme.js';
 
@@ -356,7 +355,9 @@ const Comments = ({ roomId }) => {
                     variant="caption"
                     sx={{ fontSize: '0.6em', color: 'rgba(255, 255, 255, 0.7)' }}
                   >
-                    {Moment(comment.created_at).fromNow()}
+                    {formatDistanceToNow(parse(comment.created_at, 'dd-MM-yyyy HH:mm', new Date()), { addSuffix: true })}
+
+
                   </Typography>
                 </Box>
                 <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em', color: '#e0e0e0' }}>

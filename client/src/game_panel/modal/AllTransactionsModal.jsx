@@ -46,7 +46,8 @@ import { getCustomTheme } from '../../config/theme';
 
 // Example Redux action to fetch transactions (adjust to your actual code)
 import { getTransactions } from '../../redux/Auth/user.actions';
-import moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
+
 
 function AllTransactionsModal({
   modalIsOpen,
@@ -484,7 +485,7 @@ function AllTransactionsModal({
                                 )}
                               </TableCell>
                               <TableCell>
-                                {moment(transaction.created_at).fromNow()}
+                              {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
                               </TableCell>
                               <TableCell>{transaction.description}</TableCell>
                               <TableCell>

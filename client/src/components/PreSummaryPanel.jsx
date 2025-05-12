@@ -3,10 +3,11 @@ import InfoIcon from '@mui/icons-material/Info';
 import WarningIcon from '@mui/icons-material/Warning';
 import Avatar from './Avatar';
 import { convertToCurrency } from '../util/conversion';
-import Moment from 'moment';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { formatDistanceToNow, isValid } from 'date-fns';
+
 import {
-  faBuilding,
   faInfoCircle,
   faWater,
   faDollarSign,
@@ -594,7 +595,11 @@ const PreSummaryPanel = (props) => {
             <DataCard
               icon={faCalendarAlt}
               label="Created"
-              value={Moment(roomInfo?.created_at).fromNow()}
+              value={
+                roomInfo?.created_at && isValid(new Date(roomInfo.created_at))
+                  ? formatDistanceToNow(new Date(roomInfo.created_at), { addSuffix: true })
+                  : 'Invalid Date'
+              }
               tooltip="Timestamp of when the room was created"
               color="text.primary"
             />

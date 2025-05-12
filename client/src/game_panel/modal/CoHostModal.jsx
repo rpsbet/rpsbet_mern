@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { sendSolDeposit } from '../../util/solana';
 import { useSelector, useDispatch } from 'react-redux';
-import Moment from 'moment';
+import {
+  differenceInSeconds,
+  differenceInMinutes,
+  differenceInHours,
+  differenceInDays,
+  isValid,
+} from 'date-fns';
 import {
   Box,
   Tooltip,
@@ -365,14 +371,16 @@ function CoHostModal({
     : 0;
 
   const formatRelativeTime = (date) => {
-    const now = Moment();
-    const created = Moment(date);
-    const diff = Moment.duration(now.diff(created));
+    const now = new Date();
+    const created = new Date(date);
 
-    const days = diff.days();
-    const hours = diff.hours();
-    const minutes = diff.minutes();
-    const seconds = diff.seconds();
+    if (!isValid(created)) return 'Invalid Date';
+
+    const diffSeconds = differenceInSeconds(now, created);
+    const days = Math.floor(diffSeconds / (24 * 60 * 60));
+    const hours = Math.floor((diffSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((diffSeconds % (60 * 60)) / 60);
+    const seconds = diffSeconds % 60;
 
     if (days >= 1) {
       return days > 1 ? `${days}d ${hours}h ago` : `${days}d ${hours > 0 ? hours + 'h' : ''} ago`;
@@ -387,6 +395,7 @@ function CoHostModal({
     }
     return `${seconds}s ago`;
   };
+
   const debouncedHandleChange = useCallback(
     debounce((value) => {
       handleCoHostAmountChange({ target: { value } });

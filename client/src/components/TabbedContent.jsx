@@ -18,7 +18,7 @@ import { yellow, blue, grey } from '@mui/material/colors';
 import Lottie from 'react-lottie';
 import progress from '../game_panel/LottieAnimations/progress.json';
 import LoadingComponent from './LoadingComponent';
-import Moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import RPS from '../game_panel/JoinGame/RPS';
 const QuickShoot = lazy(() => import('../game_panel/JoinGame/QuickShoot'));
@@ -31,7 +31,7 @@ function updateFromNow(history) {
   if (!history) return [];
   const result = JSON.parse(JSON.stringify(history));
   for (let i = 0; i < result.length; i++) {
-    result[i].from_now = Moment(result[i].created_at).fromNow();
+    result[i].from_now = formatDistanceToNow(new Date(result[i].created_at), { addSuffix: true });
   }
   return result;
 }

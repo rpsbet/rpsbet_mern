@@ -10,60 +10,43 @@ import {
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
-import Moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
 
 import { getMyHistory } from '../../redux/Logic/logic.actions';
 import { getSettings } from '../../redux/Setting/setting.action';
 import PlayerModal from '../modal/PlayerModal';
 import { convertToCurrency } from '../../util/conversion';
 
-/** 
- * Convert the date into a "time ago" format.
- */
+
 function customFromNow(date) {
-  return Moment(date).fromNow();
+  return formatDistanceToNow(new Date(date), { addSuffix: true });
 }
 
-/**
- * Renders a heart or broken heart icon based on `isOpen`.
- */
 function HeartIcon({ isOpen }) {
   return <FontAwesomeIcon icon={isOpen ? faHeart : faHeartBroken} />;
 }
 
-/**
- * Build a final message for one log item using numeric fields.
- * Adjust this to match the fields your backend provides 
- * (e.g. `action`, `bet_amount`, `winnings`, etc.).
- */
 function buildMyHistoryMessage(log, solPrice) {
   if (!log) return '';
 
-  // Grab numeric fields (if you have them):
   const betAmt = log.bet_amount ?? 0;
   const winnings = log.winnings ?? 0;
-
-  // Convert to currency if needed:
   const betAmtStr = convertToCurrency(betAmt, solPrice);
   const winningsStr = convertToCurrency(winnings, solPrice);
 
-  // Build a status/room name or any other fields you have:
-  // Example usage if you have `log.action`:
   switch (log.action) {
     case 'won':
       return `User ${log.joined_user?._id || 'Unknown'} won ${winningsStr} from ${betAmtStr}`;
     case 'lost':
       return `User ${log.joined_user?._id || 'Unknown'} lost ${betAmtStr}`;
     default:
-      // Fallback if no recognized action
       return `Action: ${log.action || 'None'}, bet: ${betAmtStr}`;
   }
 }
 
-function MyHistoryTable() { // Remove props destructuring since we’ll use hooks
+function MyHistoryTable() {
   const dispatch = useDispatch();
 
-  // Map state from Redux using useSelector
   const {
     myHistory: propsMyHistory = [],
     isAuthenticated,
@@ -78,7 +61,6 @@ function MyHistoryTable() { // Remove props destructuring since we’ll use hook
     solPrice: state.logic.solPrice,
   }));
 
-  // Local state
   const [rawMyHistory, setRawMyHistory] = useState(propsMyHistory);
   const [displayMyHistory, setDisplayMyHistory] = useState([]);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
@@ -89,9 +71,6 @@ function MyHistoryTable() { // Remove props destructuring since we’ll use hook
   const isUnmountedRef = useRef(false);
   const intervalRef = useRef(null);
 
-  /**
-   * On mount, fetch user history if authenticated. Also fetch settings.
-   */
   useEffect(() => {
     isUnmountedRef.current = false;
 
@@ -102,13 +81,11 @@ function MyHistoryTable() { // Remove props destructuring since we’ll use hook
       }
       if (!isUnmountedRef.current) {
         const settings = await dispatch(getSettings());
-        // Handle settings if needed...
         setIsLoading(false);
       }
     }
     init();
 
-    // Re-run "time ago" updates every few seconds
     intervalRef.current = setInterval(() => {
       if (!isUnmountedRef.current) {
         setDisplayMyHistory((prev) =>
@@ -128,17 +105,10 @@ function MyHistoryTable() { // Remove props destructuring since we’ll use hook
     };
   }, [isAuthenticated, dispatch]); // Dependencies updated to use dispatch
 
-  /**
-   * Whenever `propsMyHistory` from Redux changes,
-   * update our "raw" local state.
-   */
   useEffect(() => {
     setRawMyHistory(propsMyHistory);
   }, [propsMyHistory]);
 
-  /**
-   * Build the final display logs from "rawMyHistory" + "solPrice"
-   */
   useEffect(() => {
     if (!rawMyHistory || rawMyHistory.length === 0) {
       setDisplayMyHistory([]);
@@ -201,10 +171,8 @@ function MyHistoryTable() { // Remove props destructuring since we’ll use hook
       });
   }, []);
 
-  // Event listener attachments for user links or Lottie accessories
   useEffect(() => {
     attachUserLinkListeners();
-    // Optionally attach Lottie accessories if needed
   }, [displayMyHistory]);
 
   const attachUserLinkListeners = useCallback(() => {

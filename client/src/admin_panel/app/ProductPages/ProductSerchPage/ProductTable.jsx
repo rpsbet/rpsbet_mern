@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
-import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTag,

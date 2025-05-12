@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import Moment from 'moment';
-import ReactDOM from 'react-dom';
+import {
+  differenceInSeconds,
+  differenceInMinutes,
+  differenceInHours,
+  differenceInDays,
+  isValid,
+} from 'date-fns';
+
+
 import {
   Box,
-  Skeleton,
   CircularProgress,
   Typography,
 } from '@mui/material';
@@ -15,14 +21,23 @@ import Avatar from './Avatar';
 const INITIAL_LIMIT = 10;           // how many logs to fetch initially
 const INFINITE_SCROLL_OFFSET = 50; // px from bottom to trigger next load
 
-// Helper function: time-ago style
 const customFromNow = (date) => {
-  const now = Moment();
-  const duration = Moment.duration(now.diff(date));
-  if (duration.asSeconds() < 60) return `${Math.round(duration.asSeconds())}s ago`;
-  if (duration.asMinutes() < 60) return `${Math.round(duration.asMinutes())}m ago`;
-  if (duration.asHours() < 24) return `${Math.round(duration.asHours())}h ago`;
-  return `${Math.round(duration.asDays())}d ago`;
+  const now = new Date();
+  const dateObj = new Date(date);
+
+  if (!isValid(dateObj)) return 'Invalid Date';
+
+  const seconds = differenceInSeconds(now, dateObj);
+  if (seconds < 60) return `${Math.round(seconds)}s ago`;
+
+  const minutes = differenceInMinutes(now, dateObj);
+  if (minutes < 60) return `${Math.round(minutes)}m ago`;
+
+  const hours = differenceInHours(now, dateObj);
+  if (hours < 24) return `${Math.round(hours)}h ago`;
+
+  const days = differenceInDays(now, dateObj);
+  return `${Math.round(days)}d ago`;
 };
 
 function RoomHistory({
@@ -100,7 +115,7 @@ function RoomHistory({
       return {
         ...log,
         finalMsg,
-        from_now: customFromNow(Moment(log.created_at)),
+        from_now: customFromNow(log.created_at),
       };
     });
 

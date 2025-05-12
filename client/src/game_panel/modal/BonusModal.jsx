@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Box, Typography, Button, Fade } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material'
-import Moment from 'moment';
+import { differenceInMilliseconds, formatDuration, intervalToDuration } from 'date-fns';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faClock, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -36,11 +37,12 @@ function BonusModal({ modalIsOpen, closeModal }) {
   const now = new Date();
   let remainingTime = 'READY NOW!';
   if (lastBonus) {
-    const elapsedTime = Moment(now).diff(Moment(lastBonus), 'milliseconds');
+    const elapsedTime = differenceInMilliseconds(new Date(), new Date(lastBonus));
     const sixHoursInMs = 6 * 60 * 60 * 1000;
     const remainingMs = sixHoursInMs - elapsedTime;
     if (remainingMs > 0) {
-      remainingTime = Moment.duration(remainingMs, 'milliseconds').humanize(true);
+      const duration = intervalToDuration({ start: 0, end: remainingMs });
+      remainingTime = formatDuration(duration, { format: ['hours', 'minutes'] });
     }
   }
 

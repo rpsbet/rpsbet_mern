@@ -780,7 +780,7 @@ const SettingsRef = ({
       <Fade in={settings_panel_opened}>
         <Box
           sx={{
-            width: isMobile ? '95vw' : isTablet ? '90vw' : '80vw',
+            width: isMobile ? '95vw' : isTablet ? '95vw' : '90vw',
             maxWidth: 1200,
             height: isMobile ? '90vh' : '85vh',
             maxHeight: '90vh',
@@ -1442,11 +1442,13 @@ const SettingsRef = ({
                   alignItems: 'center',
                   height: isMobile ? 300 : 600,
                   ...glassmorphismStyle,
+                  p: 2,
+                  textAlign: 'center',
                   borderRadius: 2,
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
               >
-                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', }}>
                   No game generated yet. Enter a prompt and click Generate.
                 </Typography>
               </Box>

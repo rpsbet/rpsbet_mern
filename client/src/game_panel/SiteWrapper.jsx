@@ -57,7 +57,7 @@ import {
   NotificationsOutlined,
 } from '@mui/icons-material';
 import socketIOClient from 'socket.io-client';
-import Moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
 import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
@@ -160,13 +160,14 @@ function updateFromNow(items, timestampField = 'created_at') {
 
   for (let i = 0; i < result.length; i++) {
     if (result[i][timestampField]) {
-      const fromNow = Moment(result[i][timestampField]).fromNow();
+      const fromNow = formatDistanceToNow(new Date(result[i][timestampField]), { addSuffix: true });
 
-      if (fromNow === 'a few seconds ago') {
+      if (fromNow === 'less than a minute ago') {
         result[i]['from_now'] = 'just now';
       } else {
         result[i]['from_now'] = fromNow
-          .replace(' a few', ' a few ')
+          .replace('less than a minute', 'a few s')
+          .replace('about ', '')
           .replace(' seconds', 's')
           .replace(' minutes', 'm')
           .replace(' hours', 'h')
@@ -181,10 +182,10 @@ function updateFromNow(items, timestampField = 'created_at') {
           .replace('a week', '1w')
           .replace('a month', '1mo')
           .replace('a year', '1y')
+          .replace(' ago', '');
       }
     }
   }
-
   return result;
 }
 

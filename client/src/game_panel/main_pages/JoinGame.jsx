@@ -8,7 +8,7 @@ import React, {
   Suspense
 } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import Moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
 import { useParams } from 'react-router-dom'; 
 import { Button, Drawer, Box } from '@mui/material';
 import { sendSolDeposit } from '../../util/solana';
@@ -20,7 +20,6 @@ import {
 const TabbedContent = lazy(() => import('../../components/TabbedContent'));
 const PreSummaryPanel = lazy(() => import('../../components/PreSummaryPanel'));
 const CoHostModal = lazy(() => import('../modal/CoHostModal'));
-const AiPanel = lazy(() => import('../../components/AiPanel'));
 const RoomTokenDetails = lazy(() => import('../../components/RoomTokenDetails'));
 const ChatPanel = lazy(() => import('../ChatPanel/ChatPanel'));
 const MyGamesTable = lazy(() => import('../MyGames/MyGamesTable'));
@@ -61,13 +60,12 @@ const LoadingFallback = () => (
   <div className="loading-spinner"></div>
 );
 
-// Helper function moved outside component for better memory usage
 function updateFromNow(history) {
   if (!history || !Array.isArray(history)) return [];
-  
+
   return history.map(item => ({
     ...item,
-    from_now: Moment(item.created_at).fromNow()
+    from_now: formatDistanceToNow(new Date(item.created_at), { addSuffix: true })
   }));
 }
 

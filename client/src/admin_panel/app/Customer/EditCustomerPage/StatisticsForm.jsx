@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import moment from 'moment';
 import './style.css';
 import {
   Tooltip,
@@ -12,7 +11,7 @@ import {
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { convertToCurrency } from '../../../../util/conversion';
-import { updateDigitToPoint2 } from '../../../../util/helper';
+import { formatDistanceToNow } from 'date-fns';
 
 /**
  * Functional component version of StatisticsForm without chart and filters.
@@ -142,10 +141,10 @@ const StatisticsForm = (props) => {
 };
 
   // ----- Computed Values -----
-  const date_joined = moment(dateJoined);
-  const lastSeen = moment(last_seen);
-  const joinedAgo = date_joined.fromNow();
-  const lastSeenAgo = lastSeen.fromNow();
+  const date_joined = new Date(dateJoined);
+  const lastSeen = new Date(last_seen);
+  const joinedAgo = formatDistanceToNow(date_joined, { addSuffix: true });
+  const lastSeenAgo = formatDistanceToNow(lastSeen, { addSuffix: true }); 
   const roundedCreditScore = Math.ceil(creditScore);
 
   // ----- Render -----

@@ -10,7 +10,6 @@ import isEqual from 'lodash/isEqual';
 import {
   TrendingUpOutlined,
   TrendingDownOutlined,
-  ShowChartOutlined,
   LockOutlined,
   Add,
   Remove,
@@ -30,8 +29,7 @@ import {
 } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SchoolIcon from '@mui/icons-material/School';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import Moment from 'moment';
+
 import {
   faHeart,
   faHeartBroken,
@@ -40,7 +38,13 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Avatar from '../../components/Avatar';
 import { convertToCurrency } from '../../util/conversion';
-import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
+import {
+  differenceInSeconds,
+  differenceInMinutes,
+  differenceInHours,
+  differenceInDays,
+  isValid,
+} from 'date-fns';
 import Battle from '../icons/Battle';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import PlayerModal from '../modal/PlayerModal';
@@ -133,45 +137,55 @@ function OpenGamesTable(props) {
   };
 
   const customFromNow = (date) => {
-    const now = Moment();
-    const duration = Moment.duration(now.diff(date));
+    const now = new Date();
+    const dateObj = new Date(date);
     const style = { fontSize: 'xx-small' };
-
-    if (duration.asSeconds() < 60) {
+  
+    if (!isValid(dateObj)) return 'Invalid Date';
+  
+    const seconds = differenceInSeconds(now, dateObj);
+    if (seconds < 60) {
       return (
         <>
-          {Math.round(duration.asSeconds())}
+          {Math.round(seconds)}
           <span style={style}>s</span>
         </>
       );
-    } else if (duration.asMinutes() < 60) {
+    }
+  
+    const minutes = differenceInMinutes(now, dateObj);
+    if (minutes < 60) {
       return (
         <>
-          {Math.round(duration.asMinutes())}
+          {Math.round(minutes)}
           <span style={style}>m</span>
         </>
       );
-    } else if (duration.asHours() < 24) {
+    }
+  
+    const hours = differenceInHours(now, dateObj);
+    if (hours < 24) {
       return (
         <>
-          {Math.round(duration.asHours())}
+          {Math.round(hours)}
           <span style={style}>h</span>
         </>
       );
-    } else {
-      return (
-        <>
-          {Math.round(duration.asDays())}
-          <span style={style}>d</span>
-        </>
-      );
     }
+  
+    const days = differenceInDays(now, dateObj);
+    return (
+      <>
+        {Math.round(days)}
+        <span style={style}>d</span>
+      </>
+    );
   };
-
+  
   const updateFromNow = (historyArr) => {
     const result = JSON.parse(JSON.stringify(historyArr));
     for (let i = 0; i < result.length; i++) {
-      result[i]['from_now'] = customFromNow(Moment(result[i]['updated_at']));
+      result[i]['from_now'] = customFromNow(result[i]['updated_at']);
     }
     return result;
   };
@@ -420,7 +434,7 @@ function OpenGamesTable(props) {
                       mt: 0.5,
                     }}
                   >
-                    {customFromNow(Moment(transaction.created_at))}
+                    {customFromNow(transaction.created_at)}
                   </Typography>
                   <Link
                     href={`https://solscan.io/tx/${transaction.hash}`}
@@ -1089,7 +1103,7 @@ function OpenGamesTable(props) {
                                 fontSize: '0.95rem'
                               }}
                             >
-                              {customFromNow(Moment(row.created_at))}
+                              {customFromNow(row.created_at)}
                             </Typography>
                           </Box>
                         </Box>
@@ -1349,7 +1363,7 @@ function OpenGamesTable(props) {
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <FontAwesomeIcon icon={faStopwatch} />
-                        {customFromNow(Moment(row.created_at))}
+                        {customFromNow(row.created_at)}
                       </Box>
                       <FontAwesomeIcon icon={faHeartBroken} />
                     </Box>

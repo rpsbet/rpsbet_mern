@@ -4,7 +4,14 @@ import { useNavigate } from 'react-router-dom'; // Replace history with useNavig
 import { setChatRoomInfo, getMyChat, markChatAsRead } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import Avatar from '../../components/Avatar';
-import moment from 'moment';
+import {
+  differenceInSeconds,
+  differenceInMinutes,
+  differenceInHours,
+  format,
+  isValid,
+  isSameYear,
+} from 'date-fns';
 import { Skeleton, Box, Typography, Paper } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
@@ -70,25 +77,29 @@ function MyChat({ highlightChatId }) {
   // Custom theme from your config
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
-  // Optional: date formatter (if needed)
   function formatDateShort(dateString) {
-    const now = moment();
-    const date = moment(dateString);
-    const diffSeconds = now.diff(date, 'seconds');
+    const now = new Date();
+    const date = new Date(dateString);
+  
+    if (!isValid(date)) return 'Invalid Date';
+  
+    const diffSeconds = differenceInSeconds(now, date);
     if (diffSeconds < 60) {
       return `${diffSeconds}s`;
     }
+  
     const diffMinutes = Math.floor(diffSeconds / 60);
     if (diffMinutes < 60) {
       return `${diffMinutes}m`;
     }
+  
     const diffHours = Math.floor(diffMinutes / 60);
     if (diffHours < 24) {
       return `${diffHours}h`;
     }
-    return date.year() === now.year() ? date.format('D MMM') : date.format('D MMM YYYY');
+  
+    return isSameYear(date, now) ? format(date, 'd MMM') : format(date, 'd MMM yyyy');
   }
-
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ borderRadius: '0.3em' }}>
