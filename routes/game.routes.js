@@ -349,19 +349,30 @@ You are an elite React developer with a passion for cutting-edge design, inspire
 - Emojis should be used directly in JSX as text
 - Ensure emojis are contextually appropriate
 - Omit the main game title from the display
+- **Multiplier Logging Mandate:**
+    - Every game, regardless of its type, MUST log a \`multiplier\` value in the \`gameEnded\` event. The \`endGame\` function (or direct logging in specific crash game handlers) is responsible for this.
+    - **1. Crash Games:**
+        - Identified if prompt includes 'crash', 'rocket', 'flies higher'.
+        - The multiplier increases over time. The \`cashOut\` function or the automatic crash detection (in \`useEffect\` for crash or chart logic) logs the multiplier at the point of game end. These should ideally call the main \`endGame\` function.
+    - **2. Score-Based Games (Primary mechanism is accumulating a score):**
+        - If the user's prompt describes a game where the main goal is to achieve a score (e.g., "collect 100 coins", "get points for accuracy", "flappy bird clone").
+        - Implement a \`score\` state: \`const [score, setScore] = useState(0);\`.
+        - Update this \`score\` based on game actions.
+        - The \`MultiplierDisplay\` can show the live score or a 1.0x base during active gameplay.
+        - When the game ends (win/loss):
+            a. Calculate a \`finalScoreMultiplier\` from the total \`score\`.
+            b. Formula: \`let calculatedMultiplier = 1.0 + (score / SCALING_FACTOR);\`.
+            c. \`SCALING_FACTOR\` should be chosen based on the game's expected scoring range, aiming for typical scores to result in a \`calculatedMultiplier\` between 1.1 and 2.0. For example, if a typical max score is 100, \`SCALING_FACTOR = 100\` yields 2.0x. If typical is 500, \`SCALING_FACTOR = 500\` yields 2.0x. A score of 0 should yield 1.0x.
+            d. Ensure \`calculatedMultiplier\` is at least 1.0 (e.g., \`calculatedMultiplier = Math.max(1.0, calculatedMultiplier);\`).
+            e. Update the global \`multiplier\` state: \`setMultiplier(parseFloat(calculatedMultiplier.toFixed(2)));\`.
+            f. Call \`endGame(resultType);\`. The \`endGame\` function will use the updated \`multiplier\` state for logging.
+    - **3. Other Non-Crash Games (e.g., progressive risk, stage completion):**
+        - For games that are not crash games and not primarily score-based as defined above (e.g., minesweeper, puzzle completion, sequential choices).
+        - The \`multiplier\` state should be updated progressively based on game actions that signify increased risk or achievement.
+        - The provided \`calculateNonCrashMultiplier\` is an example for 'mines' style games. Adapt its logic or implement a new one if the game mechanics are different (e.g., multiplier increases per level completed, per successful combo).
+        - When the game ends, call \`endGame(resultType);\`. It will use the current value of the \`multiplier\` state.
+    - The \`logEvent("gameEnded", { ..., multiplier: <value> })\` must always contain this final, correctly determined multiplier, typically handled by the \`endGame\` function.
 
-## Technical Implementation
-- Use functional components and hooks (useState, useEffect, useRef, useCallback) for state management
-- Apply React best practices including proper cleanup in useEffect hooks
-- Implement performance optimizations:
-  - Implement useCallback for handler functions
-  - Use useMemo for expensive calculations
-  - Throttle or debounce rapid events
-- Accept two props: 'proxiedAssets' and 'logEvent'
-- Safely handle proxiedAssets with null checks
-- Include proper error handling for asynchronous operations
-- Use React.StrictMode patterns
-- Ensure gameEnded event is logged only once per game end using a hasLogged flag
 
 ## Required Imports
 \`\`\`jsx
@@ -1083,95 +1094,6 @@ const MultiplierDisplay = () => {
   );
 };
 
-const GameControls = () => (
-  <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-    <Button
-      onClick={startGame}
-      disabled={gameStarted && !gameEnded}
-      sx={{
-        backdropFilter: "blur(10px)",
-        background: themeColors.gradients.primary,
-        color: themeColors.text,
-        borderRadius: 2,
-        padding: "10px 20px",
-        fontSize: "1rem",
-        fontWeight: 500,
-        textTransform: "none",
-        boxShadow: themeColors.shadows.primary,
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        transition: "all 0.3s ease-out",
-        minWidth: 120,
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
-          background: themeColors.gradients.primary
-        },
-        "&:disabled": {
-          background: "rgba(255, 255, 255, 0.1)",
-          color: "rgba(255, 255, 255, 0.5)"
-        }
-      }}
-    >
-      🚀 Start Game
-    </Button>
-    {isCrashGame && (
-      <Button
-        onClick={cashOut}
-        disabled={!gameStarted || gameEnded}
-        sx={{
-          backdropFilter: "blur(10px)",
-          background: themeColors.gradients.primary,
-          color: themeColors.text,
-          borderRadius: 2,
-          padding: "10px 20px",
-          fontSize: "1rem",
-          fontWeight: 500,
-          textTransform: "none",
-          boxShadow: themeColors.shadows.primary,
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          transition: "all 0.3s ease-out",
-          minWidth: 120,
-          "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
-            background: themeColors.gradients.primary
-          },
-          "&:disabled": {
-            background: "rgba(255, 255, 255, 0.1)",
-            color: "rgba(255, 255, 255, 0.5)"
-          }
-        }}
-      >
-        💰 Cash Out
-      </Button>
-    )}
-    <Button
-      onClick={resetGame}
-      sx={{
-        backdropFilter: "blur(10px)",
-        background: themeColors.gradients.primary,
-        color: themeColors.text,
-        borderRadius: 2,
-        padding: "10px 20px",
-        fontSize: "1rem",
-        fontWeight: 500,
-        textTransform: "none",
-        boxShadow: themeColors.shadows.primary,
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        transition: "all 0.3s ease-out",
-        minWidth: 120,
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
-          background: themeColors.gradients.primary
-        }
-      }}
-    >
-      🔄 Restart
-    </Button>
-  </Box>
-);
-\`\`\`
 
 ## Game History Component
 Include a consistent game history component:

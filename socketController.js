@@ -3,7 +3,8 @@ const socket_io = require('socket.io');
 const Message = require('./model/Message');
 const Chat = require('./model/Chat');
 const User = require('./model/User');
-const moment = require('moment');
+const { format } = require('date-fns');
+
 
 // Socket connection manager module pattern
 function createSocketManager() {
@@ -100,7 +101,7 @@ async function globalChatSend(io, data) {
         elite: replyTo.elite,
         message: replyTo.message,
         messageType: replyTo.messageType,
-        time: moment(replyTo.created_at).format('HH:mm'),
+        time: format(new Date(replyTo.created_at), 'HH:mm'),
       };
     }
     
@@ -129,7 +130,7 @@ async function globalChatSend(io, data) {
       accessory,
       rank,
       replyTo: formattedReplyTo,
-      time: moment(savedChat.created_at).format('HH:mm')
+      time: format(new Date(savedChat.created_at), 'HH:mm'),
     };
     io.sockets.emit('GLOBAL_CHAT_RECEIVED', chatData);
   } catch (error) {
