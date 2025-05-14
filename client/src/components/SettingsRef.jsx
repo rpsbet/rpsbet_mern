@@ -324,17 +324,17 @@ const SettingsRef = ({
     }
   }, [chatMessages, processingMessage, showChat]);
 
-  useEffect(() => {
-    const checkTokenStatus = async () => {
-      try {
-        const res = await axios.post('/game/checkTokens');
-        setTokenStatus(res.data.status ?? false);
-      } catch (error) {
-        console.error('Error checking tokens:', error);
-      }
-    };
-    checkTokenStatus();
-  }, []);
+  // useEffect(() => {
+  //   const checkTokenStatus = async () => {
+  //     try {
+  //       const res = await axios.post('/game/checkTokens');
+  //       setTokenStatus(res.data.status ?? false);
+  //     } catch (error) {
+  //       console.error('Error checking tokens:', error);
+  //     }
+  //   };
+  //   checkTokenStatus();
+  // }, []);
 
   useEffect(() => {
     if (initialGameCode && Physics && !isPhysicsLoading) {
@@ -963,7 +963,7 @@ const SettingsRef = ({
               </Box>
             </Box>
 
-            <Box sx={{ ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
+            {/* <Box sx={{ ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, color: '#fff', display: 'flex', alignItems: 'center' }}>
                 <FontAwesomeIcon icon={faBolt} style={{ marginRight: '8px', color: blue[400] }} />
                 Model Selection
@@ -1077,7 +1077,7 @@ const SettingsRef = ({
               <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block' }}>
                 Higher models provide better quality and more complex game implementations
               </Typography>
-            </Box>
+            </Box> */}
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff' }}>
@@ -1314,7 +1314,6 @@ const SettingsRef = ({
                 label={chatMessages.length > 0 ? 'Continue the conversation' : 'Custom Game Prompt'}
                 value={localPrompt}
                 onChange={(e) => {
-                  console.log('[TextField] New prompt value:', e.target.value);
                   handlePromptChange(e);
                 }}
                 inputProps={{ maxLength: 1800 }}

@@ -166,7 +166,7 @@ export const generateReactGameFromPrompt = (
 
   const cost = model === 'o4' ? 12 : 8; // Adjust cost based on model
   if (user_credits < cost) {
-    dispatch({ type: MSG_ERROR, payload: `Not enough credits, need ${cost} credits to use ${model}.` });
+    dispatch({ type: MSG_ERROR, payload: `Not enough credits, need ${cost} credits.` });
     return;
   }
 
@@ -190,7 +190,7 @@ export const generateReactGameFromPrompt = (
       onChangeState({ prompt: gamePrompt });
     }
 
-    dispatch({ type: MSG_SUCCESS, payload: `Game generated successfully using ${model}!` });
+    dispatch({ type: MSG_SUCCESS, payload: `Game generated successfully!` });
     return { payload: { finalApp, proxiedAssets } }; // Return proxiedAssets
   } catch (error) {
     console.error('Error generating React app:', error);
