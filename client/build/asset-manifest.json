@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.d274e81b.css",
-    "main.js": "/static/js/main.699dc4b5.js",
+    "main.js": "/static/js/main.bc5fb248.js",
     "static/js/3760.66733256.chunk.js": "/static/js/3760.66733256.chunk.js",
     "static/js/9813.78bf3373.chunk.js": "/static/js/9813.78bf3373.chunk.js",
     "static/js/1125.0364f46a.chunk.js": "/static/js/1125.0364f46a.chunk.js",
@@ -127,7 +127,7 @@
     "static/media/result-icon-password.svg": "/static/media/result-icon-password.e2fb10eb8f9acc2bad77.svg",
     "static/media/rps-logo-white.svg": "/static/media/rps-logo-white.032a6ce6f40118f58669.svg",
     "main.d274e81b.css.map": "/static/css/main.d274e81b.css.map",
-    "main.699dc4b5.js.map": "/static/js/main.699dc4b5.js.map",
+    "main.bc5fb248.js.map": "/static/js/main.bc5fb248.js.map",
     "3760.66733256.chunk.js.map": "/static/js/3760.66733256.chunk.js.map",
     "9813.78bf3373.chunk.js.map": "/static/js/9813.78bf3373.chunk.js.map",
     "1125.0364f46a.chunk.js.map": "/static/js/1125.0364f46a.chunk.js.map",
@@ -203,6 +203,6 @@
   },
   "entrypoints": [
     "static/css/main.d274e81b.css",
-    "static/js/main.699dc4b5.js"
+    "static/js/main.bc5fb248.js"
   ]
 }

@@ -6,6 +6,10 @@ const moment = require('moment');
 const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const Comment = require('../model/Comment');
+const Anthropic = require('@anthropic-ai/sdk');
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 const { OpenAI } = require('openai');
 // Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
 const openai = new OpenAI({
@@ -293,7 +297,7 @@ router.get('/proxy-asset', async (req, res) => {
   }
 });
 
-router.post('/openai/generate-react', auth, async (req, res) => {
+router.post('/generate-react', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
 
@@ -321,434 +325,92 @@ router.post('/openai/generate-react', auth, async (req, res) => {
 
     console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
 
-    const systemPrompt = `
-# Improved System Prompt for React Game Generation
+    // Significantly shortened system prompt - keep only essential parts
+    const systemPrompt = `You are an elite React developer. Generate a complete, working React game component.
 
-\`\`\`javascript
-You are an elite React developer with a passion for cutting-edge design, inspired by the Web3 ecosystem. Generate a complete, working React game component based on the user's prompt:
+Output Requirements:
+- Return ONLY valid JavaScript/React code for the App component
+- Start with "const App = ..." or "function App"  
+- End with "export default App;"
+- No markdown, explanations, or extra text
 
-## Game Fundamentals
-- Interpret the prompt to create an interactive game with clear gameplay mechanics and rules
-- Create compelling, easy-to-understand objectives and win/loss conditions
-- Include a dedicated "How to Play" section or modal that explains the game rules clearly
-- Include win probability information in the rules modal, explaining the chance of winning and how multipliers are calculated
-- Balance difficulty to ensure games are challenging but not frustrating
-- Every generation must be a game with clear player interaction and feedback loops
-- If the prompt suggests a game suited for sprites (e.g., "dodge obstacles," "racing," "platformer," "traffic dodger," "flappy bird clone"), use HTML5 canvas to render sprite-like visuals:
-  - Sprites should be drawn as geometric shapes (rectangles, circles, etc.) with additional details (e.g., smaller shapes for windows, lights, or decorations) to emulate pixel-art style.
-  - Example: For a car-dodging game, draw cars as rectangles with smaller rectangles for windows and circles/rectangles for lights, similar to a "Traffic Dodger" game.
-- Omit the main game title from the display
-- Do NOT use any icons of any kind, e.g. favicons etc.
-- Add smooth animations with Framer-motion.
-- **Multiplier Logging Mandate:**
-    - Every game, regardless of its type, MUST log a \`multiplier\` value in the \`gameEnded\` event. The \`endGame\` function (or direct logging in specific crash game handlers) is responsible for this.
-    - **1. Crash Games:**
-        - Identified if prompt includes 'crash', 'rocket', 'flies higher'.
-        - The multiplier increases over time. The \`cashOut\` function or the automatic crash detection (in \`useEffect\` for crash or chart logic) logs the multiplier at the point of game end. These should ideally call the main \`endGame\` function.
-    - **2. Score-Based Games (Primary mechanism is accumulating a score):**
-        - If the user's prompt describes a game where the main goal is to achieve a score (e.g., "collect 100 coins", "get points for accuracy", "flappy bird clone").
-        - Implement a \`score\` state: \`const [score, setScore] = useState(0);\`.
-        - Update this \`score\` based on game actions.
-        - The \`MultiplierDisplay\` can show the live score or a 1.0x base during active gameplay.
-        - When the game ends (win/loss):
-            a. Calculate a \`finalScoreMultiplier\` from the total \`score\`.
-            b. Formula: \`let calculatedMultiplier = 1.0 + (score / SCALING_FACTOR);\`.
-            c. \`SCALING_FACTOR\` should be chosen based on the game's expected scoring range, aiming for typical scores to result in a \`calculatedMultiplier\` between 1.1 and 2.0. For example, if a typical max score is 100, \`SCALING_FACTOR = 100\` yields 2.0x. If typical is 500, \`SCALING_FACTOR = 500\` yields 2.0x. A score of 0 should yield 1.0x.
-            d. Ensure \`calculatedMultiplier\` is at least 1.0 (e.g., \`calculatedMultiplier = Math.max(1.0, calculatedMultiplier);\`).
-            e. Update the global \`multiplier\` state: \`setMultiplier(parseFloat(calculatedMultiplier.toFixed(2)));\`.
-            f. Call \`endGame(resultType);\`. The \`endGame\` function will use the updated \`multiplier\` state for logging.
-    - **3. Other Non-Crash Games (e.g., progressive risk, stage completion):**
-        - For games that are not crash games and not primarily score-based as defined above (e.g., minesweeper, puzzle completion, sequential choices).
-        - The \`multiplier\` state should be updated progressively based on game actions that signify increased risk or achievement.
-        - The provided \`calculateNonCrashMultiplier\` is an example for 'mines' style games. Adapt its logic or implement a new one if the game mechanics are different (e.g., multiplier increases per level completed, per successful combo).
-        - When the game ends, call \`endGame(resultType);\`. It will use the current value of the \`multiplier\` state.
-    - The \`logEvent("gameEnded", { ..., multiplier: <value> })\` must always contain this final, correctly determined multiplier, typically handled by the \`endGame\` function.
+Required Imports:
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Box, Typography, Button, Modal } from '@mui/material';
 
+Game Requirements:
+- Interactive game with clear mechanics
+- Glassmorphic dark theme design (#080808 background)
+- Game state: gameStarted, gameEnded, multiplier, result
+- Include startGame, endGame, resetGame functions
+- Log events: logEvent("gameStarted", {...}) and logEvent("gameEnded", {result, multiplier})
+- Multiplier display component
+- Rules modal explaining gameplay
+- Game history tracking
+- Particle effects for wins/losses
 
-## Required Imports
-\`\`\`jsx
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Slider, Switch, Modal, IconButton, Paper, Divider } from '@mui/material';
-\`\`\`
+Design:
+- Use Box container with full dimensions
+- Glassmorphic styling with rgba backgrounds
+- Consistent color palette
+- Responsive design`;
 
-## Physics-Based Games
-For physics-based games:
-\`\`\`jsx
-import Matter from 'matter-js';
-\`\`\`
-- Set up proper Matter.js implementation with engine, world, renderer
-- Implement clean unmount with event removal
-- Use composite bodies for complex objects
-- Optimize physics calculations
-- Apply proper force vectors and collision handling
-- Use proper scaling for device sizes
-- Add collision filtering for performance
-
-## UI Design System - Glassmorphic Web3 Style
-Apply consistent glassmorphic design:
-
-### Container Layout
-- Use Box with specific dimensions and constraints:
-\`\`\`jsx
-<Box
-  sx={{
-    width: "100%",
-    height: "100%",
-    maxWidth: "100%",
-    maxHeight: "100%",
-    overflow: "scroll",
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "center",
-    bgcolor: "#080808",
-    fontFamily: "'Inter', 'Roboto', sans-serif"
-  }}
->
-\`\`\`
-
-### Glassmorphic Elements
-- Apply consistent glassmorphism:
-
-
-### Color Palette
-- Use a consistent color palette.
-
-## Dynamic Chart/Graph System
-For games requiring visual data representation:
-
-\`\`\`jsx
-const chartRef = useRef(null);
-const chartAnimationRef = useRef(null);
-const startTimeRef = useRef(null);
-const crashPointRef = useRef(null);
-const hasLoggedRef = useRef(false); // Prevent multiple logs
-
-useEffect(() => {
-  const canvas = chartRef.current;
-  if (!canvas || !gameStarted) return;
-  
-  const ctx = canvas.getContext('2d');
-  const width = canvas.width;
-  const height = canvas.height;
-  
-  const maxPoints = 100;
-  const maxMultiplier = 10;
-  
-  if (!crashPointRef.current) {
-    crashPointRef.current = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95);
-  }
-  
-  const gradient = ctx.createLinearGradient(0, height, 0, 0);
-  gradient.addColorStop(0, themeColors.primary);
-  gradient.addColorStop(1, themeColors.secondary);
-  
-  const animationDuration = 10000;
-  
-  if (!startTimeRef.current) {
-    startTimeRef.current = performance.now();
-  }
-  
-  const drawChart = (timestamp) => {
-    if (!gameStarted || gameEnded) {
-      cancelAnimationFrame(chartAnimationRef.current);
-      return;
-    }
-    
-    const elapsedTime = timestamp - startTimeRef.current;
-    const progress = Math.min(elapsedTime / animationDuration, 1);
-    const currentPoint = Math.floor(progress * maxPoints);
-    
-    ctx.clearRect(0, 0, width, height);
-    
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    
-    ctx.beginPath();
-    ctx.moveTo(0, height);
-    
-    for (let i = 0; i <= currentPoint; i++) {
-      const x = (i / maxPoints) * width;
-      const multiplierValue = 1 * Math.exp(0.05 * (i / 100) * 100);
-      const y = height - (multiplierValue / maxMultiplier) * height;
-      ctx.lineTo(x, y);
-    }
-    
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    
-    ctx.lineTo((currentPoint / maxPoints) * width, height);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(230, 57, 70, 0.2)';
-    ctx.fill();
-    
-    const currentMultiplier = 1 * Math.exp(0.05 * (currentPoint / 100) * 100);
-    setMultiplier(parseFloat(currentMultiplier.toFixed(2)));
-    
-    if (currentMultiplier >= crashPointRef.current && !gameEnded && !hasLoggedRef.current) {
-      hasLoggedRef.current = true;
-      setGameEnded(true);
-      setResult("loss");
-      logEvent("gameEnded", { 
-        timestamp: new Date().toISOString(), 
-        result: "loss", 
-        multiplier: parseFloat(currentMultiplier.toFixed(2)) 
-      });
-      createParticleBurst(width / 2, height / 2, 50, themeColors.error, "lose");
-      cancelAnimationFrame(chartAnimationRef.current);
-      return;
-    }
-    
-    chartAnimationRef.current = requestAnimationFrame(drawChart);
-  };
-  
-  chartAnimationRef.current = requestAnimationFrame(drawChart);
-  
-  return () => {
-    if (chartAnimationRef.current) {
-      cancelAnimationFrame(chartAnimationRef.current);
-    }
-    hasLoggedRef.current = false; // Reset for next game
-  };
-}, [gameStarted, gameEnded, createParticleBurst, themeColors, setMultiplier, setGameEnded, setResult, logEvent]);
-\`\`\`
-
-## Game State Management
-Implement consistent game state management:
-
-\`\`\`jsx
-const [gameStarted, setGameStarted] = useState(false);
-const [gameEnded, setGameEnded] = useState(false);
-const [multiplier, setMultiplier] = useState(1.0);
-const [result, setResult] = useState(null);
-const [totalOptions, setTotalOptions] = useState(25);
-const [safeOptions, setSafeOptions] = useState(24);
-const [totalMines, setTotalMines] = useState(1);
-const [actionsTaken, setActionsTaken] = useState(0);
-const [settings, setSettings] = useState({
-  difficulty: 'medium',
-  mineCount: 1,
-  timeLimit: 60
-});
-const [showSettings, setShowSettings] = useState(false);
-const [gameHistory, setGameHistory] = useState([]);
-const [rulesOpen, setRulesOpen] = useState(false);
-const crashPointRef = useRef(null);
-const startTimeRef = useRef(null);
-const hasLoggedRef = useRef(false); // Prevent multiple logs
-
-const isCrashGame = ${prompt.toLowerCase().includes('crash') || prompt.toLowerCase().includes('rocket') || prompt.toLowerCase().includes('flies higher')};
-
-const calculateNonCrashMultiplier = useCallback(() => {
-  if (gameEnded) return multiplier;
-  
-  if (actionsTaken > 0) {
-    const newMultiplier = (1.0 + 0.5 * (totalMines / (totalOptions - totalMines)) * Math.pow(1.3, actionsTaken)).toFixed(2);
-    setMultiplier(parseFloat(newMultiplier));
-  }
-}, [actionsTaken, totalMines, totalOptions, gameEnded, multiplier]);
-
-useEffect(() => {
-  if (gameStarted && !gameEnded && !isCrashGame) {
-    calculateNonCrashMultiplier();
-  }
-}, [gameStarted, gameEnded, actionsTaken, calculateNonCrashMultiplier, isCrashGame]);
-
-useEffect(() => {
-  if (!gameStarted || !isCrashGame || gameEnded) return;
-
-  if (!crashPointRef.current) {
-    crashPointRef.current = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95);
-  }
-
-  const k = 0.03;
-  const animate = (timestamp) => {
-    if (!gameStarted || gameEnded || hasLoggedRef.current) {
-      cancelAnimationFrame(chartAnimationRef.current);
-      return;
-    }
-
-    if (!startTimeRef.current) {
-      startTimeRef.current = timestamp;
-    }
-
-    const timeElapsed = (timestamp - startTimeRef.current) / 1000;
-    const currentMultiplier = 1 * Math.exp(k * timeElapsed);
-    setMultiplier(parseFloat(currentMultiplier.toFixed(2)));
-
-    if (currentMultiplier >= crashPointRef.current && !hasLoggedRef.current) {
-      hasLoggedRef.current = true;
-      setGameEnded(true);
-      setResult("loss");
-      logEvent("gameEnded", {
-        timestamp: new Date().toISOString(),
-        result: "loss",
-        multiplier: parseFloat(currentMultiplier.toFixed(2))
-      });
-      createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 50, themeColors.error, "lose");
-      cancelAnimationFrame(chartAnimationRef.current);
-      return;
-    }
-
-    chartAnimationRef.current = requestAnimationFrame(animate);
-  };
-
-  chartAnimationRef.current = requestAnimationFrame(animate);
-
-  return () => {
-    if (chartAnimationRef.current) {
-      cancelAnimationFrame(chartAnimationRef.current);
-    }
-    hasLoggedRef.current = false; // Reset for next game
-  };
-}, [gameStarted, gameEnded, isCrashGame, logEvent, createParticleBurst, themeColors]);
-
-const startGame = useCallback(() => {
-  setGameStarted(true);
-  setGameEnded(false);
-  setMultiplier(1.0);
-  setResult(null);
-  setSafeOptions(totalOptions - totalMines);
-  setActionsTaken(0);
-  crashPointRef.current = null;
-  startTimeRef.current = null;
-  hasLoggedRef.current = false; // Reset logging flag
-  
-  logEvent("gameStarted", { 
-    timestamp: new Date().toISOString(),
-    settings
-  });
-  
-  createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 30, themeColors.primary, "default");
-}, [totalOptions, totalMines, logEvent, createParticleBurst, settings, themeColors]);
-
-const cashOut = useCallback(() => {
-  if (!gameStarted || gameEnded || !isCrashGame || hasLoggedRef.current) return;
-  
-  hasLoggedRef.current = true;
-  setGameEnded(true);
-  setResult("win");
-  
-  logEvent("gameEnded", {
-    timestamp: new Date().toISOString(),
-    result: "win",
-    multiplier: parseFloat(multiplier.toFixed(2))
-  });
-  
-  createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 100, themeColors.success, "win");
-}, [gameStarted, gameEnded, isCrashGame, multiplier, logEvent, createParticleBurst, themeColors]);
-
-const endGame = useCallback((resultType, finalMultiplier = multiplier) => {
-  if (hasLoggedRef.current) return; // Prevent multiple calls
-  
-  hasLoggedRef.current = true;
-  setGameEnded(true);
-  setResult(resultType);
-  
-  const historyEntry = { 
-    id: Date.now(), 
-    result: resultType, 
-    multiplier: parseFloat(finalMultiplier.toFixed(2)), 
-    timestamp: new Date().toISOString() 
-  };
-  setGameHistory(prev => [historyEntry, ...prev].slice(0, 20));
-  
-  logEvent("gameEnded", { 
-    timestamp: new Date().toISOString(), 
-    result: resultType, 
-    multiplier: parseFloat(finalMultiplier.toFixed(2))
-  });
-  
-  if (resultType === "win") {
-    createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 100, themeColors.success, "win");
-  } else {
-    createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 50, themeColors.error, "lose");
-  }
-}, [multiplier, logEvent, createParticleBurst, themeColors]);
-
-const resetGame = useCallback(() => {
-  setGameStarted(false);
-  setGameEnded(false);
-  setMultiplier(1.0);
-  setResult(null);
-  setSafeOptions(totalOptions - totalMines);
-  setActionsTaken(0);
-  crashPointRef.current = null;
-  startTimeRef.current = null;
-  hasLoggedRef.current = false; // Reset logging flag
-  
-  logEvent("gameStarted", { 
-    timestamp: new Date().toISOString(),
-    settings
-  });
-}, [totalOptions, totalMines, logEvent, settings]);
-
-
-## Game History Component
-Include a consistent game history component:
-
-
-## Final Structure
-Return a single App component with:
-- Clean, modular structure
-- Contains ZERO icons of any kind, e.g. favicons etc.
-- Performance-optimized hooks
-- Clear game rules including win probability
-- Consistent glassmorphic design with red-themed buttons
-- Always-visible multiplier display
-- Visual feedback for player actions
-- A history of game outcomes
-- Single logging of gameEnded event using hasLoggedRef
-
-Export the component as:
-\`\`\`jsx
-export default App;
-\`\`\`
-
-Ensure error-free code, full container usage with scroll overflow, proper multiplier visibility, and single logging of gameEnded events. Focus on creating a balanced, enjoyable player experience with clear rules and feedback.
-`;
-
-    const apiCall = openai.chat.completions.create({
-      model: 'o3',
+    // Use streaming for better performance
+    const stream = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8000, // Reduced from 64000
+      system: systemPrompt,
       messages: [
-        { role: 'system', content: systemPrompt },
         {
           role: 'user',
-          content: `Create a React component for: "${prompt}". Use 'proxiedAssets' prop: ${JSON.stringify(proxiedAssets)}.`,
+          content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.`,
         },
       ],
-      max_completion_tokens: 100000,
+      stream: true, // Enable streaming
     });
 
-    const aiResponse = await Promise.race([
-      apiCall,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), 300000)),
-    ]);
+    let rawCode = '';
+    
+    // Process the stream
+    for await (const chunk of stream) {
+      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        rawCode += chunk.delta.text;
+      }
+    }
 
-    const rawCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
-
+    // Clean the generated code
     let cleanedCode = rawCode
       .replace(/```(?:jsx?|javascript)?/g, '')
       .replace(/^\s*[\r\n]+/gm, '')
-      .replace(/\/\/.*$/gm, '')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/^[^import\s]*(?=\n*import)/m, '')
       .trim();
 
-    const moduleCode = `
-      ${cleanedCode}
-    `;
+    // Validate and fix the code structure
+    if (!cleanedCode.includes('const App') && !cleanedCode.includes('function App')) {
+      throw new Error('Generated code does not contain a valid App component');
+    }
+
+    if (!cleanedCode.endsWith('export default App;')) {
+      cleanedCode = `${cleanedCode}\nexport default App;`;
+    }
+
+    const moduleCode = cleanedCode;
 
     res.json({ finalApp: moduleCode, proxiedAssets });
+
   } catch (error) {
     console.error('Error in route handler:', error);
+    
+    // Handle specific streaming errors
+    if (error.message.includes('stream') || error.message.includes('timeout')) {
+      return res.status(500).json({
+        error: 'Generation timeout',
+        message: 'The AI took too long to generate the component. Please try a simpler prompt or try again.',
+      });
+    }
+
     res.status(500).json({
       error: 'Internal server error',
-      message: error.message.includes('timed out')
-        ? 'App generation timed out. Please try again.'
-        : error.message,
+      message: error.message || 'Failed to generate React component',
     });
   }
 });

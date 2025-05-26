@@ -174,7 +174,7 @@ export const generateReactGameFromPrompt = (
   setGameLoading(true);
 
   try {
-    const response = await axios.post('/game/openai/generate-react', {
+    const response = await axios.post('/game/generate-react', {
       prompt: gamePrompt,
       imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl),
       model, // Include the model parameter

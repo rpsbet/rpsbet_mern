@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
     "@babel/parser": "^7.27.0",
     "@magicblock-labs/ephemeral-rollups-sdk": "^0.2.4",
     "@metaplex-foundation/mpl-token-metadata": "^3.3.0",
