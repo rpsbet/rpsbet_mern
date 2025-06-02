@@ -391,6 +391,38 @@ export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) =
   }
 };
 
+export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
+  try {
+    dispatch({ type: START_LOADING });
+
+    const res = await axios.post('/auth/privy', {
+      privyId: privyUser.id,
+      email: privyUser.email?.address,
+      wallet: privyUser.wallet?.address,
+    });
+    dispatch({ type: END_LOADING });
+
+    if (res.data.success) {
+      const token = res.data.token;
+
+      // Save token in session
+      localStorage.setItem('token', token);
+      localStorage.setItem('isAuthenticated', '1');
+
+      // Attach token to axios
+      setAuthToken(token);
+
+      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
+      dispatch({ type: MSG_SUCCESS, payload: res.data.message });
+
+      return { status: 'success', user: res.data.user };
+    }
+  } catch (err) {
+    dispatch({ type: MSG_WARNING, payload: err.message });
+    return { status: 'failed' };
+  }
+};
+
 // Login User
 export const userSignIn = body => async dispatch => {
   try {
@@ -467,6 +499,7 @@ export const deleteAccount = () => async dispatch => {
 export const userSignOut = (clear_token, navigate) => async (dispatch) => {
   dispatch({ type: LOGOUT });
   try {
+    console.log("---logout2")
     const { data } = await axios.post('/auth/logout');
     if (data.success) {
       if (clear_token) setAuthToken();
