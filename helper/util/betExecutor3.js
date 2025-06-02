@@ -9,8 +9,6 @@ const GameType = require('../../model/GameType');
 const Room = require('../../model/Room');
 const Notification = require('../../model/Notification');
 const CustomBetItem = require('../../model/CustomBetItem');
-const RpsBetItem = require('../../model/RpsBetItem');
-const QsBetItem = require('../../model/QsBetItem');
 const GameTransaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
 const socket = require('../../socketController');
@@ -21,9 +19,6 @@ const {
 } = require('./convertGameLogToHistoryStyle');
 const check_access_time = require('../../helper/util/checkAccessTime');
 
-const {
-  getRandomItem_qs,
-} = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
 const { mintTokenWithMetadata } = require('./mintTokenWithMetadata');
 const { wallet, connection } = require('./config');
@@ -323,318 +318,11 @@ const updateRoomAndEmitData = async (roomInfo, user, newTransactionAmount, req) 
   return newCandle;
 };
 
-// Process Catsino.Fun (RPS Game)
-const processRpsGame = async (req, user, roomInfo, bet_amount, tax, newTransactionJ, newGameLog) => {
-  let game_result = 0;
-  let newTransactionAmount = 0; // Deduct bet amount initially
-  let commission = roomInfo['tax'] + (user.elite === 'black' ? tax.value / 2 : tax.value);
-  let pool_id = '';
-  let message;
-
-  // Find or create bet item
-  const availableBetItem = await RpsBetItem.findOne({
-    room: req.body._id,
-    joiner_rps: '',
-  });
-
-  let bet_item = availableBetItem;
-
-  // Get recent bet items for this user
-  const reversedBetItems = await RpsBetItem.find({
-    room: new ObjectId(req.body._id),
-    joiner: user._id,
-    joiner_rps: { $ne: null },
-  })
-    .sort({ created_at: -1 })
-    .limit(50);
-
-  const mostRecentItems = reversedBetItems.slice(0, 4);
-
-  // Create new bet item if none exists
-  if (!bet_item && roomInfo['rps_game_type'] === 0) {
-    const rpsOptions = ['R', 'P', 'S'];
-    const nextItem = rpsOptions[Math.floor(Math.random() * 3)];
-
-    bet_item = new RpsBetItem({
-      room: new ObjectId(req.body._id),
-      joiner: req.user._id,
-      rps: nextItem,
-      bet_amount: bet_amount,
-      joiner_rps: req.body.selected_rps,
-    });
-  }
-
-  newGameLog.selected_rps = req.body.selected_rps;
-
-  if (roomInfo['rps_game_type'] === 0) {
-    // Determine game result
-    if (
-      (bet_item.rps === 'R' && req.body.selected_rps === 'P') ||
-      (bet_item.rps === 'P' && req.body.selected_rps === 'S') ||
-      (bet_item.rps === 'S' && req.body.selected_rps === 'R')
-    ) {
-      // Win
-      game_result = 1;
-      newTransactionAmount += bet_amount * 2 * ((100 - commission) / 100);
-      newGameLog.commission = bet_amount * 2 * (roomInfo['tax'] / 100);
-
-      // Update room values
-      roomInfo['host_pr'] -= bet_amount;
-      roomInfo['user_bet'] -= bet_amount;
-
-      // Set message
-      message = new Notification({
-        from: user,
-        to: roomInfo['creator'],
-        room: req.body._id,
-        message: 'Won in ' + roomInfo['name'],
-        amount: bet_amount * 2 * ((100 - commission) / 100),
-        is_read: false,
-      });
-
-    } else if (bet_item.rps === req.body.selected_rps) {
-      // Draw
-      game_result = 0;
-
-      roomInfo['user_bet'] -= bet_amount;
-      roomInfo['host_pr'] -= bet_amount;
-
-      newTransactionAmount += (bet_amount * 2 * ((100 - commission) / 100)) / 2;
-
-      // Set message
-      message = new Notification({
-        from: user,
-        to: roomInfo['creator'],
-        room: req.body._id,
-        message: 'Split in ' + roomInfo['name'],
-        amount: bet_amount * 2 * ((100 - commission) / 100),
-        is_read: false,
-      });
-
-    } else {
-      // Loss
-      game_result = -1;
-
-      roomInfo['user_bet'] += bet_amount * 2 * ((100 - tax.value) / 100);
-      roomInfo['host_pr'] += bet_amount * 2 * ((100 - tax.value) / 100);
-
-      newTransactionAmount -= bet_amount;
-
-      pool_id = await processGameEndIfNeeded(roomInfo, req, user);
-
-      // Set message
-      message = new Notification({
-        from: user,
-        to: roomInfo['creator'],
-        room: req.body._id,
-        message: 'Lost in ' + roomInfo['name'],
-        amount: bet_amount,
-        is_read: false,
-      });
-    }
-  }
-
-  // Update bet item and save it
-  bet_item.joiner = user._id;
-  bet_item.joiner_rps = req.body.selected_rps;
-  bet_item.bet_amount = bet_amount;
-  await saveDocumentWithRetry(bet_item);
-
-  // Update game log
-  newGameLog.winnings = newTransactionAmount;
-  newGameLog.game_result = game_result;
-  newGameLog.endgame_amount = roomInfo['endgame_amount'];
-
-  // Emit updated bankroll data
-  if (roomInfo['rps_game_type'] === 0 && req.io && req.io.sockets) {
-    mostRecentItems.reverse();
-    mostRecentItems.push(bet_item);
-
-    const payload = {
-      bankroll: roomInfo['user_bet'],
-      host_pr: roomInfo['host_pr'],
-      rps: mostRecentItems,
-      room: roomInfo._id,
-      user: user,
-    };
-
-    if (pool_id) {
-      payload.pool_id = pool_id;
-    }
-
-    req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, payload);
-  }
-
-  // Handle room end case
-  if (roomInfo['user_bet'] <= 0.001) {
-    roomInfo.status = 'finished';
-    if (req.io && req.io.sockets) {
-      req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
-    }
-    game_result = 1;
-    message.message = 'Won in ' + roomInfo['name'];
-    message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
-    roomInfo['user_bet'] -= roomInfo['user_bet'];
-    newTransactionC.amount += roomInfo['user_bet'];
-  }
-
-  return {
-    game_result,
-    newTransactionAmount,
-    bet_item,
-    pool_id,
-    message
-  };
-};
-
-// Process Quick Shoot game
-const processQsGame = async (req, user, roomInfo, bet_amount, tax, newTransactionJ, newGameLog) => {
-  let game_result = 0;
-  let newTransactionAmount = 0; // Deduct bet amount initially
-  let commission = roomInfo['tax'] + (user.elite === 'black' ? tax.value / 2 : tax.value);
-  let pool_id = '';
-  let message;
-
-  // Find or create bet item
-  const availableBetItem = await QsBetItem.findOne({
-    _id: req.body._id,
-    joiner_qs: '',
-  });
-
-  let bet_item = availableBetItem;
-
-  // Get recent bet items for this user
-  const reversedBetItems = await QsBetItem.find({
-    room: new ObjectId(req.body._id),
-    joiner: user._id,
-    joiner_qs: { $ne: null },
-  })
-    .sort({ created_at: -1 })
-    .limit(50);
-
-  const mostRecentItems = reversedBetItems.slice(0, 4);
-
-  // Create new bet item if none exists
-  if (!bet_item) {
-    const nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-
-    bet_item = new QsBetItem({
-      room: new ObjectId(req.body._id),
-      joiner: req.user._id,
-      qs: nextItem,
-      bet_amount: bet_amount,
-      joiner_qs: req.body.selected_qs_position,
-    });
-  }
-
-  newGameLog.selected_qs_position = req.body.selected_qs_position;
-
-  // Determine game result
-  if (Number(bet_item.qs) === req.body.selected_qs_position) {
-    // Loss
-    game_result = -1;
-    newTransactionAmount -= bet_amount;
-    // Update room values
-    roomInfo['user_bet'] += bet_amount * ((100 - tax.value) / 100);
-    roomInfo['host_pr'] += bet_amount * ((100 - tax.value) / 100);
-
-    // Process game end if needed
-    pool_id = await processGameEndIfNeeded(roomInfo, req, user);
-
-    // Set message
-    message = new Notification({
-      from: user,
-      to: roomInfo['creator'],
-      room: req.body._id,
-      message: 'Lost in ' + roomInfo['name'],
-      amount: req.body.bet_amount,
-      is_read: false,
-    });
-
-  } else {
-    // Win
-    game_result = 1;
-
-    const winAmount = (bet_amount + bet_amount / (roomInfo['qs_game_type'] - 1)) * ((100 - commission) / 100);
-    newTransactionAmount += winAmount;
-
-    // Update room values
-    roomInfo['host_pr'] -= winAmount - bet_amount;
-    roomInfo['user_bet'] -= winAmount - bet_amount;
-
-    // Calculate commission
-    newGameLog.commission = (bet_amount + bet_amount / (roomInfo['qs_game_type'] - 1)) * (roomInfo['tax'] / 100);
-
-    // Set message
-    message = new Notification({
-      from: user,
-      to: roomInfo['creator'],
-      room: req.body._id,
-      message: 'Won in ' + roomInfo['name'],
-      amount: bet_amount / parseFloat(roomInfo['qs_game_type'] - 1) + bet_amount,
-      is_read: false,
-    });
-  }
-
-  // Update bet item and save it
-  bet_item.joiner = req.user._id;
-  bet_item.joiner_qs = req.body.selected_qs_position;
-  bet_item.bet_amount = bet_amount;
-  await saveDocumentWithRetry(bet_item);
-
-  // Update game log
-  newGameLog.qs_game_type = parseFloat(roomInfo.qs_game_type);
-  newGameLog.winnings = newTransactionAmount;
-  newGameLog.game_result = game_result;
-  newGameLog.endgame_amount = roomInfo['endgame_amount'];
-
-  // Emit updated bankroll data
-  if (req.io && req.io.sockets) {
-    mostRecentItems.reverse();
-    mostRecentItems.push(bet_item);
-
-    const payload = {
-      bankroll: roomInfo['user_bet'],
-      host_pr: roomInfo['host_pr'],
-      qs: mostRecentItems,
-      room: roomInfo._id,
-      user: user,
-    };
-
-    if (pool_id) {
-      payload.pool_id = pool_id;
-    }
-
-    req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, payload);
-  }
-
-  // Handle room end case
-  if (roomInfo['user_bet'] <= 0.001) {
-    roomInfo.status = 'finished';
-    if (req.io && req.io.sockets) {
-      req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
-    }
-    game_result = 1;
-    message.message = 'Won in ' + roomInfo['name'];
-    message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
-    roomInfo['user_bet'] -= roomInfo['user_bet'];
-    newTransactionC.amount += roomInfo['user_bet'];
-  }
-
-  return {
-    game_result,
-    newTransactionAmount,
-    bet_item,
-    pool_id,
-    message
-  };
-};
-
 // Process Custom game
 const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransactionJ, newGameLog) => {
   const { result, multiplier } = req.body;
   let game_result = 0;
-  let newTransactionAmount = 0; // Deduct bet amount initially
+  let newTransactionAmount = 0;
   let commission = roomInfo['tax'] + (user.elite === 'black' ? tax.value / 2 : tax.value);
   let pool_id = '';
   let message;
@@ -658,8 +346,8 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     newGameLog.commission = bet_amount * multiplier * (roomInfo['tax'] / 100);
 
     // Update room values
-    roomInfo['host_pr'] -= bet_amount;
-    roomInfo['user_bet'] -= bet_amount;
+    roomInfo['host_pr'] -= bet_amount * (multiplier - 1);
+    roomInfo['user_bet'] -= bet_amount * (multiplier - 1);
 
     // Set message
     message = new Notification({
@@ -682,6 +370,7 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     pool_id = await processGameEndIfNeeded(roomInfo, req, user);
 
     newTransactionAmount -= bet_amount;
+    
     // Set message
     message = new Notification({
       from: user,
@@ -701,6 +390,23 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   // Save bet item
   await saveDocumentWithRetry(bet_item);
 
+  // Emit updated bankroll data
+  if (req.io && req.io.sockets) {
+    const payload = {
+      bankroll: roomInfo['user_bet'],
+      host_pr: roomInfo['host_pr'],
+      custom: bet_item,
+      room: roomInfo._id,
+      user: user,
+    };
+
+    if (pool_id) {
+      payload.pool_id = pool_id;
+    }
+
+    req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, payload);
+  }
+
   // Handle room end case
   if (roomInfo['user_bet'] <= 0.001) {
     roomInfo.status = 'finished';
@@ -711,7 +417,7 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     message.message = 'Won in ' + roomInfo['name'];
     message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
     roomInfo['user_bet'] -= roomInfo['user_bet'];
-    newTransactionC.amount += roomInfo['user_bet'];
+    newTransactionAmount += roomInfo['user_bet'];
   }
 
   return {
@@ -721,6 +427,69 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     pool_id,
     message
   };
+};
+
+// Validation functions for better organization
+const validateBetRequest = (req, user, roomInfo) => {
+  // Early validations
+  if (user.dailyWithdrawals > 4.269) {
+    return {
+      success: false,
+      message: 'Irregular action detected',
+      betResult: -1000,
+    };
+  }
+
+  if (user.isWithdrawing) {
+    return {
+      success: false,
+      message: 'Withdrawal in progress. Please wait until it completes.',
+      betResult: -1000,
+    };
+  }
+
+  if (parseFloat(req.body.bet_amount) < 0.001) {
+    return {
+      success: false,
+      message: 'Minimum bet is 0.001 SOL',
+    };
+  }
+
+  // Check if user is the creator
+  if (
+    roomInfo['creator'] &&
+    roomInfo['creator']._id &&
+    user &&
+    user._id &&
+    roomInfo['creator']._id.toString() === user._id.toString()
+  ) {
+    return {
+      success: false,
+      message: 'Cannot bet on your own game!',
+      betResult: -101,
+    };
+  }
+
+  // Check if room was updated recently (anti-spam)
+  const tenSecondsAgo = new Date(Date.now() - 500);
+  if (roomInfo['updated_at'] > tenSecondsAgo) {
+    return {
+      success: false,
+      message: 'Room too busy, try again later',
+      betResult: -1200,
+    };
+  }
+
+  // Check if room is finished
+  if (roomInfo['status'] === 'finished') {
+    return {
+      success: false,
+      message: 'This game has ended',
+      betResult: -100,
+    };
+  }
+
+  return { success: true };
 };
 
 const addToQueue = async (req, bot = false) => {
@@ -761,36 +530,12 @@ const addToQueue = async (req, bot = false) => {
 
     // Process bet if room ID exists
     if (req.body._id) {
-      // Early validations
-      if (user.dailyWithdrawals > 4.269) {
-        return {
-          success: false,
-          message: 'illregular action',
-          betResult: -1000,
-        };
-      }
-
-      if (user.isWithdrawing) {
-        return {
-          success: false,
-          message: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
-          betResult: -1000,
-        };
-      }
-
-      if (parseFloat(req.body.bet_amount) < 0.001) {
-        return {
-          success: false,
-          message: 'MEOWNIMUM BET IS 0.001 SOL',
-        };
-      }
-
       const { bet_amount } = req.body;
 
       // Get room information with populated relations
       roomInfo = await Room.findOne({ _id: req.body._id })
         .select(
-          'name image tax ticker prompt room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
+          'name image tax ticker prompt room_number updated_at battles selectedStrategy game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
         )
         .populate({
           path: 'creator',
@@ -804,29 +549,10 @@ const addToQueue = async (req, bot = false) => {
           select: 'game_type_name short_name',
         });
 
-      // Check if user is the creator
-      if (
-        roomInfo['creator'] &&
-        roomInfo['creator']._id &&
-        user &&
-        user._id &&
-        roomInfo['creator']._id.toString() === user._id.toString()
-      ) {
-        return {
-          success: false,
-          message: `YOU'VE CAT TO BE KITTEN ME! DIS YOUR OWN GAME!`,
-          betResult: -101,
-        };
-      }
-
-      // Check if room was updated recently (anti-spam)
-      const tenSecondsAgo = new Date(Date.now() - 500);
-      if (roomInfo['updated_at'] > tenSecondsAgo) {
-        return {
-          success: false,
-          message: 'ROOM TOO BUSY, TRY AGAIN LATER',
-          betResult: -1200,
-        };
+      // Validate bet request
+      const validation = validateBetRequest(req, user, roomInfo);
+      if (!validation.success) {
+        return validation;
       }
 
       // Check access time
@@ -834,16 +560,7 @@ const addToQueue = async (req, bot = false) => {
       if (!accessAllowed) {
         return {
           success: false,
-          message: 'SLOW TF DOWN!!',
-          betResult: -100,
-        };
-      }
-
-      // Check if room is finished
-      if (roomInfo['status'] === 'finished') {
-        return {
-          success: false,
-          message: 'THIS GAME HAS NOW ENDED',
+          message: 'Too many requests. Please slow down!',
           betResult: -100,
         };
       }
@@ -885,73 +602,8 @@ const addToQueue = async (req, bot = false) => {
         is_read: false,
       });
 
-      // Process different game types
-      if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-        // Validate bet amount
-        if (
-          bet_amount > roomInfo['user_bet'] ||
-          bet_amount > parseFloat(user.balance)
-        ) {
-          if (bot) {
-            bet_amount =
-              bet_amount > roomInfo['user_bet']
-                ? roomInfo['user_bet']
-                : parseFloat(user.balance);
-          } else {
-            return {
-              success: false,
-              message: 'Bet amount exceeds available balance.',
-            };
-          }
-        }
-
-        const rpsResult = await processRpsGame(
-          req,
-          user,
-          roomInfo,
-          bet_amount,
-          tax,
-          newTransactionJ,
-          newGameLog
-        );
-
-        game_result = rpsResult.game_result;
-        newTransactionAmount = rpsResult.newTransactionAmount;
-        bet_item = rpsResult.bet_item;
-        pool_id = rpsResult.pool_id;
-        message = rpsResult.message;
-      } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
-        // Validate bet amount for QS
-        if (
-          parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-          parseFloat(req.body.bet_amount) -
-          (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
-          roomInfo['user_bet'] ||
-          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
-        ) {
-          return {
-            success: false,
-            message: 'Bet amount exceeds available balance.',
-            betResult: -1000,
-          };
-        }
-
-        const qsResult = await processQsGame(
-          req,
-          user,
-          roomInfo,
-          bet_amount,
-          tax,
-          newTransactionJ,
-          newGameLog
-        );
-
-        game_result = qsResult.game_result;
-        newTransactionAmount = qsResult.newTransactionAmount;
-        bet_item = qsResult.bet_item;
-        pool_id = qsResult.pool_id;
-        message = qsResult.message;
-      } else if (roomInfo['game_type']['game_type_name'] === 'Custom') {
+      // Process Custom game (only game type supported now)
+      if (roomInfo['game_type']['game_type_name'] === 'Custom') {
         // Validate bet amount for Custom game
         if (
           bet_amount > roomInfo['user_bet'] ||
@@ -978,6 +630,13 @@ const addToQueue = async (req, bot = false) => {
         bet_item = customResult.bet_item;
         pool_id = customResult.pool_id;
         message = customResult.message;
+      } else {
+        // Unsupported game type
+        return {
+          success: false,
+          message: 'Unsupported game type',
+          betResult: -100,
+        };
       }
 
       // Update room and emit candle data
@@ -988,9 +647,10 @@ const addToQueue = async (req, bot = false) => {
       user.gameProfit += newTransactionAmount;
       user.totalWagered += Math.abs(bet_item.bet_amount);
 
+      // Handle Solana transactions for winnings
       if (newTransactionAmount > 0 && req.body.connectedAccount) {
         // Validate deposit transaction (check both pending and completed)
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000); // 15 minutes ago
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
         const depositTransaction = await GameTransaction.findOne({
           user: user._id,
           room: req.body._id,
@@ -1030,6 +690,7 @@ const addToQueue = async (req, bot = false) => {
         await saveDocumentWithRetry(newGameTransaction);
       }
 
+      // Update host stats
       const host = await User.findOne({ _id: roomInfo['creator'] });
       if (host) {
         host.gamePlayed++;

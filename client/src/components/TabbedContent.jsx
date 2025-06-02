@@ -11,17 +11,26 @@ import {
   Typography,
   Avatar,
   Badge,
+  Card,
+  Fade,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDice, faClock, faBolt } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faDice, 
+  faClock, 
+  faBolt, 
+  faPlay, 
+  faChartLine, 
+  faHistory, 
+  faComments 
+} from '@fortawesome/free-solid-svg-icons';
 import { yellow, blue, grey } from '@mui/material/colors';
 import Lottie from 'react-lottie';
 import progress from '../game_panel/LottieAnimations/progress.json';
 import LoadingComponent from './LoadingComponent';
 import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
-import RPS from '../game_panel/JoinGame/RPS';
-const QuickShoot = lazy(() => import('../game_panel/JoinGame/QuickShoot'));
+import { motion, AnimatePresence } from 'framer-motion';
+
 const Custom = lazy(() => import('../game_panel/JoinGame/Custom'));
 const RoomHistory = lazy(() => import('./RoomHistory'));
 const Comments = lazy(() => import('./Comments'));
@@ -67,25 +76,17 @@ function TabbedContent(props) {
     onChangeState,
     is_mobile,
     gameResult,
-    updateSelectedRps,
-    rpsbetitems,
     handleOpenPlayerModal,
     predictedBetAmount,
     handleClosePlayerModal,
     join,
-    selected_qs_position,
     handleSwitchChange,
-    selected_rps,
-    total_wagered,
     updateUserStrategy,
     updateUserPrompt,
     actionList,
     getRoomData,
-    qsbetitems,
     bet_amount,
     borderColor,
-    updateSelectedQs,
-    changeBgColorQs,
     account
   } = props;
 
@@ -102,6 +103,34 @@ function TabbedContent(props) {
   );
   const [activeTabs, setActiveTabs] = useState([0, 1]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
+
+  // Tab configuration with icons and colors
+  const tabConfig = [
+    { 
+      label: 'Play', 
+      icon: faPlay, 
+      color: '#4caf50',
+      description: 'Start your game'
+    },
+    { 
+      label: 'Trade', 
+      icon: faChartLine, 
+      color: '#2196f3',
+      description: 'Manage investments'
+    },
+    { 
+      label: 'History', 
+      icon: faHistory, 
+      color: '#ff9800',
+      description: 'View past games'
+    },
+    { 
+      label: 'Comments', 
+      icon: faComments, 
+      color: '#9c27b0',
+      description: 'Community discussion'
+    }
+  ];
 
   // Effects
   useEffect(() => {
@@ -148,7 +177,6 @@ function TabbedContent(props) {
     setShowPlayerModal(true);
   }, []);
 
-
   const handleTabChange = useCallback((event, newValue) => {
     setSelectedTab(newValue);
   }, []);
@@ -174,43 +202,50 @@ function TabbedContent(props) {
     [onChangeState]
   );
 
-  // Glassmorphism style
+  // Enhanced glassmorphism style
   const glassmorphismStyle = {
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-    '@supports not (backdrop-filter: blur(12px))': {
-      background: 'rgba(255, 255, 255, 0.2)',
+    background: 'rgba(0, 0, 0, 0.15)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    '@supports not (backdrop-filter: blur(20px))': {
+      background: 'rgba(0, 0, 0, 0.35)',
     },
   };
 
-  // Result Display Component
+  // Enhanced Result Display Component
   const renderResultDisplay = () => (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <Box
+      <Card
         sx={{
           ...glassmorphismStyle,
-          p: isMobile ? 1 : 1.5,
-          mt: isMobile ? 4 : 0,
-          borderRadius: '12px',
+          p: isMobile ? 2 : 2.5,
+          mt: isMobile ? 3 : 0,
+          borderRadius: '20px',
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          zIndex: 10,
-          minWidth: isMobile ? '100%' : '200px',
-          background:
-            is_betting
-              ? 'linear-gradient(45deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.4))'
-              : 'rgba(255, 255, 255, 0.1)',
-          transition: 'background 0.3s ease',
+          gap: 2,
+          minWidth: isMobile ? '100%' : '280px',
+         
+          transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
           width: isMobile ? '100%' : 'auto',
-          boxSizing: 'border-box',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: is_betting ? '-100%' : '100%',
+            width: '100%',
+            height: '100%',
+            transition: 'left 2s ease-in-out',
+            ...(is_betting && { left: '100%' }),
+          },
         }}
       >
         {result !== '' ? (
@@ -218,23 +253,32 @@ function TabbedContent(props) {
             label={
               <Typography
                 variant={isMobile ? 'body2' : 'body1'}
-                sx={{ color: '#fff', fontWeight: 400 }}
+                sx={{ 
+                  color: '#fff', 
+                  fontWeight: 600,
+                  letterSpacing: '0.3px',
+                }}
               >
                 {result}
               </Typography>
             }
             sx={{
-              bgcolor: is_betting ? 'rgba(33, 150, 243, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+              bgcolor: 'rgba(76, 175, 80, 0.8)',
               color: '#fff',
               borderRadius: '16px',
               flexGrow: 1,
-              height: isMobile ? 28 : 32,
-              '& .MuiChip-label': { px: 1 },
+              height: isMobile ? 36 : 40,
+              border: '1px solid rgba(76, 175, 80, 0.3)',
+              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
+              '& .MuiChip-label': { 
+                px: 2,
+                fontSize: isMobile ? '0.85rem' : '0.95rem',
+              },
             }}
           />
         ) : is_betting ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <Box sx={{ width: isMobile ? '40px' : '50px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+            <Box sx={{ width: isMobile ? '44px' : '52px' }}>
               <Lottie
                 options={{
                   loop: isLowGraphics ? false : true,
@@ -243,68 +287,110 @@ function TabbedContent(props) {
                 }}
               />
             </Box>
-            <Typography
-              variant={isMobile ? 'caption' : 'body2'}
-              sx={{
-                color: '#fff',
-                fontWeight: 400,
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-              }}
-            >
-              Betting...
-            </Typography>
+            <Box>
+              <Typography
+                variant={isMobile ? 'body2' : 'body1'}
+                sx={{
+                  color: '#fff',
+                  fontWeight: 600,
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                  fontSize: isMobile ? '0.9rem' : '1rem',
+                }}
+              >
+                Processing Bet...
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: '0.75rem',
+                }}
+              >
+                Please wait
+              </Typography>
+            </Box>
           </Box>
         ) : (
-          <Typography
-            variant={isMobile ? 'caption' : 'body2'}
-            sx={{
-              color: '#fff',
-              fontWeight: 400,
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-              flexGrow: 1,
-              textAlign: 'center',
-            }}
-          >
-            Waiting for bet
-          </Typography>
+          <Box sx={{ flexGrow: 1, textAlign: 'center' }}>
+            <Typography
+              variant={isMobile ? 'body2' : 'body1'}
+              sx={{
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontWeight: 500,
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                fontSize: isMobile ? '0.9rem' : '1rem',
+              }}
+            >
+              Ready to Play
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '0.75rem',
+              }}
+            >
+              Place your bet
+            </Typography>
+          </Box>
         )}
+        
         <Badge
           badgeContent={
             is_betting ? (
-              <FontAwesomeIcon icon={faBolt} style={{ color: yellow[500], fontSize: '12px' }} />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <FontAwesomeIcon 
+                  icon={faBolt} 
+                  style={{ 
+                    color: '#ffd700', 
+                    fontSize: '10px',
+                    filter: 'drop-shadow(0 0 4px rgba(255, 215, 0, 0.6))',
+                  }} 
+                />
+              </motion.div>
             ) : null
           }
           sx={{
             '& .MuiBadge-badge': {
-              right: -8,
-              top: 8,
-              bgcolor: 'rgba(0, 0, 0, 0.5)',
+              right: -6,
+              top: 6,
+              bgcolor: 'rgba(0, 0, 0, 0.7)',
+              border: '1px solid rgba(255, 215, 0, 0.5)',
               borderRadius: '50%',
               p: 0.5,
+              minWidth: 20,
+              height: 20,
             },
           }}
         >
           <Avatar
             sx={{
-              width: isMobile ? 28 : 32,
-              height: isMobile ? 28 : 32,
-              bgcolor: is_betting ? blue[500] : grey[700],
-              transition: 'background-color 0.3s ease',
+              width: isMobile ? 36 : 40,
+              height: isMobile ? 36 : 40,
+              bgcolor: is_betting ? '#2196f3' : '#666',
+              transition: 'all 0.3s ease',
+              border: `2px solid ${is_betting ? 'rgba(33, 150, 243, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+              boxShadow: is_betting 
+                ? '0 0 20px rgba(33, 150, 243, 0.4)' 
+                : '0 4px 8px rgba(0, 0, 0, 0.2)',
             }}
           >
             <FontAwesomeIcon
               icon={is_betting ? faDice : faClock}
-              style={{ fontSize: isMobile ? '14px' : '16px', color: '#fff' }}
+              style={{ 
+                fontSize: isMobile ? '16px' : '18px', 
+                color: '#fff',
+                filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))',
+              }}
             />
           </Avatar>
         </Badge>
-      </Box>
+      </Card>
     </motion.div>
   );
-
-  // Renderers
-  // Replace the current loading skeleton in the renderTabContent function (case 0)
-  // with this professional loading progress bar
 
   const renderTabContent = (tabIndex) => {
     switch (tabIndex) {
@@ -315,102 +401,35 @@ function TabbedContent(props) {
         }
 
         return (
-          <Paper
-            square
-            variant="inherit"
-            sx={{ backgroundColor: '#111213', position: 'relative', mb: 1, border: '1px solid #414242' }}
-            className="join-game-panel"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {/* Result Display for Mobile */}
-            {isMobile && (
-              <Box sx={{ mb: 2, px: 2 }}>
-                {renderResultDisplay()}
-              </Box>
-            )}
+            <Card
+              sx={{
+                ...glassmorphismStyle,
+                borderRadius: '24px',
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                mb: 2,
+              }}
+            >
+              {/* Result Display for Mobile */}
+              {isMobile && (
+                <Box sx={{ p: 3, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  {renderResultDisplay()}
+                </Box>
+              )}
 
-            {roomInfo.game_type === 'RPS' ? (
-              <RPS
-                changeBgColor={changeBgColor}
-                bgColorChanged={bgColorChanged}
-                betting={betting}
-                strategies={strategies}
-                result={result}
-                ai_mode={ai_mode}
-                handle2xButtonClick={handle2xButtonClick}
-                handleHalfXButtonClick={handleHalfXButtonClick}
-                handleMaxButtonClick={handleMaxButtonClick}
-                onChangeState={onChangeState}
-                is_mobile={is_mobile}
-                gameResult={gameResult}
-                rpsbetitems={rpsbetitems}
-                updateSelectedRps={updateSelectedRps}
-                selected_rps={selected_rps}
-                playSound={playSound}
-                join={join}
-                handleSwitchChange={handleSwitchChange}
-                betResult={betResult}
-                roomInfo={roomInfo}
-                rps_game_type={roomInfo.rps_game_type}
-                user_id={user_id}
-                rank={rank}
-                handleOpenPlayerModal={handleOpenPlayerModal}
-                handleClosePlayerModal={handleClosePlayerModal}
-                showPlayerModal={showPlayerModal}
-                creator_id={roomInfo.creator_id}
-                bet_amount={bet_amount}
-                pr={roomInfo.pr}
-                updateUserStrategy={updateUserStrategy}
-                updateUserPrompt={updateUserPrompt}
-                bankroll={bankroll}
-                predictedBetAmount={predictedBetAmount}
-                is_private={roomInfo.is_private}
-                actionList={actionList}
-                getRoomData={getRoomData}
-                onResultChange={handleResultChange}
-              />
-            ) : roomInfo.game_type === 'Quick Shoot' ? (
-              <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={300} />}>
-                <QuickShoot
-                  changeBgColor={changeBgColorQs}
-                  onChangeState={onChangeState}
-                  handleOpenPlayerModal={handleOpenPlayerModal}
-                  handleClosePlayerModal={handleClosePlayerModal}
-                  showPlayerModal={showPlayerModal}
-                  handle2xButtonClick={handle2xButtonClick}
-                  handleHalfXButtonClick={handleHalfXButtonClick}
-                  handleMaxButtonClick={handleMaxButtonClick}
-                  join={join}
-                  result={result}
-                  gameResult={gameResult}
-                  updateUserStrategy={updateUserStrategy}
-                  updateUserPrompt={updateUserPrompt}
-                  borderColor={borderColor}
-                  bgColorChanged={bgColorChanged}
-                  updateSelectedQs={updateSelectedQs}
-                  user_id={user_id}
-                  betResult={betResult}
-                  is_mobile={is_mobile}
-                  qsbetitems={qsbetitems}
-                  creator_id={roomInfo.creator_id}
-                  qs_game_type={roomInfo.qs_game_type}
-                  bankroll={bankroll}
-                  bet_amount={bet_amount}
-                  is_private={roomInfo.is_private}
-                  selected_qs_position={selected_qs_position}
-                  roomInfo={roomInfo}
-                  playSound={playSound}
-                  ai_mode={ai_mode}
-                  betting={betting}
-                  strategies={strategies}
-                  handleSwitchChange={handleSwitchChange}
-                  pr={roomInfo.pr}
-                  actionList={actionList}
-                  getRoomData={getRoomData}
-                  onResultChange={handleResultChange}
+              <Suspense fallback={
+                <Skeleton 
+                  variant="rectangular" 
+                  width="100%" 
+                  height={300}
+                 
                 />
-              </Suspense>
-            ) : (
-              <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={300} />}>
+              }>
                 <Custom
                   onChangeState={onChangeState}
                   handleOpenPlayerModal={handleOpenPlayerModal}
@@ -426,7 +445,6 @@ function TabbedContent(props) {
                   updateUserPrompt={updateUserPrompt}
                   borderColor={borderColor}
                   bgColorChanged={bgColorChanged}
-                  updateSelectedQs={updateSelectedQs}
                   user_id={user_id}
                   betResult={betResult}
                   is_mobile={is_mobile}
@@ -444,56 +462,127 @@ function TabbedContent(props) {
                   actionList={actionList}
                   getRoomData={getRoomData}
                   onResultChange={handleResultChange}
+                  changeBgColor={changeBgColor}
+                  rank={rank}
+                  predictedBetAmount={predictedBetAmount}
                 />
               </Suspense>
-            )}
-          </Paper>
+            </Card>
+          </motion.div>
         );
       }
 
       case 1: {
-        // "Chart" / CoHost
+        // "Trade" / CoHost
         return (
-          <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
-            <CoHostModal
-              isDarkMode={isDarkMode}
-              coHostAmount={coHostAmount}
-              selectedRow={roomInfo}
-              balance={balance}
-              user={user}
-              account={account}
-              togglePopup={togglePopup}
-              handleClose={handleCloseCoHostModal}
-              handleSendCoHost={handleSendCoHost}
-              handleCoHostAmountChange={handleCoHostAmountChange}
-              has_joined={has_joined}
-              solPrice={solPrice}
-              input_only={false}
-            />
-          </Suspense>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <Suspense fallback={
+              <Skeleton 
+                variant="rectangular" 
+                width="100%" 
+                height={200}
+                sx={{ 
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '24px',
+                }}
+              />
+            }>
+              <CoHostModal
+                isDarkMode={isDarkMode}
+                coHostAmount={coHostAmount}
+                selectedRow={roomInfo}
+                balance={balance}
+                user={user}
+                account={account}
+                togglePopup={togglePopup}
+                handleClose={handleCloseCoHostModal}
+                handleSendCoHost={handleSendCoHost}
+                handleCoHostAmountChange={handleCoHostAmountChange}
+                has_joined={has_joined}
+                solPrice={solPrice}
+                input_only={false}
+              />
+            </Suspense>
+          </motion.div>
         );
       }
 
       case 2: {
         // "History"
         return (
-          <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
-            <RoomHistory
-              roomId={roomInfo._id}
-              getRoomInfo={props.getRoomInfo}
-              roomInfo={roomInfo}
-              isLowGraphics={isLowGraphics}
-            />
-          </Suspense>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <Card
+              sx={{
+                ...glassmorphismStyle,
+                borderRadius: '24px',
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                mb: 2,
+              }}
+            >
+              <Suspense fallback={
+                <Skeleton 
+                  variant="rectangular" 
+                  width="100%" 
+                  height={200}
+                  sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '24px',
+                  }}
+                />
+              }>
+                <RoomHistory
+                  roomId={roomInfo._id}
+                  getRoomInfo={props.getRoomInfo}
+                  roomInfo={roomInfo}
+                  isLowGraphics={isLowGraphics}
+                />
+              </Suspense>
+            </Card>
+          </motion.div>
         );
       }
 
       case 3: {
-        // "Thread"
+        // "Comments"
         return (
-          <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
-            <Comments roomId={roomInfo._id} />
-          </Suspense>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <Card
+              sx={{
+                ...glassmorphismStyle,
+                borderRadius: '24px',
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                mb: 2,
+              }}
+            >
+              <Suspense fallback={
+                <Skeleton 
+                  variant="rectangular" 
+                  width="100%" 
+                  height={200}
+                  sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '24px',
+                  }}
+                />
+              }>
+                <Comments roomId={roomInfo._id} />
+              </Suspense>
+            </Card>
+          </motion.div>
         );
       }
 
@@ -505,79 +594,179 @@ function TabbedContent(props) {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="tabs-container">
-        <Tabs
-          TabIndicatorProps={{ style: { background: '#FF0000' } }}
-          value={selectedTab}
-          onChange={handleTabChange}
-          textColor="inherit"
-          indicatorColor="error"
+      <Box className="tabs-container">
+        <Card
+          sx={{
+            ...glassmorphismStyle,
+            borderRadius: '20px 20px 0 0',
+            overflow: 'hidden',
+            mb: 0,
+          }}
         >
-          <Tab label="Play" />
-          <Tab label="Trade" />
-          <Tab label="History" />
-          <Tab label="Comments" />
-        </Tabs>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            textColor="inherit"
+            TabIndicatorProps={{ 
+              style: { 
+                background: 'linear-gradient(90deg, #f44336, #ff5722)',
+                height: '3px',
+                borderRadius: '2px',
+              } 
+            }}
+            sx={{
+              '& .MuiTab-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                textTransform: 'none',
+                minHeight: 64,
+                transition: 'all 0.3s ease',
+                '&.Mui-selected': {
+                  color: '#fff',
+                },
+                '&:hover': {
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                },
+              },
+            }}
+          >
+            {tabConfig.map((tab, index) => (
+              <Tab 
+                key={index}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FontAwesomeIcon 
+                      icon={tab.icon} 
+                      style={{ 
+                        fontSize: '14px',
+                        color: selectedTab === index ? tab.color : 'inherit',
+                      }} 
+                    />
+                    {tab.label}
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+        </Card>
 
-        <div>
-          {selectedTab === 0 && renderTabContent(0)}
-          {selectedTab === 1 && renderTabContent(1)}
-          {selectedTab === 2 && renderTabContent(2)}
-          {selectedTab === 3 && renderTabContent(3)}
-        </div>
-      </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderTabContent(selectedTab)}
+          </motion.div>
+        </AnimatePresence>
+      </Box>
     );
   }
 
   // Desktop Layout
   return (
-    <div>
-      <Box
-        component={Paper}
-        elevation={0}
-        square
-        variant="filled"
+    <Box>
+      {/* Tab Control Bar */}
+      <Card
         sx={{
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: 'rgba(0, 0, 0, 0.4)',
-          },
-          padding: '10px',
-          marginTop: '5px',
+          ...glassmorphismStyle,
+          borderRadius: '24px',
+          p: 3,
+          mb: 3,
           display: 'flex',
           alignItems: 'center',
-          gap: '16px',
+          gap: 2,
           flexWrap: 'wrap',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        {['Play', 'Chart', 'History', 'Comments'].map((label, index) => {
-          const isInsights = index === 4;
-          return (
-            <Chip
-              key={index}
-              label={isInsights ? `${label} (Coming Soon)` : label}
-              onClick={isInsights ? undefined : () => handleChipClick(index)}
-              clickable={!isInsights}
-              color={activeTabs.includes(index) ? 'error' : 'error'}
-              variant={activeTabs.includes(index) ? 'filled' : 'outlined'}
-            />
-          );
-        })}
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', flex: 1 }}>
+          {tabConfig.map((tab, index) => {
+            const isActive = activeTabs.includes(index);
+            return (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Chip
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <FontAwesomeIcon 
+                        icon={tab.icon} 
+                        style={{ 
+                          fontSize: '14px',
+                          color: isActive ? '#fff' : tab.color,
+                        }} 
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 600,
+                          letterSpacing: '0.3px',
+                        }}
+                      >
+                        {tab.label}
+                      </Typography>
+                    </Box>
+                  }
+                  onClick={() => handleChipClick(index)}
+                  clickable
+                  variant={isActive ? 'filled' : 'outlined'}
+                  sx={{
+                    height: 44,
+                    borderRadius: '16px',
+                    backgroundColor: isActive ? tab.color : 'transparent',
+                    borderColor: tab.color,
+                    color: isActive ? '#fff' : tab.color,
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    border: `2px solid ${tab.color}`,
+                    transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                    boxShadow: isActive 
+                      ? `0 8px 20px ${tab.color}40` 
+                      : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    '&:hover': {
+                      backgroundColor: isActive ? tab.color : `${tab.color}20`,
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 12px 24px ${tab.color}50`,
+                    },
+                    '& .MuiChip-label': {
+                      px: 2,
+                    },
+                  }}
+                />
+              </motion.div>
+            );
+          })}
+        </Box>
+
         {/* Result Display for Desktop */}
-        <Box sx={{ marginLeft: 'auto' }}>
+        <Box sx={{ ml: 'auto' }}>
           {renderResultDisplay()}
         </Box>
-      </Box>
+      </Card>
 
-      <Box>
+      {/* Tab Content */}
+      <AnimatePresence>
         {activeTabs.map((tabIndex) => (
-          <Box key={tabIndex}>{renderTabContent(tabIndex)}</Box>
+          <motion.div
+            key={tabIndex}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            {renderTabContent(tabIndex)}
+          </motion.div>
         ))}
-      </Box>
-    </div>
+      </AnimatePresence>
+    </Box>
   );
 }
 

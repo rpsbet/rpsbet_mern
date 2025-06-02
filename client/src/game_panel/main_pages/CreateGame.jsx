@@ -11,7 +11,7 @@ import {
   Step,
   StepLabel,
   Paper,
-  CircularProgress, // Added CircularProgress import
+  CircularProgress,
 } from '@mui/material';
 import { sendSolDeposit } from '../../util/solana';
 import { ArrowForward, ArrowBack, Info } from '@mui/icons-material';
@@ -24,6 +24,7 @@ import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
 import CoinInfo from '../CreateGame/CoinInfo';
 import DefaultBetAmountPanel from '../CreateGame/DefaultBetAmountPanel';
+import SettingsRef from '../../components/SettingsRef';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import {
   createRoom,
@@ -37,7 +38,6 @@ import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { getCustomTheme } from '../../config/theme';
-import GameSelection from '../CreateGame/GameSelection';
 
 const GlassContainer = styled(Box)`
   background: ${({ isDarkMode }) =>
@@ -55,46 +55,9 @@ const GlassContainer = styled(Box)`
   transition: all 0.3s ease;
 `;
 
-const GlassMuiButton = styled(Button)(({ theme, isDarkMode, isActive }) => ({
-  background: isActive
-    ? 'rgba(211, 47, 47, 0.8)'
-    : isDarkMode
-    ? 'rgba(255, 255, 255, 0.12)'
-    : 'rgba(255, 255, 255, 0.5)',
-  backdropFilter: 'blur(8px)',
-  WebkitBackdropFilter: 'blur(8px)',
-  border: `1px solid ${
-    isActive
-      ? 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.08)'
-      : 'rgba(255, 255, 255, 0.5)'
-  }`,
-  color: isActive
-    ? 'white'
-    : isDarkMode
-    ? 'rgba(255, 255, 255, 0.9)'
-    : 'rgba(0, 0, 0, 0.8)',
-  fontWeight: isActive ? 600 : 400,
-  padding: '8px 16px',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
-  textTransform: 'none',
-  minWidth: '60px',
-  '&:hover': {
-    background: isDarkMode
-      ? 'rgba(211, 47, 47, 0.6)'
-      : 'rgba(211, 47, 47, 0.6)',
-    color: 'white',
-    border: '1px solid rgba(211, 47, 47, 0.6)',
-  },
-}));
-
 function CreateGame() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { game_type_name } = useParams();
 
   // Redux state selectors
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -113,13 +76,10 @@ function CreateGame() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
   const [step, setStep] = useState(1);
-  const [childStep, setChildStep] = useState(1);
-  const [gameType, setGameType] = useState(1);
-  const [gameMode, setGameModeLocal] = useState('RPS');
-  const [selectedGameType, setSelectedGameType] = useState('RPS');
-  const [rpsList, setRpsList] = useState([]);
-  const [qsList, setQsList] = useState([]);
-  const [tax, setTax] = useState(20);
+  const [gameType, setGameType] = useState(9); // Default to Custom
+  const [gameMode, setGameModeLocal] = useState('Custom');
+  const [selectedGameType, setSelectedGameType] = useState('Custom');
+  const [tax, setTax] = useState(5); // Default tax for custom games
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [xLink, setXLink] = useState('');
@@ -129,10 +89,8 @@ function CreateGame() {
   const [gameCode, setGameCode] = useState('');
   const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [], theme: {}, background: {} });
   const [prompt, setPrompt] = useState('');
-  const [qsNation, setQsNation] = useState(0);
-  const [selectedQsPosition, setSelectedQsPosition] = useState(0);
   const [betAmount, setBetAmount] = useState(0.25);
-  const [endgameAmount, setEndgameAmount] = useState(20);
+  const [endgameAmount, setEndgameAmount] = useState(40);
   const [maxReturn, setMaxReturn] = useState(0);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [winChance, setWinChance] = useState(0);
@@ -143,8 +101,6 @@ function CreateGame() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [endgameType, setEndgameType] = useState(true);
   const [description, setDescription] = useState('');
-  const [rpsGameType, setRpsGameType] = useState(0);
-  const [qsGameType, setQsGameType] = useState(2);
   const [localBalance, setLocalBalance] = useState(balance);
 
   // Mobile responsiveness
@@ -157,66 +113,12 @@ function CreateGame() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Initialize game type based on URL parameter
-  const initializeGameType = useCallback(
-    async (gameTypeName, isInitial = true) => {
-      const selectedGameTypeObj = gameTypeList.find(
-        (g) => g.game_type_name === gameTypeName,
-      );
-
-      if (selectedGameTypeObj && selectedGameTypeObj.short_name) {
-        setSelectedGameType(selectedGameTypeObj.short_name);
-      }
-
-      if (gameTypeName === 'rps') {
-        setGameType(1);
-      } else if (gameTypeName === 'quick-shoot') {
-        setGameType(5);
-        setQsNation(Math.floor(Math.random() * 4));
-      } else {
-        setGameType(9);
-      }
-    },
-    [gameTypeList],
-  );
-
-  // Initial setup based on URL
+  // Initial setup
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/create/rps') {
-      setSelectedGameType('RPS');
-      setGameModeLocal('RPS');
-    } else if (path === '/create/quick-shoot') {
-      setSelectedGameType('QS');
-      setGameModeLocal('QS');
-    } else if (path === '/create/custom') {
-      setSelectedGameType('Custom');
-      setGameModeLocal('Custom');
-    }
-
-    const gameTypeName = game_type_name || 'RPS';
     dispatch(getGameTypeList());
-    dispatch(setGameMode(gameTypeName));
-    initializeGameType(gameTypeName, true);
-
-    return () => {};
-  }, [dispatch, game_type_name, initializeGameType]);
-
-  // Update game type when URL changes
-  useEffect(() => {
-    if (game_type_name) {
-      initializeGameType(game_type_name, false);
-    }
-  }, [game_type_name, initializeGameType]);
-
-  // Set custom game mode when code is entered
-  useEffect(() => {
-    if (gameCode.trim()) {
-      setGameModeLocal('Custom');
-      setSelectedGameType('Custom');
-      setGameType(9);
-    }
-  }, [gameCode]);
+    dispatch(setGameMode('Custom'));
+    return () => { };
+  }, [dispatch]);
 
   // Update local balance when Redux balance changes
   useEffect(() => {
@@ -244,10 +146,6 @@ function CreateGame() {
     if ('proxiedAssets' in newState) setProxiedAssets(newState.proxiedAssets);
     if ('prompt' in newState) setPrompt(newState.prompt);
     if ('winChance' in newState) setWinChance(newState.winChance);
-    if ('rps_game_type' in newState) setRpsGameType(newState.rps_game_type);
-    if ('qs_game_type' in newState) setQsGameType(newState.qs_game_type);
-    if ('qs_nation' in newState) setQsNation(newState.qs_nation);
-    if ('selected_qs_position' in newState) setSelectedQsPosition(newState.selected_qs_position);
   };
 
   // Toggle drawer handler
@@ -270,36 +168,7 @@ function CreateGame() {
   };
 
   const onPrevButtonClicked = () => {
-    if (step < 5) {
-      if (step === 3 && childStep === 1) {
-        if (gameMode === 'Quick Shoot' || (gameMode === 'RPS' && rpsGameType === 1)) {
-          setStep(2);
-          setChildStep(3);
-          setRpsList([]);
-          return;
-        } else {
-          setStep(2);
-          setChildStep(2);
-          return;
-        }
-      } else if (childStep > 1) {
-        setChildStep(childStep - 1);
-        if (step === 4 || step === 2) {
-          setStep(step - 1);
-        }
-        return;
-      }
-    }
-
     setStep(step > 1 ? step - 1 : step);
-
-    if (childStep === 4) {
-      setChildStep(childStep - 1);
-    }
-
-    if (step === 2) {
-      setChildStep(1);
-    }
   };
 
   const onNextButtonClicked = () => {
@@ -309,45 +178,14 @@ function CreateGame() {
         dispatch(errorMsgBar('CONNECT YOUR WALLET'));
         return;
       }
-      if (!gameMode) {
-        dispatch(errorMsgBar("YOU DIDN'T PICK A GAMEMODE"));
+      if (gameCode === '') {
+        dispatch(errorMsgBar("YOU DIDN'T GENERATE A GAME!"));
         return;
       }
       if (parseFloat(betAmount) <= 0 || isNaN(parseFloat(betAmount))) {
         dispatch(errorMsgBar("YOU DIDN'T BET (CAT) SHIT!!!"));
         return;
       }
-      if (gameMode === 'Custom' && gameCode === '') {
-        dispatch(errorMsgBar("YOU DIDN'T GENERATE A GAME MOTHERFUintoCKER!"));
-        return;
-      }
-
-      // Set appropriate tax based on game mode
-      const parsedQsGameType = parseInt(qsGameType);
-      if (gameMode === 'RPS') {
-        setTax(30);
-      } else if (gameMode === 'QS') {
-        switch (parsedQsGameType) {
-          case 5:
-            setTax(12);
-            break;
-          case 4:
-            setTax(14);
-            break;
-          case 3:
-            setTax(16);
-            break;
-          case 2:
-            setTax(18);
-            break;
-          default:
-            setTax(20);
-        }
-      } else {
-        setTax(5);
-      }
-
-      // Additional validations
       if (parseFloat(betAmount) < 0.001) {
         dispatch(errorMsgBar('MEOWNIMUM BUY-IN IS 0.001 SOL!'));
         return;
@@ -396,9 +234,7 @@ function CreateGame() {
       }
     }
 
-    if (step !== 3) {
-      setStep(step + 1);
-    }
+    setStep(step + 1);
   };
 
   // Create room with image upload
@@ -493,8 +329,6 @@ function CreateGame() {
         game_type: gameType,
         game_mode: gameMode,
         selectedGameType,
-        rps_list: rpsList,
-        qs_list: qsList,
         tax,
         name,
         ticker,
@@ -505,9 +339,6 @@ function CreateGame() {
         telegram_link: telegramLink,
         gameCode: gameCode,
         proxiedAssets: proxiedAssets,
-        qs_game_type: qsGameType,
-        qs_nation: qsNation,
-        selected_qs_position: selectedQsPosition,
         bet_amount: betAmount,
         endgame_amount: endgameAmount,
         max_return: maxReturn,
@@ -519,7 +350,6 @@ function CreateGame() {
         ai_mode: aiMode,
         endgame_type: endgameType,
         description,
-        rps_game_type: rpsGameType,
       };
 
       await dispatch(createRoom(fullState, navigate));
@@ -531,114 +361,31 @@ function CreateGame() {
     }
   };
 
-  // Game type selection handler
-  const handleChange = (event) => {
-    const shortName = event.target.value;
-    const selectedGame = gameTypeList.find((g) => g.short_name === shortName);
-
-    if (selectedGame) {
-      const selectedGameName = selectedGame.game_type_name;
-      const urlFriendlyGameName = selectedGameName
-        .toLowerCase()
-        .replace(/\s+/g, '-');
-      const url = `/create/${urlFriendlyGameName}`;
-
-      setSelectedGameType(shortName);
-      setGameModeLocal(shortName);
-      setStep(1);
-
-      dispatch(setGameMode(selectedGameName));
-      navigate(url);
-    }
-  };
-
-  // Step 1 - Game selection and basic info
+  // Step 1 - Game generation and basic info
   const step1 = () => {
     return (
       <Box className="game-info-panel" sx={{ width: '100%' }}>
-        <GameSelection
-          gameTypeList={gameTypeList}
-          selectedGameType={selectedGameType}
-          handleChange={handleChange}
-          isDarkMode={isDarkMode}
-          theme={theme}
-          gameMode={gameMode}
-          setGameModeLocal={setGameModeLocal}
-          setSelectedGameType={setSelectedGameType}
+        {/* AI Game Generator - Embedded SettingsRef */}
+        <SettingsRef
+          strategies={strategies}
           gameCode={gameCode}
           setGameCode={setGameCode}
           proxiedAssets={proxiedAssets}
           setProxiedAssets={setProxiedAssets}
-          prompt={prompt}
-          setPrompt={setPrompt}
-          initializeGameType={initializeGameType}
-          onChangeState={onChangeState}
-          user={user}
-          rank={getRank(user.totalWagered)}
+          settings_panel_opened={true}
+          description={description}
           ai_mode={aiMode}
-          strategies={strategies}
+          prompt={prompt}
+          onChangeState={onChangeState}
+          user_id={user._id}
+          user_credits={user.credits}
+          user_balance={user.balance}
+          rank={getRank(user.totalWagered)}
+          isDarkMode={isDarkMode}
+          onClose={() => { }}
+          ticker={ticker}
+          image={image}
         />
-
-        {gameMode === 'QS' && (
-          <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 2, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography
-              variant="h6"
-              component="h3"
-              className="game-sub-title"
-              sx={{
-                fontWeight: 600,
-                position: 'relative',
-                color: isDarkMode ? '#fff' : '#000',
-                '&:after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: -6,
-                  left: 0,
-                  width: '40px',
-                  height: '3px',
-                  background: theme.palette.error.main,
-                  borderRadius: '2px',
-                },
-              }}
-            >
-              Choose a Game Type
-            </Typography>
-            <Tooltip
-              title="Select the multiplier of the player, 5x is typically the safest option for the Host."
-              placement="top"
-            >
-              <Info
-                sx={{
-                  cursor: 'pointer',
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-                  '&:hover': { color: theme.palette.error.main },
-                  transition: 'color 0.2s ease',
-                }}
-              />
-            </Tooltip>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {[2, 3, 4, 5].map((i) => (
-              <GlassMuiButton
-                key={i}
-                isDarkMode={isDarkMode}
-                isActive={qsGameType === i}
-                onClick={() => {
-                  onChangeState({
-                    qs_game_type: i,
-                    max_return: betAmount * Number(i),
-                    public_bet_amount: convertToCurrency(betAmount * Number(i - 1), solPrice),
-                    selected_qs_position: 0,
-                  });
-                }}
-              >
-                {i}x
-              </GlassMuiButton>
-            ))}
-          </Box>
-        </GlassContainer>
-        )}
 
         <CoinInfo
           onChangeState={onChangeState}
@@ -650,6 +397,7 @@ function CreateGame() {
           website_link={websiteLink}
           telegram_link={telegramLink}
           isDarkMode={isDarkMode}
+          gameCode={gameCode}
         />
 
         <DefaultBetAmountPanel
@@ -686,10 +434,9 @@ function CreateGame() {
         description={description}
         endgame_amount={endgameAmount}
         step={step}
-        child_step={childStep}
         isPlaying={isPlaying}
-        handleUrlChange={() => {}}
-        handleSubmit={() => {}}
+        handleUrlChange={() => { }}
+        handleSubmit={() => { }}
         handleDescriptionChange={handleDescriptionChange}
       />
     );
@@ -713,8 +460,6 @@ function CreateGame() {
         {step > 1 && (
           <Button
             variant="outlined"
-            isDarkMode={isDarkMode}
-            isActive={false}
             color="error"
             startIcon={<ArrowBack />}
             onClick={onPrevButtonClicked}
@@ -726,7 +471,7 @@ function CreateGame() {
 
         <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <Stepper activeStep={step - 1} alternativeLabel>
-            {['Game', 'Extra'].map((label, index) => (
+            {['Generate Game', 'Settings'].map((label, index) => (
               <Step key={label}>
                 <StepLabel
                   StepIconProps={{
@@ -762,9 +507,7 @@ function CreateGame() {
           <Button
             variant="contained"
             color="error"
-            isDarkMode={isDarkMode}
-            isActive={true}
-            onClick={() => createRoomWithDeposit()} // Open confirmation dialog
+            onClick={() => createRoomWithDeposit()}
             disabled={creatingRoom}
             sx={{
               borderRadius: '8px',
@@ -787,11 +530,10 @@ function CreateGame() {
           <Button
             variant="contained"
             color="error"
-            isDarkMode={isDarkMode}
-            isActive={true}
             endIcon={<ArrowForward />}
             onClick={onNextButtonClicked}
             sx={{ borderRadius: '8px', textTransform: 'none' }}
+            disabled={!gameCode} // Disable until game is generated
           >
             Next
           </Button>
@@ -802,7 +544,7 @@ function CreateGame() {
 
   // Main render
   return (
-    <Box className="main-game" isDarkMode={isDarkMode}>
+    <Box className="main-game">
       {isMobile && selectedMobileTab === 'chat' && (
         <Drawer
           className="mat-chat"
@@ -822,8 +564,6 @@ function CreateGame() {
       )}
 
       <Box className="main-panel" sx={{ maxWidth: '1200px', mx: 'auto', width: '100%' }}>
-       
-
         <Paper
           elevation={0}
           sx={{
@@ -865,7 +605,7 @@ function CreateGame() {
           {step === 2 && step2()}
         </Paper>
 
-        {step !== 4 && actionPanel()}
+        {actionPanel()}
         <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
       </Box>
 

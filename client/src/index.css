@@ -378,9 +378,7 @@ h4.game_header {
 	background: #111315;
 }
 
-.dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
-	color: #b9bbbe;
-}
+
 
 
 .dark_mode .modal-footer {
@@ -397,10 +395,6 @@ h4.game_header {
 
 .dark_mode td {
 	border-bottom: 1px solid #fff3;
-}
-
-.dark_mode .chat-wrapper .chat-input-panel {
-	border-top: 1px solid #78748d26;
 }
 
 .dark_mode div.table .dont-have-game-msg {
@@ -597,9 +591,6 @@ td {
 }
 
 
-.chat-line .avatar {
-  overflow: visible !important;
-}
 
 .header_action_panel .avatar,
 .player .avatar {
@@ -751,11 +742,6 @@ input[type='number'] {
 .filters button {
   background-color: unset !important;
   color: unset !important;
-}
-
-.chat-panel {
-  position: relative;
-  z-index: 1;
 }
 
 .footer {
@@ -988,6 +974,20 @@ svg#delete:hover {
 .chat-player {
   cursor: pointer !important;
 }
+.chat-wrapper .chat-panel .chat-line .sender-name {
+	color: #b9bbbe;
+}
+.chat-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.chat-line .avatar {
+  overflow: visible !important;
+}
+.chat-wrapper .chat-input-panel {
+	border-top: 1px solid #78748d26;
+}
 
 .reply-to {
   display: flex;
@@ -1016,9 +1016,6 @@ svg#delete:hover {
   display: none;
 }
 
-/* .special-message-rent .chat-msg {
-  background: linear-gradient(-58deg, #dd2f2f57, #69030369) !important;
-} */
 
 .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name,
 .chat-wrapper .chat-panel .chat-line.special-message .sender-name {
@@ -1101,7 +1098,7 @@ svg#delete:hover {
 }
 
 .chat-msg {
-  padding: 1.75rem 0.4rem 0.75rem 1rem;
+  padding: 1.75rem 0.5rem 0.75rem 0.5rem;
   margin-bottom: 20px;
 }
 
@@ -1116,10 +1113,6 @@ svg#delete:hover {
   background: darkgray;
 }
 
-.chat-wrapper .chat-panel {
-  padding: 16px;
-}
-
 .chat-wrapper .chat-panel .chat-line .chat-content {
   display: flex;
   justify-items: center;
@@ -1129,7 +1122,6 @@ svg#delete:hover {
   color: #c0c3c7;
   position: absolute;
   font-size: 1em;
-  margin-left: 20px !important;
   margin-top: -20px;
   font-weight: 600;
 }
@@ -1138,14 +1130,13 @@ svg#delete:hover {
   font-size: 0.65em;
   font-weight: 600;
   width: 100%;
-  margin-left: 20px;
+  margin-left: 7.5px;
   display: flex;
   flex-direction: column;
 }
 
 .chat-wrapper .chat-panel .chat-line .chat-msg .chat-text {
   color: #fdfdfd;
-  margin-left: 20px;
   font-weight: 400;
 }
 
@@ -1186,6 +1177,63 @@ svg#delete:hover {
 
   text-align: center;
 }
+
+
+.mat-chat > div {
+  border-right: none !important;
+}
+
+.mat-chat .chat-wrapper {
+  overflow: hidden;
+  width: 260px;
+  height: 100%;
+}
+
+.chat-log-panel .message-header {
+  color: #747f8d;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+
+.chat-header .avatar div {
+  box-shadow: unset !important;
+}
+
+.chat-log-panel .message-header img {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 1em;
+}
+
+
+.chat-page .chat-input-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  bottom: 0px;
+  width: 100%;
+}
+
+.chat-page .chat-input-panel button {
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.chat-page .chat-input-panel input {
+  border: 0;
+  background-color: transparent;
+  outline: 0;
+  box-shadow: none;
+}
+
+.chat-page .chat-input-panel input::placeholder {
+  color: #b9bbbe;
+}
+
 
 @keyframes textPulse {
   0% {
@@ -1279,61 +1327,6 @@ svg#delete:hover {
   transform: translateY(-2px);
   transition: filter 0.2s;
   filter: drop-shadow(0px 4px 2px rgba(0, 0, 0, 0.74));
-}
-
-.mat-chat > div {
-  border-right: none !important;
-}
-
-.mat-chat .chat-wrapper {
-  overflow: hidden;
-  width: 260px;
-  height: 100%;
-}
-
-.chat-log-panel .message-header {
-  color: #747f8d;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  margin: 8px 0 12px;
-}
-
-.chat-header .avatar div {
-  box-shadow: unset !important;
-}
-
-.chat-log-panel .message-header img {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 1em;
-}
-
-
-.chat-page .chat-input-panel {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  bottom: 0px;
-  width: 100%;
-}
-
-.chat-page .chat-input-panel button {
-  background-color: transparent;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.chat-page .chat-input-panel input {
-  border: 0;
-  background-color: transparent;
-  outline: 0;
-  box-shadow: none;
-}
-
-.chat-page .chat-input-panel input::placeholder {
-  color: #b9bbbe;
 }
 
 

@@ -20,7 +20,7 @@ import {
   TableCell,
   TableRow,
   TableContainer,
-  Paper,
+  Card,
   useMediaQuery,
   InputAdornment
 } from '@mui/material';
@@ -538,28 +538,58 @@ function CoHostModal({
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
+          gap: 3,
           width: '100%',
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '0 0 16px 16px',
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: 'rgba(0, 0, 0, 0.4)',
+          background: 'rgba(0, 0, 0, 0.15)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '0 0 24px 24px',
+          overflow: 'hidden',
+          '@supports not (backdrop-filter: blur(20px))': {
+            background: 'rgba(0, 0, 0, 0.35)',
           },
         }}
       >
         {/* Header */}
         {!input_only && !has_joined && (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
-              <ShowChartOutlined sx={{ mr: 1 }} />
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              p: 3,
+              pb: 0,
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                fontWeight: 700,
+                fontSize: '1.25rem',
+                letterSpacing: '0.5px',
+              }}
+            >
+              <ShowChartOutlined sx={{ mr: 1.5, fontSize: 28 }} />
               TRADE
             </Typography>
-            <Button variant="text" color="error" onClick={handleClose}>
-              ×
-            </Button>
+            <IconButton
+              onClick={handleClose}
+              sx={{
+                color: 'error.main',
+                bgcolor: 'rgba(255, 0, 0, 0.1)',
+                border: '1px solid rgba(255, 0, 0, 0.2)',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 0, 0, 0.2)',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
           </Box>
         )}
 
@@ -572,229 +602,403 @@ function CoHostModal({
           />
         )}
 
-        {/* Info Box */}
+        {/* Info Dashboard */}
         {!input_only && !has_joined && (
-          <Box sx={{ p: 2, }}>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: 3,
-                '@media (max-width: 100%)': {
-                  gridTemplateColumns: 'repeat(2, 1fr)'
-                }
-              }}
-            >
+          <Box sx={{ px: 3 }}>
+            <Grid container spacing={3}>
               {/* LIQUIDITY */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Tooltip title={`Change: ${liquidityPercentageChange}%`} arrow>
-                  <Box>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                      LIQUIDITY
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Grid item xs={6} sm={3}>
+                <Card
+                  sx={{
+                    p: 2.5,
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+                    },
+                  }}
+                >
+                  <Tooltip title={`Change: ${liquidityPercentageChange}%`} arrow>
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.secondary',
+                          mb: 1.5,
+                          display: 'block',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
+                        Liquidity
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: liquidityPercentageChange > 0
+                              ? '#4caf50'
+                              : liquidityPercentageChange < 0
+                                ? '#f44336'
+                                : 'text.primary',
+                            fontWeight: 700,
+                            fontSize: '1.1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                          }}
+                        >
+                          {!selectedRow.winnings
+                            ? convertToCurrency(selectedRow.user_bet, solPrice)
+                            : convertToCurrency(selectedRow.winnings, solPrice)}
+                          {liquidityPercentageChange > 0 && (
+                            <TrendingUpOutlined sx={{ fontSize: 18, color: '#4caf50' }} />
+                          )}
+                          {liquidityPercentageChange < 0 && (
+                            <TrendingDownOutlined sx={{ fontSize: 18, color: '#f44336' }} />
+                          )}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Tooltip>
+                </Card>
+              </Grid>
+
+              {/* HOLDERS */}
+              <Grid item xs={6} sm={3}>
+                <Card
+                  sx={{
+                    p: 2.5,
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+                    },
+                  }}
+                >
+                  <Tooltip
+                    arrow
+                    title={
+                      <Box sx={{ p: 1 }}>
+                        {Array.isArray(hosts) &&
+                          hosts.map((host, i) => {
+                            const pct = totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
+                            return (
+                              <Typography key={i} variant="body2" sx={{ mb: 0.5 }}>
+                                {i === 0 ? 'Dev' : `Co-Host ${i + 1}`}: {pct}%
+                              </Typography>
+                            );
+                          })}
+                      </Box>
+                    }
+                  >
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.secondary',
+                          mb: 1.5,
+                          display: 'block',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
+                        Holders
+                      </Typography>
                       <Typography
                         variant="h6"
                         sx={{
-                          color:
-                            liquidityPercentageChange > 0
-                              ? '#fff'
-                              : liquidityPercentageChange < 0
-                                ? '#FF0000'
-                                : 'text.primary'
+                          fontWeight: 700,
+                          fontSize: '1.1rem',
                         }}
                       >
-                        {!selectedRow.winnings
-                          ? convertToCurrency(selectedRow.user_bet, solPrice)
-                          : convertToCurrency(selectedRow.winnings, solPrice)}
-                        {liquidityPercentageChange > 0 && (
-                          <TrendingUpOutlined sx={{ ml: 1, color: 'green' }} />
-                        )}
-                        {liquidityPercentageChange < 0 && (
-                          <TrendingDownOutlined sx={{ ml: 1, color: '#FF0000' }} />
-                        )}
+                        {Array.isArray(hosts) ? hosts.length : 0}
                       </Typography>
                     </Box>
-                  </Box>
-                </Tooltip>
-              </Box>
-
-              {/* HOLDERS */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Tooltip
-                  arrow
-                  title={
-                    <Box>
-                      {Array.isArray(hosts) &&
-                        hosts.map((host, i) => {
-                          const pct =
-                            totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
-                          return (
-                            <Typography key={i} variant="body2">
-                              {i === 0 ? 'Dev' : `Co-Host ${i + 1}`}: {pct}%
-                            </Typography>
-                          );
-                        })}
-                    </Box>
-                  }
-                >
-                  <Box>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                      HOLDERS
-                    </Typography>
-                    <Typography variant="h6">
-                      {Array.isArray(hosts) ? hosts.length : 0}
-                    </Typography>
-                  </Box>
-                </Tooltip>
-              </Box>
+                  </Tooltip>
+                </Card>
+              </Grid>
 
               {/* BATTLES */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                  BATTLES
-                </Typography>
-                <Typography variant="h6">
-                  {selectedRow.battles
-                    ? selectedRow.battles
-                    : selectedRow.game_log_list?.length || 0}
-                </Typography>
-              </Box>
+              <Grid item xs={6} sm={3}>
+                <Card
+                  sx={{
+                    p: 2.5,
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'text.secondary',
+                      mb: 1.5,
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Battles
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '1.1rem',
+                    }}
+                  >
+                    {selectedRow.battles
+                      ? selectedRow.battles
+                      : selectedRow.game_log_list?.length || 0}
+                  </Typography>
+                </Card>
+              </Grid>
 
               {/* CREATED BY */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                  CREATED BY
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                  <a className="player" onClick={() => handleOpenPlayerModal(selectedRow.creator_id)}>
+              <Grid item xs={6} sm={3}>
+                <Card
+                  sx={{
+                    p: 2.5,
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'text.secondary',
+                      mb: 1.5,
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Created By
+                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                     <Avatar
-                      className="avatar desktop-only"
                       src={selectedRow.creator_avatar}
                       user_id={selectedRow.creator_id}
                       username={selectedRow.username}
                       rank={selectedRow.rank}
                       accessory={selectedRow.accessory}
                       elite={selectedRow.elite}
-                      alt="Player Avatar"
-                      sx={{ width: 40, height: 40, margin: '0 auto' }}
+                      alt="Creator Avatar"
+                      onClick={() => handleOpenPlayerModal(selectedRow.creator_id)}
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        cursor: 'pointer',
+                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.1)',
+                          borderColor: 'rgba(255, 255, 255, 0.4)',
+                        },
+                      }}
                     />
-                  </a>
-                </Box>
-              </Box>
-            </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            </Grid>
           </Box>
         )}
 
-        {/* PUMP / JEET inputs */}
+        {/* Trading Interface */}
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
+              px: 3,
               p: 3,
               display: 'flex',
               flexDirection: 'column',
               gap: 3,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              position: 'relative'
             }}
           >
-            <Summary shortVersion={!has_joined ? false : true} />
+           
 
-            {/* Trade type selection with improved visuals */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-              <Button
-                onClick={() => setSelectedTab('PUMP')}
-                variant={selectedTab === 'PUMP' ? 'contained' : 'outlined'}
-                color={selectedTab === 'PUMP' ? 'success' : 'inherit'}
-                sx={{
-                  flexGrow: 1,
-                  textTransform: 'none',
-                  borderRadius: 2,
-                  height: 48,
-                  borderColor: selectedTab !== 'PUMP' ? '#4caf50' : '',
-                  color: selectedTab !== 'PUMP' ? '#4caf50' : '',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                PUMP
-                <TrendingUpOutlined
+              {/* Trade Type Selection */}
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <Button
+                  onClick={() => setSelectedTab('PUMP')}
+                  variant={selectedTab === 'PUMP' ? 'contained' : 'outlined'}
+                  color="success"
                   sx={{
-                    ml: 1,
-                    color: selectedTab === 'PUMP' ? '#fff' : '#4caf50'
+                    flex: 1,
+                    height: 56,
+                    borderRadius: '16px',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    border: selectedTab !== 'PUMP' ? '2px solid #4caf50' : 'none',
+                    backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : 'transparent',
+                    color: selectedTab === 'PUMP' ? '#ffffff' : '#4caf50',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: selectedTab === 'PUMP' ? '#45a049' : 'rgba(76, 175, 80, 0.1)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 20px rgba(76, 175, 80, 0.3)',
+                    },
                   }}
-                />
-              </Button>
-              <Button
-                onClick={() => setSelectedTab('JEET')}
-                variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
-                color="error"
-                sx={{
-                  flexGrow: 1,
-                  textTransform: 'none',
-                  borderRadius: 2,
-                  height: 48,
-                  borderColor: selectedTab !== 'JEET' ? '#FF0000' : '',
-                  color: selectedTab !== 'JEET' ? '#FF0000' : '',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                JEET
-                <TrendingDownOutlined sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#FF0000' }} />
-              </Button>
-            </Box>
-
-            {/* Amount selection area with improved visuals */}
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {selectedTab === 'PUMP' ? 'Amount to invest' : 'Amount to withdraw'}
-              </Typography>
-
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                {[0.01, 0.1, 1].map((amt) => (
-                  <Button
-                    key={amt}
-                    variant="outlined"
-                    color={selectedTab === 'PUMP' ? 'success' : 'error'}
-                    onClick={() => handleButtonClick(amt)}
-                    sx={{
-                      flex: 1,
-                      height: 40,
-                      borderRadius: 1.5,
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {amt}
-                  </Button>
-                ))}
+                >
+                  <TrendingUpOutlined sx={{ mr: 1, fontSize: 20 }} />
+                  Pump
+                </Button>
+                <Button
+                  onClick={() => setSelectedTab('JEET')}
+                  variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
+                  color="error"
+                  sx={{
+                    flex: 1,
+                    height: 56,
+                    borderRadius: '16px',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    border: selectedTab !== 'JEET' ? '2px solid #f44336' : 'none',
+                    backgroundColor: selectedTab === 'JEET' ? '#f44336' : 'transparent',
+                    color: selectedTab === 'JEET' ? '#ffffff' : '#f44336',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: selectedTab === 'JEET' ? '#e53935' : 'rgba(244, 67, 54, 0.1)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 20px rgba(244, 67, 54, 0.3)',
+                    },
+                  }}
+                >
+                  <TrendingDownOutlined sx={{ mr: 1, fontSize: 20 }} />
+                  Jeet
+                </Button>
               </Box>
 
-              <TextField
-                color={selectedTab === 'PUMP' ? 'success' : 'error'}
-                value={localCoHostAmount}
-                onChange={handleInputChange}
-                variant="outlined"
-                type="number"
-                fullWidth
-                placeholder="Enter amount"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>SOL</Box>
-                    </InputAdornment>
-                  ),
-                  sx: { borderRadius: 1.5, height: 56 }
-                }}
-              />
+              {/* Amount Input Section */}
+              <Box>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    fontSize: '1rem',
+                  }}
+                >
+                  {selectedTab === 'PUMP' ? 'Amount to invest' : 'Amount to withdraw'}
+                </Typography>
 
-              {/* Action button with loading state */}
-              <Box sx={{ mt: 2 }}>
+                {/* Quick Amount Buttons */}
+                <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+                  {[0.01, 0.1, 1].map((amt) => (
+                    <Button
+                      key={amt}
+                      variant="outlined"
+                      onClick={() => handleButtonClick(amt)}
+                      sx={{
+                        flex: 1,
+                        height: 44,
+                        borderRadius: '12px',
+                        fontWeight: 700,
+                        fontSize: '0.95rem',
+                        border: `2px solid ${selectedTab === 'PUMP' ? '#4caf50' : '#f44336'}`,
+                        color: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                        backgroundColor: 'transparent',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: selectedTab === 'PUMP'
+                            ? 'rgba(76, 175, 80, 0.1)'
+                            : 'rgba(244, 67, 54, 0.1)',
+                          transform: 'scale(1.02)',
+                        },
+                      }}
+                    >
+                      {amt}
+                    </Button>
+                  ))}
+                </Box>
+
+                {/* Amount Input Field */}
+                <TextField
+                  value={localCoHostAmount}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  type="number"
+                  fullWidth
+                  placeholder="Enter amount"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Box
+                          component="span"
+                          sx={{
+                            color: 'text.secondary',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          SOL
+                        </Box>
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      borderRadius: '16px',
+                      height: 64,
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                        borderWidth: '2px',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                      },
+                    }
+                  }}
+                />
+
+                {/* Action Button */}
                 <Button
                   variant="contained"
-                  color={selectedTab === 'PUMP' ? 'success' : 'error'}
                   onClick={() => {
                     if (isProcessing || trade_loading) {
                       dispatch(errorMsgBar("Trade is already in progress."));
@@ -813,41 +1017,95 @@ function CoHostModal({
                   disabled={isProcessing || trade_loading}
                   fullWidth
                   sx={{
-                    height: 48,
-                    borderRadius: 2,
-                    fontWeight: 'bold',
-                    fontSize: '1rem',
-                    boxShadow: 3
+                    mt: 3,
+                    height: 64,
+                    borderRadius: '16px',
+                    fontSize: '1.2rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                    boxShadow: `0 8px 20px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.4)' : 'rgba(244, 67, 54, 0.4)'}`,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 12px 25px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)'}`,
+                    },
+                    '&:disabled': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    },
                   }}
                 >
                   {isProcessing || trade_loading ? (
-                    <CircularProgress size={24} color="inherit" />
+                    <CircularProgress size={28} color="inherit" />
                   ) : (
-                    selectedTab === 'PUMP' ? "PUMP IT" : "JEET OUT"
+                    selectedTab === 'PUMP' ? "Pump It" : "Jeet Out"
                   )}
                 </Button>
               </Box>
-            </Box>
 
-            {/* Trade information table with improved visuals */}
-            <Paper elevation={0} sx={{ backgroundColor: 'rgba(0, 0, 0, 0.15)', borderRadius: 0, mt: 1, overflow: 'hidden' }}>
+            {/* Trade Information Table */}
+            <Card
+              sx={{
+                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                backdropFilter: 'blur(10px)',
+              }}
+            >
               <Table>
                 <TableBody>
                   {!input_only && (
                     <>
                       <TableRow>
-                        <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
+                        <TableCell
+                          sx={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: 'text.secondary',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            py: 2,
+                          }}
+                        >
                           YOUR BALANCE:
                         </TableCell>
-                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            fontWeight: 700,
+                            fontSize: '0.95rem',
+                            py: 2,
+                          }}
+                        >
                           {convertToCurrency(balance, solPrice)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
+                        <TableCell
+                          sx={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: 'text.secondary',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            py: 2,
+                          }}
+                        >
                           CURRENT BANKROLL:
                         </TableCell>
-                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#ff8500' }}>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#ff8500',
+                            fontWeight: 700,
+                            fontSize: '0.95rem',
+                            py: 2,
+                          }}
+                        >
                           {selectedRow
                             ? convertToCurrency(parseFloat(selectedRow.user_bet || 0), solPrice)
                             : "N/A"}
@@ -856,32 +1114,45 @@ function CoHostModal({
                     </>
                   )}
 
-                  {/* BEFORE */}
+                  {/* CURRENT POSITION */}
                   <TableRow>
-                    <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
+                    <TableCell
+                      sx={{
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: 'text.secondary',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        py: 2,
+                      }}
+                    >
                       CURRENT POSITION:
                     </TableCell>
                     <TableCell
                       align="right"
-                      sx={{ borderBottom: 'none', whiteSpace: 'pre-wrap' }}
+                      sx={{
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        whiteSpace: 'pre-wrap',
+                        py: 2,
+                      }}
                     >
                       <Typography
                         variant="body2"
-                        fontWeight="bold"
-                        color="warning"
+                        sx={{
+                          fontWeight: 700,
+                          color: '#ffa726',
+                          fontSize: '0.9rem',
+                        }}
                       >
                         {(() => {
                           if (!Array.isArray(hosts) || !selectedRow) {
                             return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
                           }
 
-                          // Check if current user is a host
                           const existingHost = hosts.find((h) => h.host === user?._id);
                           if (!existingHost) {
                             return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
                           }
 
-                          // Show % and absolute stake
                           const currentBankroll = parseFloat(selectedRow.user_bet) || 0;
                           const pct = existingHost.share.toFixed(2);
                           const absStake = (existingHost.share / 100) * currentBankroll;
@@ -892,17 +1163,35 @@ function CoHostModal({
                     </TableCell>
                   </TableRow>
 
-                  {/* AFTER - with visual distinction */}
-                  <TableRow sx={{ backgroundColor: 'rgba(114, 114, 114, 0.1)' }}>
-                    <TableCell sx={{ color: 'text.secondary' }}>
+                  {/* PROJECTED POSITION */}
+                  <TableRow
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    }}
+                  >
+                    <TableCell
+                      sx={{
+                        color: 'text.secondary',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        py: 2,
+                        borderBottom: 'none',
+                      }}
+                    >
                       PROJECTED POSITION:
                     </TableCell>
                     <TableCell
                       align="right"
-                      sx={{ color: '#ff8500', whiteSpace: 'pre-line', fontWeight: 700, fontSize: '0.875rem' }}
+                      sx={{
+                        color: '#ff8500',
+                        whiteSpace: 'pre-line',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        py: 2,
+                        borderBottom: 'none',
+                      }}
                     >
                       {(() => {
-                        // Guard checks
                         if (!selectedRow || !Array.isArray(hosts)) {
                           return (
                             <>
@@ -920,7 +1209,6 @@ function CoHostModal({
                           );
                         }
 
-                        // Convert user input to a float
                         const inputValue = parseFloat(coHostAmount || '0');
                         if (inputValue <= 0) {
                           return (
@@ -930,9 +1218,7 @@ function CoHostModal({
                           );
                         }
 
-                        // Decide which "simulate" to run
                         if (selectedTab === 'PUMP') {
-                          // Simulate Pump
                           const { userFinalSharePct, userFinalAbsolute } = simulatePump({
                             currentLiquidity: currentBankroll,
                             hosts,
@@ -947,11 +1233,10 @@ function CoHostModal({
                           const displaySol = userFinalAbsolute.toFixed(6);
                           return (
                             <>
-                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.75rem' }}> / {displaySol} SOL ({displayCurrency})</span>
+                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.8rem' }}> / {displaySol} SOL ({displayCurrency})</span>
                             </>
                           );
                         } else {
-                          // Simulate Jeet
                           const sharesToSell = inputValue;
 
                           const { userFinalSharePct, userFinalAbsolute, error } = simulateJeet({
@@ -972,7 +1257,7 @@ function CoHostModal({
                           const displaySol = userFinalAbsolute.toFixed(6);
                           return (
                             <>
-                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.75rem' }}>/ {displaySol} SOL ({displayCurrency})</span>
+                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.8rem' }}>/ {displaySol} SOL ({displayCurrency})</span>
                             </>
                           );
                         }
@@ -981,73 +1266,220 @@ function CoHostModal({
                   </TableRow>
                 </TableBody>
               </Table>
-            </Paper>
 
-            {/* Fee information */}
-            <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
-              {selectedTab === 'PUMP' ? 'Trading fee: 5%' : 'Trading fee: 5%'}
-            </Typography>
+              {/* Fee Information */}
+              <Box sx={{ p: 2, textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: '0.8rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  {selectedTab === 'PUMP' ? 'Trading fee: 5%' : 'Trading fee: 5%'}
+                </Typography>
+              </Box>
+            </Card>
           </Box>
         )}
 
         {/* Chart Container */}
         {!input_only && (
-          <Box sx={{ borderRadius: '16px', overflow: 'hidden', width: '100%' }}>
-            <div
-              ref={chartContainerRef}
-              style={{
-                width: '100%',
-                height: 'auto',
+          <Box sx={{ px: 3, pb: 3 }}>
+            <Card
+              sx={{
+                borderRadius: '20px',
+                overflow: 'hidden',
+                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
               }}
-            />
+            >
+              <div
+                ref={chartContainerRef}
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                }}
+              />
+            </Card>
           </Box>
         )}
 
         {/* Transactions Table */}
         {!has_joined && !input_only && (
-          <Box sx={{ background: '#080808', p: 2, borderRadius: 1 }}>
-            <TableContainer component={Paper} sx={{ maxHeight: 300, mt: 1 }}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Description</TableCell>
-                    <TableCell align="center">Amount</TableCell>
-                    <TableCell align="right">Date</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {transactions.length > 0 ? (
-                    transactions.map((tx, i) => {
-                      let desc = tx.description?.toLowerCase() || '';
-                      let label = null;
-                      if (desc.includes('joined')) label = 'Bet';
-                      else if (desc.includes('created')) label = 'Created';
-                      else if (desc.includes('pumped')) label = 'Pumped';
-                      else if (desc.includes('jeeted')) label = 'Jeeted';
-                      if (!label) return null;
+          <Box sx={{ px: 3, pb: 3 }}>
+            <Card
+              sx={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                backdropFilter: 'blur(10px)',
+              }}
+            >
+              <Box sx={{ p: 3 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 3,
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.3px',
+                  }}
+                >
+                  Recent Transactions
+                </Typography>
 
-                      return (
-                        <TableRow key={i}>
-                          <TableCell>{label}</TableCell>
-                          <TableCell align="center">
-                            {convertToCurrency(tx.amount, solPrice)}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatRelativeTime(tx.created_at)}
+                <TableContainer sx={{ maxHeight: 320 }}>
+                  <Table stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          Description
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          Amount
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          Date
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {transactions.length > 0 ? (
+                        transactions.map((tx, i) => {
+                          let desc = tx.description?.toLowerCase() || '';
+                          let label = null;
+                          let labelColor = 'text.primary';
+                          let bgColor = 'transparent';
+
+                          if (desc.includes('joined')) {
+                            label = 'Bet';
+                            labelColor = '#2196f3';
+                            bgColor = 'rgba(33, 150, 243, 0.1)';
+                          } else if (desc.includes('created')) {
+                            label = 'Created';
+                            labelColor = '#9c27b0';
+                            bgColor = 'rgba(156, 39, 176, 0.1)';
+                          } else if (desc.includes('pumped')) {
+                            label = 'Pumped';
+                            labelColor = '#4caf50';
+                            bgColor = 'rgba(76, 175, 80, 0.1)';
+                          } else if (desc.includes('jeeted')) {
+                            label = 'Jeeted';
+                            labelColor = '#f44336';
+                            bgColor = 'rgba(244, 67, 54, 0.1)';
+                          }
+
+                          if (!label) return null;
+
+                          return (
+                            <TableRow
+                              key={i}
+                              sx={{
+                                '&:hover': {
+                                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                },
+                              }}
+                            >
+                              <TableCell
+                                sx={{
+                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                  py: 2,
+                                }}
+                              >
+                                <Chip
+                                  label={label}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: bgColor,
+                                    color: labelColor,
+                                    fontWeight: 600,
+                                    fontSize: '0.75rem',
+                                    border: `1px solid ${labelColor}40`,
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell
+                                align="center"
+                                sx={{
+                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                  fontWeight: 700,
+                                  fontSize: '0.9rem',
+                                  py: 2,
+                                }}
+                              >
+                                {convertToCurrency(tx.amount, solPrice)}
+                              </TableCell>
+                              <TableCell
+                                align="right"
+                                sx={{
+                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                  color: 'text.secondary',
+                                  fontSize: '0.85rem',
+                                  py: 2,
+                                }}
+                              >
+                                {formatRelativeTime(tx.created_at)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={3}
+                            align="center"
+                            sx={{
+                              py: 6,
+                              color: 'text.secondary',
+                              fontSize: '0.95rem',
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            No transactions available
                           </TableCell>
                         </TableRow>
-                      );
-                    })
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} align="center">
-                        No transactions available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            </Card>
           </Box>
         )}
 

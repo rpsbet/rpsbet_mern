@@ -30,8 +30,6 @@ import {
   bet3,
   getRoomInfo,
   updateUserPrompt,
-  getRpsBetItems,
-  getQsBetItems,
   addNewTransaction,
   pumpGame,
   getRoomList,
@@ -78,8 +76,6 @@ function JoinGame() {
     auth,
     history: propsHistory,
     roomInfo,
-    rpsbetitems,
-    qsbetitems,
     user_id,
     total_wagered,
     rank: roomRank,
@@ -103,8 +99,6 @@ function JoinGame() {
     auth: state.auth.isAuthenticated,
     history: state.logic.history,
     roomInfo: state.logic.curRoomInfo,
-    rpsbetitems: state.logic.rpsbetitems,
-    qsbetitems: state.logic.qsbetitems,
     user_id: state.auth.user._id,
     total_wagered: state.auth.user.totalWagered,
     rank: state.logic.curRoomInfo.rank,
@@ -144,8 +138,6 @@ function JoinGame() {
     localRoomInfo: roomInfo,
     bankroll: roomInfo.bankroll,
     battles: roomInfo.battles,
-    selected_rps: '',
-    selected_qs_position: 0,
     run: false,
     bgColorChanged: false,
     borderColor: '',
@@ -163,8 +155,6 @@ function JoinGame() {
 
   // Use refs for values that don't need to trigger re-renders
   const isMountedRef = useRef(true);
-  const rpsbetitemsRef = useRef(rpsbetitems);
-  const qsbetitemsRef = useRef(qsbetitems);
   
   // Audio setup - memoized to prevent recreating on each render
   const soundsRef = useRef({
@@ -189,12 +179,6 @@ function JoinGame() {
     if (isNaN((bankroll / roomInfo.endgame_amount) * 100)) return 0;
     return Math.ceil((bankroll / roomInfo.endgame_amount) * 100);
   }, [gameState.bankroll, roomInfo.endgame_amount]);
-
-  const winChance = useMemo(() => 
-    roomInfo.game_type === 'Quick Shoot'
-      ? (((roomInfo.qs_game_type - 1) / roomInfo.qs_game_type) * 100).toFixed(2)
-      : 33,
-  [roomInfo.game_type, roomInfo.qs_game_type]);
 
   const progressPercentage = useMemo(() => {
     const { bankroll } = gameState;
@@ -244,15 +228,6 @@ function JoinGame() {
     };
   }, [dispatch, id]);
 
-  // Update refs when dependencies change
-  useEffect(() => {
-    rpsbetitemsRef.current = rpsbetitems;
-  }, [rpsbetitems]);
-  
-  useEffect(() => {
-    qsbetitemsRef.current = qsbetitems;
-  }, [qsbetitems]);
-
   useEffect(() => {
     if (!roomInfo || !isMountedRef.current) return;
     
@@ -263,14 +238,6 @@ function JoinGame() {
       hosts: roomInfo.hosts || [],
       battles: roomInfo.battles
     }));
-
-    const gameType = roomInfo.game_type;
-    if (gameType === 'Quick Shoot') {
-      dispatch(getQsBetItems(roomInfo._id));
-    } else if (gameType === 'RPS') {
-      dispatch(getRpsBetItems(roomInfo._id));
-    }
-
   }, [roomInfo, dispatch]);
 
   // Handle max button when balance changes
@@ -340,7 +307,6 @@ function JoinGame() {
   }, []);
 
   // Handler for playing sounds
-  
   const playSound = useCallback(
     (soundKey) => {
       if (!isMuted || !gameSounds) {
@@ -452,7 +418,7 @@ const join = useCallback(
   [dispatch, roomInfo, user_id, connectedAccount, account, user_balance]
 );
 
-  // Handle background color change for RPS
+  // Handle background color change
   const changeBgColor = useCallback(async (resultVal) => {
     setGameState(prev => ({
       ...prev,
@@ -476,40 +442,6 @@ const join = useCallback(
       betResult: null
     }));
   }, []);
-
-  // Handle background color change for Quick Shoot
-  const changeBgColorQs = useCallback(async (resultVal) => {
-    let newBorderColor = '';
-    const defaultColor = roomInfo.game_type === 'Mystery Box' ? '#ffd000' : 'grey';
-
-    switch (resultVal) {
-      case 1:
-        newBorderColor = '#00ff3a';
-        break;
-      case -1:
-        newBorderColor = '#ffd000';
-        break;
-      default:
-        newBorderColor = defaultColor;
-        break;
-    }
-    
-    setGameState(prev => ({
-      ...prev,
-      betResult: resultVal,
-      bgColorChanged: true,
-      borderColor: newBorderColor
-    }));
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setGameState(prev => ({
-      ...prev,
-      borderColor: '',
-      bgColorChanged: false,
-      betResult: null
-    }));
-  }, [roomInfo.game_type]);
 
   // Handle switch change
   const handleSwitchChange = useCallback(() => {
@@ -542,12 +474,12 @@ const join = useCallback(
     const { coHostAmount } = gameState;
     
     if (coHostAmount <= 0) {
-      dispatch(errorMsgBar('R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!'));
+      dispatch(errorMsgBar('Amount must be more than 0!'));
       return;
     }
     
     if (coHostAmount > user_balance) {
-      dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
+      dispatch(errorMsgBar('Insufficient funds'));
       return;
     }
 
@@ -563,7 +495,7 @@ const join = useCallback(
       }
     } catch (error) {
       console.log("error", error)
-      dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
+      dispatch(errorMsgBar('Room too busy, try again later'));
     }
   }, [gameState.coHostAmount, user_balance, roomInfo._id, connectedAccount, dispatch]);
 
@@ -617,25 +549,6 @@ const join = useCallback(
     });
   }, [user_balance, gameState.bankroll]);
 
-  // Update selected RPS or QS position
-  const updateSelectedRps = useCallback((selection, callback) => {
-    setGameState(prev => ({
-      ...prev,
-      selected_rps: selection
-    }));
-    
-    if (callback) callback();
-  }, []);
-
-  const updateSelectedQs = useCallback((position, callback) => {
-    setGameState(prev => ({
-      ...prev,
-      selected_qs_position: position
-    }));
-    
-    if (callback) callback();
-  }, []);
-
   // Game type list - could be expanded as needed
   const gameTypeList = [];
 
@@ -684,7 +597,6 @@ const join = useCallback(
             bankroll={gameState.bankroll}
             isDarkMode={isDarkMode}
             solPrice={solPrice}
-            winChance={winChance}
             payoutPercentage={payoutPercentage}
             roomInfo={roomInfo}
             handleOpenPlayerModal={handleOpenPlayerModal}
@@ -694,8 +606,6 @@ const join = useCallback(
             rank={roomRank}
             battles={gameState.battles}
             accessory={creator_accessory}
-            rps_game_type={roomInfo.rps_game_type}
-            qs_game_type={roomInfo.qs_game_type}
             pr={roomInfo.pr}
             isLowBankroll={isLowBankroll}
             isHighCommission={isHighCommission}
@@ -709,7 +619,6 @@ const join = useCallback(
         <Suspense fallback={<LoadingFallback />}>
           <TabbedContent
             changeBgColor={changeBgColor}
-            changeBgColorQs={changeBgColorQs}
             bgColorChanged={gameState.bgColorChanged}
             betting={gameState.betting}
             connectedAccount={connectedAccount}
@@ -723,16 +632,12 @@ const join = useCallback(
             bet_amount={gameState.bet_amount}
             is_mobile={is_mobile}
             gameResult={gameState.gameResult}
-            rpsbetitems={rpsbetitems}
             run={gameState.run}
-            updateSelectedRps={updateSelectedRps}
-            selected_rps={gameState.selected_rps}
             playSound={playSound}
             join={join}
             handleSwitchChange={handleSwitchChange}
             betResult={gameState.betResult}
             roomInfo={roomInfo}
-            rps_game_type={roomInfo.rps_game_type}
             user_id={user_id}
             rank={getRank(total_wagered)}
             handleOpenPlayerModal={handleOpenPlayerModal}
@@ -757,11 +662,7 @@ const join = useCallback(
             handleSendCoHost={handleSendCoHost}
             has_joined={true}
             borderColor={gameState.borderColor}
-            updateSelectedQs={updateSelectedQs}
-            qsbetitems={qsbetitems}
             account={account}
-            qs_game_type={roomInfo.qs_game_type}
-            selected_qs_position={gameState.selected_qs_position}
           />
         </Suspense>
 

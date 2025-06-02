@@ -26,8 +26,7 @@ const Message = require('../model/Message');
 const Notification = require('../model/Notification');
 const GameTransanction = require('../model/Transaction');
 const System = require('../model/SystemSetting');
-const RpsBetItem = require('../model/RpsBetItem');
-const QsBetItem = require('../model/QsBetItem');
+
 const {
   convertGameLogToHistoryStyle,
 } = require('../helper/util/convertGameLogToHistoryStyle');
@@ -297,6 +296,135 @@ router.get('/proxy-asset', async (req, res) => {
   }
 });
 
+router.post('/extract-room-info', auth, async (req, res) => {
+  try {
+    const { gameCode } = req.body;
+
+    if (!gameCode || typeof gameCode !== 'string') {
+      return res.status(400).json({
+        error: 'Missing or invalid game code',
+        message: 'gameCode is required and must be a string'
+      });
+    }
+
+    // Extract title using regex for <Typography id="game-title">
+    const titleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>(.*?)<\/Typography>/i);
+    let name = titleMatch ? titleMatch[1].trim() : '';
+    if (!name || name.length < 3 || name.length > 20) {
+      name = 'Default Game'; // Fallback
+    }
+
+    // Generate ticker from title
+    const ticker = name
+      .split(/\s+/)
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 6) || 'GAME';
+
+    // Extract rules from <Box id="game-rules">
+    const rulesMatch = gameCode.match(/<Box[^>]*id="game-rules"[^>]*>([\s\S]*?)<\/Box>/i);
+    let rulesText = '';
+    if (rulesMatch && rulesMatch[1]) {
+      // Extract text content from Typography or other elements
+      const textMatches = rulesMatch[1].match(/<Typography[^>]*>(.*?)<\/Typography>/gi) || [];
+      rulesText = textMatches
+        .map(match => match.match(/<Typography[^>]*>(.*?)<\/Typography>/i)[1])
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    if (!rulesText) {
+      rulesText = 'Play the game to achieve high multipliers.'; // Fallback
+    }
+
+    // Generate description from rules (max 200 characters)
+    const description = rulesText.length > 200 
+      ? rulesText.substring(0, 197) + '...' 
+      : rulesText;
+
+    // Determine game theme based on title and rules
+    const themeWords = (name + ' ' + rulesText).toLowerCase();
+    let gameTheme = 'generic game';
+    if (themeWords.includes('dice')) gameTheme = 'dice game';
+    else if (themeWords.includes('card')) gameTheme = 'card game';
+    else if (themeWords.includes('race') || themeWords.includes('speed')) gameTheme = 'racing game';
+    else if (themeWords.includes('puzzle')) gameTheme = 'puzzle game';
+
+    const extractedInfo = {
+      name,
+      ticker,
+      description,
+      gameTheme,
+      confidence: titleMatch && rulesMatch ? 0.95 : 0.7
+    };
+
+    res.json(extractedInfo);
+
+  } catch (error) {
+    console.error('Error extracting room info:', error);
+    res.status(500).json({
+      error: 'Extraction failed',
+      message: error.message || 'Failed to extract room information'
+    });
+  }
+});
+
+router.post('/generate-image', auth, async (req, res) => {
+  try {
+    const { prompt, size = '1024x1024', quality = 'standard' } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: 'Missing prompt',
+        message: 'Image prompt is required'
+      });
+    }
+
+    // Validate size parameter for DALL-E 3
+    const validSizes = ['1024x1024', '1024x1792', '1792x1024'];
+    const requestedSize = validSizes.includes(size) ? size : '1024x1024';
+
+    console.log(`[Image Generation] Generating with size: ${requestedSize}`);
+
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: prompt,
+      n: 1,
+      size: requestedSize, // Fixed: Use valid size
+      quality: quality,
+    });
+
+    const imageUrl = response.data[0].url;
+    console.log(`[Image Generation] Successfully generated image`);
+
+    // Optional: Upload to your storage service (Pinata, AWS S3, etc.)
+    // const uploadedUrl = await uploadImageToStorage(imageUrl);
+
+    res.json({
+      imageUrl: imageUrl, // or uploadedUrl if you uploaded it
+      originalPrompt: prompt,
+      size: requestedSize
+    });
+
+  } catch (error) {
+    console.error('Error generating image:', error);
+
+    // Handle specific DALL-E errors
+    if (error.message && error.message.includes('content_policy_violation')) {
+      return res.status(400).json({
+        error: 'Content policy violation',
+        message: 'The image prompt violates OpenAI content policy. Please try a different description.'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Image generation failed',
+      message: error.message || 'Failed to generate image'
+    });
+  }
+});
+
 router.post('/generate-react', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
@@ -325,12 +453,11 @@ router.post('/generate-react', auth, async (req, res) => {
 
     console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
 
-    // Significantly shortened system prompt - keep only essential parts
     const systemPrompt = `You are an elite React developer. Generate a complete, working React game component.
 
 Output Requirements:
 - Return ONLY valid JavaScript/React code for the App component
-- Start with "const App = ..." or "function App"  
+- Start with "const App = ..." or "function App"
 - End with "export default App;"
 - No markdown, explanations, or extra text
 
@@ -338,53 +465,117 @@ Required Imports:
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, Button, Modal } from '@mui/material';
 
+CRITICAL: NO FINANCIAL LOGIC
+- DO NOT include any bet amount, balance, wallet, or money-related state
+- DO NOT implement betting mechanics, currency displays, or financial calculations
+- DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
+- Focus purely on game mechanics and user interaction
+- Financial logic will be handled by external systems
+
+CRITICAL RESPONSIVE REQUIREMENTS:
+- Main game container MUST use: width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%"
+- Use viewport units carefully: prefer % over vw/vh
+- All game elements must fit within parent container
+- Use responsive units (%, em, rem) instead of fixed px values for sizing
+- Implement mobile-first design with useMediaQuery
+- Canvas elements must have: maxWidth: "100%", height: "auto"
+- Use CSS transforms for scaling instead of changing dimensions
+- Game should work from 320px mobile to 1920px desktop
+
+Container Structure:
+<Box sx={{
+  width: "100%",
+  height: "100%",
+  maxWidth: "100%",
+  maxHeight: "100%",  
+  overflow: "hidden",
+  position: "relative",
+  display: "flex",
+  flexDirection: "column"
+}}>
+
+Game Title Requirement:
+- Include a game title displayed prominently at the top
+- Use a <Typography> component with id="game-title"
+- Example: <Typography id="game-title" variant="h4">Game Name</Typography>
+- The title should be 3-20 characters, catchy, and relevant to the game theme
+
+Rules Modal Requirement:
+- Include a rules modal with a <Typography> or <Box> component with id="game-rules"
+- The rules should clearly explain gameplay mechanics (no financial terms)
+- Example:
+  <Modal open={showRules} onClose={() => setShowRules(false)}>
+    <Box id="game-rules" sx={{ p: 2 }}>
+      <Typography>Rule 1: Click to score points...</Typography>
+      <Typography>Rule 2: Avoid obstacles...</Typography>
+    </Box>
+  </Modal>
+- Rules should be concise but complete, suitable for extraction as a description
+
 Game Requirements:
-- Interactive game with clear mechanics
+- Interactive game with clear mechanics (no financial elements)
 - Glassmorphic dark theme design (#080808 background)
-- Game state: gameStarted, gameEnded, multiplier, result
+- Game state: gameStarted, gameEnded, multiplier, result (NO balance/bet states)
 - Include startGame, endGame, resetGame functions
 - Log events: logEvent("gameStarted", {...}) and logEvent("gameEnded", {result, multiplier})
-- Multiplier display component
-- Rules modal explaining gameplay
-- Game history tracking
-- Particle effects for wins/losses
+- Multiplier display component (for game mechanics only, not financial)
+- Main container must be scrollable
+- Game history tracking with an appropriate minimum height on main container
 
-Design:
-- Use Box container with full dimensions
-- Glassmorphic styling with rgba backgrounds
-- Consistent color palette
-- Responsive design`;
+Allowed Game Elements:
+- Score tracking (points, not money)
+- Level progression
+- Achievement systems
+- Multiplier mechanics (for scoring/points)
+- Timer/countdown elements
+- Player statistics (games played, high scores)
+- Game difficulty settings
 
-    // Use streaming for better performance
+Responsive Design Patterns:
+- Use Grid/Flexbox for layouts
+- Implement breakpoint-specific styling
+- Scale font sizes responsively (clamp() function)
+- Use aspect-ratio for consistent proportions
+- Ensure touch targets are minimum 44px on mobile`;
+
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 8000, // Reduced from 64000
+      max_tokens: 8000,
       system: systemPrompt,
       messages: [
         {
           role: 'user',
-          content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.`,
+          content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}. 
+          
+          IMPORTANT: Include a <Typography id="game-title"> for the game title and a rules modal with <Box id="game-rules"> containing the gameplay rules. Do not include any betting, balance, or financial logic. Focus on pure game mechanics and user experience.`,
         },
       ],
-      stream: true, // Enable streaming
+      stream: true,
     });
 
     let rawCode = '';
-    
-    // Process the stream
+
     for await (const chunk of stream) {
       if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
         rawCode += chunk.delta.text;
       }
     }
 
-    // Clean the generated code
     let cleanedCode = rawCode
       .replace(/```(?:jsx?|javascript)?/g, '')
       .replace(/^\s*[\r\n]+/gm, '')
       .trim();
 
-    // Validate and fix the code structure
+    const financialTerms = ['bet', 'balance', 'wallet', 'money', 'currency', 'credits', 'coins', 'cash'];
+    const codeWords = cleanedCode.toLowerCase().split(/\W+/);
+    const foundFinancialTerms = financialTerms.filter(term =>
+      codeWords.some(word => word.includes(term))
+    );
+
+    if (foundFinancialTerms.length > 0) {
+      console.warn('Financial terms detected in generated code:', foundFinancialTerms);
+    }
+
     if (!cleanedCode.includes('const App') && !cleanedCode.includes('function App')) {
       throw new Error('Generated code does not contain a valid App component');
     }
@@ -399,15 +590,6 @@ Design:
 
   } catch (error) {
     console.error('Error in route handler:', error);
-    
-    // Handle specific streaming errors
-    if (error.message.includes('stream') || error.message.includes('timeout')) {
-      return res.status(500).json({
-        error: 'Generation timeout',
-        message: 'The AI took too long to generate the component. Please try a simpler prompt or try again.',
-      });
-    }
-
     res.status(500).json({
       error: 'Internal server error',
       message: error.message || 'Failed to generate React component',
@@ -415,9 +597,10 @@ Design:
   }
 });
 
-router.post('/openai/update-react', auth, async (req, res) => {
+router.post('/update-react', auth, async (req, res) => {
   try {
-    const { prompt, currentCode, imageUrls = [] } = req.body || {};
+    const { prompt, currentCode, imageUrls = [], proxiedAssets = {}, model = 'claude-sonnet-4-20250514' } = req.body || {};
+
     if (!req.user?._id) {
       throw new Error('User not authenticated');
     }
@@ -434,79 +617,184 @@ router.post('/openai/update-react', auth, async (req, res) => {
       throw new Error('imageUrls must be an array');
     }
 
+    // Prepare assets (similar to generate route)
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
     const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
     const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
     const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
 
-    const proxiedAssets = {
-      images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
-      audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
+    const updatedProxiedAssets = {
+      images: [
+        ...(proxiedAssets.images || []),
+        ...allImageUrls.map((url, i) => ({ key: `image${proxiedAssets.images?.length || 0 + i}`, proxiedUrl: url }))
+      ],
+      audio: [
+        ...(proxiedAssets.audio || []),
+        ...audioUrls.map((url, i) => ({ key: `audio${proxiedAssets.audio?.length || 0 + i}`, proxiedUrl: url }))
+      ],
     };
 
-    console.log(`[React Update] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
+    console.log(`[React Update] User: ${req.user._id}, Updated proxied assets:`, JSON.stringify(updatedProxiedAssets));
 
-    // Extract the main component code and any important elements from the current code
-    // Strip out imports and export statements
+    // Extract and clean the current code
     const cleanedCurrentCode = currentCode
-      .replace(/import [^;]+;/g, '')
-      .replace(/export default App;/g, '')
+      .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
+      .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+      .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
+      .replace(/export\s+[\w\s]*?\s*;?/g, '')
       .trim();
 
-    const systemPrompt = `
-You are an expert React developer skilled at modifying existing React components. You will be given a current React game component and a user request for modifications. Your task is to update the component based on the user's request.
+    const systemPrompt = `You are an expert React developer specializing in game modification and enhancement. You will be given an existing React game component and a user request for modifications.
 
-IMPORTANT:
-1. Maintain the core structure and functionality of the original component
-2. Add or modify features as requested by the user
-3. Ensure all existing hooks (useState, useEffect, useRef) are properly preserved
-4. Keep all existing event handlers and callbacks
-5. Preserve any physics systems, particle effects, or other complex systems
-6. Make sure the component accepts the same props: 'proxiedAssets' and 'logEvent'
-7. Return the complete updated component, not just the changed parts
-8. Do not include import statements or export statements in your response
+CRITICAL: NO FINANCIAL LOGIC
+- DO NOT add any bet amount, balance, wallet, or money-related state
+- DO NOT implement betting mechanics, currency displays, or financial calculations
+- DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
+- Focus purely on game mechanics and user interaction
+- Financial logic will be handled by external systems
 
-Please analyze the existing code carefully before making changes to ensure you understand the game's mechanics and structure.
-`;
+SCORE-BASED MULTIPLIER SYSTEM (maintain if exists):
+- Keep existing conservative score-to-multiplier conversion
+- Maintain multiplier range: 1.0x to 2.5x (maximum 3x for exceptional skill)
+- Preserve existing multiplier formulas and thresholds
+- If adding new scoring, use conservative scaling
 
-    const apiCall = openai.chat.completions.create({
-      model: 'o3-mini',
+MODIFICATION REQUIREMENTS:
+1. **Preserve Core Structure**: Maintain the original game's architecture and state management
+2. **Keep Existing Features**: Preserve all working functionality unless specifically requested to change
+3. **Enhance, Don't Replace**: Add new features while keeping existing ones intact
+4. **Maintain Props**: Component must accept 'proxiedAssets' and 'logEvent' props
+5. **Responsive Design**: Ensure any new elements are responsive and fit the container
+6. **Glassmorphic Theme**: Match the existing dark glassmorphic design (#080808 background)
+
+REQUIRED IMPORTS (add these at the start):
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Box, Typography, Button, Modal } from '@mui/material';
+
+OUTPUT REQUIREMENTS:
+- Return ONLY the complete updated component code
+- Start with "const App = ..." or "function App"
+- End with "export default App;"
+- Include all necessary state, effects, and handlers
+- Maintain the container structure with proper responsive design
+- No markdown formatting or explanations
+
+CONTAINER REQUIREMENTS:
+- Main container MUST use: width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%"
+- Preserve responsive design patterns
+- Maintain glassmorphic styling consistency
+
+CHANGE ANALYSIS:
+Before making modifications, analyze what the user is requesting:
+- UI changes (colors, layout, visual elements)
+- Game logic changes (rules, mechanics, scoring)
+- New features (modes, levels, characters)
+- Performance improvements
+- Bug fixes
+
+Make targeted changes that fulfill the request while preserving the game's core functionality.`;
+
+    // Use Claude with streaming for faster response
+    const stream = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8000,
+      system: systemPrompt,
       messages: [
-        { role: 'system', content: systemPrompt },
         {
           role: 'user',
-          content: `Here is the current React game component:\n\n${cleanedCurrentCode}\n\nUser's modification request: "${prompt}". Please update the component accordingly. Use 'proxiedAssets' prop: ${JSON.stringify(proxiedAssets)}.`,
+          content: `Here is the current React game component:
+
+\`\`\`javascript
+${cleanedCurrentCode}
+\`\`\`
+
+User's modification request: "${prompt}"
+
+Available proxied assets: ${JSON.stringify(updatedProxiedAssets)}
+
+Please update the component according to the user's request. Maintain all existing functionality and ensure the component works properly with the provided assets.
+
+IMPORTANT: Do not include any betting, balance, or financial logic. Focus on pure game mechanics and user experience improvements.`,
         },
       ],
-      max_completion_tokens: 100000,
+      stream: true,
     });
 
-    const aiResponse = await Promise.race([
-      apiCall,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), 300000)),
-    ]);
+    let rawCode = '';
 
-    const rawCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
-    const cleanedCode = rawCode.replace(/```(?:jsx?|javascript)?/g, '').trim();
-
-    // Basic validation
-    if (!cleanedCode.includes('return (') || !cleanedCode.includes('App')) {
-      throw new Error('Generated code is invalid or incomplete');
+    // Process the stream
+    for await (const chunk of stream) {
+      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        rawCode += chunk.delta.text;
+      }
     }
 
-    // Wrap the cleaned code with imports and export
-    const moduleCode = `
-      ${cleanedCode}
-    `;
+    // Clean the generated code
+    let cleanedCode = rawCode
+      .replace(/```(?:jsx?|javascript)?/g, '')
+      .replace(/^\s*[\r\n]+/gm, '')
+      .trim();
 
-    res.json({ finalApp: moduleCode });
+    // Validate the updated code
+    if (!cleanedCode.includes('const App') && !cleanedCode.includes('function App')) {
+      throw new Error('Updated code does not contain a valid App component');
+    }
+
+    // Ensure proper export
+    if (!cleanedCode.endsWith('export default App;')) {
+      cleanedCode = `${cleanedCode}\nexport default App;`;
+    }
+
+    // Validate for financial terms
+    const financialTerms = ['bet', 'balance', 'wallet', 'money', 'currency', 'credits', 'coins', 'cash'];
+    const codeWords = cleanedCode.toLowerCase().split(/\W+/);
+    const foundFinancialTerms = financialTerms.filter(term =>
+      codeWords.some(word => word.includes(term))
+    );
+
+    if (foundFinancialTerms.length > 0) {
+      console.warn('[React Update] Financial terms detected in updated code:', foundFinancialTerms);
+    }
+
+    // Check if the modification appears successful
+    const modificationKeywords = prompt.toLowerCase().split(/\W+/);
+    const codeHasKeywords = modificationKeywords.some(keyword =>
+      keyword.length > 3 && cleanedCode.toLowerCase().includes(keyword)
+    );
+
+    if (!codeHasKeywords && modificationKeywords.length > 0) {
+      console.warn('[React Update] Warning: Modification may not have been applied correctly');
+    }
+
+    console.log(`[React Update] Successfully updated component for user: ${req.user._id}`);
+
+    res.json({
+      finalApp: cleanedCode,
+      proxiedAssets: updatedProxiedAssets,
+      message: 'Component updated successfully'
+    });
+
   } catch (error) {
-    console.error('Error in update route handler:', error);
+    console.error('[React Update] Error in update route handler:', error);
+
+    // Handle specific errors
+    if (error.message.includes('stream') || error.message.includes('timeout')) {
+      return res.status(500).json({
+        error: 'Update timeout',
+        message: 'The AI took too long to update the component. Please try a simpler modification or try again.',
+      });
+    }
+
+    if (error.message.includes('rate limit') || error.message.includes('quota')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: 'Too many requests. Please wait a moment before trying again.',
+      });
+    }
+
     res.status(500).json({
       error: 'Internal server error',
-      message: error.message.includes('timed out')
-        ? 'App update timed out. Please try again.'
-        : error.message,
+      message: error.message || 'Failed to update React component',
     });
   }
 });
@@ -752,52 +1040,6 @@ router.get('/room/:id', async (req, res) => {
   }
 });
 
-// Define your route
-router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const rpsBetItems = await RpsBetItem.find({
-      room: roomId,
-      joiner: req.user._id,
-      joiner_rps: { $ne: null },
-    })
-      .sort({ created_at: -1 })
-      .limit(50);
-
-    res.json({
-      success: true,
-      data: rpsBetItems,
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err,
-    });
-  }
-});
-
-router.get('/qsbetitems/:roomId', auth, async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const qsBetItems = await QsBetItem.find({
-      room: roomId,
-      joiner: req.user._id,
-      joiner_qs: { $ne: null },
-    })
-
-      .sort({ created_at: -1 })
-      .limit(50);
-    res.json({
-      success: true,
-      data: qsBetItems,
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err,
-    });
-  }
-});
 
 // GET /api/comments/:room_id
 router.get('/comments/:room_id', async (req, res) => {

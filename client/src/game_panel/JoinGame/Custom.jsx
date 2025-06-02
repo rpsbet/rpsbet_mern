@@ -1,87 +1,23 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import PlayerModal from '../modal/PlayerModal';
-import AiPanel from '../../components/AiPanel';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faDice,
-  faCoins,
-  faChevronDown,
-  faRocket,
-  faHome,
-  faSpinner,
-  faGem,
-  faTrophy,
-  faRedo,
-  faBomb,
-  faStar,
-  faCogs,
-  faExchangeAlt,
-  faInfoCircle,
-  faChevronUp,
-  faArrowUp,
-  faArrowDown,
-  faVolumeUp,
-  faVolumeMute,
-  faCog,
-  faExclamationTriangle,
-  faCheck,
-  faTimes,
-  faPlay,
-  faHistory,
-  faChartLine,
-  faWallet,
-  faShieldAlt,
-  faHeart,
-  faSkull,
-  faClock,
-  faBolt,
+  faDice, faCoins, faChevronDown, faRocket, faHome, faSpinner, faGem, faTrophy,
+  faRedo, faBomb, faStar, faCogs, faExchangeAlt, faInfoCircle, faChevronUp,
+  faArrowUp, faArrowDown, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle,
+  faCheck, faTimes, faPlay, faHistory, faChartLine, faWallet, faShieldAlt,
+  faHeart, faSkull, faClock, faBolt,
 } from '@fortawesome/free-solid-svg-icons';
 import {
-  Paper,
-  Button,
-  Tooltip,
-  CircularProgress,
-  TextField,
-  useMediaQuery,
-  Typography,
-  Box,
-  Slider,
-  Avatar,
-  Chip,
-  Modal,
-  Card,
-  Fade,
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  DialogTitle,
-  Grid,
-  Divider,
-  Collapse,
-  IconButton,
-  Container,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Badge,
-  Snackbar,
-  Alert,
-  Zoom,
-  Grow,
-  CardContent,
-  CardActions,
-  TableContainer,
-  Checkbox,
-  FormControlLabel,
+  Paper, Button, Tooltip, CircularProgress, TextField, useMediaQuery, Typography,
+  Box, Slider, Avatar, Chip, Card, Fade, Dialog, DialogContent, DialogContentText,
+  DialogActions, DialogTitle, Grid, Divider, Collapse, IconButton, Container,
+  Table, TableBody, TableCell, TableHead, TableRow, Badge, Snackbar, Alert,
+  Zoom, Grow, CardContent, CardActions, TableContainer, Checkbox, Modal, FormControlLabel,
 } from '@mui/material';
 import styled from 'styled-components';
 import * as Babel from '@babel/standalone';
-import ImageResultModal from '../modal/ImageResultModal';
 import { convertToCurrency } from '../../util/conversion';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import {
@@ -89,27 +25,418 @@ import {
   validateBetAmount,
   validateBankroll,
 } from '../modal/betValidations';
-import { sendSolDeposit } from '../../util/solana'; // Import sendSolDeposit
+import { sendSolDeposit } from '../../util/solana';
+import { safeDeepEqual, createShallowComparison } from '../../util/safeStateComparison';
 
+// Lazy load components for better performance
+const PlayerModal = lazy(() => import('../modal/PlayerModal'));
+const AiPanel = lazy(() => import('../../components/AiPanel'));
+
+// Custom hooks for better organization
+const useResponsiveGameContainer = () => {
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const containerRef = useRef(null);
+  const resizeObserverRef = useRef(null);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const { offsetWidth, offsetHeight } = containerRef.current;
+        setContainerSize({ width: offsetWidth, height: offsetHeight });
+      }
+    };
+
+    // Use ResizeObserver for better performance than window resize
+    if (window.ResizeObserver) {
+      resizeObserverRef.current = new ResizeObserver(updateSize);
+      if (containerRef.current) {
+        resizeObserverRef.current.observe(containerRef.current);
+      }
+    } else {
+      // Fallback for older browsers
+      updateSize();
+      window.addEventListener('resize', updateSize);
+    }
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      } else {
+        window.removeEventListener('resize', updateSize);
+      }
+    };
+  }, []);
+
+  return { containerRef, containerSize };
+};
+
+const usePhysicsEngine = () => {
+  const [Physics, setPhysics] = useState(null);
+  const [isPhysicsLoading, setIsPhysicsLoading] = useState(true);
+  const [physicsError, setPhysicsError] = useState(null);
+
+  const loadPhysics = useCallback(async () => {
+    try {
+      // Check if already loaded
+      if (window.Matter && window.Matter.World && typeof window.Matter.World === 'function') {
+        console.log('[Custom] Using cached Matter.js');
+        return window.Matter;
+      }
+
+      console.log('[Custom] Loading Matter.js dynamically');
+      
+      // Try dynamic import first
+      try {
+        const matterModule = await import('matter-js');
+        if (!matterModule || !matterModule.World || !matterModule.Engine) {
+          throw new Error('Matter.js module loaded but missing required properties');
+        }
+        console.log('[Custom] Successfully loaded Matter.js via import');
+        window.Matter = matterModule;
+        return matterModule;
+      } catch (importError) {
+        console.log('[Custom] Dynamic import failed, falling back to CDN');
+        
+        // CDN fallback
+        const matterModule = await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js';
+          script.onload = () => {
+            if (window.Matter && window.Matter.World && window.Matter.Engine) {
+              console.log('[Custom] Loaded via CDN');
+              resolve(window.Matter);
+            } else {
+              reject(new Error('Matter.js CDN loaded but missing required properties'));
+            }
+          };
+          script.onerror = () => reject(new Error('Failed to load Matter.js from CDN'));
+          document.head.appendChild(script);
+        });
+        return matterModule;
+      }
+    } catch (error) {
+      console.error('[Custom] Failed to load Matter.js:', error);
+      throw new Error(`Failed to load Matter.js: ${error.message}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    
+    const initPhysics = async () => {
+      setIsPhysicsLoading(true);
+      setPhysicsError(null);
+      
+      try {
+        const matterModule = await loadPhysics();
+        if (mounted) {
+          setPhysics(matterModule);
+        }
+      } catch (error) {
+        if (mounted) {
+          setPhysicsError(error.message);
+        }
+      } finally {
+        if (mounted) {
+          setIsPhysicsLoading(false);
+        }
+      }
+    };
+
+    initPhysics();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [loadPhysics]);
+
+  return { Physics, isPhysicsLoading, physicsError };
+};
+
+const ResponsiveGameContainer = React.memo(({ 
+  GameComponent, 
+  componentError, 
+  proxiedAssets, 
+  logEvent, 
+  Physics, 
+  isWalletPopupActive,
+  isCreator,
+  containerSize,
+  isMobile,
+  isTablet 
+}) => {
+  const getContainerHeight = useMemo(() => {
+    if (isMobile) return '60vh';
+    if (isTablet) return '70vh';
+    return '600px';
+  }, [isMobile, isTablet]);
+
+  const containerStyles = useMemo(() => ({
+    width: '100%',
+    height: getContainerHeight,
+    maxWidth: '100%',
+    maxHeight: '100%',
+    overflow: 'scroll',
+    position: 'relative',
+   
+  }), [getContainerHeight]);
+
+  const renderGameContent = () => {
+    if (componentError) {
+      return (
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          textAlign: 'center'
+        }}>
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #f44336, #d32f2f)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mb: 3,
+              boxShadow: '0 8px 24px rgba(244, 67, 54, 0.4)',
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                color: '#fff',
+                fontWeight: 800,
+              }}
+            >
+              ⚠️
+            </Typography>
+          </Box>
+          <Typography 
+            variant={isMobile ? "h6" : "h5"} 
+            sx={{ 
+              mb: 2,
+              color: '#f44336',
+              fontWeight: 700,
+              fontSize: isMobile ? '1.1rem' : '1.3rem',
+            }}
+          >
+            Game Error
+          </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              fontSize: isMobile ? '0.9rem' : '1rem',
+              color: 'rgba(255, 255, 255, 0.8)',
+              lineHeight: 1.5,
+              maxWidth: '400px',
+            }}
+          >
+            {componentError}
+          </Typography>
+        </Box>
+      );
+    }
+
+    if (!GameComponent) {
+      return (
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          p: 4,
+          textAlign: 'center'
+        }}>
+          <CircularProgress 
+            sx={{ 
+              color: '#2196f3', 
+              mb: 3,
+            }} 
+            size={isMobile ? 40 : 48}
+          />
+          <Typography 
+            variant="h6" 
+            sx={{
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: isMobile ? '1rem' : '1.1rem',
+              fontWeight: 600,
+              mb: 1,
+            }}
+          >
+            Loading Game...
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: isMobile ? '0.85rem' : '0.9rem',
+            }}
+          >
+            Please wait while we prepare your game
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{
+        width: '100%',
+        height: '100%',
+        overflow: 'scroll',
+        filter: isWalletPopupActive ? 'blur(8px)' : 'none',
+        pointerEvents: isWalletPopupActive ? 'none' : 'auto',
+        position: 'relative',
+        transition: 'filter 0.3s ease',
+        borderRadius: '20px',
+      }}>
+        <GameComponent 
+          proxiedAssets={proxiedAssets} 
+          logEvent={logEvent} 
+          Physics={Physics}
+          containerSize={containerSize}
+          isMobile={isMobile}
+          isTablet={isTablet}
+        />
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={containerStyles} tabIndex="0">
+      {renderGameContent()}
+      
+      {/* Enhanced Wallet Popup Overlay */}
+      {isWalletPopupActive && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 10,
+          pointerEvents: 'auto',
+          borderRadius: '20px',
+        }}>
+          <Box
+            sx={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '20px',
+              p: 4,
+              textAlign: 'center',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(20px)',
+              maxWidth: '300px',
+              mx: 2,
+            }}
+          >
+            <CircularProgress 
+              sx={{ 
+                color: '#f44336',
+                mb: 3,
+              }}
+              size={isMobile ? 40 : 48}
+            />
+            <Typography sx={{ 
+              color: 'white', 
+              fontWeight: 700,
+              fontSize: isMobile ? '1rem' : '1.1rem',
+              mb: 1,
+            }}>
+              Confirm Transaction
+            </Typography>
+            <Typography sx={{ 
+              color: 'rgba(255, 255, 255, 0.8)', 
+              fontSize: isMobile ? '0.85rem' : '0.9rem',
+              lineHeight: 1.5,
+            }}>
+              Please check your wallet and confirm the transaction to continue
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      {/* Enhanced Creator Overlay */}
+      {isCreator && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'auto',
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+        }}>
+          <Box
+            sx={{
+              background: 'rgba(255, 152, 0, 0.1)',
+              borderRadius: '20px',
+              p: 4,
+              textAlign: 'center',
+              border: '1px solid rgba(255, 152, 0, 0.3)',
+              backdropFilter: 'blur(20px)',
+              maxWidth: '350px',
+              mx: 2,
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                mb: 2,
+                fontSize: '2.5rem',
+              }}
+            >
+              🚫
+            </Typography>
+            <Typography sx={{
+              color: '#ff9800',
+              fontSize: isMobile ? '1.1rem' : '1.3rem',
+              fontWeight: 700,
+              mb: 2,
+            }}>
+              Creator Restriction
+            </Typography>
+            <Typography sx={{
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: isMobile ? '0.9rem' : '1rem',
+              lineHeight: 1.6,
+            }}>
+              As the creator of this game, you cannot participate in your own room. Please invite others to join!
+            </Typography>
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+});
+
+ResponsiveGameContainer.displayName = 'ResponsiveGameContainer';
+
+// Main Custom Component
 function Custom(props) {
   const dispatch = useDispatch();
-
-  // Map state from Redux using useSelector
-  const {
-    socket,
-    isAuthenticated,
-    isPasswordCorrect: propIsPasswordCorrect,
-    balance,
-    isDarkMode,
-    isWatching,
-    is_betting,
-    solPrice,
-    isLowGraphics,
-    connectedAccount,
-    account,
-    user_id: reduxUserId,
-  } = useSelector((state) => ({
-    socket: state.auth.socket,
+  
+  // Separate socket from other state to avoid circular reference issues
+  const socket = useSelector((state) => state.auth.socket, (prev, next) => prev === next);
+  
+  // Memoized selector for non-circular state with safe comparison
+  const reduxState = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
     isPasswordCorrect: state.snackbar.isPasswordCorrect,
     balance: state.auth.balance,
@@ -127,181 +454,118 @@ function Custom(props) {
     connectedAccount: state.auth.connectedAccount,
     account: state.logic.account,
     user_id: state.auth.user._id,
-  }));
+  }), safeDeepEqual);
 
-  // Extract remaining props from parent component
+  // Destructure props
   const {
-    bankroll,
-    user_id,
-    creator_id,
-    roomInfo,
-    bet_amount,
-    onChangeState,
-    playSound,
-    join,
-    handle2xButtonClick,
-    handleHalfXButtonClick,
-    handleMaxButtonClick,
-    actionList,
-    handleOpenPlayerModal,
-    handleClosePlayerModal,
-    showPlayerModal,
-    selectedCreator,
-    betting,
-    result,
-    onResultChange,
+    bankroll, user_id, creator_id, roomInfo, bet_amount, onChangeState, playSound,
+    join, handle2xButtonClick, handleHalfXButtonClick, handleMaxButtonClick,
+    actionList, handleOpenPlayerModal, handleClosePlayerModal, showPlayerModal,
+    selectedCreator, betting, result, onResultChange,
   } = props;
 
-  // Local state
-  const [isWalletPopupActive, setIsWalletPopupActive] = useState(false);
-  const [gameStartedCount, setGameStartedCount] = useState(0);
-  const [poolId, setPoolId] = useState(roomInfo.pool_id);
-  const [players, setPlayers] = useState([]);
-  const [host_pr, setHostPr] = useState(roomInfo.host_pr);
-  const [productName, setProductName] = useState('');
-  const [status, setStatus] = useState(roomInfo.status);
-  const [image, setImage] = useState('');
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [isPasswordCorrect, setIsPasswordCorrect] = useState(propIsPasswordCorrect);
-  const [gameResult, setGameResult] = useState(null);
-  const [GameComponent, setGameComponent] = useState(null);
-  const [componentError, setComponentError] = useState(null);
-  const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [], theme: {}, background: {} });
-  const [isGameActive, setIsGameActive] = useState(false);
-  const [openConfirmBet, setOpenConfirmBet] = useState(false);
-  const [confirmBetMessage, setConfirmBetMessage] = useState('');
-  const [confirmBetCallback, setConfirmBetCallback] = useState(null);
-  const [skipConfirm, setSkipConfirm] = useState(localStorage.getItem('hideConfirmModal') === 'true');
-  const [Physics, setPhysics] = useState(null);
-  const [isPhysicsLoading, setIsPhysicsLoading] = useState(true);
-  const bankrollRef = useRef(bankroll);
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const isComponentMountedRef = useRef(false);
-  const gameContainerRef = useRef(null);
-  const hasDepositedRef = useRef(false); // Track if deposit has been made for the current game
+  // Custom hooks
+  const { containerRef, containerSize } = useResponsiveGameContainer();
+  const { Physics, isPhysicsLoading, physicsError } = usePhysicsEngine();
 
+  // Responsive breakpoints
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(max-width: 1024px)');
+
+  // Local state - organized and optimized
+  const [gameState, setGameState] = useState({
+    isWalletPopupActive: false,
+    gameStartedCount: 0,
+    isGameActive: false,
+    hasDeposited: false,
+  });
+
+  const [roomState, setRoomState] = useState({
+    poolId: roomInfo.pool_id,
+    players: [],
+    hostPr: roomInfo.host_pr,
+    status: roomInfo.status,
+  });
+
+  const [modalState, setModalState] = useState({
+    showImageModal: false,
+    image: '',
+    productName: '',
+    openConfirmBet: false,
+    confirmBetMessage: '',
+    confirmBetCallback: null,
+    skipConfirm: localStorage.getItem('hideConfirmModal') === 'true',
+  });
+
+  const [componentState, setComponentState] = useState({
+    GameComponent: null,
+    componentError: physicsError,
+    proxiedAssets: { images: [], audio: [], theme: {}, background: {} },
+    gameResult: null,
+    isPasswordCorrect: reduxState.isPasswordCorrect,
+  });
+
+  // Refs for performance
+  const bankrollRef = useRef(bankroll);
+  const isComponentMountedRef = useRef(false);
+  const hasDepositedRef = useRef(false);
+
+  // Update refs when props change
   useEffect(() => {
     bankrollRef.current = bankroll;
   }, [bankroll]);
 
-  const loadPhysics = async () => {
-    try {
-      if (window.Matter && window.Matter.World && typeof window.Matter.World === 'function') {
-        console.log('[Custom] Using cached Matter.js');
-        return window.Matter;
-      }
-      console.log('[Custom] Attempting to load Matter.js dynamically');
-      const matterModule = await import('matter-js');
-      if (!matterModule || !matterModule.World || !matterModule.Engine) {
-        throw new Error('Matter.js module loaded but missing required properties');
-      }
-      console.log('[Custom] Successfully loaded Matter.js:', matterModule);
-      window.Matter = matterModule;
-      return matterModule;
-    } catch (error) {
-      console.error('[Custom] Local import failed:', error.message);
-      console.log('[Custom] Falling back to CDN');
-      try {
-        const matterModule = await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js';
-          script.onload = () => {
-            if (window.Matter && window.Matter.World && window.Matter.Engine) {
-              console.log('[Custom] Loaded via CDN');
-              resolve(window.Matter);
-            } else {
-              reject(new Error('Matter.js CDN loaded but missing required properties'));
-            }
-          };
-          script.onerror = () => reject(new Error('Failed to load Matter.js from CDN'));
-          document.head.appendChild(script);
-        });
-        return matterModule;
-      } catch (cdnError) {
-        console.error('[Custom] CDN fallback failed:', cdnError.message);
-        throw new Error(`Failed to load Matter.js: ${cdnError.message}`);
+  useEffect(() => {
+    hasDepositedRef.current = gameState.hasDeposited;
+  }, [gameState.hasDeposited]);
+
+  // Memoized values
+  const isCreator = useMemo(() => 
+    creator_id && user_id && creator_id.toString() === user_id.toString(),
+    [creator_id, user_id]
+  );
+
+  // Optimized keyboard handler
+  const handleKeyDown = useCallback((event) => {
+    const gameKeys = ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '];
+    const keyCodes = [32, 37, 38, 39, 40];
+    
+    if (gameKeys.includes(event.key) || keyCodes.includes(event.keyCode)) {
+      if (gameState.isGameActive) {
+        event.preventDefault();
       }
     }
-  };
+  }, [gameState.isGameActive]);
 
   useEffect(() => {
-    const loadPhysicsOnMount = async () => {
-      setIsPhysicsLoading(true);
-      try {
-        console.log('[Custom] Loading Matter.js on page load');
-        const matterModule = await loadPhysics();
-        if (!matterModule || !matterModule.World || !matterModule.Engine) {
-          throw new Error('Matter.js loaded but missing required properties');
-        }
-        console.log('[Custom] Matter.js loaded successfully:', matterModule);
-        setPhysics(matterModule);
-      } catch (error) {
-        console.error('[Custom] Failed to load Matter.js:', error.message, error.stack);
-        setComponentError(`Failed to load physics engine: ${error.message}`);
-      } finally {
-        setIsPhysicsLoading(false);
-      }
-    };
-
-    loadPhysicsOnMount();
-  }, []);
-
-  // Add event handler for keyboard controls
-  const handleKeyDown = useCallback(
-    (event) => {
-      if (
-        ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key) ||
-        event.keyCode === 32 ||
-        event.keyCode === 37 ||
-        event.keyCode === 38 ||
-        event.keyCode === 39 ||
-        event.keyCode === 40
-      ) {
-        if (isGameActive) {
-          event.preventDefault();
-        }
-      }
-    },
-    [isGameActive]
-  );
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Socket Handlers
-  const handleSocketData = useCallback(
-    (data) => {
-      setPlayers((prevPlayers) => {
-        const updated = [...prevPlayers, data.user];
-        if (updated.length > 5) updated.shift();
-        return updated;
-      });
+  // Optimized socket handlers
+  const handleSocketData = useCallback((data) => {
+    setRoomState(prev => ({
+      ...prev,
+      players: [...prev.players.slice(-4), data.user], // Keep only last 5 players
+      hostPr: data.host_pr
+    }));
 
-      if (playSound) {
-        playSound('blip');
-      }
+    if (playSound) {
+      playSound('blip');
+    }
 
-      onChangeState({
-        bankroll: data.bankroll,
-        battles: 1,
-        hosts: data.hosts,
-      });
-      setHostPr(data.host_pr);
-    },
-    [playSound, user_id, isWatching, onChangeState]
-  );
+    onChangeState({
+      bankroll: data.bankroll,
+      battles: 1,
+      hosts: data.hosts,
+    });
+  }, [playSound, onChangeState]);
 
-  const handleSocketData2 = useCallback(
-    (data) => {
-      onChangeState({ bankroll: data.bankroll });
-    },
-    [onChangeState]
-  );
+  const handleSocketData2 = useCallback((data) => {
+    onChangeState({ bankroll: data.bankroll });
+  }, [onChangeState]);
 
+  // Socket cleanup
   const removeSocketListeners = useCallback(() => {
     if (socket) {
       socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
@@ -309,6 +573,7 @@ function Custom(props) {
     }
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
+  // Solana deposit handler
   const processSolDeposit = useCallback(async () => {
     if (hasDepositedRef.current) {
       console.log('[Custom] Deposit already processed for this game, skipping.');
@@ -322,21 +587,18 @@ function Custom(props) {
         roomInfo._id,
         roomInfo.name,
         'join',
-        account,
-        balance,
+        reduxState.account,
+        reduxState.balance,
         () => {
           hasDepositedRef.current = true;
+          setGameState(prev => ({ ...prev, hasDeposited: true }));
         },
         () => {
           console.error('[Custom] Solana deposit failed');
           onChangeState({ betting: false });
         },
-        () => {
-          setIsWalletPopupActive(true); // Set popup active when it opens
-        },
-        () => {
-          setIsWalletPopupActive(false); // Set popup inactive when it closes
-        }
+        () => setGameState(prev => ({ ...prev, isWalletPopupActive: true })),
+        () => setGameState(prev => ({ ...prev, isWalletPopupActive: false }))
       );
 
       if (!depositResult.success) {
@@ -353,426 +615,294 @@ function Custom(props) {
       onChangeState({ betting: false });
       return false;
     }
-  }, [dispatch, bet_amount, roomInfo._id, account, balance, onChangeState]);
+  }, [dispatch, bet_amount, roomInfo._id, reduxState.account, reduxState.balance, onChangeState]);
 
-  const joinGame = useCallback(
-    async (result, multiplier) => {
-      onChangeState({ result: '' });
-      const resultData = await join({
-        bet_amount: parseFloat(bet_amount),
-        result: result || null,
-        multiplier:
-          result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
-      });
+  // Game join logic
+  const joinGame = useCallback(async (result, multiplier) => {
+    onChangeState({ result: '' });
+    
+    const resultData = await join({
+      bet_amount: parseFloat(bet_amount),
+      result: result || null,
+      multiplier: result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
+    });
 
-      const amount = resultData.amount || 0;
-      const currencyElement = convertToCurrency(Math.abs(amount), solPrice);
-      const sign = amount >= 0 ? '+' : '-';
-      let soundToPlay = null;
+    const amount = resultData.amount || 0;
+    const currencyElement = convertToCurrency(Math.abs(amount), reduxState.solPrice);
+    const sign = amount >= 0 ? '+' : '-';
+    
+    let soundToPlay = null;
+    if (resultData.betResult === 1) soundToPlay = 'win';
+    else if (resultData.betResult === 0) soundToPlay = 'split';
+    else soundToPlay = 'lose';
 
-      if (resultData.betResult === 1) {
-        soundToPlay = 'win';
-      } else if (resultData.betResult === 0) {
-        soundToPlay = 'split';
-      } else {
-        soundToPlay = 'lose';
-      }
+    if (playSound && soundToPlay) {
+      playSound(soundToPlay);
+    }
 
-      if (playSound && soundToPlay) {
-        playSound(soundToPlay);
-      }
-
-      const formattedResult = (
-        <span
-          style={{
-            color: amount >= 0 ? '#00ff3a' : '#ff0000',
-            fontSize: '1.2rem',
-            fontWeight: 'bold',
-          }}
-        >
-          {sign} {currencyElement}{' '}
-          <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
-            ({Math.abs(amount).toFixed(4)} SOL)
-          </span>
+    const formattedResult = (
+      <span style={{
+        color: amount >= 0 ? '#00ff3a' : '#ff0000',
+        fontSize: '1.2rem',
+        fontWeight: 'bold',
+      }}>
+        {sign} {currencyElement}{' '}
+        <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
+          ({Math.abs(amount).toFixed(4)} SOL)
         </span>
-      );
+      </span>
+    );
 
-      onResultChange(formattedResult, false);
-      onChangeState({
-        gameResult: resultData.betResult,
-      });
+    onResultChange(formattedResult, false);
+    onChangeState({ gameResult: resultData.betResult });
 
-      setGameStartedCount((prev) => prev + 1);
-      hasDepositedRef.current = false; // Reset deposit flag after game ends
-    },
-    [bet_amount, join, onChangeState, solPrice, playSound, onResultChange]
-  );
+    setGameState(prev => ({ 
+      ...prev, 
+      gameStartedCount: prev.gameStartedCount + 1,
+      hasDeposited: false 
+    }));
+  }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange]);
 
-  const onBtnBetClick = async (result, multiplier) => {
-    if (!validateIsAuthenticated(isAuthenticated, dispatch)) return;
-    if (!validateBetAmount(bet_amount, balance, dispatch)) return;
+  // Bet click handler
+  const onBtnBetClick = useCallback(async (result, multiplier) => {
+    if (!validateIsAuthenticated(reduxState.isAuthenticated, dispatch)) return;
+    if (!validateBetAmount(bet_amount, reduxState.balance, dispatch)) return;
     if (!validateBankroll(bet_amount, bankrollRef.current, dispatch)) return;
 
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
 
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
+    const executeJoin = async () => {
       if (roomInfo.is_private && passwordCorrect !== true) {
         dispatch(openGamePasswordModal());
       } else {
         await joinGame(result, multiplier);
       }
+    };
+
+    if (modalState.skipConfirm) {
+      await executeJoin();
     } else {
-      openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', async () => {
-        if (roomInfo.is_private && passwordCorrect !== true) {
-          dispatch(openGamePasswordModal());
-        } else {
-          await joinGame(result, multiplier);
+      openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', executeJoin);
+    }
+  }, [reduxState.isAuthenticated, reduxState.balance, bet_amount, roomInfo._id, roomInfo.is_private, modalState.skipConfirm, dispatch, joinGame]);
+
+  // Game event logger
+  const logEvent = useCallback((eventType, data) => {
+    console.log(`Game Event: ${eventType}`, data);
+
+    if (playSound) {
+      playSound('select');
+    }
+
+    if (eventType === 'gameStarted') {
+      setGameState(prev => ({
+        ...prev,
+        gameStartedCount: prev.gameStartedCount + 1,
+        isGameActive: true
+      }));
+      
+      onResultChange('', true);
+
+      openConfirmBetDialog('ARE YOU SURE YOU WANT TO JOIN THIS GAME?', async () => {
+        const depositSuccess = await processSolDeposit();
+        if (!depositSuccess) {
+          setGameState(prev => ({ ...prev, isGameActive: false }));
+          onResultChange('Deposit failed, please try again.', false);
         }
       });
+    } else if (eventType === 'gameEnded') {
+      setGameState(prev => ({ ...prev, isGameActive: false }));
+      
+      const { result, multiplier } = data;
+      const validResults = ['win', 'loss', 'other'];
+      
+      if (validResults.includes(result) && gameState.gameStartedCount > 0 && hasDepositedRef.current) {
+        console.log('Processing game result:', result, 'Multiplier:', multiplier);
+        onBtnBetClick(result, result === 'win' ? multiplier : undefined);
+      } else {
+        console.log('[Custom] Skipping bet placement: No deposit made or invalid state');
+        hasDepositedRef.current = false;
+      }
     }
-  };
+  }, [gameState.gameStartedCount, onBtnBetClick, playSound, onResultChange, processSolDeposit]);
 
-  const logEvent = useCallback(
-    (eventType, data) => {
-      console.log(`Game Event: ${eventType}`, data);
+  // Game code processing - optimized with useMemo
+  const processedGameCode = useMemo(() => {
+    if (!roomInfo.gameCode || !Physics || isPhysicsLoading) {
+      return null;
+    }
 
-      if (playSound) {
-        playSound('select');
-      }
+    try {
+      // Clean the code
+      let cleanedCode = roomInfo.gameCode
+        .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
+        .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+        .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
+        .replace(/export\s+[\w\s]*?\s*;?/g, '')
+        .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+        .trim();
 
-      if (eventType === 'gameStarted') {
-        setGameStartedCount((prev) => prev + 1);
-        setIsGameActive(true);
-        console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
-        onResultChange('', true);
-
-        // Process Solana deposit on game start
-        openConfirmBetDialog('ARE YOU SURE YOU WANT TO JOIN THIS GAME?', async () => {
-          const depositSuccess = await processSolDeposit();
-          if (!depositSuccess) {
-            setIsGameActive(false);
-            onResultChange('Deposit failed, please try again.', false);
-          }
-        });
-      } else if (eventType === 'gameEnded') {
-        setIsGameActive(false);
-        const { result, multiplier } = data;
-        const validResults = ['win', 'loss', 'other'];
-        if (validResults.includes(result) && gameStartedCount > 0 && hasDepositedRef.current) {
-          console.log('Processing game result:', result, 'Multiplier:', multiplier);
-          onBtnBetClick(result, result === 'win' ? multiplier : undefined);
-        } else {
-          console.log('[Custom] Skipping bet placement: No deposit made or invalid state');
-          hasDepositedRef.current = false;
-        }
-      }
-    },
-    [gameStartedCount, onBtnBetClick, playSound, onResultChange, processSolDeposit]
-  );
-
-  // Load and transpile the gameCode
-  useEffect(() => {
-    if (roomInfo.gameCode && Physics && !isPhysicsLoading) {
-      let isMounted = true;
-      setComponentError(null);
-
-      const processGameCode = async () => {
-        try {
-          if (!Physics || !Physics.World) {
-            throw new Error('Matter.js not loaded or missing World property');
-          }
-
-          let cleanedCode = roomInfo.gameCode
-            .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
-            .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-            .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
-            .replace(/export\s+[\w\s]*?\s*;?/g, '')
-            .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-            .trim();
-
-          const babelHelpers = `
-            function _defineProperty(obj, key, value) {
-              if (key in obj) {
-                Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
-              } else {
-                obj[key] = value;
-              }
-              return obj;
-            }
-            function _slicedToArray(arr, i) {
-              return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
-            }
-            function _arrayWithHoles(arr) {
-              if (Array.isArray(arr)) return arr;
-            }
-            function _iterableToArrayLimit(arr, i) {
-              var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
-              if (_i == null) return;
-              var _arr = [];
-              var _n = true;
-              var _d = false;
-              var _s, _e;
-              try {
-                for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
-                  _arr.push(_s.value);
-                  if (i && _arr.length === i) break;
-                }
-              } catch (err) {
-                _d = true;
-                _e = err;
-              } finally {
-                try {
-                  if (!_n && _i["return"] != null) _i["return"]();
-                } finally {
-                  if (_d) throw _e;
-                }
-              }
-              return _arr;
-            }
-            function _unsupportedIterableToArray(o, minLen) {
-              if (!o) return;
-              if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-              var n = Object.prototype.toString.call(o).slice(8, -1);
-              if (n === "Object" && o.constructor) n = o.constructor.name;
-              if (n === "Map" || n === "Set") return Array.from(o);
-              if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-            }
-            function _arrayLikeToArray(arr, len) {
-              if (len == null || len > arr.length) len = arr.length;
-              for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-              return arr2;
-            }
-            function _nonIterableRest() {
-              throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-            }
-            function _objectSpread(target) {
-              for (var i = 1; i < arguments.length; i++) {
-                var source = arguments[i] != null ? arguments[i] : {};
-                var ownKeys = Object.keys(source);
-                if (typeof Object.getOwnPropertySymbols === 'function') {
-                  ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-                    return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-                  }));
-                }
-                ownKeys.forEach(function (key) {
-                  _defineProperty(target, key, source[key]);
-                });
-              }
-              return target;
-            }
-          `;
-
-          let transpiledCode;
-          try {
-            transpiledCode = Babel.transform(cleanedCode, {
-              presets: ['react', ['env', { modules: false, targets: { browsers: ['last 2 versions'] } }]],
-              filename: 'app.jsx',
-            }).code;
-            transpiledCode = `${babelHelpers}\n${transpiledCode}`;
-          } catch (babelError) {
-            console.error('[Custom] Babel Transpile Error:', babelError);
-            throw new Error(`Babel transpilation failed: ${babelError.message}`);
-          }
-
-          const componentFactory = new Function(
-            'React',
-            'useState',
-            'useEffect',
-            'useRef',
-            'useMemo',
-            'useCallback',
-            'useAnimation',
-            'Grid',
-            'Box',
-            'Typography',
-            'TextField',
-            'Button',
-            'Slider',
-            'Dialog',
-            'Divider',
-            'Paper',
-            'Chip',
-            'Collapse',
-            'DialogContent',
-            'DialogTitle',
-            'CircularProgress',
-            'logEvent',
-            'FontAwesomeIcon',
-            'TableContainer',
-            'Table',
-            'TableBody',
-            'TableRow',
-            'TableCell',
-            'TableHead',
-            'faDice',
-            'faCoins',
-            'faPlay',
-            'faRocket',
-            'faChevronDown',
-            'faGem',
-            'faSpinner',
-            'faCogs',
-            'faExchangeAlt',
-            'faTrophy',
-            'faArrowUp',
-            'faArrowDown',
-            'faRedo',
-            'faBomb',
-            'faStar',
-            'faHome',
-            'Physics',
-            'Card',
-            'CardContent',
-            'CardActions',
-            'Tooltip',
-            'motion',
-            'styled',
-            'AnimatePresence',
-            'IconButton',
-            'Container',
-            'Badge',
-            'Snackbar',
-            'Alert',
-            'DialogContentText',
-            'DialogActions',
-            'Zoom',
-            'Grow',
-            'faInfoCircle',
-            'faChevronUp',
-            'faVolumeUp',
-            'faVolumeMute',
-            'faCog',
-            'faExclamationTriangle',
-            'faCheck',
-            'faTimes',
-            'faHistory',
-            'faChartLine',
-            'faWallet',
-            'faShieldAlt',
-            'faHeart',
-            'faSkull',
-            'faClock',
-            'faBolt',
-            'proxiedAssets',
-            `
-              return function App(props) {
-                ${transpiledCode}
-                return App(props);
-              };
-            `
-          );
-
-          const GeneratedApp = componentFactory(
-            React,
-            useState,
-            useEffect,
-            useRef,
-            useMemo,
-            useCallback,
-            useAnimation,
-            Grid,
-            Box,
-            Typography,
-            TextField,
-            Button,
-            Slider,
-            Dialog,
-            Divider,
-            Paper,
-            Chip,
-            Collapse,
-            DialogContent,
-            DialogTitle,
-            CircularProgress,
-            logEvent,
-            FontAwesomeIcon,
-            TableContainer,
-            Table,
-            TableBody,
-            TableRow,
-            TableCell,
-            TableHead,
-            faDice,
-            faCoins,
-            faPlay,
-            faRocket,
-            faChevronDown,
-            faGem,
-            faSpinner,
-            faCogs,
-            faExchangeAlt,
-            faTrophy,
-            faArrowUp,
-            faArrowDown,
-            faRedo,
-            faBomb,
-            faStar,
-            faHome,
-            Physics,
-            Card,
-            CardContent,
-            CardActions,
-            Tooltip,
-            motion,
-            styled,
-            AnimatePresence,
-            IconButton,
-            Container,
-            Badge,
-            Snackbar,
-            Alert,
-            DialogContentText,
-            DialogActions,
-            Zoom,
-            Grow,
-            faInfoCircle,
-            faChevronUp,
-            faVolumeUp,
-            faVolumeMute,
-            faCog,
-            faExclamationTriangle,
-            faCheck,
-            faTimes,
-            faHistory,
-            faChartLine,
-            faWallet,
-            faShieldAlt,
-            faHeart,
-            faSkull,
-            faClock,
-            faBolt,
-            proxiedAssets
-          );
-
-          if (typeof GeneratedApp === 'function') {
-            if (isMounted) {
-              setGameComponent(() => (props) => <GeneratedApp {...props} Physics={Physics} proxiedAssets={proxiedAssets} />);
-            }
+      // Babel helpers (moved to external constant for performance)
+      const babelHelpers = `
+        function _defineProperty(obj, key, value) {
+          if (key in obj) {
+            Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
           } else {
-            throw new Error('Generated code did not return a valid React component');
+            obj[key] = value;
           }
-        } catch (error) {
-          console.error('[Custom] Error creating component:', error);
-          if (isMounted) {
-            setComponentError(`Failed to create component: ${error.message}`);
-            setGameComponent(null);
-          }
+          return obj;
         }
-      };
+        function _slicedToArray(arr, i) {
+          return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+        }
+        function _arrayWithHoles(arr) {
+          if (Array.isArray(arr)) return arr;
+        }
+        function _iterableToArrayLimit(arr, i) {
+          var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+          if (_i == null) return;
+          var _arr = [];
+          var _n = true;
+          var _d = false;
+          var _s, _e;
+          try {
+            for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+              _arr.push(_s.value);
+              if (i && _arr.length === i) break;
+            }
+          } catch (err) {
+            _d = true;
+            _e = err;
+          } finally {
+            try {
+              if (!_n && _i["return"] != null) _i["return"]();
+            } finally {
+              if (_d) throw _e;
+            }
+          }
+          return _arr;
+        }
+        function _unsupportedIterableToArray(o, minLen) {
+          if (!o) return;
+          if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+          var n = Object.prototype.toString.call(o).slice(8, -1);
+          if (n === "Object" && o.constructor) n = o.constructor.name;
+          if (n === "Map" || n === "Set") return Array.from(o);
+          if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+        }
+        function _arrayLikeToArray(arr, len) {
+          if (len == null || len > arr.length) len = arr.length;
+          for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+          return arr2;
+        }
+        function _nonIterableRest() {
+          throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+        }
+        function _objectSpread(target) {
+          for (var i = 1; i < arguments.length; i++) {
+            var source = arguments[i] != null ? arguments[i] : {};
+            var ownKeys = Object.keys(source);
+            if (typeof Object.getOwnPropertySymbols === 'function') {
+              ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+                return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+              }));
+            }
+            ownKeys.forEach(function (key) {
+              _defineProperty(target, key, source[key]);
+            });
+          }
+          return target;
+        }
+      `;
 
-      processGameCode();
-      return () => {
-        isMounted = false;
-      };
-    } else if (roomInfo.gameCode && isPhysicsLoading) {
-      console.log('[Custom] Waiting for Matter.js to load before processing game code');
-    } else {
-      setGameComponent(null);
-      setComponentError(null);
+      // Transpile with Babel
+      let transpiledCode;
+      try {
+        transpiledCode = Babel.transform(cleanedCode, {
+          presets: ['react', ['env', { modules: false, targets: { browsers: ['last 2 versions'] } }]],
+          filename: 'app.jsx',
+        }).code;
+        transpiledCode = `${babelHelpers}\n${transpiledCode}`;
+      } catch (babelError) {
+        throw new Error(`Babel transpilation failed: ${babelError.message}`);
+      }
+
+      // Create component factory
+      const componentFactory = new Function(
+        'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'useAnimation',
+        'Grid', 'Box', 'Typography', 'TextField', 'Button', 'Slider', 'Dialog', 'Divider', 'Paper', 'Chip',
+        'Collapse', 'DialogContent', 'DialogTitle', 'CircularProgress', 'logEvent', 'FontAwesomeIcon',
+        'TableContainer', 'Table', 'TableBody', 'TableRow', 'TableCell', 'TableHead',
+        'faDice', 'faCoins', 'faPlay', 'faRocket', 'faChevronDown', 'faGem', 'faSpinner', 'faCogs',
+        'faExchangeAlt', 'faTrophy', 'faArrowUp', 'faArrowDown', 'faRedo', 'faBomb', 'faStar', 'faHome',
+        'Physics', 'Card', 'CardContent', 'CardActions', 'Tooltip', 'motion', 'styled', 'Modal',
+        'AnimatePresence', 'IconButton', 'Container', 'Badge', 'Snackbar', 'Alert', 'DialogContentText',
+        'DialogActions', 'Zoom', 'Grow', 'faInfoCircle', 'faChevronUp', 'faVolumeUp', 'faVolumeMute',
+        'faCog', 'faExclamationTriangle', 'faCheck', 'faTimes', 'faHistory', 'faChartLine', 'faWallet',
+        'faShieldAlt', 'faHeart', 'faSkull', 'faClock', 'faBolt', 'proxiedAssets',
+        `return function App(props) { ${transpiledCode} return App(props); };`
+      );
+
+      return componentFactory(
+        React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
+        Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
+        Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+        TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
+        faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
+        faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,
+        Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence,
+        IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions,
+        Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog,
+        faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
+        faShieldAlt, faHeart, faSkull, faClock, faBolt, componentState.proxiedAssets
+      );
+    } catch (error) {
+      console.error('[Custom] Error processing game code:', error);
+      return null;
     }
-  }, [roomInfo.gameCode, Physics, isPhysicsLoading, proxiedAssets]);
+  }, [roomInfo.gameCode, Physics, isPhysicsLoading, componentState.proxiedAssets]);
 
+  // Update component when processed code changes
+  useEffect(() => {
+    if (processedGameCode) {
+      try {
+        setComponentState(prev => ({
+          ...prev,
+          GameComponent: (props) => React.createElement(processedGameCode, {
+            ...props,
+            Physics,
+            proxiedAssets: componentState.proxiedAssets,
+            containerSize,
+            isMobile,
+            isTablet
+          }),
+          componentError: null
+        }));
+      } catch (error) {
+        console.error('[Custom] Failed to create component:', error);
+        setComponentState(prev => ({
+          ...prev,
+          GameComponent: null,
+          componentError: `Failed to create component: ${error.message}`
+        }));
+      }
+    } else if (physicsError) {
+      setComponentState(prev => ({
+        ...prev,
+        GameComponent: null,
+        componentError: `Failed to load physics engine: ${physicsError}`
+      }));
+    } else if (!roomInfo.gameCode) {
+      setComponentState(prev => ({
+        ...prev,
+        GameComponent: null,
+        componentError: null
+      }));
+    }
+  }, [processedGameCode, Physics, physicsError, componentState.proxiedAssets, containerSize, isMobile, isTablet, roomInfo.gameCode]);
+
+  // Socket effects
   useEffect(() => {
     isComponentMountedRef.current = true;
     return () => {
@@ -793,299 +923,369 @@ function Custom(props) {
     };
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
-  useEffect(() => {
-    if (isPasswordCorrect !== propIsPasswordCorrect) {
-      setIsPasswordCorrect(propIsPasswordCorrect);
-    }
-  }, [propIsPasswordCorrect, isPasswordCorrect]);
-
-  useEffect(() => {
-    if (isPasswordCorrect && hasDepositedRef.current) {
-      // Only proceed with bet if deposit was successful
-      joinGame(gameResult);
-    }
-  }, [isPasswordCorrect, joinGame, gameResult]);
-
+  // Update room info when props change
   useEffect(() => {
     if (roomInfo) {
-      if (roomInfo.host_pr !== undefined) {
-        setHostPr(parseFloat(roomInfo.host_pr));
-      }
-      if (roomInfo.status !== undefined) {
-        setStatus(roomInfo.status);
-      }
-      if (roomInfo.pool_id !== undefined && roomInfo.pool_id) {
-        setPoolId(roomInfo.pool_id);
-      }
+      setRoomState(prev => ({
+        ...prev,
+        hostPr: roomInfo.host_pr !== undefined ? parseFloat(roomInfo.host_pr) : prev.hostPr,
+        status: roomInfo.status !== undefined ? roomInfo.status : prev.status,
+        poolId: roomInfo.pool_id !== undefined && roomInfo.pool_id ? roomInfo.pool_id : prev.poolId,
+      }));
     }
   }, [roomInfo]);
 
+  // Password correction effect
   useEffect(() => {
-    if (props.actionList !== actionList) {
-      // Handle changes to actionList if needed
+    if (componentState.isPasswordCorrect !== reduxState.isPasswordCorrect) {
+      setComponentState(prev => ({
+        ...prev,
+        isPasswordCorrect: reduxState.isPasswordCorrect
+      }));
     }
-  }, [props.actionList, actionList]);
+  }, [reduxState.isPasswordCorrect, componentState.isPasswordCorrect]);
 
-  const openConfirmBetDialog = (message, callback) => {
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
+  useEffect(() => {
+    if (componentState.isPasswordCorrect && hasDepositedRef.current) {
+      joinGame(componentState.gameResult);
+    }
+  }, [componentState.isPasswordCorrect, joinGame, componentState.gameResult]);
+
+  // Modal handlers
+  const openConfirmBetDialog = useCallback((message, callback) => {
+    if (modalState.skipConfirm) {
       callback();
       return;
     }
-    setOpenConfirmBet(true);
-    setConfirmBetMessage(message);
-    setConfirmBetCallback(() => callback);
-  };
+    setModalState(prev => ({
+      ...prev,
+      openConfirmBet: true,
+      confirmBetMessage: message,
+      confirmBetCallback: () => callback
+    }));
+  }, [modalState.skipConfirm]);
 
-  const closeConfirmBetDialog = () => {
-    setOpenConfirmBet(false);
-    setConfirmBetMessage('');
-    setConfirmBetCallback(null);
-  };
+  const closeConfirmBetDialog = useCallback(() => {
+    setModalState(prev => ({
+      ...prev,
+      openConfirmBet: false,
+      confirmBetMessage: '',
+      confirmBetCallback: null
+    }));
+  }, []);
 
   const handleConfirmBet = useCallback(async () => {
-    if (confirmBetCallback) {
-      await confirmBetCallback();
+    if (modalState.confirmBetCallback) {
+      await modalState.confirmBetCallback();
     }
     closeConfirmBetDialog();
-  }, [confirmBetCallback]);
+  }, [modalState.confirmBetCallback, closeConfirmBetDialog]);
 
-  const handleSkipConfirmChange = (event) => {
+  const handleSkipConfirmChange = useCallback((event) => {
     const checked = event.target.checked;
-    setSkipConfirm(checked);
+    setModalState(prev => ({ ...prev, skipConfirm: checked }));
     localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
-  };
+  }, []);
 
-  // Render Logic
-  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
-
-  return (
-    <div className="game-page">
-      <Dialog
-        open={openConfirmBet}
-        onClose={closeConfirmBetDialog}
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-description"
-      >
-        <DialogTitle id="confirm-dialog-title">Confirmation</DialogTitle>
-        <DialogContent>
-          <Typography>{confirmBetMessage}</Typography>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={skipConfirm}
-                onChange={handleSkipConfirmChange}
-                color="error"
-              />
-            }
-            label="Don't show this again"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirmBetDialog} color="error">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmBet} color="error" autoFocus>
-            Yes
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {showImageModal && (
-        <ImageResultModal
-          modalIsOpen={showImageModal}
-          closeModal={() => setShowImageModal(false)}
-          isDarkMode={isDarkMode}
-          image={image}
-          productName={productName}
-        />
-      )}
-
-      {showPlayerModal && (
-        <PlayerModal
-          selectedCreator={selectedCreator}
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-        />
-      )}
-
-      <div className="game-contents title">
-        {status === 'open' ? (
-          <>
-            <div className="game-info-panel">
-              <Paper
-                square
-                variant="inherit"
-                sx={{
-                  background: '#080808',
-                  position: 'relative',
-                  width: '100%',
-                }}
-                className="join-game-panel"
-              >
-                <Box
-                  ref={gameContainerRef}
-                  sx={{ width: '100%', overflow: 'hidden', position: 'relative' }}
-                  tabIndex="0"
-                >
-                  {componentError ? (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '600px',
-                        color: '#FF0000',
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 2 }}>
-                        Error
-                      </Typography>
-                      <Typography>{componentError}</Typography>
-                    </Box>
-                  ) : GameComponent ? (
-                    <>
-                    <Box
-                      sx={{
-                        width: '100%',
-                        overflow: 'auto',
-                        backgroundColor: '#080808',
-                        '& canvas': {
-                          maxWidth: '100%',
-                          objectFit: 'contain',
-                        },
-                        filter: isWalletPopupActive ? 'blur(5px)' : 'none',
-                        pointerEvents: isWalletPopupActive ? 'none' : 'auto',
-                      }}
-                    >
-                      <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} Physics={Physics} />
-                    </Box>
-                      {isWalletPopupActive && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                            zIndex: 5,
-                            pointerEvents: 'auto',
-                          }}
-                        >
-                          <CircularProgress color="error" />
-                          <Typography sx={{ mt: 2, color: 'white', fontWeight: 'bold' }}>
-                            Confirm Transaction in Wallet...
-                          </Typography>
-                        </Box>
-                      )}
-                      </>
-                  ) : (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '600px',
-
-                      }}
-                    >
-                      <Typography variant="body1" color="text.secondary">
-                        No game loaded yet.
-                      </Typography>
-                    </Box>
-                  )}
-                  {isCreator && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: '0px',
-                        zIndex: 4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        pointerEvents: 'auto',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          color: 'white',
-                          fontSize: '1.5rem',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                        }}
-                      >
-                        You cannot join your own game.
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
-              </Paper>
-              {!isCreator && !isGameActive && (
-                <AiPanel
-                  onChangeState={onChangeState}
-                  betting={betting}
-                  playSound={playSound}
-                  bet_amount={bet_amount}
-                  handle2xButtonClick={handle2xButtonClick}
-                  handleHalfXButtonClick={handleHalfXButtonClick}
-                  handleMaxButtonClick={handleMaxButtonClick}
-                  bankroll={bankroll}
-                  is_betting={is_betting}
-                  creator_id={creator_id}
-                  roomId={roomInfo._id}
-                  game_type={roomInfo.game_type}
-                  user_id={user_id}
-                  user_balance={balance}
-                  isDarkMode={isDarkMode}
-                />
-              )}
-            </div>
-          </>
-        ) : (
-          <Box
+  // Render optimized game section
+  const renderGameSection = () => {
+    if (roomState.status !== 'open') {
+      return (
+        <Card
+          sx={{
+            background: 'rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            overflow: 'scroll',
+            '@supports not (backdrop-filter: blur(20px))': {
+              background: 'rgba(0, 0, 0, 0.35)',
+            },
+          }}
+        >
+          <CardContent
             sx={{
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
+              minHeight: '400px',
+              p: 6,
+              textAlign: 'center',
             }}
           >
-            <Typography variant="subtitle2" sx={{ color: '#FF0000' }}>
-              GAME ENDED
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #f44336, #d32f2f)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 3,
+                boxShadow: '0 8px 24px rgba(244, 67, 54, 0.4)',
+              }}
+            >
+              <Typography
+                variant="h4"
+                sx={{
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '2rem',
+                }}
+              >
+                🔚
+              </Typography>
+            </Box>
+
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                color: '#f44336', 
+                mb: 3,
+                fontWeight: 700,
+                fontSize: '1.5rem',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Game Ended
             </Typography>
-            <br />
-            {roomInfo.pool_id && roomInfo.pool_id ? (
-              <Typography>
-                Pool seeded! SEE{' '}
-                <Box
+
+            {roomState.poolId ? (
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography 
+                  variant="h6"
+                  sx={{ 
+                    mb: 3,
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '1.1rem',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  🎉 Pool successfully seeded!
+                </Typography>
+                <Button
                   component="a"
-                  href={`https://www.geckoterminal.com/solana/pools/${roomInfo.pool_id}`}
-                  sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+                  href={`https://www.geckoterminal.com/solana/pools/${roomState.poolId}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  variant="contained"
+                  sx={{
+                    background: 'linear-gradient(135deg, #4caf50, #45a049)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    borderRadius: '16px',
+                    px: 4,
+                    py: 1.5,
+                    boxShadow: '0 8px 20px rgba(76, 175, 80, 0.4)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #45a049, #388e3c)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 24px rgba(76, 175, 80, 0.5)',
+                    },
+                  }}
                 >
-                  DEX 🚀
-                </Box>
-              </Typography>
+                  View on DEX 🚀
+                </Button>
+              </Box>
             ) : (
-              <Typography sx={{ textAlign: 'center', color: '#fff' }}>
-                Pool is either being seeded, or the room has ended.
-              </Typography>
+              <Box sx={{ textAlign: 'center' }}>
+                <CircularProgress 
+                  sx={{ 
+                    color: '#ff9800', 
+                    mb: 3,
+                  }} 
+                  size={40}
+                />
+                <Typography 
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.8)', 
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Pool is being seeded or the room has ended.
+                  <br />
+                  Please check back shortly.
+                </Typography>
+              </Box>
             )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Box className="game-info-panel">
+       
+          <Box ref={containerRef}>
+            <ResponsiveGameContainer
+              GameComponent={componentState.GameComponent}
+              componentError={componentState.componentError}
+              proxiedAssets={componentState.proxiedAssets}
+              logEvent={logEvent}
+              Physics={Physics}
+              isWalletPopupActive={gameState.isWalletPopupActive}
+              isCreator={isCreator}
+              containerSize={containerSize}
+              isMobile={isMobile}
+              isTablet={isTablet}
+            />
           </Box>
+        
+        {!isCreator && !gameState.isGameActive && (
+          <Suspense fallback={
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress color="error" />
+            </Box>
+          }>
+            <AiPanel
+              onChangeState={onChangeState}
+              betting={betting}
+              playSound={playSound}
+              bet_amount={bet_amount}
+              handle2xButtonClick={handle2xButtonClick}
+              handleHalfXButtonClick={handleHalfXButtonClick}
+              handleMaxButtonClick={handleMaxButtonClick}
+              bankroll={bankroll}
+              is_betting={reduxState.is_betting}
+              creator_id={creator_id}
+              roomId={roomInfo._id}
+              game_type={roomInfo.game_type}
+              user_id={user_id}
+              user_balance={reduxState.balance}
+              isDarkMode={reduxState.isDarkMode}
+            />
+          </Suspense>
         )}
-      </div>
-    </div>
+      </Box>
+    );
+  };
+
+  return (
+    <Box className="game-page">
+      {/* Enhanced Confirmation Dialog */}
+      <Dialog
+        open={modalState.openConfirmBet}
+        onClose={closeConfirmBetDialog}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '20px',
+            color: '#fff',
+          }
+        }}
+      >
+        <DialogTitle 
+          id="confirm-dialog-title"
+          sx={{
+            fontSize: '1.3rem',
+            fontWeight: 700,
+            color: '#fff',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
+          Confirm Your Bet
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.9)', fontSize: '1rem' }}>
+            {modalState.confirmBetMessage}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={modalState.skipConfirm}
+                onChange={handleSkipConfirmChange}
+                sx={{
+                  color: '#f44336',
+                  '&.Mui-checked': {
+                    color: '#f44336',
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>
+                Don't show this again
+              </Typography>
+            }
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={closeConfirmBetDialog} 
+            variant="outlined"
+            sx={{
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '12px',
+              px: 3,
+              '&:hover': {
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmBet} 
+            variant="contained"
+            autoFocus
+            sx={{
+              background: 'linear-gradient(135deg, #f44336, #d32f2f)',
+              borderRadius: '12px',
+              px: 3,
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.4)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #d32f2f, #c62828)',
+                boxShadow: '0 6px 16px rgba(244, 67, 54, 0.5)',
+              },
+            }}
+          >
+            Confirm Bet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Lazy loaded modals */}
+      <Suspense fallback={null}>
+
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        )}
+      </Suspense>
+
+      {/* Main game content */}
+      <Box className="game-contents title">
+        {renderGameSection()}
+      </Box>
+    </Box>
   );
 }
 
-export default Custom;
+// Wrap with React.memo for performance optimization
+export default React.memo(Custom, createShallowComparison([
+  'bankroll', 'bet_amount', 'betting', 'result', 'roomInfo.gameCode', 
+  'roomInfo.status', 'roomInfo._id', 'creator_id', 'user_id'
+]));

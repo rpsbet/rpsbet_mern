@@ -128,7 +128,8 @@ const UserSchema = new Schema({
   last_bonus:  {
     type: Date,
     default: Date.now
-  }
+  },
+  
 });
 
 module.exports = User = mongoose.model('rps_users', UserSchema);

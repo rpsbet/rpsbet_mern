@@ -37,35 +37,3 @@ export const saveSettings = settings => async dispatch => {
   }
 };
 
-
-export const addToQueue = (videoId, title, totalDuration) => async (dispatch) => {
-  try {
-    const response = await axios.post('/settings/add-to-queue', { videoId, title, totalDuration });
-
-    // Check if the response status is in the range of 2xx
-    if (response.status >= 200 && response.status < 300) {
-      dispatch({ type: ADD_TO_QUEUE, payload: response.data });
-    } else {
-      console.error('Error adding to queue. Server responded with:', response.status, response.statusText);
-    }
-  } catch (error) {
-    console.error('Error adding to queue:', error);
-    console.log('Error details:', error.response ? error.response.data : 'N/A');
-  }
-};
-
-export const getQueue = () => async (dispatch) => {
-  try {
-    const response = await axios.get('/settings/get-queue');
-    if (response.status >= 200 && response.status < 300) {
-      dispatch({ type: GET_QUEUE, payload: response.data });
-    } else {
-      console.error('Error fetching queue. Server responded with:', response.status, response.statusText);
-
-    }
-
-  } catch (error) {
-    console.log('error***', error);
-
-  }
-};

@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-// MUI v5
 import {
   Modal,
   Box,
@@ -15,88 +13,121 @@ import {
   Skeleton,
   Typography,
   useMediaQuery,
+  IconButton,
+  Chip,
+  Paper,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Sort as SortIcon, Close as CloseIcon } from '@mui/icons-material';
+import { 
+  Sort as SortIcon, 
+  Close as CloseIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  EmojiEvents as TrophyIcon
+} from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 
-// Custom components
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
-
-// Actions & Selectors
-import {
-  fetchLeaderboardsData,
-  fetchReceiptStatistics,
-  fetchEquityDistribution,
-} from '../../redux/Customer/customer.action';
+import { fetchLeaderboardsData } from '../../redux/Customer/customer.action';
 import { convertToCurrency } from '../../util/conversion';
 
-function LeaderboardsModal({
-  // Modal props (only keep parent-passed props)
-  modalIsOpen,
-  closeModal,
-}) {
+// Leaderboard column configuration
+const COLUMNS = [
+  { 
+    key: 'username', 
+    label: 'PLAYER', 
+    sortable: true, 
+    width: '20%',
+    align: 'left'
+  },
+  { 
+    key: 'totalWagered', 
+    label: 'TOTAL WAGERED', 
+    sortable: true, 
+    width: '16%',
+    isCurrency: true
+  },
+  { 
+    key: 'totalTraded', 
+    label: 'TOTAL TRADED', 
+    sortable: true, 
+    width: '16%',
+    isCurrency: true
+  },
+  { 
+    key: 'gameProfit', 
+    label: 'GAME PROFIT', 
+    sortable: true, 
+    width: '16%',
+    isCurrency: true,
+    isProfit: true
+  },
+  { 
+    key: 'tradingProfit', 
+    label: 'TRADING PROFIT', 
+    sortable: true, 
+    width: '16%',
+    isCurrency: true,
+    isProfit: true
+  },
+  { 
+    key: 'gamePlayed', 
+    label: 'GAMES', 
+    sortable: true, 
+    width: '16%',
+    align: 'center'
+  },
+];
+
+// Medal icons for top 3 positions
+const getMedalIcon = (position) => {
+  switch (position) {
+    case 0: return '🥇';
+    case 1: return '🥈';
+    case 2: return '🥉';
+    default: return `#${position + 1}`;
+  }
+};
+
+function LeaderboardsModal({ modalIsOpen, closeModal }) {
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Replace mapStateToProps with useSelector
-  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
-  const equityChart = useSelector((state) => state.customerReducer.equityChart);
-  const receiptChart = useSelector((state) => state.customerReducer.receiptChart);
-  const leaderboards = useSelector((state) => state.customerReducer.leaderboards);
-  const loading = useSelector((state) => state.customerReducer.loading);
-  const solPrice = useSelector((state) => state.logic.solPrice);
-  const loadingEquityChart = useSelector((state) => state.customerReducer.loadingEquityChart);
-  const loadingReceiptChart = useSelector((state) => state.customerReducer.loadingReceiptChart);
+  // Redux selectors
+  const { leaderboards, loading, solPrice, isDarkMode } = useSelector((state) => ({
+    leaderboards: state.customerReducer.leaderboards,
+    loading: state.customerReducer.loading,
+    solPrice: state.logic.solPrice,
+    isDarkMode: state.auth.isDarkMode,
+  }));
 
-  // -------------------- Local State --------------------
+  // Local state
   const [sortField, setSortField] = useState('gameProfit');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
 
-  // Chart data states
-  const [equityChartData, setEquityChartData] = useState([]);
-  const [receiptChartData, setReceiptChartData] = useState([]);
-
-  // Loading states for charts
-  const [loadingEquityChartData, setLoadingEquityChartData] = useState(true);
-  const [loadingReceiptChartData, setLoadingReceiptChartData] = useState(true);
-
-  // Responsive checks
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  // -------------------- 1) Fetch Once When Modal Opens --------------------
+  // Fetch data when modal opens
   useEffect(() => {
-    if (!modalIsOpen) return;
+    if (modalIsOpen) {
+      dispatch(fetchLeaderboardsData());
+    }
+  }, [modalIsOpen, dispatch]);
 
-    (async () => {
-      try {
-        // Fetch everything only once per open
-        await dispatch(fetchLeaderboardsData()); // Dispatch directly
-        // await dispatch(fetchEquityDistribution());
-        // await dispatch(fetchReceiptStatistics());
-      } catch (error) {
-        console.error('Error fetching leaderboards data:', error);
-      }
-    })();
-  }, [modalIsOpen, dispatch]); // Add dispatch to dependencies
+  // Sort handler
+  const handleSort = useCallback((field) => {
+    if (sortField === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc'); // Default to descending for new fields
+    }
+  }, [sortField]);
 
-  // -------------------- 2) Sync Equity Chart State From Redux --------------------
-  // useEffect(() => {
-  //   setEquityChartData(Array.isArray(equityChart) ? equityChart : []);
-  //   setLoadingEquityChartData(loadingEquityChart || false);
-  // }, [equityChart, loadingEquityChart]);
-
-  // -------------------- 3) Sync Receipt Chart State From Redux --------------------
-  // useEffect(() => {
-  //   setReceiptChartData(receiptChart || {});
-  //   setLoadingReceiptChartData(loadingReceiptChart || false);
-  // }, [receiptChart, loadingReceiptChart]);
-
-  // -------------------- Sorting & Player Modal Handlers --------------------
+  // Player modal handlers
   const handleOpenPlayerModal = useCallback((creatorId) => {
     setSelectedCreator(creatorId);
     setShowPlayerModal(true);
@@ -104,442 +135,338 @@ function LeaderboardsModal({
 
   const handleClosePlayerModal = useCallback(() => {
     setShowPlayerModal(false);
+    setSelectedCreator('');
   }, []);
 
-  const handleSort = useCallback((field) => {
-    setSortField((prevField) => {
-      if (prevField === field) {
-        setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
-        return prevField;
-      } else {
-        setSortOrder('asc');
-        return field;
+  // Sorted leaderboards with memoization
+  const sortedLeaderboards = useMemo(() => {
+    if (!leaderboards?.length) return [];
+
+    return [...leaderboards].sort((a, b) => {
+      const aValue = a[sortField] || 0;
+      const bValue = b[sortField] || 0;
+      
+      if (sortField === 'username') {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
       }
-    });
-  }, []);
-
-  // -------------------- Chart Config / Colors --------------------
-  const baseColor = '#c734ff';
-  const chartColors = [
-    `${baseColor}BF`,
-    `${baseColor}99`,
-    `${baseColor}80`,
-    `${baseColor}66`,
-    `${baseColor}33`,
-    `${baseColor}1A`,
-  ];
-  const chartWidth = isMobile ? '250px' : '350px';
-
-  // **Equity Chart**: safe array map
-  const equityChartSeries =
-    equityChartData.map((u) => u.equityPercentage) || [];
-  const equityChartOptions = {
-    chart: {
-      type: equityChartSeries.length > 0 ? 'pie' : 'donut',
-    },
-    labels: equityChartData.map((user) => user.username.toUpperCase()) || [],
-    responsive: [
-      {
-        breakpoint: 480,
-        options: { chart: { width: chartWidth } },
-      },
-    ],
-    colors: chartColors,
-    legend: { show: false },
-    dataLabels: {
-      enabled: true,
-      formatter: (value) => `${value.toFixed(2)}%`,
-      style: {
-        colors: ['#ffffff'],
-        fontSize: '14px',
-        fontWeight: 600,
-      },
-    },
-    tooltip: {
-      custom: ({ seriesIndex, w }) => {
-        const user = equityChartData[seriesIndex];
-        if (!user) return '';
-        return `
-          <div style="display: flex; align-items: center;">
-            <img src="${user.avatar}" alt="${user.username}" style="width:24px; height:24px; border-radius:50%; margin-right:8px;" />
-            <span style="color:${baseColor};">
-              ${user.username}: ${w.globals.series[seriesIndex].toFixed(2)}%
-            </span>
-          </div>
-        `;
-      },
-      theme: isDarkMode ? 'dark' : 'light',
-      useHTML: true,
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '70%',
-          labels: { show: false },
-        },
-      },
-    },
-  };
-
-  // **Receipt Chart**: destructure safely from receiptChartData
-  const {
-    overTenMillion = 0,
-    betweenOneAndTenMillion = 0,
-    betweenZeroAndOneMillion = 0,
-    lessThanZero = 0,
-  } = receiptChartData;
-
-  const receiptChartSeries = [
-    overTenMillion,
-    betweenOneAndTenMillion,
-    betweenZeroAndOneMillion,
-    lessThanZero,
-  ];
-  const receiptChartOptions = {
-    chart: {
-      type: receiptChartSeries.length > 0 ? 'pie' : 'donut',
-    },
-    labels: ['Made over 10M', 'Made over 1M', 'Made over 0', 'Not profitable'],
-    responsive: [
-      {
-        breakpoint: 480,
-        options: { chart: { width: chartWidth } },
-      },
-    ],
-    colors: chartColors,
-    legend: { show: false },
-    dataLabels: {
-      enabled: true,
-      formatter: (value) => `${value.toFixed(2)}%`,
-      style: {
-        colors: ['#ffffff'],
-        fontSize: '14px',
-        fontWeight: 600,
-      },
-    },
-    tooltip: {
-      custom: ({ seriesIndex, w }) => {
-        const labels = [
-          'Made over 10M',
-          'Made over 1M',
-          'Made over 0',
-          'Not profitable',
-        ];
-        return `
-          <div style="display: flex; align-items: center;">
-            <span style="color:${baseColor};">
-              ${labels[seriesIndex]}: ${w.globals.series[seriesIndex].toFixed(2)}%
-            </span>
-          </div>
-        `;
-      },
-      theme: isDarkMode ? 'dark' : 'light',
-      useHTML: true,
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '70%',
-          labels: { show: false },
-        },
-      },
-    },
-  };
-
-  // -------------------- Sort Leaderboards --------------------
-  const sortedLeaderboards = leaderboards
-    ? [...leaderboards].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+      
       return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-    })
-    : [];
+    });
+  }, [leaderboards, sortField, sortOrder]);
 
-  // -------------------- Render --------------------
+  // Render table header
+  const renderTableHeader = () => (
+    <TableHead>
+      <TableRow sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600, 
+          width: '60px',
+          backgroundColor: 'transparent'
+        }}>
+          RANK
+        </TableCell>
+        {COLUMNS.map((column) => (
+          <TableCell
+            key={column.key}
+            sx={{
+              color: isDarkMode ? '#ccc' : '#666',
+              fontWeight: 600,
+              cursor: column.sortable ? 'pointer' : 'default',
+              width: column.width,
+              textAlign: column.align || 'left',
+              backgroundColor: 'transparent',
+              '&:hover': column.sortable ? { 
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' 
+              } : {},
+              transition: 'background-color 0.2s',
+            }}
+            onClick={column.sortable ? () => handleSort(column.key) : undefined}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {column.label}
+              {column.sortable && sortField === column.key && (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {sortOrder === 'asc' ? (
+                    <TrendingUpIcon sx={{ fontSize: 16, color: '#ff0000' }} />
+                  ) : (
+                    <TrendingDownIcon sx={{ fontSize: 16, color: '#ff0000' }} />
+                  )}
+                </Box>
+              )}
+            </Box>
+          </TableCell>
+        ))}
+      </TableRow>
+    </TableHead>
+  );
+
+  // Render table cell value
+  const renderCellValue = (entry, column) => {
+    const value = entry[column.key];
+
+    if (column.key === 'username') {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            '&:hover': { opacity: 0.8 }
+          }}
+          onClick={() => handleOpenPlayerModal(entry._id)}
+        >
+          <Avatar
+            src={entry.avatar}
+            rank={entry.totalWagered}
+            user_id={entry._id}
+            accessory={entry.accessory}
+            elite={entry.elite}
+            username={entry.username}
+            alt={entry.username}
+            darkMode={isDarkMode}
+            style={{ marginRight: 12 }}
+          />
+          <Box>
+            <Typography sx={{ 
+              fontSize: '0.9rem', 
+              fontWeight: 500,
+              color: isDarkMode ? '#fff' : '#333'
+            }}>
+              {entry.username}
+            </Typography>
+            {entry.elite && (
+              <Chip 
+                label="ELITE" 
+                size="small" 
+                sx={{ 
+                  height: 16, 
+                  fontSize: '0.6rem',
+                  backgroundColor: '#ffd700',
+                  color: '#000',
+                  fontWeight: 600,
+                  mt: 0.5
+                }} 
+              />
+            )}
+          </Box>
+        </Box>
+      );
+    }
+
+    if (column.isCurrency) {
+      const currencyValue = convertToCurrency(value || 0, solPrice);
+      const isNegative = (value || 0) < 0;
+      
+      return (
+        <Typography 
+          sx={{ 
+            color: column.isProfit 
+              ? (isNegative ? '#ff4444' : '#00ff3a')
+              : '#fff',
+            fontWeight: column.isProfit ? 600 : 400,
+            textAlign: column.align || 'left'
+          }}
+        >
+          {column.isProfit && !isNegative && '+'}
+          {currencyValue}
+        </Typography>
+      );
+    }
+
+    return (
+      <Typography sx={{ textAlign: column.align || 'left' }}>
+        {value?.toLocaleString() || '0'}
+      </Typography>
+    );
+  };
+
+  // Render table body
+  const renderTableBody = () => (
+    <TableBody>
+      {sortedLeaderboards.map((entry, index) => (
+        <TableRow 
+          key={entry._id} 
+          sx={{
+            '&:hover': { 
+              backgroundColor: 'rgba(255,255,255,0.05)',
+            },
+            transition: 'background-color 0.2s',
+          }}
+        >
+          <TableCell sx={{ color: isDarkMode ? '#fff' : '#333' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
+                {getMedalIcon(index)}
+              </Typography>
+              {index < 3 && <TrophyIcon sx={{ fontSize: 16, color: '#ffd700' }} />}
+            </Box>
+          </TableCell>
+          {COLUMNS.map((column) => (
+            <TableCell key={column.key} sx={{ color: isDarkMode ? '#fff' : '#333' }}>
+              {renderCellValue(entry, column)}
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </TableBody>
+  );
+
+  // Loading skeleton
+  const renderLoadingSkeleton = () => (
+    <Box sx={{ mt: 2 }}>
+      {Array.from({ length: 8 }).map((_, index) => (
+        <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+          <Skeleton variant="text" width="40px" height={24} />
+          <Skeleton variant="circular" width={40} height={40} />
+          <Skeleton variant="text" width="120px" height={24} />
+          <Skeleton variant="text" width="100px" height={24} />
+          <Skeleton variant="text" width="100px" height={24} />
+          <Skeleton variant="text" width="100px" height={24} />
+          <Skeleton variant="text" width="100px" height={24} />
+          <Skeleton variant="text" width="60px" height={24} />
+        </Box>
+      ))}
+    </Box>
+  );
+
   return (
     <>
       <Modal
         open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
-        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}
-      >
-        <Box
-         sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: { xs: '90vw', sm: '80vw', md: '75vw', lg: '70vw' },
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          borderRadius: 3,
-          p: { xs: 2, sm: 3, md: 4 },
-          // Glassmorphism
-          background: 'rgba(30, 30, 30, 0.3)',
-          backdropFilter: 'blur(15px)',
-          WebkitBackdropFilter: 'blur(15px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-          // Fallback
-          '@supports not (backdrop-filter: blur(15px))': {
-            background: 'rgba(30, 30, 30, 0.6)',
-          },
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.2) transparent',
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '4px',
-          },
+        BackdropProps={{ 
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } 
         }}
+      >
+        <Paper
+          elevation={24}
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '95vw', sm: '90vw', md: '85vw', lg: '80vw' },
+            maxWidth: '1200px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            background: isDarkMode 
+              ? 'rgba(30, 30, 30, 0.95)' 
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+            boxShadow: `0 8px 32px ${isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)'}`,
+            color: isDarkMode ? '#fff' : '#333',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
+            },
+          }}
         >
-          {/* HEADER */}
+          {/* Header */}
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              mb: 2,
+              mb: 3,
+              pb: 2,
+              borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
             }}
           >
-            <Typography
-              variant="h6"
-              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-            >
-              <FontAwesomeIcon icon={faList} />
-              LEADERBOARDS
-            </Typography>
-            <Button
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <TrophyIcon sx={{ fontSize: 28, color: '#ffd700' }} />
+              <Typography variant="h5" sx={{ fontWeight: 700, color: isDarkMode ? '#fff' : '#333' }}>
+                LEADERBOARDS
+              </Typography>
+              <Chip 
+                label="ALL-TIME" 
+                size="small" 
+                sx={{ 
+                  backgroundColor: '#ff0000',
+                  color: '#fff',
+                  fontWeight: 600
+                }} 
+              />
+            </Box>
+            <IconButton
               onClick={closeModal}
               sx={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                minWidth: 'auto',
-                p: 1,
-                bgcolor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
-                borderRadius: '50%',
+                color: isDarkMode ? '#fff' : '#333',
+                bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                '&:hover': { 
+                  bgcolor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' 
+                },
               }}
             >
               <CloseIcon />
-            </Button>
+            </IconButton>
           </Box>
-          <Box
 
-          >
-            {/* CHARTS SECTION */}
-            {/* <Box
-              sx={{
-                display: 'flex',
-                flexDirection: isMobile ? 'column' : 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                p: 2,
-                mb: 3
+          {/* Stats Summary */}
+          {!loading && sortedLeaderboards.length > 0 && (
+            <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Chip 
+                label={`${sortedLeaderboards.length} Players`} 
+                variant="outlined"
+                sx={{ borderColor: '#ff0000', color: isDarkMode ? '#fff' : '#333' }}
+              />
+              <Chip 
+                label={`Total Wagered: ${convertToCurrency(
+                  sortedLeaderboards.reduce((sum, p) => sum + (p.totalWagered || 0), 0), 
+                  solPrice
+                )}`}
+                variant="outlined"
+                sx={{ borderColor: '#ff0000', color: isDarkMode ? '#fff' : '#333' }}
+              />
+            </Box>
+          )}
+
+          {/* Table */}
+          {!loading ? (
+            <TableContainer 
+              sx={{ 
+                overflowX: 'auto',
+                borderRadius: 2,
+                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
               }}
             >
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography  className='roll-tag title' variant="h5">Capital Distribution</Typography>
-                {loadingEquityChartData ? (
-                  <Box sx={{ mt: 2 }}>
-                    <Skeleton variant="circular" width={200} height={200} />
-                    <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
-                  </Box>
-                ) : equityChartSeries.length > 0 ? (
-                  <Chart
-                    options={equityChartOptions}
-                    series={equityChartSeries}
-                    type="pie"
-                    width={isMobile ? 200 : 350}
-                  />
-                ) : (
-                  <Typography variant="body2" sx={{ mt: 2 }}>
-                    No data available
-                  </Typography>
-                )}
-              </Box>
+              <Table sx={{ minWidth: 800 }} stickyHeader>
+                {renderTableHeader()}
+                {renderTableBody()}
+              </Table>
+            </TableContainer>
+          ) : (
+            renderLoadingSkeleton()
+          )}
 
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography className='roll-tag title' variant="h5">Profit Distribution</Typography>
-                {loadingReceiptChartData ? (
-                  <Box sx={{ mt: 2 }}>
-                    <Skeleton variant="circular" width={200} height={200} />
-                    <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
-                  </Box>
-                ) : receiptChartSeries.reduce((a, b) => a + b, 0) > 0 ? (
-                  <Chart
-                    options={receiptChartOptions}
-                    series={receiptChartSeries}
-                    type="pie"
-                    width={isMobile ? 200 : 350}
-                  />
-                ) : (
-                  <Typography variant="body2" sx={{ mt: 2 }}>
-                    No data available
-                  </Typography>
-                )}
-              </Box>
-            </Box> */}
-
-            {/* LEADERBOARDS TABLE */}
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              ALL-TIME LEADERBOARDS
-            </Typography>
-            {!loading ? (
-              <TableContainer sx={{ overflowX: 'auto' }}>
-                <Table sx={{ minWidth: '588px' }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        sx={{
-                          color: '#fff',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleSort('username')}
-                      >
-                        PLAYER {sortField === 'username' && <SortIcon />}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: '#fff',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleSort('totalWagered')}
-                      >
-                        TOTAL WAGERED{' '}
-                        {sortField === 'totalWagered' && <SortIcon />}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: '#fff',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleSort('totalTraded')}
-                      >
-                        TOTAL TRADED{' '}
-                        {sortField === 'totalTraded' && <SortIcon />}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: '#fff',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleSort('gameProfit')}
-                      >
-                        GAME PROFIT {sortField === 'gameProfit' && <SortIcon />}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: '#fff',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleSort('tradingProfit')} // Fixed typo: 'gameProfit' -> 'tradingProfit'
-                      >
-                        TRADING PROFIT{' '}
-                        {sortField === 'tradingProfit' && <SortIcon />}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: '#fff',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleSort('gamePlayed')}
-                      >
-                        GAMES PLAYED{' '}
-                        {sortField === 'gamePlayed' && <SortIcon />}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {sortedLeaderboards.map((entry, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell sx={{ color: '#fff' }}>
-                          <Box
-                            className="player"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => handleOpenPlayerModal(entry._id)}
-                          >
-                            <Avatar
-                              className="avatar"
-                              src={entry.avatar}
-                              rank={entry.totalWagered}
-                              user_id={entry._id}
-                              accessory={entry.accessory}
-                              elite={entry.elite}
-                              username={entry.username}
-                              alt={entry.username}
-                              darkMode={isDarkMode}
-                            />
-                            <Typography sx={{ ml: 1 }}>
-                              {entry.username}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ color: '#fff' }}>
-                          {convertToCurrency(entry.totalWagered, solPrice)}
-                        </TableCell>
-                        <TableCell sx={{ color: '#fff' }}>
-                          {convertToCurrency(entry.totalTraded, solPrice)}
-                        </TableCell>
-                        <TableCell sx={{ color: '#fff' }}>
-                          {convertToCurrency(entry.gameProfit, solPrice)}
-                        </TableCell>
-                        <TableCell sx={{ color: '#fff' }}>
-                          {convertToCurrency(entry.tradingProfit, solPrice)}
-                        </TableCell>
-                        <TableCell sx={{ color: '#fff' }}>
-                          {entry.gamePlayed}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              // Loading Skeletons for the table
-              <Box sx={{ mt: 2 }}>
-                {[...Array(5)].map((_, index) => (
-                  <Box
-                    key={index}
-                    sx={{ display: 'flex', alignItems: 'center', mb: 2 }}
-                  >
-                    <Skeleton
-                      variant="circular"
-                      width={40}
-                      height={40}
-                      sx={{ mr: 2 }}
-                    />
-                    <Skeleton variant="text" width="20%" sx={{ mr: 2 }} />
-                    <Skeleton variant="text" width="15%" sx={{ mr: 2 }} />
-                    <Skeleton variant="text" width="15%" sx={{ ml: 'auto' }} />
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-        </Box>
+          {/* Empty state */}
+          {!loading && sortedLeaderboards.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <TrophyIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.3)', mb: 2 }} />
+              <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                No leaderboard data available
+              </Typography>
+            </Box>
+          )}
+        </Paper>
       </Modal>
 
-      {/* PLAYER MODAL */}
+      {/* Player Modal */}
       {showPlayerModal && (
         <PlayerModal
           selectedCreator={selectedCreator}

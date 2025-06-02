@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import InfoIcon from '@mui/icons-material/Info';
 import WarningIcon from '@mui/icons-material/Warning';
 import Avatar from './Avatar';
@@ -11,7 +11,6 @@ import {
   faInfoCircle,
   faWater,
   faDollarSign,
-  faDice,
   faBalanceScale,
   faPercentage,
   faHandHoldingUsd,
@@ -35,10 +34,11 @@ import {
   useMediaQuery,
   Paper,
   ThemeProvider,
+  Chip,
 } from '@mui/material';
 import { getCustomTheme } from '../config/theme';
 
-const PreSummaryPanel = (props) => {
+const PreSummaryPanel = React.memo((props) => {
   const {
     status,
     bankroll,
@@ -59,10 +59,6 @@ const PreSummaryPanel = (props) => {
     accessory,
     elite,
     solPrice,
-    winChance,
-    rps_game_type,
-    endgame_type,
-    qs_game_type,
     pr,
     bet_amount,
   } = props;
@@ -74,23 +70,52 @@ const PreSummaryPanel = (props) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Use custom theme
-  const customTheme = getCustomTheme(isDarkMode);
+  // Memoize custom theme to prevent unnecessary re-creation
+  const customTheme = useMemo(() => getCustomTheme(isDarkMode), [isDarkMode]);
 
-  // Check scroll position to determine arrow visibility
-  const checkScrollPosition = () => {
+  // Memoize calculated values
+  const memoizedValues = useMemo(() => {
+    const netProfit = isNaN(hostProfit - totalStakes) ? 'N/A' : convertToCurrency(hostProfit - totalStakes, solPrice);
+    const liquidityValue = `${parseFloat(bankroll).toFixed(3)} SOL`;
+    const liquidityTooltip = isLowBankroll
+      ? `Available liquidity: ${convertToCurrency(Number(bankroll), solPrice)} - Low liquidity may prevent bet execution`
+      : `Available liquidity: ${convertToCurrency(Number(bankroll), solPrice)}`;
+    const taxDisplay = roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`;
+    const healthPercentage = Math.round(100 - payoutPercentage);
+    const createdDate = roomInfo?.created_at && isValid(new Date(roomInfo.created_at))
+      ? formatDistanceToNow(new Date(roomInfo.created_at), { addSuffix: true })
+      : 'Invalid Date';
+    const stakingRewards = convertToCurrency(pr, solPrice);
+
+    return {
+      netProfit,
+      liquidityValue,
+      liquidityTooltip,
+      taxDisplay,
+      healthPercentage,
+      createdDate,
+      stakingRewards,
+    };
+  }, [hostProfit, totalStakes, solPrice, bankroll, isLowBankroll, roomInfo.tax, payoutPercentage, roomInfo?.created_at, pr]);
+
+  // Memoized scroll position check
+  const checkScrollPosition = useCallback(() => {
     const { current } = scrollContainerRef;
     if (current) {
-      setShowLeftArrow(current.scrollLeft > 0);
-      setShowRightArrow(current.scrollLeft < current.scrollWidth - current.clientWidth - 10);
+      const isAtStart = current.scrollLeft <= 0;
+      const isAtEnd = current.scrollLeft >= current.scrollWidth - current.clientWidth - 10;
+      
+      setShowLeftArrow(!isAtStart);
+      setShowRightArrow(!isAtEnd);
       setScrollPosition(current.scrollLeft);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
       container.addEventListener('scroll', checkScrollPosition);
+      // Check initial position
       checkScrollPosition();
     }
     return () => {
@@ -98,145 +123,163 @@ const PreSummaryPanel = (props) => {
         container.removeEventListener('scroll', checkScrollPosition);
       }
     };
-  }, []);
+  }, [checkScrollPosition]);
 
-  // Handle scroll buttons
-  const handleScroll = (direction) => {
+  // Optimized scroll handler
+  const handleScroll = useCallback((direction) => {
     const container = scrollContainerRef.current;
     if (container) {
       const scrollAmount = container.clientWidth * 0.75;
-      const newPosition =
-        direction === 'left' ? container.scrollLeft - scrollAmount : container.scrollLeft + scrollAmount;
+      const newPosition = direction === 'left' 
+        ? container.scrollLeft - scrollAmount 
+        : container.scrollLeft + scrollAmount;
+      
       container.scrollTo({
         left: newPosition,
         behavior: 'smooth',
       });
     }
-  };
+  }, []);
 
-  // Calculate returns for different game types
-  const calculateQuickShootReturn = () => {
-    if (qs_game_type && bet_amount) {
-      return (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) * (1 - (roomInfo.tax + 5) / 100);
-    }
-    return 0;
-  };
-
-  const calculateRPSReturn = () => {
-    return bet_amount * 2 * ((100 - (roomInfo.tax + 5)) / 100);
-  };
-
-  // LikeDislikeBar component
-  const LikeDislikeBar = ({ likes = 0, dislikes = 0 }) => {
+  // Memoized LikeDislikeBar component
+  const LikeDislikeBar = React.memo(({ likes = 0, dislikes = 0 }) => {
     const total = likes + dislikes;
     const likePercentage = total > 0 ? (likes / total) * 100 : 50;
     const dislikePercentage = total > 0 ? (dislikes / total) * 100 : 50;
 
     return (
-      <Box className="data-item" sx={{ minWidth: '180px' }}>
-        <Typography
-          variant="h6"
-          className="label likes-dislikes"
-          sx={{
-            mb: 1,
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            color: 'text.secondary', // #CCCCCC
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: 8 }} />
-          Likes / Dislikes
-        </Typography>
-        {total === 0 ? (
-          <Typography
-            variant="body2"
-            sx={{
-              fontSize: '1rem',
-              color: 'text.primary', // #ffffff
-            }}
-          >
-            No votes yet
-          </Typography>
-        ) : (
-          <Tooltip title={`${likes} likes, ${dislikes} dislikes (Total: ${total} votes)`}>
-            <Box
-              sx={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <Box
-                className="like-dislike-bar"
-                sx={{
-                  width: '100%',
-                  minWidth: 100,
-                  maxWidth: 300,
-                  height: 8,
-                  display: 'flex',
-                  overflow: 'hidden',
-                  borderRadius: '4px',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.2)',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: `${likePercentage}%`,
-                    background: 'linear-gradient(to right, rgba(0, 255, 58, 0.7), rgba(0, 255, 58, 0.9))',
-                    transition: 'width 0.3s ease',
-                    height: '100%',
-                  }}
-                />
-                <Box
-                  sx={{
-                    width: `${dislikePercentage}%`,
-                    background: 'linear-gradient(to right, rgba(255, 0, 0, 0.7), rgba(255, 0, 0, 0.9))',
-                    transition: 'width 0.3s ease',
-                    height: '100%',
-                  }}
-                />
-              </Box>
-              <InfoIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            </Box>
-          </Tooltip>
-        )}
-      </Box>
-    );
-  };
-
-  // DataCard component
-  const DataCard = ({ icon, label, value, tooltip, warning = false, color = null, width = 180, children = null }) => {
-    return (
       <Box
         className="data-item"
         sx={{
-          minWidth: `${width}px`,
-          borderRight: '1px solid rgba(255, 255, 255, 0.12)',
-          px: 2,
+          minWidth: '200px',
+          px: 3,
+          py: 2.5,
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
           '&:last-child': {
             borderRight: 'none',
           },
         }}
       >
         <Typography
-          variant="h6"
-          className={`label ${label.toLowerCase().replace(/\s+/g, '-')}`}
+          variant="subtitle2"
           sx={{
-            mb: 1,
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            color: 'text.secondary',
+            mb: 2,
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: 'rgba(255, 255, 255, 0.7)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
             display: 'flex',
             alignItems: 'center',
             gap: 1,
           }}
         >
-          <FontAwesomeIcon icon={icon} />
+          <FontAwesomeIcon icon={faBalanceScale} style={{ fontSize: '12px' }} />
+          Community Sentiment
+        </Typography>
+        {total === 0 ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontStyle: 'italic',
+              }}
+            >
+              No votes yet
+            </Typography>
+            <InfoIcon sx={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.4)' }} />
+          </Box>
+        ) : (
+          <Tooltip title={`${likes} likes, ${dislikes} dislikes (Total: ${total} votes)`} arrow>
+            <Box
+              sx={{
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem' }}>
+                  {likes} 👍
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#f44336', fontWeight: 600, fontSize: '0.85rem' }}>
+                  👎 {dislikes}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  width: '100%',
+                  height: 8,
+                  display: 'flex',
+                  overflow: 'hidden',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: `${likePercentage}%`,
+                    background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
+                    transition: 'width 0.3s ease',
+                    height: '100%',
+                    boxShadow: '0 0 8px rgba(76, 175, 80, 0.4)',
+                  }}
+                />
+                <Box
+                  sx={{
+                    width: `${dislikePercentage}%`,
+                    background: 'linear-gradient(90deg, #f44336, #ef5350)',
+                    transition: 'width 0.3s ease',
+                    height: '100%',
+                    boxShadow: '0 0 8px rgba(244, 67, 54, 0.4)',
+                  }}
+                />
+              </Box>
+            </Box>
+          </Tooltip>
+        )}
+      </Box>
+    );
+  });
+
+  // Memoized DataCard component
+  const DataCard = React.memo(({ icon, label, value, tooltip, warning = false, color = null, width = 180, children = null }) => {
+    return (
+      <Box
+        className="data-item"
+        sx={{
+          minWidth: `${width}px`,
+          px: 3,
+          py: 2.5,
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+          },
+          '&:last-child': {
+            borderRight: 'none',
+          },
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{
+            mb: 2,
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: 'rgba(255, 255, 255, 0.7)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          <FontAwesomeIcon icon={icon} style={{ fontSize: '12px' }} />
           {label}
         </Typography>
         <Tooltip title={tooltip} placement="top" arrow>
@@ -251,25 +294,59 @@ const PreSummaryPanel = (props) => {
             {children || (
               <Typography
                 variant="body1"
-                className="value"
                 sx={{
                   fontSize: '1rem',
-                  fontWeight: 500,
-                  color: color || 'text.primary',
+                  fontWeight: 600,
+                  // color: color || '#ffffff',
+                  letterSpacing: '0.3px',
                 }}
               >
                 {value}
               </Typography>
             )}
             {warning ? (
-              <WarningIcon sx={{ fontSize: 16, color: 'error.main' }} />
+              <WarningIcon sx={{ fontSize: 18, color: '#ff9800' }} />
             ) : (
-              <InfoIcon sx={{ fontSize: 16, color: 'text.secondary', opacity: 0.7 }} />
+              <InfoIcon sx={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.4)' }} />
             )}
           </Box>
         </Tooltip>
       </Box>
     );
+  });
+
+  // Memoized scroll indicator calculation
+  const scrollIndicatorStyle = useMemo(() => {
+    if (!scrollContainerRef.current) return { width: '10%', transform: 'translateX(0%)' };
+    
+    const container = scrollContainerRef.current;
+    const widthPercentage = (container.clientWidth / container.scrollWidth) * 100;
+    const transformPercentage = (scrollPosition / container.scrollWidth) * 100 * (container.scrollWidth / container.clientWidth);
+    
+    return {
+      width: `${widthPercentage}%`,
+      transform: `translateX(${transformPercentage}%)`,
+    };
+  }, [scrollPosition]);
+
+  const handleCreatorClick = useCallback(() => {
+    handleOpenPlayerModal(creator_id);
+  }, [handleOpenPlayerModal, creator_id]);
+
+  // Status color mapping
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'open':
+      case 'active':
+        return '#4caf50';
+      case 'paused':
+        return '#ff9800';
+      case 'finished':
+      case 'ended':
+        return '#f44336';
+      default:
+        return '#2196f3';
+    }
   };
 
   return (
@@ -278,25 +355,8 @@ const PreSummaryPanel = (props) => {
         sx={{
           position: 'relative',
           width: '100%',
-          mb: 2,
-          overflow: 'hidden', // Prevent outer scrollbar
-          '&::-webkit-scrollbar': {
-            width: '8px',
-            height: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: '#ff0000',
-            borderRadius: '4px',
-            '&:hover': {
-              background: '#cc0000',
-            },
-          },
-          scrollbarColor: '#ff0000 rgba(255, 255, 255, 0.1)',
-          scrollbarWidth: 'thin',
+          mb: 3,
+          overflow: 'hidden',
         }}
       >
         {/* Left scroll button */}
@@ -305,22 +365,25 @@ const PreSummaryPanel = (props) => {
             onClick={() => handleScroll('left')}
             sx={{
               position: 'absolute',
-              left: 0,
+              left: 8,
               top: '50%',
               transform: 'translateY(-50%)',
-              zIndex: 10,
-              bgcolor: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(5px)',
+              zIndex: 20,
+              bgcolor: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(10px)',
               color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.85)',
+                bgcolor: 'rgba(0, 0, 0, 0.9)',
+                transform: 'translateY(-50%) scale(1.05)',
               },
-              width: 40,
-              height: 40,
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+              width: 44,
+              height: 44,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+              transition: 'all 0.2s ease',
             }}
           >
-            <FontAwesomeIcon icon={faChevronLeft} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: '16px' }} />
           </IconButton>
         )}
 
@@ -330,22 +393,25 @@ const PreSummaryPanel = (props) => {
             onClick={() => handleScroll('right')}
             sx={{
               position: 'absolute',
-              right: 0,
+              right: 8,
               top: '50%',
               transform: 'translateY(-50%)',
-              zIndex: 10,
-              bgcolor: '_RGBA(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(5px)',
+              zIndex: 20,
+              bgcolor: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(10px)',
               color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.85)',
+                bgcolor: 'rgba(0, 0, 0, 0.9)',
+                transform: 'translateY(-50%) scale(1.05)',
               },
-              width: 40,
-              height: 40,
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+              width: 44,
+              height: 44,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+              transition: 'all 0.2s ease',
             }}
           >
-            <FontAwesomeIcon icon={faChevronRight} />
+            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '16px' }} />
           </IconButton>
         )}
 
@@ -353,44 +419,39 @@ const PreSummaryPanel = (props) => {
         <Box
           sx={{
             position: 'absolute',
-            bottom: -8,
+            bottom: 0,
             left: 0,
             right: 0,
-            height: 4,
+            height: 3,
             bgcolor: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: 1,
             overflow: 'hidden',
-            mx: 2,
+            zIndex: 10,
           }}
         >
           <Box
             sx={{
               height: '100%',
-              width: scrollContainerRef.current
-                ? `${(scrollContainerRef.current.clientWidth / scrollContainerRef.current.scrollWidth) * 100}%`
-                : '10%',
-              bgcolor: 'primary.main',
-              borderRadius: 1,
+              bgcolor: '#f44336',
               transition: 'transform 0.1s ease-out',
-              transform: scrollContainerRef.current
-                ? `translateX(${(scrollPosition / scrollContainerRef.current.scrollWidth) * 100 * (scrollContainerRef.current.scrollWidth / scrollContainerRef.current.clientWidth)}%)`
-                : 'translateX(0%)',
+              boxShadow: '0 0 8px rgba(244, 67, 54, 0.6)',
+              ...scrollIndicatorStyle,
             }}
           />
         </Box>
 
         {/* Main scroll container */}
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
-            bgcolor: 'rgb(17, 18, 19)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px 16px 0 0',
+            background: 'rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px 24px 0 0',
             overflow: 'hidden',
-            '@supports not (backdrop-filter: blur(10px))': {
-              bgcolor: 'rgba(30, 30, 30, 0.5)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            '@supports not (backdrop-filter: blur(20px))': {
+              background: 'rgba(0, 0, 0, 0.35)',
             },
           }}
         >
@@ -399,177 +460,205 @@ const PreSummaryPanel = (props) => {
             sx={{
               display: 'flex',
               overflowX: 'auto',
-              py: 2,
               '&::-webkit-scrollbar': {
-                width: '8px',
-                height: '8px',
+                height: '6px',
               },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#ff0000',
-                borderRadius: '4px',
-                '&:hover': {
-                  background: '#cc0000',
-                },
-              },
-              scrollbarColor: '#ff0000 rgba(255, 255, 255, 0.1)',
-              scrollbarWidth: 'thin',
+             
             }}
           >
             {/* ROOM NAME */}
             <DataCard
               icon={faCat}
-              label="Name / Ticker"
-              value={`${roomInfo?.name} `}
+              label="Token Details"
               tooltip="Room name and associated ticker symbol"
-              width={200}
+              width={220}
             >
-              <Typography sx={{ fontSize: '1rem', fontWeight: 500, color: 'text.primary' }}>
-                {roomInfo?.name}{' '}
-                <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'text.secondary' }}>
-                  / ${roomInfo?.ticker}
-                </span>
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
+                  {roomInfo?.name}
+                </Typography>
+                <Chip
+                  label={`$${roomInfo?.ticker}`}
+                  size="small"
+                  sx={{
+                    backgroundColor: '#f44336',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '0.7rem',
+                    height: 20,
+                    alignSelf: 'flex-start',
+                  }}
+                />
+              </Box>
             </DataCard>
 
             {/* LIQUIDITY */}
             <DataCard
               icon={faWater}
-              label="Liquidity"
-              value={`${parseFloat(bankroll).toFixed(3)} SOL`}
-              tooltip={
-                isLowBankroll
-                  ? `Available liquidity: ${convertToCurrency(Number(bankroll), solPrice)} - Low liquidity may prevent bet execution`
-                  : `Available liquidity: ${convertToCurrency(Number(bankroll), solPrice)}`
-              }
+              label="Liquidity Pool"
+              value={memoizedValues.liquidityValue}
+              tooltip={memoizedValues.liquidityTooltip}
               warning={isLowBankroll}
-              color={isLowBankroll ? '#ff4444' : 'text.primary'}
+              color={isLowBankroll ? '#f44336' : '#2196f3'}
+              width={180}
             />
-
-            {/* RETURN */}
-            {roomInfo.game_type !== 'Custom' && (
-              <DataCard
-                icon={faDollarSign}
-                label="Return"
-                value={`${(roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn()).toFixed(4)} SOL`}
-                tooltip={
-                  roomInfo.game_type === 'Quick Shoot'
-                    ? 'Quick Shoot Return: (Bet / (Game Type - 1) + Bet) × (1 - Fees)'
-                    : 'RPS Return: (Bet × 2) × (1 - Fees)'
-                }
-                color={
-                  (roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn()) > 0
-                    ? '#03ff3b'
-                    : '#ff0000'
-                }
-              />
-            )}
 
             {/* HOST PROFIT */}
             <DataCard
               icon={faBalanceScale}
-              label="Host Profit"
-              value={isNaN(hostProfit - totalStakes) ? 'N/A' : convertToCurrency(hostProfit - totalStakes, solPrice)}
+              label="Host Performance"
+              value={memoizedValues.netProfit}
               tooltip="Net profit: Current bankroll - Initial bankroll"
               warning={!isLowProfit}
-              color={isLowProfit ? '#03ff3b' : '#ff0000'}
+              color={isLowProfit ? '#4caf50' : '#f44336'}
+              width={200}
             />
 
             {/* TAX */}
             <DataCard
               icon={faPercentage}
-              label="Tax"
-              value={roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`}
+              label="Fee Structure"
               tooltip="Host's fees on winnings"
               warning={isHighCommission}
-              color="text.primary"
-            />
+              width={160}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: isHighCommission ? '#ff9800' : '#ffffff',
+                  }}
+                >
+                  {memoizedValues.taxDisplay}
+                </Typography>
+                {isHighCommission && (
+                  <Chip
+                    label="HIGH"
+                    size="small"
+                    sx={{
+                      backgroundColor: '#ff9800',
+                      color: '#000',
+                      fontWeight: 700,
+                      fontSize: '0.6rem',
+                      height: 18,
+                    }}
+                  />
+                )}
+              </Box>
+            </DataCard>
 
             {/* HEALTH */}
             <DataCard
               icon={faHandHoldingUsd}
-              label="Health"
-              tooltip="Room health percentage or Hard Cap value. At 0%, the game ends and converts to a tradeable token"
-              width={150}
+              label="Token Health"
+              tooltip="Room health percentage. At 0%, the game ends and converts to a tradeable token"
+              width={180}
             >
-              <Box position="relative" display="inline-flex">
-                <CircularProgress
-                  variant="determinate"
-                  value={100 - payoutPercentage}
-                  color="error"
-                  size={35}
-                  thickness={4}
-                />
-                <Box
-                  top={0}
-                  left={0}
-                  bottom={0}
-                  right={0}
-                  position="absolute"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Typography
-                    variant="caption"
-                    component="div"
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box position="relative" display="inline-flex">
+                  <CircularProgress
+                    variant="determinate"
+                    value={100 - payoutPercentage}
                     sx={{
-                      fontSize: '0.6rem',
-                      fontWeight: 'bold',
-                      color: 'text.primary',
+                      color: memoizedValues.healthPercentage > 70 
+                        ? '#4caf50' 
+                        : memoizedValues.healthPercentage > 40 
+                          ? '#ff9800' 
+                          : '#f44336',
+                    }}
+                    size={40}
+                    thickness={5}
+                  />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    {`${Math.round(100 - payoutPercentage)}%`}
-                  </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        color: '#ffffff',
+                      }}
+                    >
+                      {`${memoizedValues.healthPercentage}%`}
+                    </Typography>
+                  </Box>
                 </Box>
+                <Chip
+                  label={
+                    memoizedValues.healthPercentage > 70 
+                      ? 'Excellent' 
+                      : memoizedValues.healthPercentage > 40 
+                        ? 'Moderate' 
+                        : 'Critical'
+                  }
+                  size="small"
+                  sx={{
+                    backgroundColor: memoizedValues.healthPercentage > 70 
+                      ? '#4caf50' 
+                      : memoizedValues.healthPercentage > 40 
+                        ? '#ff9800' 
+                        : '#f44336',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '0.7rem',
+                  }}
+                />
               </Box>
             </DataCard>
 
             {/* BATTLES */}
             <DataCard
               icon={faShieldAlt}
-              label="Battles"
+              label="Battle Count"
               value={battles}
               tooltip="Total number of battles conducted in this room"
-              color="text.primary"
+              color="#9c27b0"
+              width={160}
             />
 
             {/* LIKES / DISLIKES */}
             <LikeDislikeBar likes={roomInfo?.likes?.length || 0} dislikes={roomInfo?.dislikes?.length || 0} />
 
-            {/* WIN CHANCE */}
-            {roomInfo.game_type !== 'Custom' && (
-              <DataCard
-                icon={faDice}
-                label="Win Chance"
-                value={`${winChance}%`}
-                tooltip="Estimated probability of winning based on game mechanics"
-                color="text.primary"
-              />
-            )}
-
             {/* STAKING REWARDS */}
             <DataCard
               icon={faCoins}
               label="Staking Rewards"
-              value={convertToCurrency(pr, solPrice)}
+              value={memoizedValues.stakingRewards}
               tooltip="Rewards distributed every 3 hours at 0.0001% of bankroll for public rooms"
-              color="#00fff5"
+              color="#00bcd4"
+              width={200}
             />
 
             {/* CREATOR */}
             <DataCard
               icon={faUser}
-              label="Creator"
+              label="Room Creator"
               tooltip="Profile of the user who created this room"
-              width={150}
+              width={180}
             >
-              <Box onClick={() => handleOpenPlayerModal(creator_id)} sx={{ cursor: 'pointer' }}>
+              <Box 
+                onClick={handleCreatorClick} 
+                sx={{ 
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                  }
+                }}
+              >
                 <Avatar
-                  className="avatar"
                   src={creator_avatar}
                   user_id={creator_id}
                   username={username}
@@ -578,6 +667,11 @@ const PreSummaryPanel = (props) => {
                   elite={elite}
                   alt=""
                   darkMode={isDarkMode}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                  }}
                 />
               </Box>
             </DataCard>
@@ -585,47 +679,60 @@ const PreSummaryPanel = (props) => {
             {/* STATUS */}
             <DataCard
               icon={faInfoCircle}
-              label="Status"
-              value={status}
-              tooltip="Current operational status of the room (e.g., Open, Paused, Finished)"
-              color="text.primary"
-            />
+              label="Room Status"
+              tooltip="Current operational status of the room"
+              width={160}
+            >
+              <Chip
+                label={status}
+                size="small"
+                sx={{
+                  backgroundColor: getStatusColor(status),
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              />
+            </DataCard>
 
             {/* CREATED */}
             <DataCard
               icon={faCalendarAlt}
-              label="Created"
-              value={
-                roomInfo?.created_at && isValid(new Date(roomInfo.created_at))
-                  ? formatDistanceToNow(new Date(roomInfo.created_at), { addSuffix: true })
-                  : 'Invalid Date'
-              }
+              label="Created Date"
+              value={memoizedValues.createdDate}
               tooltip="Timestamp of when the room was created"
-              color="text.primary"
+              color="#795548"
+              width={180}
             />
 
             {/* GAME TYPE */}
             <DataCard
               icon={faRobot}
-              label="Game Type"
+              label="Game Mode"
               value={roomInfo?.game_type}
-              tooltip="Type of game"
-              color="text.primary"
+              tooltip="Type of game mechanism used in this room"
+              color="#673ab7"
+              width={160}
             />
 
             {/* ROOM ID */}
             <DataCard
               icon={faSortNumericUp}
-              label="ID"
+              label="Room ID"
               value={roomInfo?.room_name}
               tooltip="Unique identifier for this room"
-              color="text.primary"
+              color="#607d8b"
+              width={160}
             />
           </Box>
         </Paper>
       </Box>
     </ThemeProvider>
   );
-};
+});
+
+PreSummaryPanel.displayName = 'PreSummaryPanel';
 
 export default PreSummaryPanel;

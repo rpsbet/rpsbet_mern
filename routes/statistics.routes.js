@@ -9,7 +9,6 @@ const Receipt = require('../model/Receipt');
 const Transaction = require('../model/Transaction');
 const Item = require('../model/Item');
 const GameLog = require('../model/GameLog');
-const Vault = require('../model/Vault');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const SystemSetting = require('../model/SystemSetting');
@@ -703,8 +702,7 @@ router.get('/get-equity-distribution', async (req, res) => {
     let totalBalance = 0;
 
     const userBalances = await Promise.all(users.map(async (user) => {
-      const vault = await Vault.findOne({ user: user._id });
-      const userBalance = user.balance + (vault ? vault.balance : 0);
+      const userBalance = user.balance;
       // If the user's balance is greater than or equal to 10, return user info
       if (userBalance >= 0.005) {
         return {

@@ -1,6 +1,4 @@
 import {
-  RPSBETITEMS_LOADED,
-  QSBETITEMS_LOADED,
   ACTION_ROOM,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
@@ -60,8 +58,6 @@ import {
 
 const initialState = {
   highlightedRooms: [],
-  rpsbetitems: [],
-  qsbetitems: [],
   isActiveLoadingOverlay: false,
   transactionComplete: false,
   socket: null,
@@ -234,6 +230,7 @@ export default function (state = initialState, action) {
         highlightedRooms: action.payload,
       };
     case UPDATE_CREATOR_PROMPT:
+      console.log('Updating creator prompt:', action.payload);
       return {
         ...state,
         creator_prompt: action.payload,
@@ -351,18 +348,6 @@ export default function (state = initialState, action) {
       return {
         ...state,
         comments: action.payload,
-        error: null
-      };
-    case QSBETITEMS_LOADED:
-      return {
-        ...state,
-        qsbetitems: action.payload.data,
-        error: null
-      };
-    case RPSBETITEMS_LOADED:
-      return {
-        ...state,
-        rpsbetitems: action.payload.data,
         error: null
       };
     case COMMENTS_LOAD_FAILED:
