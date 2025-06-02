@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { SnackbarProvider } from 'notistack';
+import { PrivyProvider } from '@privy-io/react-auth';
 import { Alert } from '@mui/material';
 import store from './redux/store';
 import App from './App';
@@ -152,23 +153,34 @@ const theme = getTheme(currentMode);
 const container = document.getElementById('root');
 const root = createRoot(container);
 root.render(
-  <Provider store={store}>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <SnackbarProvider
-        maxSnack={10}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        autoHideDuration={1000}
-        style={{ transform: 'translateY(-90px)' }}
-        Components={{
-          success: CustomSuccessSnackbar, // Map success variant to custom Alert
-        }}
-      >
-        <BrowserRouter>
-          <App />
-          <MessageBar />
-        </BrowserRouter>
-      </SnackbarProvider>
-    </ThemeProvider>
-  </Provider>
+  <PrivyProvider
+    appId="cm9i6xoyw033ll80ntlqnl78e"
+    config={{
+      loginMethods: ['wallet', 'google', 'email'],
+      appearance: {
+        theme: 'dark', 
+        showWalletLoginFirst: true
+      },
+    }}
+  >
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <SnackbarProvider
+          maxSnack={10}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          autoHideDuration={1000}
+          style={{ transform: 'translateY(-90px)' }}
+          Components={{
+            success: CustomSuccessSnackbar, // Map success variant to custom Alert
+          }}
+        >
+          <BrowserRouter>
+            <App />
+            <MessageBar />
+          </BrowserRouter>
+        </SnackbarProvider>
+      </ThemeProvider>
+    </Provider>
+  </PrivyProvider>
 );
