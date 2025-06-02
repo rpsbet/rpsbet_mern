@@ -3,7 +3,6 @@ const cron = require('node-cron');
 const User = require('../../model/User');
 const SystemSetting = require('../../model/SystemSetting');
 const Receipts = require('../../model/Receipt');
-const Vaults = require('../../model/Vault');
 
 const DEFAULT_THRESHOLD = 4.269;
 const ACTIVE_USER_THRESHOLD = 6.369;
@@ -12,7 +11,6 @@ const EXCLUDED_USERS = ['Tydrellinbg', 'SYSTEM', 'pimpedpistols', 'Bearbland11']
 async function getUserFinancialData(userId) {
   const [receipts, vault] = await Promise.all([
     Receipts.find({ user_id: userId }),
-    Vaults.findOne({ user: userId })
   ]);
   
   return {

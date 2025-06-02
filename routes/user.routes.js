@@ -14,7 +14,6 @@ const check_access_time = require('../helper/util/checkAccessTime');
 // User Model
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
-const Vault = require('../model/Vault');
 const Notification = require('../model/Notification');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');

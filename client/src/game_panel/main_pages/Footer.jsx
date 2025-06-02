@@ -1,8 +1,8 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXTwitter, faTelegram, faYoutube, faTiktok, faInstagram } from '@fortawesome/free-brands-svg-icons';
-import { Box, Typography, Link, styled, useMediaQuery, useTheme } from '@mui/material';
+import { faXTwitter, faYoutube, faTiktok, faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { Box, Typography, Link, styled, useMediaQuery, useTheme, IconButton, Tooltip } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 
@@ -22,31 +22,96 @@ const FooterContainer = styled(Box)(({ theme, open }) => ({
   bottom: 0,
   left: 0,
   width: open ? 'calc(100vw - 275px)' : 'calc(100vw - 5px)',
+  position: 'relative',
+  padding: '20px 16px',
+  gap: '16px',
 }));
 
-const Address = styled(Box)({
+const SocialIconsContainer = styled(Box)({
   display: 'flex',
-  flexDirection: 'column',
-  textAlign: 'center',
-  fontWeight: '400',
-  margin: '30px 0 20px',
-  textTransform: 'capitalize',
+  alignItems: 'center',
+  gap: '16px',
+  '& a': {
+    color: '#b9bbbe',
+    fontSize: '1.2rem',
+    transition: 'all 0.3s ease',
+    padding: '8px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      color: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    '&[href*="x.com"]:hover': {
+      color: '#1DA1F2',
+    },
+    '&[href*="youtube"]:hover': {
+      color: '#FF0000',
+    },
+    '&[href*="tiktok"]:hover': {
+      color: '#000000',
+    },
+    '&[href*="discord"]:hover': {
+      color: '#5865F2',
+    },
+  },
 });
 
-const LinksContainer = styled(Box)({
+const LinksContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'flex-end',
-});
+  alignItems: 'center',
+  gap: '8px',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+    gap: '12px',
+  },
+}));
 
 const StyledLink = styled(Link)({
-  marginTop: '10px',
   color: '#b9bbbe',
+  textDecoration: 'none',
+  fontSize: '0.75rem',
+  fontWeight: '500',
+  padding: '4px 8px',
+  borderRadius: '4px',
+  transition: 'all 0.2s ease',
   '&:hover': {
-    color: '#b9bbbe',
+    color: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     textDecoration: 'none',
   },
 });
 
+const Separator = styled('span')(({ theme }) => ({
+  color: '#747f8d',
+  margin: '0 4px',
+  [theme.breakpoints.down('sm')]: {
+    display: 'none',
+  },
+}));
+
+const CopyrightText = styled(Typography)({
+  fontSize: '0.65rem',
+  color: '#5a6169',
+  textAlign: 'center',
+  marginTop: '8px',
+});
+
+const BackgroundImage = styled('img')({
+  width: '100%',
+  height: 'auto',
+  filter: 'grayscale(1) opacity(0.3)',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  zIndex: -1,
+  pointerEvents: 'none',
+});
 
 function Footer({ open, style }) {
   const { isDarkMode } = useSelector((state) => ({
@@ -58,29 +123,87 @@ function Footer({ open, style }) {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const handleOpenLeaderboardsModal = () => setShowLeaderboardsModal(true);
   const handleCloseLeaderboardsModal = () => setShowLeaderboardsModal(false);
 
-  const handleOpenTermsModal = () => setShowTermsModal(true);
+  const handleOpenTermsModal = (e) => {
+    e.preventDefault();
+    setShowTermsModal(true);
+  };
   const handleCloseTermsModal = () => setShowTermsModal(false);
 
-  const handleOpenPrivacyModal = () => setShowPrivacyModal(true);
+  const handleOpenPrivacyModal = (e) => {
+    e.preventDefault();
+    setShowPrivacyModal(true);
+  };
   const handleClosePrivacyModal = () => setShowPrivacyModal(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 'sm' is 600px by default
 
-  const fullAddress = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
-  const truncatedAddress = isMobile
-    ? `${fullAddress.slice(0, 6)}...${fullAddress.slice(-4)}`
-    : fullAddress;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const bottomFooterClasses = `bottom-footer ${isDarkMode ? 'dark_mode' : ''}`;
+
+  const socialLinks = [
+    { href: 'https://x.com/catsinofun', icon: faXTwitter, label: 'Follow us on X (Twitter)' },
+    { href: 'https://www.youtube.com/@catsinofun', icon: faYoutube, label: 'Subscribe to our YouTube' },
+    { href: 'https://www.tiktok.com/@catsinofun', icon: faTiktok, label: 'Follow us on TikTok' },
+    { href: 'https://discord.gg/2yU5hEmWVh', icon: faDiscord, label: 'Join our Discord community' },
+  ];
 
   return (
     <div className={bottomFooterClasses} style={style}>
       <FooterContainer id="footer-container" open={open}>
+        {/* Social Media Icons */}
+        <SocialIconsContainer>
+          {socialLinks.map((social, index) => (
+            <Tooltip key={index} title={social.label} arrow>
+              <a 
+                href={social.href} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label={social.label}
+              >
+                <FontAwesomeIcon icon={social.icon} />
+              </a>
+            </Tooltip>
+          ))}
+        </SocialIconsContainer>
+
+        {/* Navigation Links */}
+        <LinksContainer>
+          {isMobile && (
+            <>
+              <StyledLink
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleOpenLeaderboardsModal();
+                }}
+              >
+                Leaderboards
+              </StyledLink>
+              <Separator>•</Separator>
+            </>
+          )}
+          <StyledLink href="#terms" onClick={handleOpenTermsModal}>
+            Terms of Service
+          </StyledLink>
+          <Separator>•</Separator>
+          <StyledLink href="#privacy" onClick={handleOpenPrivacyModal}>
+            Privacy Policy
+          </StyledLink>
+        </LinksContainer>
+
+        {/* Copyright */}
+        <CopyrightText>
+          © {new Date().getFullYear()} Catsino.Fun • All rights reserved.
+        </CopyrightText>
+
+        {/* Background Image */}
+        <BackgroundImage src="/img/bottom-bg.svg" alt="" />
+
+        {/* Modals */}
         {showLeaderboardsModal && (
           <Suspense fallback={<Typography>Loading Leaderboards...</Typography>}>
             <LeaderboardsModal
@@ -90,80 +213,27 @@ function Footer({ open, style }) {
             />
           </Suspense>
         )}
-        <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
-          <a href="https://x.com/catsinofun">
-            <FontAwesomeIcon icon={faXTwitter} />
-          </a>
-          <a href="https://t.me/catsinofun">
-            <FontAwesomeIcon icon={faTelegram} />
-          </a>
-          <a href="https://www.youtube.com/@catsinofun">
-            <FontAwesomeIcon icon={faYoutube} />
-          </a>
-          <a href="https://www.tiktok.com/@catsinofun">
-            <FontAwesomeIcon icon={faTiktok} />
-          </a>
-          <a href="https://www.instagram.com/catsinofun/">
-            <FontAwesomeIcon icon={faInstagram} />
-          </a>
-        </Box>
 
-        <LinksContainer>
-          <StyledLink
-            className="mobile-only"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handleOpenLeaderboardsModal();
-            }}
-          >
-            Leaderboards&nbsp;
-          </StyledLink>
-          <span className="mobile-only"> ✗ </span>&nbsp;
-          <StyledLink href="#terms" onClick={handleOpenTermsModal}>
-            &nbsp;Terms
-          </StyledLink>
-          &nbsp;✗
-          <StyledLink href="#privacy" onClick={handleOpenPrivacyModal}>
-          &nbsp;Privacy
-          </StyledLink>
-        </LinksContainer>
-        {/* <Address
-          onClick={() => {
-            navigator.clipboard.writeText('74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump');
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-          sx={{ cursor: 'pointer' }}
-        >
-          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {truncatedAddress}
-            {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-          </Typography>
-          <Typography variant="caption" sx={{ mt: 1 }}>
-            Click to copy!
-          </Typography>
-        </Address> */}
-        <img src="/img/bottom-bg.svg" alt="bottom footer" style={{ width: '100%', height: 'auto', filter: 'grayscale(1)', position: 'absolute', zIndex: '-1' }} />
+        {showTermsModal && (
+          <Suspense fallback={<Typography>Loading Terms...</Typography>}>
+            <TermsModal
+              modalIsOpen={showTermsModal}
+              closeModal={handleCloseTermsModal}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
+        )}
+
+        {showPrivacyModal && (
+          <Suspense fallback={<Typography>Loading Privacy...</Typography>}>
+            <PrivacyModal
+              modalIsOpen={showPrivacyModal}
+              closeModal={handleClosePrivacyModal}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
+        )}
       </FooterContainer>
-      {showTermsModal && (
-        <Suspense fallback={<Typography>Loading Terms...</Typography>}>
-          <TermsModal
-            modalIsOpen={showTermsModal}
-            closeModal={handleCloseTermsModal}
-            isDarkMode={isDarkMode}
-          />
-        </Suspense>
-      )}
-      {showPrivacyModal && (
-        <Suspense fallback={<Typography>Loading Privacy...</Typography>}>
-          <PrivacyModal
-            modalIsOpen={showPrivacyModal}
-            closeModal={handleClosePrivacyModal}
-            isDarkMode={isDarkMode}
-          />
-        </Suspense>
-      )}
     </div>
   );
 }

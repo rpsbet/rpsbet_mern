@@ -21,10 +21,6 @@ import {
   UPDATE_USER_ASSOCIATED_ACCOUNTS,
   CHECK_AND_ADD_WALLET_ADDRESS,
   ALL_TRANSACTIONS,
-  FETCH_RECENT_TRANSACTIONS_SUCCESS,
-  SET_SEVEN_DAY_PROFIT,
-  SET_ONE_DAY_PROFIT,
-  SET_ALL_TIME_PROFIT,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_SPECTATE_MODE,
@@ -42,6 +38,11 @@ import {
   END_LOADING,
   TNX_INCOMPLETE,
   TNX_COMPLETE,
+  API_KEYS_LOADING,
+  API_KEYS_LOADED,
+  API_KEYS_ERROR,
+  API_KEY_GENERATED,
+  API_KEY_REVOKED,
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -181,34 +182,6 @@ export const addBonus = () => async (dispatch) => {
   }
 };
 
-export const getProfitData = () => async dispatch => {
-  try {
-    const res = await axios.get('/auth/profit');
-    if (res.data.success) {
-      const { sevenDayProfit, oneDayProfit, allTimeProfit } = res.data;
-      if (sevenDayProfit !== undefined) {
-        dispatch({ type: SET_SEVEN_DAY_PROFIT, payload: sevenDayProfit });
-      }
-
-      if (oneDayProfit !== undefined) {
-        dispatch({ type: SET_ONE_DAY_PROFIT, payload: oneDayProfit });
-      }
-
-      if (allTimeProfit !== undefined) {
-        dispatch({ type: SET_ALL_TIME_PROFIT, payload: allTimeProfit });
-      }
-
-      return {
-        status: 'success'
-      };
-    }
-  } catch (err) {
-    console.error(err);
-    return {
-      status: 'failed'
-    };
-  }
-};
 
 // Register User
 export const userSignUp = ({
@@ -288,6 +261,107 @@ export const setReferralCode = (referralCode) => async (dispatch) => {
     return { success: false, error: error.message };
   }
 };
+
+export const getApiKeys = () => async (dispatch) => {
+  try {
+    dispatch({ type: API_KEYS_LOADING });
+    
+    const response = await axios.get('/api/api-keys/list');
+    
+    if (response.data.success) {
+      dispatch({
+        type: API_KEYS_LOADED,
+        payload: response.data.apiKeys
+      });
+      return { success: true, apiKeys: response.data.apiKeys };
+    } else {
+      dispatch({
+        type: API_KEYS_ERROR,
+        payload: response.data.error || 'Failed to load API keys'
+      });
+      return { success: false, error: response.data.error };
+    }
+  } catch (error) {
+    console.error('Error fetching API keys:', error);
+    dispatch({
+      type: API_KEYS_ERROR,
+      payload: error.response?.data?.error || 'Failed to load API keys'
+    });
+    dispatch({ type: MSG_WARNING, payload: 'Failed to load API keys' });
+    return { success: false, error: error.message };
+  }
+};
+
+// Generate new API key
+export const generateApiKey = (keyData) => async (dispatch) => {
+  try {
+    const response = await axios.post('/api/api-keys/generate', keyData);
+    
+    if (response.data.success) {
+      dispatch({
+        type: API_KEY_GENERATED,
+        payload: response.data.apiKey
+      });
+      dispatch({ type: MSG_SUCCESS, payload: 'API key generated successfully!' });
+      return { success: true, apiKey: response.data.apiKey };
+    } else {
+      dispatch({ type: MSG_ERROR, payload: response.data.error || 'Failed to generate API key' });
+      return { success: false, error: response.data.error };
+    }
+  } catch (error) {
+    console.error('Error generating API key:', error);
+    const errorMessage = error.response?.data?.error || 'Failed to generate API key';
+    dispatch({ type: MSG_ERROR, payload: errorMessage });
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Revoke API key
+export const revokeApiKey = (keyId) => async (dispatch) => {
+  try {
+    const response = await axios.delete(`/api/api-keys/${keyId}`);
+    
+    if (response.data.success) {
+      dispatch({
+        type: API_KEY_REVOKED,
+        payload: keyId
+      });
+      dispatch({ type: MSG_SUCCESS, payload: 'API key revoked successfully!' });
+      return { success: true };
+    } else {
+      dispatch({ type: MSG_ERROR, payload: response.data.error || 'Failed to revoke API key' });
+      return { success: false, error: response.data.error };
+    }
+  } catch (error) {
+    console.error('Error revoking API key:', error);
+    const errorMessage = error.response?.data?.error || 'Failed to revoke API key';
+    dispatch({ type: MSG_ERROR, payload: errorMessage });
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Update API key permissions
+export const updateApiKeyPermissions = (keyId, permissions) => async (dispatch) => {
+  try {
+    const response = await axios.put(`/api/api-keys/${keyId}`, { permissions });
+    
+    if (response.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: 'API key permissions updated successfully!' });
+      // Refresh the API keys list
+      dispatch(getApiKeys());
+      return { success: true };
+    } else {
+      dispatch({ type: MSG_ERROR, payload: response.data.error || 'Failed to update API key' });
+      return { success: false, error: response.data.error };
+    }
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    const errorMessage = error.response?.data?.error || 'Failed to update API key';
+    dispatch({ type: MSG_ERROR, payload: errorMessage });
+    return { success: false, error: errorMessage };
+  }
+};
+
 
 export const cancelEliteSubscription = () => async (dispatch) => {
   try {
@@ -616,23 +690,6 @@ export const changeUserName = (newUsername) => async (dispatch) => {
   return { status: 'failed' };
 };
 
-export const vaultDeposit = (amount) => async (dispatch) => {
-  try {
-    const { data } = await axios.post('/user/deposit', { amount });
-
-    if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: 'Successfully added funds to your vault.' });
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error:', error);
-    dispatch({ type: MSG_WARNING, payload: error.message });
-    return { status: 'failed' };
-  }
-};
 
 export const authenticateWithGoogle = (token) => async (dispatch) => {
   try {
@@ -658,62 +715,6 @@ export const authenticateWithGoogle = (token) => async (dispatch) => {
     dispatch({ type: MSG_WARNING, payload: err });
   }
   return { status: 'failed' };
-};
-
-export const vaultWithdraw = (amount) => async (dispatch) => {
-  try {
-    const { data } = await axios.post('/user/withdraw', { amount });
-
-    if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: 'Successfully withdrew funds from your vault.' });
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error:', error);
-    dispatch({ type: MSG_WARNING, payload: error.message });
-    return { status: 'failed' };
-  }
-};
-
-export const fetchVaultBalance = () => async (dispatch) => {
-  try {
-    const { data } = await axios.get('/user/vault');
-
-    if (data.success) {
-      return data.vaultBalance;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-      return null;
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    dispatch({ type: MSG_WARNING, payload: error.message });
-    return null;
-  }
-};
-
-export const fetchRecentVaultTransactions = () => async (dispatch) => {
-  try {
-    const { data } = await axios.get('/user/vault-transactions');
-
-    if (data.success) {
-      dispatch({
-        type: FETCH_RECENT_TRANSACTIONS_SUCCESS,
-        payload: data.transactions
-      });
-      return data.transactions;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-      return null;
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    dispatch({ type: MSG_WARNING, payload: error.message });
-    return null;
-  }
 };
 
 export const changeLink = (link) => async (dispatch) => {

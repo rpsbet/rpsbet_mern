@@ -1,43 +1,94 @@
-import React from 'react';
-import BetArray from './BetArray';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { Box } from '@mui/material';
+import BetAmountInput from '../components/BetAmountInput.jsx';
+import { getRank } from '../util/getRank.js';
 
-const AiPanel = ({ isDarkMode, playSound, bankroll, bet_amount, handle2xButtonClick, handleHalfXButtonClick, handleMaxButtonClick, creator_id, rank, is_betting, rpsbetitems, qsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, updateUserPrompt, strategies, game_type, onChangeState, qs_game_type, betting, handleSwitchChange }) => {
-  let list;
-  switch (game_type) {
-    case 'Quick Shoot':
-      list = qsbetitems;
-      break;
-    default:
-      list = rpsbetitems;
-  }
+const AiPanel = ({ 
+  isDarkMode, 
+  playSound, 
+  bankroll, 
+  bet_amount, 
+  handle2xButtonClick, 
+  handleHalfXButtonClick, 
+  handleMaxButtonClick, 
+  creator_id, 
+  rank: propRank, 
+  is_betting, 
+  rpsbetitems, 
+  qsbetitems, 
+  predictedBetAmount, 
+  roomId, 
+  ai_mode, 
+  user_balance: propUserBalance, 
+  user_id: propUserId, 
+  updateUserStrategy, 
+  updateUserPrompt, 
+  strategies, 
+  game_type, 
+  onChangeState, 
+  qs_game_type, 
+  betting, 
+  handleSwitchChange 
+}) => {
+  
+  // Access Redux state with useSelector
+  const user_balance  = useSelector(state => state.auth.user.balance) || propUserBalance;
+  const user_id       = useSelector(state => state.auth.user._id) || propUserId;
+  const totalWagered  = useSelector(state => state.auth.user.totalWagered);
+
+  // Local component states
+  const [rank, setRank] = useState(propRank || null);
+
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    (async () => {
+      try {
+        if (totalWagered && !propRank) {
+          const computedRank = await getRank(totalWagered);
+          setRank(computedRank);
+        }
+      } catch (err) {
+        console.error('Error during mount:', err);
+      }
+    })();
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, [totalWagered, propRank]);
 
   return (
     <div className="ai-container">
-      <BetArray
-        bankroll={bankroll}
-        handle2xButtonClick={handle2xButtonClick}
-        handleMaxButtonClick={handleMaxButtonClick}
-        handleHalfXButtonClick={handleHalfXButtonClick}
-        onChangeState={onChangeState}
-        isDarkMode={isDarkMode}
-        arrayName={list}
-        playSound={playSound}
-        bet_amount={bet_amount}
-        user_id={user_id}
-        is_betting={is_betting}
-        strategies={strategies}
-        ai_mode={ai_mode}
-        qs_game_type={qs_game_type}
-        rank={rank}
-        betting={betting}
-        predictedBetAmount={predictedBetAmount}
-        creator_id={creator_id}
-        room_id={roomId}
-        updateUserPrompt={updateUserPrompt}
-        user_balance={user_balance}
-        handleSwitchChange={handleSwitchChange}
-        game_type={game_type}
-      />
+      <Box sx={{ position: 'relative', width: '100%', mt: 4, mb: 4 }}>
+        <BetAmountInput 
+          bankroll={bankroll}
+          handle2xButtonClick={handle2xButtonClick}
+          handleMaxButtonClick={handleMaxButtonClick}
+          handleHalfXButtonClick={handleHalfXButtonClick}
+          onChangeState={onChangeState}
+          isDarkMode={isDarkMode}
+          playSound={playSound}
+          bet_amount={bet_amount}
+          user_id={user_id}
+          is_betting={is_betting}
+          strategies={strategies}
+          ai_mode={ai_mode}
+          qs_game_type={qs_game_type}
+          rank={rank}
+          betting={betting}
+          predictedBetAmount={predictedBetAmount}
+          creator_id={creator_id}
+          room_id={roomId}
+          updateUserStrategy={updateUserStrategy}
+          updateUserPrompt={updateUserPrompt}
+          user_balance={user_balance}
+          handleSwitchChange={handleSwitchChange}
+          game_type={game_type}
+        />
+      </Box>
     </div>
   );
 };

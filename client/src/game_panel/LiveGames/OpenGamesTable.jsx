@@ -240,20 +240,20 @@ function OpenGamesTable(props) {
           mr: 3,
           display: 'flex',
           justifyContent: 'flex-start',
-          marginBottom: '10px',
-          gap: '8px',
+          marginBottom: '24px',
+          gap: '12px',
           // Enable horizontal scrolling on mobile
-          overflowX: { xs: 'auto', sm: 'visible' }, // Scroll on xs, no scroll on sm+
-          flexWrap: { xs: 'nowrap', sm: 'wrap' }, // No wrap on xs, wrap on sm+
-          whiteSpace: { xs: 'nowrap', sm: 'normal' }, // Prevent text wrapping on xs
-          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-          scrollbarWidth: { xs: 'thin', sm: 'none' }, // Optional: Thin scrollbar on Firefox
+          overflowX: { xs: 'auto', sm: 'visible' },
+          flexWrap: { xs: 'nowrap', sm: 'wrap' },
+          whiteSpace: { xs: 'nowrap', sm: 'normal' },
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: { xs: 'thin', sm: 'none' },
           '&::-webkit-scrollbar': {
-            height: { xs: '8px', sm: '0px' }, // Optional: Custom scrollbar height
+            height: { xs: '6px', sm: '0px' },
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: { xs: 'rgba(0, 0, 0, 0.2)', sm: 'transparent' }, // Optional: Scrollbar color
-            borderRadius: '4px',
+            backgroundColor: { xs: 'rgba(0, 0, 0, 0.15)', sm: 'transparent' },
+            borderRadius: '3px',
           },
         }}
       >
@@ -264,6 +264,14 @@ function OpenGamesTable(props) {
           color={filter === 'BEAT THE HOUSE' ? 'error' : 'default'}
           variant={filter === 'BEAT THE HOUSE' ? 'filled' : 'outlined'}
           clickable
+          sx={{
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+            '&:hover': {
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+            },
+          }}
         />
         <Chip
           icon={<SchoolIcon sx={{ p: 0.5 }} />}
@@ -272,610 +280,524 @@ function OpenGamesTable(props) {
           color={filter === 'RECENTLY MINTED' ? 'error' : 'default'}
           variant={filter === 'RECENTLY MINTED' ? 'filled' : 'outlined'}
           clickable
+          sx={{
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+            '&:hover': {
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+            },
+          }}
         />
-        {/* <Chip
-          icon={<ExitToAppIcon sx={{ p: 0.5 }} />}
-          label="RECENTLY WD / DP"
-          onClick={() => handleFilterChange('RECENTLY WD / DP')}
-          color={filter === 'RECENTLY WD / DP' ? 'error' : 'default'}
-          variant={filter === 'RECENTLY WD / DP' ? 'filled' : 'outlined'}
-          clickable
-        /> */}
       </Box>
 
       {filter === 'RECENTLY WD / DP' ? (
-        <Grid container spacing={2} sx={{ p: 2 }}>
-          {loadingTransactions ? (
-            Array.from({ length: 4 }).map((_, index) => (
-              <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
-                <Card
-                  sx={{
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    backgroundColor: effectiveIsDarkMode ? '#121212' : 'rgba(0, 0, 0, 0.05)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    height: '100%',
-                  }}
-                >
-                  {/* Avatar */}
-                  <Skeleton
-                    variant="circular"
-                    width={48}
-                    height={48}
+        <Box sx={{ px: 3 }}>
+          <Grid container spacing={3}>
+            {loadingTransactions ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={index}>
+                  <Card
                     sx={{
-                      mb: 2,
-                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                      p: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
+                      borderRadius: '16px',
+                      border: effectiveIsDarkMode 
+                        ? '1px solid rgba(255, 255, 255, 0.08)' 
+                        : '1px solid rgba(0, 0, 0, 0.06)',
+                      boxShadow: effectiveIsDarkMode
+                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                        : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                      height: '220px',
                     }}
-                  />
-
-                  {/* Deposit/Withdraw amount */}
-                  <Skeleton
-                    variant="text"
-                    width="80%"
-                    height={24}
-                    sx={{
-                      mb: 1,
-                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
-
-                  {/* Time */}
-                  <Skeleton
-                    variant="text"
-                    width="40%"
-                    height={16}
-                    sx={{
-                      mb: 2,
-                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
-
-                  {/* View on Solscan button */}
-                  <Skeleton
-                    variant="rounded"
-                    width="80%"
-                    height={36}
-                    sx={{
-                      borderRadius: '8px',
-                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
-                </Card>
-              </Grid>
-            ))
-          ) : recentTransactions.length === 0 ? (
-            <Grid item xs={12}>
-              <Typography variant="body1" align="center">
-                NO RECENT TRANSACTIONS
-              </Typography>
-            </Grid>
-          ) : (
-            recentTransactions.map((transaction) => (
-              <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={transaction._id}>
-                <Box
-                  sx={{
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    background: getColorClass(transaction.amount).bg, // Colored background
-                    backdropFilter: 'blur(12px) saturate(120%)',
-                    borderRadius: '16px',
-                    border: `1px solid ${getColorClass(transaction.amount).border}`, // Colored border
-                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.2), 0 0 10px ${getColorClass(transaction.amount).border}`, // Colored shadow
-                    transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&:before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: `linear-gradient(135deg, ${getColorClass(transaction.amount).bg}, rgba(255,255,255,0.05))`,
-                      pointerEvents: 'none',
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-8px)',
-                      boxShadow: `0 12px 40px rgba(0, 0, 0, 0.3), 0 0 15px ${getColorClass(transaction.amount).border}`,
-                      background: `${getColorClass(transaction.amount).bg.replace('0.15', '0.2')}`, // Slightly stronger on hover
-                    },
-                  }}
-                >
-                  <a style={{ cursor: 'pointer', }} onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenPlayerModal(transaction.user?._id);
-                  }}>
-
-                    <Avatar
-                      alt={transaction.user?.username}
-                      username={transaction.user?.username}
-                      elite={transaction.user?.elite}
-                      src={transaction.user?.avatar}
-
+                  >
+                    <Skeleton
+                      variant="circular"
+                      width={56}
+                      height={56}
                       sx={{
-                        cursor: 'pointer',
-                        width: 48,
-                        height: 48,
-                        border: `2px solid ${getColorClass(transaction.amount).border}`, // Colored avatar border
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          transform: 'scale(1.15) rotate(5deg)',
-                          borderColor: getColorClass(transaction.amount).text,
-                          boxShadow: `0 0 15px ${getColorClass(transaction.amount).border}`,
-                        },
+                        mb: 2,
+                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                       }}
                     />
-                  </a>
-
-                  <Typography
-                    component="span"
-                    sx={{
-                      mt: 1.5,
-                      fontWeight: 'bold',
-                      fontSize: '1.1rem',
-                      color: '#ffffff', // White for readability
-                      textShadow: `0 2px 4px rgba(0,0,0,0.3), 0 0 8px ${getColorClass(transaction.amount).text}`, // Colored glow
+                    <Skeleton
+                      variant="text"
+                      width="85%"
+                      height={24}
+                      sx={{
+                        mb: 1,
+                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Skeleton
+                      variant="text"
+                      width="50%"
+                      height={16}
+                      sx={{
+                        mb: 3,
+                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Skeleton
+                      variant="rounded"
+                      width="90%"
+                      height={40}
+                      sx={{
+                        borderRadius: '12px',
+                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                  </Card>
+                </Grid>
+              ))
+            ) : recentTransactions.length === 0 ? (
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 8,
+                    px: 3,
+                  }}
+                >
+                  <Typography 
+                    variant="h6" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontWeight: 500,
+                      letterSpacing: '0.5px',
                     }}
                   >
-                    {transaction.amount > 0
-                      ? `DEPOSITED ${convertToCurrency(transaction.amount, effectiveSolPrice)}`
-                      : `WITHDREW ${convertToCurrency(Math.abs(transaction.amount), effectiveSolPrice)}`}
+                    NO RECENT TRANSACTIONS
                   </Typography>
-                  <Typography
-                    component="span"
+                </Box>
+              </Grid>
+            ) : (
+              recentTransactions.map((transaction) => (
+                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={transaction._id}>
+                  <Card
                     sx={{
-                      fontSize: '0.75rem',
-                      color: 'rgba(255, 255, 255, 0.8)', // Slightly off-white for contrast
-                      mt: 0.5,
-                    }}
-                  >
-                    {customFromNow(transaction.created_at)}
-                  </Typography>
-                  <Link
-                    href={`https://solscan.io/tx/${transaction.hash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      mt: 1.5,
-                      fontSize: '0.85rem',
-                      color: '#ffffff', // White for readability
-                      textDecoration: 'none',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      background: `${getColorClass(transaction.amount).bg.replace('0.15', '0.25')}`, // Slightly stronger bg
-                      border: `1px solid ${getColorClass(transaction.amount).border}`,
-                      transition: 'all 0.2s ease',
+                      p: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
+                      borderRadius: '16px',
+                      border: effectiveIsDarkMode 
+                        ? '1px solid rgba(255, 255, 255, 0.08)' 
+                        : '1px solid rgba(0, 0, 0, 0.06)',
+                      boxShadow: effectiveIsDarkMode
+                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                        : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                      height: '220px',
+                      transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                      cursor: 'pointer',
                       '&:hover': {
-                        background: getColorClass(transaction.amount).text,
-                        color: '#ffffff',
-                        transform: 'scale(1.05)',
-                        boxShadow: `0 0 10px ${getColorClass(transaction.amount).text}`,
+                        boxShadow: effectiveIsDarkMode
+                          ? '0 8px 32px rgba(0, 0, 0, 0.4)'
+                          : '0 8px 32px rgba(0, 0, 0, 0.12)',
+                        borderColor: getColorClass(transaction.amount).border,
                       },
                     }}
                   >
-                    View on Solscan
-                  </Link>
-                </Box>
-              </Grid>
-            ))
-          )}
-        </Grid>
+                    <Box
+                      sx={{ cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenPlayerModal(transaction.user?._id);
+                      }}
+                    >
+                      <Avatar
+                        alt={transaction.user?.username}
+                        username={transaction.user?.username}
+                        elite={transaction.user?.elite}
+                        src={transaction.user?.avatar}
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          mb: 2,
+                          border: `2px solid ${getColorClass(transaction.amount).border}`,
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                            boxShadow: `0 0 20px ${getColorClass(transaction.amount).border}`,
+                          },
+                        }}
+                      />
+                    </Box>
+
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '1.1rem',
+                        color: getColorClass(transaction.amount).text,
+                        textAlign: 'center',
+                        mb: 1,
+                        letterSpacing: '0.3px',
+                      }}
+                    >
+                      {transaction.amount > 0
+                        ? `DEPOSITED ${convertToCurrency(transaction.amount, effectiveSolPrice)}`
+                        : `WITHDREW ${convertToCurrency(Math.abs(transaction.amount), effectiveSolPrice)}`}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        fontSize: '0.85rem',
+                        mb: 3,
+                        opacity: 0.8,
+                      }}
+                    >
+                      {customFromNow(transaction.created_at)}
+                    </Typography>
+
+                    <Link
+                      href={`https://solscan.io/tx/${transaction.hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        textDecoration: 'none',
+                        width: '100%',
+                        mt: 'auto',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: '100%',
+                          py: 1.5,
+                          px: 2,
+                          borderRadius: '12px',
+                          backgroundColor: getColorClass(transaction.amount).bg,
+                          border: `1px solid ${getColorClass(transaction.amount).border}`,
+                          color: '#ffffff',
+                          textAlign: 'center',
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          letterSpacing: '0.3px',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: getColorClass(transaction.amount).text,
+                            transform: 'scale(1.02)',
+                            boxShadow: `0 4px 16px ${getColorClass(transaction.amount).border}`,
+                          },
+                        }}
+                      >
+                        View on Solscan
+                      </Box>
+                    </Link>
+                  </Card>
+                </Grid>
+              ))
+            )}
+          </Grid>
+        </Box>
       ) : isLiveGames ? (
         <div className="table main-game-table open-games">
           {displayedRooms.length === 0 || effectiveLoading ? (
-              <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
+            <Box sx={{ px: 3 }}>
+              <Grid container spacing={3}>
                 {Array.from({ length: 9 }).map((_, index) => (
                   <Grid
                     item
                     xs={12}
                     sm={6}
                     md={4}
+                    lg={4}
+                    xl={4}
                     key={index}
-                    sx={{
-                      flexBasis: { xs: '100%' },
-                      maxWidth: { xs: '100%' },
-                      flexGrow: 1,
-                    }}
                   >
                     <Card
                       sx={{
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        padding: '16px',
-                        borderRadius: '16px',
-                        backgroundColor: effectiveIsDarkMode ? '#121212' : '#FFFFFF',
+                        p: 3,
+                        borderRadius: '20px',
+                        backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
+                        border: effectiveIsDarkMode 
+                          ? '1px solid rgba(255, 255, 255, 0.08)' 
+                          : '1px solid rgba(0, 0, 0, 0.06)',
                         boxShadow: effectiveIsDarkMode
-                          ? '0 2px 8px rgba(0, 0, 0, 0.5)'
-                          : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                        overflow: 'hidden',
+                          ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                          : '0 4px 20px rgba(0, 0, 0, 0.08)',
                       }}
                     >
-                      {/* Header section with image and title */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: '8px', mr: 2 }} />
+                      {/* Header section */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                        <Skeleton variant="rounded" width={52} height={52} sx={{ borderRadius: '12px', mr: 2 }} />
                         <Box sx={{ flexGrow: 1 }}>
-                          <Skeleton variant="text" width="70%" height={24} sx={{ mb: 0.5 }} />
-                          <Skeleton variant="text" width="50%" height={16} />
+                          <Skeleton variant="text" width="75%" height={24} sx={{ mb: 1 }} />
+                          <Skeleton variant="text" width="55%" height={16} />
                         </Box>
-                        <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '8px' }} />
+                        <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: '12px' }} />
                       </Box>
 
-                      {/* Battle section with avatars and center icon */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, mt: 1 }}>
+                      {/* Battle section */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                         <Box sx={{ display: 'flex' }}>
-                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px' }} />
-                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px', ml: -1 }} />
+                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
+                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', ml: -1 }} />
                         </Box>
-                        <Skeleton variant="circular" width={40} height={40} />
+                        <Skeleton variant="circular" width={44} height={44} />
                         <Box sx={{ display: 'flex' }}>
-                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px', mr: -1 }} />
-                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px' }} />
+                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', mr: -1 }} />
+                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
                         </Box>
                       </Box>
 
                       {/* Stats section */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Skeleton
-                          variant="rounded"
-                          width="30%"
-                          height={60}
-                          sx={{ borderRadius: '12px' }}
-                        />
-                        <Skeleton
-                          variant="rounded"
-                          width="30%"
-                          height={60}
-                          sx={{ borderRadius: '12px' }}
-                        />
-                        <Skeleton
-                          variant="rounded"
-                          width="30%"
-                          height={60}
-                          sx={{ borderRadius: '12px' }}
-                        />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+                        <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
+                        <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
+                        <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
                       </Box>
 
-                      {/* Health bar and likes section */}
+                      {/* Health bar section */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ width: '60%' }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Skeleton variant="text" width="25%" height={14} />
                             <Skeleton variant="text" width="20%" height={14} />
-                            <Skeleton variant="text" width="15%" height={14} />
                           </Box>
-                          <Skeleton variant="rounded" width="100%" height={8} sx={{ borderRadius: '20px' }} />
+                          <Skeleton variant="rounded" width="100%" height={10} sx={{ borderRadius: '20px' }} />
                         </Box>
-                        <Box sx={{ width: '35%', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                          <Skeleton variant="circular" width={24} height={24} />
-                          <Skeleton variant="circular" width={24} height={24} />
-                          <Skeleton variant="circular" width={24} height={24} />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Skeleton variant="circular" width={28} height={28} />
+                          <Skeleton variant="circular" width={28} height={28} />
+                          <Skeleton variant="circular" width={28} height={28} />
                         </Box>
                       </Box>
                     </Card>
                   </Grid>
                 ))}
               </Grid>
+            </Box>
           ) : displayedRooms.length === 0 ? (
-            <div className="dont-have-game-msg">
-              <div>NO LIVE GAMES, GO TO 'BE THE HOUSE' TO CREATE ONE</div>
-            </div>
-          ) : (
-            <Grid
-              container
-              className="grid-container"
-              spacing={1}
-              style={{}}
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 12,
+                px: 3,
+              }}
             >
-              {displayedRooms.map((row, index) => {
-                const progressPercentage = row.endgame_amount
-                  ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
-                  : 0;
+              <Typography 
+                variant="h5" 
+                color="text.secondary"
+                sx={{ 
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                }}
+              >
+                NO LIVE GAMES, GO TO 'BE THE HOUSE' TO CREATE ONE
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ px: 3 }}>
+              <Grid container spacing={3}>
+                {displayedRooms.map((row, index) => {
+                  const progressPercentage = row.endgame_amount
+                    ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
+                    : 0;
 
-                const isFirstItem = index === 0;
+                  const isFirstItem = index === 0;
 
-                return (
-                  <Grid
-                    item
-                    xs={12}
-                    key={row._id}
-                    sx={{
-                      flexBasis: '100% !important',
-                      maxWidth: '100% !important',
-                      flexGrow: 1,
-                      padding: '8px',
-                      position: 'relative',
-                    }}
-                  >
-                    {isFirstItem && (
-                      <>
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: '-15px',
-                            left: '20px',
-                            width: '50px',
-                            height: '50px',
-                            zIndex: 10,
-                            transform: 'rotate(-35deg)',
-                            filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))',
-                          }}
-                        >
-
-                        </Box>
-                      </>
-                    )}
-
-                    <Box
-                      sx={{
-                        position: 'relative',
-                        borderRadius: '16px',
-                        ...(isFirstItem && {
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: '-4px',
-                            left: '-4px',
-                            right: '-4px',
-                            bottom: '-4px',
-                            borderRadius: '18px',
-                            background: 'linear-gradient(45deg, #ff0000, #ff7300,rgb(255, 0, 93), #ff7300, #ff0000)',
-                            backgroundSize: '300% 300%',
-                            zIndex: 0,
-                            boxShadow: '0 0 2px rgba(255, 115, 0, 0.7)',
-                          },
-                          '&:hover::before': {
-                            boxShadow: '0 0 4px rgba(255, 115, 0, 0.9)',
-                          },
-                          '@keyframes gradientBorder': {
-                            '0%': {
-                              backgroundPosition: '0% 0%',
-                              top: '-3px',
-                              left: '-3px',
-                              right: '-3px',
-                              bottom: '-3px',
-                            },
-                            '25%': {
-                              backgroundPosition: '100% 0%',
-                              top: '-3px',
-                              left: '-3px',
-                              right: '-3px',
-                              bottom: '-3px',
-                            },
-                            '50%': {
-                              backgroundPosition: '100% 100%',
-                              top: '-3px',
-                              left: '-3px',
-                              right: '-3px',
-                              bottom: '-3px',
-                            },
-                            '75%': {
-                              backgroundPosition: '0% 100%',
-                              top: '-3px',
-                              left: '-3px',
-                              right: '-3px',
-                              bottom: '-3px',
-                            },
-                            '100%': {
-                              backgroundPosition: '0% 0%',
-                              top: '-3px',
-                              left: '-3px',
-                              right: '-3px',
-                              bottom: '-3px',
-                            },
-                          },
-                        }),
-                      }}
+                  return (
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      md={4}
+                      lg={4}
+                      xl={4}
+                      key={row._id}
                     >
-                      <Card
-                        className={`table-row ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''}`}
-                        onClick={(event) => {
-                          if (!event.defaultPrevented) {
-                            joinRoom({
-                              id: row._id,
-                              roomStatus: row.status,
-                            });
-                          }
-                        }}
+                      <Box
                         sx={{
-                          width: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: '20px',
-                          borderRadius: '16px',
-                          background: 'rgba(0, 0, 0, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          transition: 'all 0.3s ease',
                           position: 'relative',
-                          overflow: 'hidden',
-                          zIndex: 1,
-                          '@supports not (backdrop-filter: blur(10px))': {
-                            background: 'rgba(0, 0, 0, 0.4)',
-                          },
-                          '&:hover': {
-                            background: 'rgba(0, 0, 0, 0.3)',
-                            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-                            cursor: 'pointer',
-                          },
-                          '&.highlighted-row': {
-                            background: 'rgba(0, 0, 0, 0.25)',
-                            '@supports not (backdrop-filter: blur(10px))': {
-                              background: 'rgba(0, 0, 0, 0.45)',
-                            },
-                          },
-                          '&:before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: '-50%',
-                            left: '-50%',
-                            width: '200%',
-                            height: '200%',
-                            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
-                            opacity: 0,
-                            transition: 'opacity 0.3s ease',
-                            transform: 'rotate(30deg)',
-                            pointerEvents: 'none',
-                          },
-                          '&:hover:before': {
-                            opacity: 1,
-                          },
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-                          <Box
-                            sx={{
-                              borderRadius: '8px',
-                              overflow: 'hidden',
-                              marginRight: '16px',
-                              border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                              width: 48,
-                              height: 48,
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              background: effectiveIsDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)',
-                            }}
-                          >
-                            <img
-                              src={row.image}
-                              alt={row.name}
-                              style={{ width: 40, height: 40, objectFit: 'cover' }}
-                            />
-                          </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: '1.1rem',
-                                lineHeight: 1.2,
-                                display: 'flex',
-                                alignItems: 'center'
-                              }}
-                            >
-                              {row.name}{' '}
-                              <Typography
-                                component="span"
-                                color="text.secondary"
-                                variant="body2"
-                                sx={{
-                                  ml: 0.75,
-                                  fontWeight: 500,
-                                  opacity: 0.7,
-                                  letterSpacing: '0.5px'
-                                }}
-                              >
-                                ({row.ticker})
-                              </Typography>
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{
-                                fontSize: '0.85rem',
-                                opacity: 0.8,
-                                maxWidth: '300px',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {row.description.length > 24 ? `${row.description.slice(0, 24)}...` : row.description}
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              ml: 'auto',
-                              display: 'flex',
-                              alignItems: 'center',
-                              background: effectiveIsDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.05)',
-                              backdropFilter: 'blur(5px)',
-                              padding: '6px 10px',
-                              borderRadius: '8px',
-                              border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.03)',
-                            }}
-                          >
-                            <img
-                              src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
-                              alt={row.game_type?.short_name}
-                              style={{ width: 20, height: 20 }}
-                            />
-                          </Box>
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 3,
-                            mt: 1,
-                            position: 'relative',
-                            '&:before': {
+                          ...(isFirstItem && {
+                            '&::before': {
                               content: '""',
                               position: 'absolute',
-                              left: '0',
-                              right: '0',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              height: '3px',
-                              background: row.joiners?.length === 0
-                                ? 'rgba(255, 50, 50, 0.9)'
-                                : `linear-gradient(90deg, rgba(255, 50, 50, 0.9) 0%, rgba(255, 50, 50, 0.9) ${row.hosts?.length > row.joiners?.length
-                                  ? Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)
-                                  : row.joiners?.length > row.hosts?.length
-                                    ? Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15)
-                                    : 50
-                                }%, rgba(253, 181, 0, 0.9) ${row.hosts?.length > row.joiners?.length
-                                  ? Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15) + 1
-                                  : row.joiners?.length > row.hosts?.length
-                                    ? Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15) + 1
-                                    : 51
-                                }%, rgba(253, 181, 0, 0.9) 100%)`,
+                              top: '-3px',
+                              left: '-3px',
+                              right: '-3px',
+                              bottom: '-3px',
+                              borderRadius: '23px',
+                              background: 'linear-gradient(45deg, #ff0000, #ff7300, rgb(255, 0, 93), #ff7300, #ff0000)',
+                              backgroundSize: '300% 300%',
                               zIndex: 0,
+                              animation: 'gradientBorder 3s ease-in-out infinite',
+                              boxShadow: '0 0 20px rgba(255, 115, 0, 0.4)',
+                            },
+                            '@keyframes gradientBorder': {
+                              '0%, 100%': { backgroundPosition: '0% 0%' },
+                              '50%': { backgroundPosition: '100% 100%' },
+                            },
+                          }),
+                        }}
+                      >
+                        <Card
+                          onClick={(event) => {
+                            if (!event.defaultPrevented) {
+                              joinRoom({
+                                id: row._id,
+                                roomStatus: row.status,
+                              });
+                            }
+                          }}
+                          sx={{
+                            p: 3,
+                            borderRadius: '20px',
+                            backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
+                            border: effectiveIsDarkMode 
+                              ? '1px solid rgba(255, 255, 255, 0.08)' 
+                              : '1px solid rgba(0, 0, 0, 0.06)',
+                            boxShadow: effectiveIsDarkMode
+                              ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                              : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            zIndex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            '&:hover': {
+                              boxShadow: effectiveIsDarkMode
+                                ? '0 8px 32px rgba(0, 0, 0, 0.4)'
+                                : '0 8px 32px rgba(0, 0, 0, 0.12)',
                             },
                           }}
                         >
-                          {row.hosts?.length > 0 && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
+                          {/* Header */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                            <Box
+                              sx={{
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                mr: 2,
+                                border: effectiveIsDarkMode 
+                                  ? '1px solid rgba(255,255,255,0.1)' 
+                                  : '1px solid rgba(0,0,0,0.08)',
+                                width: 52,
+                                height: 52,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: effectiveIsDarkMode 
+                                  ? 'rgba(255,255,255,0.05)' 
+                                  : 'rgba(0,0,0,0.02)',
+                              }}
+                            >
+                              <img
+                                src={row.image}
+                                alt={row.name}
+                                style={{ width: 44, height: 44, objectFit: 'cover' }}
+                              />
+                            </Box>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontWeight: 700,
+                                  fontSize: '1.1rem',
+                                  lineHeight: 1.2,
+                                  mb: 0.5,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {row.name}
+                                <Typography
+                                  component="span"
+                                  color="text.secondary"
+                                  sx={{
+                                    ml: 1,
+                                    fontSize: '0.9rem',
+                                    fontWeight: 500,
+                                    opacity: 0.7,
+                                  }}
+                                >
+                                  ({row.ticker})
+                                </Typography>
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  fontSize: '0.85rem',
+                                  opacity: 0.8,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {row.description.length > 30 ? `${row.description.slice(0, 30)}...` : row.description}
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                ml: 2,
+                                p: 1.5,
+                                borderRadius: '12px',
+                                backgroundColor: effectiveIsDarkMode 
+                                  ? 'rgba(255,255,255,0.05)' 
+                                  : 'rgba(0,0,0,0.03)',
+                                border: effectiveIsDarkMode 
+                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                  : '1px solid rgba(0,0,0,0.05)',
+                              }}
+                            >
+                              <img
+                                src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
+                                alt={row.game_type?.short_name}
+                                style={{ width: 20, height: 20 }}
+                              />
+                            </Box>
+                          </Box>
+
+                          {/* Battle visualization */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              mb: 3,
+                              position: 'relative',
+                            }}
+                          >
+                            {row.hosts?.length > 0 && (
                               <AvatarGroup
                                 max={2}
                                 sx={{
                                   '& .MuiAvatar-root': {
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: '10px',
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: '12px',
                                     border: 'none',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-                                    background: effectiveIsDarkMode ? '#ffffffe6' : '#f0f0f0',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                                   },
                                   '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                    marginLeft: '-10px',
+                                    marginLeft: '-12px',
                                   },
                                 }}
                               >
-                                {row.hosts.map((host, index) => (
+                                {row.hosts.map((host, hostIndex) => (
                                   <Avatar
-                                    key={index}
+                                    key={hostIndex}
                                     alt={host.username}
                                     username={host.username}
                                     elite={host.elite}
                                     src={host.avatar}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleOpenPlayerModal(row.hosts[index]);
+                                      handleOpenPlayerModal(row.hosts[hostIndex]);
                                     }}
                                     sx={{
                                       cursor: 'pointer',
-                                      transition: 'transform 0.1s',
+                                      transition: 'transform 0.2s',
                                       '&:hover': {
                                         transform: 'scale(1.1)',
                                         zIndex: 10,
@@ -884,505 +806,536 @@ function OpenGamesTable(props) {
                                   />
                                 ))}
                               </AvatarGroup>
-                            </Box>
-                          )}
+                            )}
 
-                          <Box
-                            sx={{
-                              mx: 3,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: 40,
-                              height: 40,
-                              borderRadius: '50%',
-                              background: effectiveIsDarkMode
-                                ? 'linear-gradient(135deg, rgba(40, 52, 66, 0.8), rgba(32, 42, 56, 0.9))'
-                                : 'linear-gradient(135deg, rgba(245, 245, 245, 0.8), rgba(255, 255, 255, 0.9))',
-                              backdropFilter: 'blur(5px)',
-                              boxShadow: effectiveIsDarkMode
-                                ? '0 4px 15px rgba(0, 0, 0, 0.2)'
-                                : '0 4px 15px rgba(0, 0, 0, 0.05)',
-                              border: effectiveIsDarkMode
-                                ? '1px solid rgba(255, 255, 255, 0.05)'
-                                : '1px solid rgba(255, 255, 255, 0.7)',
-                              zIndex: 2,
-                              position: 'relative',
-                              left: `${row.hosts?.length > row.joiners?.length
-                                ? Math.max(-40, (50 - Math.min(50, (row.hosts?.length - row.joiners?.length) * 10)) * -1)
-                                : row.joiners?.length > row.hosts?.length
-                                  ? Math.min(40, Math.min(50, (row.joiners?.length - row.hosts?.length) * 10) - 50)
-                                  : 0
-                                }%`,
-                            }}
-                          >
-                            <Battle
-                              sx={{
-                                fontSize: 22,
-                                color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.7)',
-                              }}
-                            />
-                          </Box>
-
-                          {row.joiners?.length > 0 && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
-                              <AvatarGroup
-                                max={2}
-                                sx={{
-                                  '& .MuiAvatar-root': {
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-                                    background: effectiveIsDarkMode ? '#ffffffe6' : '#f0f0f0',
-                                  },
-                                  '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                    marginLeft: '-10px',
-                                  },
-                                }}
-                              >
-                                {row.joiners.map((joiner, index) => (
-                                  <Avatar
-                                    key={index}
-                                    alt={joiner.username}
-                                    elite={joiner.elite}
-                                    username={joiner.username}
-                                    src={joiner.avatar}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenPlayerModal(row.joiners[index]);
-                                    }}
-                                    sx={{
-                                      cursor: 'pointer',
-                                      transition: 'transform 0.1s',
-                                      '&:hover': {
-                                        transform: 'scale(1.1)',
-                                        zIndex: 10,
-                                      },
-                                    }}
-                                  />
-                                ))}
-                              </AvatarGroup>
-                            </Box>
-                          )}
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            mb: 3,
-                            px: 1
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              textAlign: 'center',
-                              padding: '10px 16px',
-                              borderRadius: '12px',
-                              background: effectiveIsDarkMode
-                                ? 'rgba(0, 0, 0, 0.15)'
-                                : 'rgba(0, 0, 0, 0.03)',
-                              backdropFilter: 'blur(5px)',
-                              border: effectiveIsDarkMode
-                                ? '1px solid rgba(255, 255, 255, 0.05)'
-                                : '1px solid rgba(0, 0, 0, 0.03)',
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                fontSize: '0.7rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                fontWeight: 500,
-                                opacity: 0.7
-                              }}
-                            >
-                              Liquidity
-                            </Typography>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                color: getColorClass(row.user_bet - row.bet_amount),
-                                fontWeight: 700,
-                                fontSize: '0.95rem'
-                              }}
-                            >
-                              {convertToCurrency(row.user_bet, effectiveSolPrice)}
-                              {row.user_bet !== row.bet_amount && (
-                                <span style={{
-                                  fontSize: '0.75rem',
-                                  marginLeft: '4px',
-                                  display: 'inline-flex',
-                                  alignItems: 'center'
-                                }}>
-                                  {row.user_bet > row.bet_amount ? (
-                                    <TrendingUpOutlined sx={{ fontSize: 14 }} />
-                                  ) : (
-                                    <TrendingDownOutlined sx={{ fontSize: 14 }} />
-                                  )}
-                                  {` (${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(1)}%)`}
-                                </span>
-                              )}
-                            </Typography>
-                          </Box>
-
-                          <Box
-                            sx={{
-                              textAlign: 'center',
-                              padding: '10px 16px',
-                              borderRadius: '12px',
-                              background: effectiveIsDarkMode
-                                ? 'rgba(0, 0, 0, 0.15)'
-                                : 'rgba(0, 0, 0, 0.03)',
-                              backdropFilter: 'blur(5px)',
-                              border: effectiveIsDarkMode
-                                ? '1px solid rgba(255, 255, 255, 0.05)'
-                                : '1px solid rgba(0, 0, 0, 0.03)',
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                fontSize: '0.7rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                fontWeight: 500,
-                                opacity: 0.7
-                              }}
-                            >
-                              Battles
-                            </Typography>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: '0.95rem'
-                              }}
-                            >
-                              {row.battles}
-                            </Typography>
-                          </Box>
-
-                          <Box
-                            sx={{
-                              textAlign: 'center',
-                              padding: '10px 16px',
-                              borderRadius: '12px',
-                              background: effectiveIsDarkMode
-                                ? 'rgba(0, 0, 0, 0.15)'
-                                : 'rgba(0, 0, 0, 0.03)',
-                              backdropFilter: 'blur(5px)',
-                              border: effectiveIsDarkMode
-                                ? '1px solid rgba(255, 255, 255, 0.05)'
-                                : '1px solid rgba(0, 0, 0, 0.03)',
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                fontSize: '0.7rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                fontWeight: 500,
-                                opacity: 0.7
-                              }}
-                            >
-                              Age
-                            </Typography>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: '0.95rem'
-                              }}
-                            >
-                              {customFromNow(row.created_at)}
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            mb: 0.5,
-                          }}
-                        >
-                          <Box sx={{ position: 'relative', width: '60%' }}>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                position: 'absolute',
-                                top: '-20px',
-                                left: '0',
-                                fontSize: '0.7rem',
-                                opacity: 0.7,
-                              }}
-                            >
-                              Health
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                position: 'absolute',
-                                top: '-20px',
-                                right: '0',
-                                fontSize: '0.7rem',
-                                opacity: 0.7,
-                              }}
-                            >
-                              {(100 - progressPercentage).toFixed(0)}%
-                            </Typography>
                             <Box
                               sx={{
-                                width: '100%',
-                                height: '8px',
-                                background: effectiveIsDarkMode
-                                  ? 'rgba(255, 255, 255, 0.1)'
-                                  : 'rgba(0, 0, 0, 0.08)',
-                                borderRadius: '20px',
-                                overflow: 'hidden',
-                                position: 'relative',
-                              }}
-                            >
-                              <Box
-                                className="progress-bar-filled"
-                                sx={{
-                                  width: `${100 - progressPercentage}%`,
-                                  height: '100%',
-                                  background:
-                                    'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
-                                  borderRadius: '20px',
-                                  position: 'relative',
-                                  zIndex: 2,
-                                  boxShadow: '0 0 10px rgba(227, 255, 0, 0.4)',
-                                  '&::after': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    background:
-                                      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
-                                    zIndex: 3,
-                                  },
-                                  '@keyframes shimmer': {
-                                    '0%': { transform: 'translateX(-100%)' },
-                                    '100%': { transform: 'translateX(100%)' },
-                                  },
-                                }}
-                              />
-                            </Box>
-                          </Box>
-
-                          <Box
-                            sx={{
-                              width: '35%',
-                              display: 'flex',
-                              justifyContent: 'flex-end',
-                            }}
-                          >
-                            <LikeDislikeView
-                              row={row}
-                              user={user}
-                              handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
-                              handleDislike={() =>
-                                dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))
-                              }
-                              handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
-                            />
-                          </Box>
-                        </Box>
-                        {row.is_private && (
-                          <Tooltip title="A password is required to battle this room." arrow>
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                top: 10,
-                                right: 10,
-                                width: 32,
-                                height: 32,
+                                mx: 4,
+                                width: 44,
+                                height: 44,
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                background: effectiveIsDarkMode
-                                  ? 'rgba(0, 0, 0, 0.3)'
-                                  : 'rgba(255, 255, 255, 0.7)',
-                                backdropFilter: 'blur(5px)',
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                                  : '1px solid rgba(0, 0, 0, 0.05)',
+                                backgroundColor: effectiveIsDarkMode 
+                                  ? 'rgba(255,255,255,0.08)' 
+                                  : 'rgba(0,0,0,0.06)',
+                                border: effectiveIsDarkMode 
+                                  ? '1px solid rgba(255,255,255,0.1)' 
+                                  : '1px solid rgba(0,0,0,0.08)',
                               }}
                             >
-                              <LockOutlined
+                              <Battle sx={{ fontSize: 20, opacity: 0.8 }} />
+                            </Box>
+
+                            {row.joiners?.length > 0 && (
+                              <AvatarGroup
+                                max={2}
                                 sx={{
-                                  fontSize: 16,
-                                  color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                                  '& .MuiAvatar-root': {
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: '12px',
+                                    border: 'none',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                  },
+                                  '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                    marginLeft: '-12px',
+                                  },
                                 }}
+                              >
+                                {row.joiners.map((joiner, joinerIndex) => (
+                                  <Avatar
+                                    key={joinerIndex}
+                                    alt={joiner.username}
+                                    username={joiner.username}
+                                    elite={joiner.elite}
+                                    src={joiner.avatar}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenPlayerModal(row.joiners[joinerIndex]);
+                                    }}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      transition: 'transform 0.2s',
+                                      '&:hover': {
+                                        transform: 'scale(1.1)',
+                                        zIndex: 10,
+                                      },
+                                    }}
+                                  />
+                                ))}
+                              </AvatarGroup>
+                            )}
+                          </Box>
+
+                          {/* Stats */}
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
+                            <Box
+                              sx={{
+                                flex: 1,
+                                textAlign: 'center',
+                                p: 2,
+                                borderRadius: '16px',
+                                backgroundColor: effectiveIsDarkMode 
+                                  ? 'rgba(255,255,255,0.05)' 
+                                  : 'rgba(0,0,0,0.03)',
+                                border: effectiveIsDarkMode 
+                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                  : '1px solid rgba(0,0,0,0.05)',
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.5px',
+                                  fontWeight: 600,
+                                  display: 'block',
+                                  mb: 0.5,
+                                }}
+                              >
+                                Liquidity
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  color: getColorClass(row.user_bet - row.bet_amount),
+                                  fontWeight: 700,
+                                  fontSize: '0.95rem',
+                                  lineHeight: 1.2,
+                                }}
+                              >
+                                {convertToCurrency(row.user_bet, effectiveSolPrice)}
+                                {row.user_bet !== row.bet_amount && (
+                                  <Box
+                                    component="span"
+                                    sx={{
+                                      fontSize: '0.75rem',
+                                      ml: 0.5,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 0.25,
+                                    }}
+                                  >
+                                    {row.user_bet > row.bet_amount ? (
+                                      <TrendingUpOutlined sx={{ fontSize: 12 }} />
+                                    ) : (
+                                      <TrendingDownOutlined sx={{ fontSize: 12 }} />
+                                    )}
+                                    {`${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(1)}%`}
+                                  </Box>
+                                )}
+                              </Typography>
+                            </Box>
+
+                            <Box
+                              sx={{
+                                flex: 1,
+                                textAlign: 'center',
+                                p: 2,
+                                borderRadius: '16px',
+                                backgroundColor: effectiveIsDarkMode 
+                                  ? 'rgba(255,255,255,0.05)' 
+                                  : 'rgba(0,0,0,0.03)',
+                                border: effectiveIsDarkMode 
+                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                  : '1px solid rgba(0,0,0,0.05)',
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.5px',
+                                  fontWeight: 600,
+                                  display: 'block',
+                                  mb: 0.5,
+                                }}
+                              >
+                                Battles
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  fontWeight: 700,
+                                  fontSize: '0.95rem',
+                                }}
+                              >
+                                {row.battles}
+                              </Typography>
+                            </Box>
+
+                            <Box
+                              sx={{
+                                flex: 1,
+                                textAlign: 'center',
+                                p: 2,
+                                borderRadius: '16px',
+                                backgroundColor: effectiveIsDarkMode 
+                                  ? 'rgba(255,255,255,0.05)' 
+                                  : 'rgba(0,0,0,0.03)',
+                                border: effectiveIsDarkMode 
+                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                  : '1px solid rgba(0,0,0,0.05)',
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.5px',
+                                  fontWeight: 600,
+                                  display: 'block',
+                                  mb: 0.5,
+                                }}
+                              >
+                                Age
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  fontWeight: 700,
+                                  fontSize: '0.95rem',
+                                }}
+                              >
+                                {customFromNow(row.created_at)}
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          {/* Health bar and actions */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              mt: 'auto',
+                            }}
+                          >
+                            <Box sx={{ flex: 1, mr: 3 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                  }}
+                                >
+                                  Health
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {(100 - progressPercentage).toFixed(0)}%
+                                </Typography>
+                              </Box>
+                              <Box
+                                sx={{
+                                  width: '100%',
+                                  height: '10px',
+                                  backgroundColor: effectiveIsDarkMode 
+                                    ? 'rgba(255, 255, 255, 0.1)' 
+                                    : 'rgba(0, 0, 0, 0.08)',
+                                  borderRadius: '20px',
+                                  overflow: 'hidden',
+                                  position: 'relative',
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    width: `${100 - progressPercentage}%`,
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.9), rgba(253, 181, 0, 1))',
+                                    borderRadius: '20px',
+                                    boxShadow: '0 0 10px rgba(227, 255, 0, 0.3)',
+                                    transition: 'width 0.3s ease',
+                                  }}
+                                />
+                              </Box>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <LikeDislikeView
+                                row={row}
+                                user={user}
+                                handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
+                                handleDislike={() => dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))}
+                                handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
                               />
                             </Box>
-                          </Tooltip>
-                        )}
-                      </Card>
-                    </Box>
-                  </Grid>
-                );
-              })}
-            </Grid>
+                          </Box>
+
+                          {/* Private room indicator */}
+                          {row.is_private && (
+                            <Tooltip title="A password is required to battle this room." arrow>
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  top: 16,
+                                  right: 16,
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: effectiveIsDarkMode 
+                                    ? 'rgba(0, 0, 0, 0.3)' 
+                                    : 'rgba(255, 255, 255, 0.9)',
+                                  backdropFilter: 'blur(8px)',
+                                  border: effectiveIsDarkMode 
+                                    ? '1px solid rgba(255, 255, 255, 0.1)' 
+                                    : '1px solid rgba(0, 0, 0, 0.08)',
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                }}
+                              >
+                                <LockOutlined
+                                  sx={{
+                                    fontSize: 18,
+                                    color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+                                  }}
+                                />
+                              </Box>
+                            </Tooltip>
+                          )}
+                        </Card>
+                      </Box>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Box>
           )}
-          <Pagination
-            color="error"
-            variant='outlined'
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              '& .MuiPaginationItem-root': {
-                borderRadius: '4px',
-              },
-            }}
-            count={Math.ceil(roomList.length / pageSize)}
-            page={page}
-            onChange={handleChangePage}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+            <Pagination
+              color="error"
+              variant="outlined"
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: effectiveIsDarkMode 
+                    ? '1px solid rgba(255, 255, 255, 0.1)' 
+                    : '1px solid rgba(0, 0, 0, 0.1)',
+                  '&:hover': {
+                    backgroundColor: effectiveIsDarkMode 
+                      ? 'rgba(255, 255, 255, 0.05)' 
+                      : 'rgba(0, 0, 0, 0.04)',
+                  },
+                },
+              }}
+              count={Math.ceil(roomList.length / pageSize)}
+              page={page}
+              onChange={handleChangePage}
+            />
+          </Box>
         </div>
       ) : (
-        <Grid container spacing={2} sx={{ p: 2 }}>
-          {loadingRecent ? (
-            Array.from({ length: 4 }).map((_, index) => (
-              <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
-                <Card
-                  sx={{
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    borderRadius: '16px',
-                    backgroundColor: effectiveIsDarkMode ? '#121212' : '#FFFFFF',
-                    boxShadow: effectiveIsDarkMode
-                      ? '0 2px 8px rgba(0, 0, 0, 0.3)'
-                      : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  }}
-                >
-                  {/* Header with icon and name */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Skeleton variant="rounded" width={32} height={32} sx={{ mr: 1.25 }} />
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Skeleton variant="text" width="80%" height={20} sx={{ mb: 0.5 }} />
-                      <Skeleton variant="text" width="60%" height={12} />
-                    </Box>
-                  </Box>
-
-                  {/* Icons and timestamp row */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Skeleton variant="circular" width={16} height={16} />
-                    <Skeleton variant="text" width={30} height={16} />
-                    <Skeleton variant="circular" width={16} height={16} />
-                  </Box>
-
-                  {/* Currency amount */}
-                  <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'center' }}>
-                    <Skeleton variant="text" width="70%" height={24} />
-                  </Box>
-                </Card>
-              </Grid>
-            ))
-          ) : recent.length === 0 ? (
-            <Grid item xs={12}>
-              <Typography variant="body1" align="center">
-                NO RECENT GRADS
-              </Typography>
-            </Grid>
-          ) : (
-            recent.map((row) => {
-              const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
-              return (
-                <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={row._id}>
+        <Box sx={{ px: 3 }}>
+          <Grid container spacing={3}>
+            {loadingRecent ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={index}>
                   <Card
-                    onClick={() => (window.location.href = `/join/${row._id}`)}
                     sx={{
                       p: 3,
+                      borderRadius: '20px',
+                      backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
+                      border: effectiveIsDarkMode 
+                        ? '1px solid rgba(255, 255, 255, 0.08)' 
+                        : '1px solid rgba(0, 0, 0, 0.06)',
+                      boxShadow: effectiveIsDarkMode
+                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                        : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                      height: '200px',
                       display: 'flex',
                       flexDirection: 'column',
-                      alignItems: 'center',
-                      background: '#121212',
-                      cursor: 'pointer',
-                      transition: 'box-shadow 0.1s ease',
-                      '&:hover': {
-                        boxShadow: 4,
-                      },
                     }}
-                    className="carousel-content table-row slide-in"
                   >
-                    <Box sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
-                      {row.image && (
-                        <Box sx={{ mr: 1.25, display: 'block' }}>
-                          <img
-                            src={row.image}
-                            alt=""
-                            className="game-type-icon"
-                            width={32}
-                            style={{ display: 'block' }}
-                          />
-                        </Box>
-                      )}
-                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <Typography
-                          component="span"
-                          sx={{ fontWeight: 'bold', paddingRight: 0.625 }}
-                        >
-                          {row.name}
-                        </Typography>
-                        <Typography
-                          component="span"
-                          sx={{ fontSize: 'xx-small', paddingRight: 0.625 }}
-                        >
-                          {`${row.game_type.short_name}-${row.room_number}`}
-                        </Typography>
+                    {/* Header skeleton */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Skeleton variant="rounded" width={36} height={36} sx={{ mr: 2, borderRadius: '8px' }} />
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Skeleton variant="text" width="80%" height={20} sx={{ mb: 0.5 }} />
+                        <Skeleton variant="text" width="60%" height={14} />
                       </Box>
                     </Box>
 
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mb: 1,
-                        typography: 'body2',
-                        color: 'text.secondary',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <FontAwesomeIcon icon={faStopwatch} />
-                        {customFromNow(row.created_at)}
-                      </Box>
-                      <FontAwesomeIcon icon={faHeartBroken} />
+                    {/* Icons row skeleton */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <Skeleton variant="circular" width={16} height={16} />
+                      <Skeleton variant="text" width={40} height={16} />
+                      <Skeleton variant="circular" width={16} height={16} />
                     </Box>
 
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: 'bold',
-                        color: getColorClass(hostPrizeMinusBetAmount),
-                      }}
-                    >
-                      {convertToCurrency(hostPrizeMinusBetAmount, effectiveSolPrice)}
-                    </Typography>
+                    {/* Amount skeleton */}
+                    <Box sx={{ mt: 'auto', textAlign: 'center' }}>
+                      <Skeleton variant="text" width="70%" height={24} sx={{ mx: 'auto' }} />
+                    </Box>
                   </Card>
                 </Grid>
-              );
-            })
-          )}
-        </Grid>
+              ))
+            ) : recent.length === 0 ? (
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 12,
+                    px: 3,
+                  }}
+                >
+                  <Typography 
+                    variant="h5" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontWeight: 600,
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    NO RECENT GRADS
+                  </Typography>
+                </Box>
+              </Grid>
+            ) : (
+              recent.map((row) => {
+                const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
+                return (
+                  <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={row._id}>
+                    <Card
+                      onClick={() => (window.location.href = `/join/${row._id}`)}
+                      sx={{
+                        p: 3,
+                        borderRadius: '20px',
+                        backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
+                        border: effectiveIsDarkMode 
+                          ? '1px solid rgba(255, 255, 255, 0.08)' 
+                          : '1px solid rgba(0, 0, 0, 0.06)',
+                        boxShadow: effectiveIsDarkMode
+                          ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                          : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                        height: '200px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        '&:hover': {
+                          boxShadow: effectiveIsDarkMode
+                            ? '0 8px 32px rgba(0, 0, 0, 0.4)'
+                            : '0 8px 32px rgba(0, 0, 0, 0.12)',
+                        },
+                      }}
+                    >
+                      {/* Header */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        {row.image && (
+                          <Box
+                            sx={{
+                              mr: 2,
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              border: effectiveIsDarkMode 
+                                ? '1px solid rgba(255,255,255,0.1)' 
+                                : '1px solid rgba(0,0,0,0.08)',
+                              width: 36,
+                              height: 36,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: effectiveIsDarkMode 
+                                ? 'rgba(255,255,255,0.05)' 
+                                : 'rgba(0,0,0,0.02)',
+                            }}
+                          >
+                            <img
+                              src={row.image}
+                              alt=""
+                              style={{ width: 32, height: 32, objectFit: 'cover' }}
+                            />
+                          </Box>
+                        )}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: '1rem',
+                              mb: 0.25,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {row.name}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.8rem',
+                              opacity: 0.8,
+                            }}
+                          >
+                            {`${row.game_type.short_name}-${row.room_number}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Meta info */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          mb: 3,
+                          color: 'text.secondary',
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <FontAwesomeIcon icon={faStopwatch} style={{ fontSize: '14px' }} />
+                          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                            {customFromNow(row.created_at)}
+                          </Typography>
+                        </Box>
+                        <FontAwesomeIcon icon={faHeartBroken} style={{ fontSize: '14px' }} />
+                      </Box>
+
+                      {/* Amount */}
+                      <Box sx={{ mt: 'auto', textAlign: 'center' }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: '1.1rem',
+                            color: getColorClass(hostPrizeMinusBetAmount),
+                            letterSpacing: '0.3px',
+                          }}
+                        >
+                          {convertToCurrency(hostPrizeMinusBetAmount, effectiveSolPrice)}
+                        </Typography>
+                      </Box>
+                    </Card>
+                  </Grid>
+                );
+              })
+            )}
+          </Grid>
+        </Box>
       )}
     </ThemeProvider>
   );

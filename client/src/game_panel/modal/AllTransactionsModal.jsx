@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
 import {
   Modal,
   Box,
@@ -9,6 +8,7 @@ import {
   TableContainer,
   Paper,
   Table,
+  TableHead,
   TableBody,
   TableRow,
   TableCell,
@@ -21,8 +21,10 @@ import {
   Link,
   Tooltip,
   Chip,
+  InputAdornment,
+  Divider,
+  Badge,
 } from '@mui/material';
-
 import {
   Close as CloseIcon,
   FilterList as FilterListIcon,
@@ -35,200 +37,391 @@ import {
   Launch as LaunchIcon,
   MeetingRoom as MeetingRoomIcon,
   ContentCopy as ContentCopyIcon,
+  Clear as ClearIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  AccessTime as AccessTimeIcon,
 } from '@mui/icons-material';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCreditCard } from '@fortawesome/free-solid-svg-icons';
-
 import { convertToCurrency } from '../../util/conversion';
-import { ThemeProvider } from '@mui/material/styles';
-import { getCustomTheme } from '../../config/theme';
-
-// Example Redux action to fetch transactions (adjust to your actual code)
 import { getTransactions } from '../../redux/Auth/user.actions';
 import { formatDistanceToNow } from 'date-fns';
 
+// Transaction type configurations
+const TRANSACTION_TYPES = {
+  deposits: {
+    key: 'showDeposits',
+    label: 'Deposits',
+    icon: ArrowUpwardIcon,
+    color: '#00ff3a',
+  },
+  withdrawals: {
+    key: 'showWithdrawals',
+    label: 'Withdrawals',
+    icon: ArrowDownwardIcon,
+    color: '#ff4444',
+  },
+  trades: {
+    key: 'showTrades',
+    label: 'Trades',
+    icon: SwapHorizIcon,
+    color: '#5daefd',
+  },
+  tips: {
+    key: 'showTips',
+    label: 'Tips',
+    icon: CardGiftcardIcon,
+    color: '#ffd700',
+  },
+};
 
-function AllTransactionsModal({
-  modalIsOpen,
-  close,
-  transactions,
-  isDarkMode,
-  solPrice,
-}) {
+const SORT_OPTIONS = [
+  { key: 'date', label: 'Date', icon: AccessTimeIcon },
+  { key: 'amount', label: 'Amount', icon: TrendingUpIcon },
+];
+
+// Status color mapping
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return { bg: 'rgba(0, 255, 58, 0.15)', color: '#00ff3a' };
+    case 'failed':
+    case 'cancelled':
+      return { bg: 'rgba(255, 0, 0, 0.15)', color: '#ff0000' };
+    case 'pending':
+    case 'processing':
+    case 'waiting':
+      return { bg: 'rgba(255, 193, 7, 0.15)', color: '#ffc107' };
+    default:
+      return { bg: 'rgba(255, 255, 255, 0.15)', color: '#ffffff' };
+  }
+};
+
+// Transaction amount formatter
+const formatAmount = (amount, solPrice, isDarkMode) => {
+  const isPositive = amount > 0;
+  const absAmount = Math.abs(amount);
+  const color = isPositive ? '#00ff3a' : '#ff4444';
+  
+  return {
+    display: `${isPositive ? '+' : '-'} ${absAmount.toFixed(3)} SOL`,
+    usd: convertToCurrency(absAmount, solPrice),
+    color,
+  };
+};
+
+// Transaction hash utilities
+const truncateHash = (hash) => {
+  if (!hash) return '';
+  return `${hash.substring(0, 8)}...${hash.substring(hash.length - 6)}`;
+};
+
+function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, solPrice }) {
   const dispatch = useDispatch();
 
-  // State from Redux
-  const { all_transactions, page, hasMore, transactions_loading, totalCount } =
-    useSelector((state) => state.auth);
+  // Redux state
+  const { all_transactions, page, hasMore, transactions_loading, totalCount } = useSelector(
+    (state) => state.auth
+  );
 
+  // Local state
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
-  const [searchAnchorEl, setSearchAnchorEl] = useState(null);
+  const [filterType, setFilterType] = useState(null);
+  const [sortType, setSortType] = useState('date');
+  const [searchQuery, setSearchQuery] = useState('');
   const [copiedTxHash, setCopiedTxHash] = useState(false);
 
-  // The actual filter, sort, and search values we're using
-  const [filterType, setFilterType] = useState(null); // e.g. 'showTrades', 'showTips', etc.
-  const [sortType, setSortType] = useState('date'); // e.g. 'date', 'amount'
-  const [searchQuery, setSearchQuery] = useState(''); // e.g. a string to search in description
-
+  // Fetch initial data
   useEffect(() => {
-    // On mount, load initial page if needed
-    // Only call this if all_transactions is null or length = 0
-    if (!all_transactions) {
+    if (modalIsOpen && !all_transactions) {
       dispatch(getTransactions(1, filterType, sortType, searchQuery));
     }
-  }, [dispatch, all_transactions]);
+  }, [modalIsOpen, dispatch, all_transactions]);
 
-  // Handlers for Filter Menu
-  const handleFilterClick = (event) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
+  // Determine data to render
+  const dataToRender = useMemo(() => {
+    return all_transactions?.length > 0 ? all_transactions : transactions || [];
+  }, [all_transactions, transactions]);
 
-  const handleFilterClose = (selectedFilter) => {
+  // Filtered transaction count by type
+  const getFilteredCount = useCallback((type) => {
+    if (!dataToRender.length) return 0;
+    // This would need to be implemented based on your data structure
+    return dataToRender.filter(tx => {
+      switch (type) {
+        case 'showDeposits': return tx.amount > 0;
+        case 'showWithdrawals': return tx.amount < 0;
+        // Add other filters based on your transaction structure
+        default: return true;
+      }
+    }).length;
+  }, [dataToRender]);
+
+  // Handlers
+  const handleFilterSelect = useCallback((selectedFilter) => {
     setFilterAnchorEl(null);
+    setFilterType(selectedFilter);
+    dispatch(getTransactions(1, selectedFilter || '', sortType, searchQuery));
+  }, [dispatch, sortType, searchQuery]);
 
-    if (selectedFilter !== null) {
-      // This is the filter type, e.g. 'showTrades' or 'showDeposits'
-      setFilterType(selectedFilter);
-      // Re-fetch page 1 with new filter
-      dispatch(getTransactions(1, selectedFilter, sortType, searchQuery));
-    } else {
-      // null means "Show All"
-      setFilterType(null);
-      dispatch(getTransactions(1, '', sortType, searchQuery));
-    }
-  };
-
-  // Handlers for Sort Menu
-  const handleSortClick = (event) => {
-    setSortAnchorEl(event.currentTarget);
-  };
-
-  const handleSortClose = (selectedSort) => {
+  const handleSortSelect = useCallback((selectedSort) => {
     setSortAnchorEl(null);
+    setSortType(selectedSort);
+    dispatch(getTransactions(1, filterType || '', selectedSort, searchQuery));
+  }, [dispatch, filterType, searchQuery]);
 
-    if (selectedSort !== null) {
-      setSortType(selectedSort);
-      // Re-fetch page 1 with new sort
-      dispatch(getTransactions(1, filterType || '', selectedSort, searchQuery));
-    }
-  };
-
-  // Handlers for Search Menu
-  const handleSearchClick = (event) => {
-    setSearchAnchorEl(event.currentTarget);
-  };
-
-  const handleSearchClose = () => {
-    setSearchAnchorEl(null);
-  };
-
-  const onSearchQueryChange = (value) => {
+  const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
-    // Optionally trigger immediate fetch as user types, or wait until they close the menu.
-    // Here, let's do immediate fetch:
-    dispatch(getTransactions(1, filterType || '', sortType || 'date', value));
-  };
-  
-  // Copy transaction hash to clipboard
-  const copyTxHash = (hash) => {
+    // Debounced search would be better here
+    dispatch(getTransactions(1, filterType || '', sortType, value));
+  }, [dispatch, filterType, sortType]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    dispatch(getTransactions(1, filterType || '', sortType, ''));
+  }, [dispatch, filterType, sortType]);
+
+  const copyTxHash = useCallback((hash) => {
     navigator.clipboard.writeText(hash);
     setCopiedTxHash(true);
     setTimeout(() => setCopiedTxHash(false), 2000);
-  };
+  }, []);
 
-  /**
-   * Load more if scrolled to the bottom, if more pages are available
-   */
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (!transactions_loading && hasMore) {
       dispatch(getTransactions(page + 1, filterType, sortType, searchQuery));
     }
-  };
+  }, [dispatch, transactions_loading, hasMore, page, filterType, sortType, searchQuery]);
 
-  /**
-   * Called on scroll, checks if at bottom, triggers loadMore
-   */
-  const handleScroll = (e) => {
+  const handleScroll = useCallback((e) => {
     const { scrollHeight, scrollTop, clientHeight } = e.target;
     if (scrollHeight - scrollTop === clientHeight) {
       handleLoadMore();
     }
-  };
+  }, [handleLoadMore]);
 
-  // Decide which array to render:
-  let dataToRender = [];
-  if (all_transactions && all_transactions.length > 0) {
-    dataToRender = all_transactions;
-  } else if (transactions && transactions.length > 0) {
-    dataToRender = transactions;
-  }
+  // Render loading skeleton
+  const renderLoadingSkeleton = () => (
+    <Box sx={{ mt: 2 }}>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+          <Skeleton variant="text" width="120px" height={24} />
+          <Skeleton variant="text" width="100px" height={24} />
+          <Skeleton variant="text" width="200px" height={24} />
+          <Skeleton variant="text" width="80px" height={24} />
+          <Skeleton variant="text" width="120px" height={24} />
+          <Skeleton variant="text" width="80px" height={24} />
+        </Box>
+      ))}
+    </Box>
+  );
 
-  const headerStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    mb: 2,
-  };
+  // Render table header
+  const renderTableHeader = () => (
+    <TableHead>
+      <TableRow sx={{ 
+        backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)'
+      }}>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600,
+          backgroundColor: 'transparent'
+        }}>
+          AMOUNT
+        </TableCell>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600,
+          backgroundColor: 'transparent'
+        }}>
+          TIME
+        </TableCell>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600,
+          backgroundColor: 'transparent'
+        }}>
+          DESCRIPTION
+        </TableCell>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600,
+          backgroundColor: 'transparent'
+        }}>
+          STATUS
+        </TableCell>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600,
+          backgroundColor: 'transparent'
+        }}>
+          TRANSACTION
+        </TableCell>
+        <TableCell sx={{ 
+          color: isDarkMode ? '#ccc' : '#666', 
+          fontWeight: 600,
+          backgroundColor: 'transparent'
+        }}>
+          ACTION
+        </TableCell>
+      </TableRow>
+    </TableHead>
+  );
 
-  const filtersContainerStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 2,
-    mb: 2,
-    flexDirection: { xs: 'column', sm: 'row' },
-  };
+  // Render transaction row
+  const renderTransactionRow = (transaction) => {
+    const amountData = formatAmount(transaction.amount, solPrice, isDarkMode);
+    const statusColors = getStatusColor(transaction.status);
 
-  const tableContainerStyle = {
-    height: 480,
-    overflowY: 'auto',
-    background: '#080808',
-  };
+    return (
+      <TableRow 
+        key={transaction._id}
+        sx={{
+          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          '&:hover': { 
+            backgroundColor: isDarkMode ? 'rgba(50, 50, 50, 0.8)' : 'rgba(240, 240, 240, 0.8)' 
+          },
+          opacity: ['waiting', 'pending', 'processing'].includes(transaction.status) ? 0.7 : 1,
+          transition: 'background-color 0.2s ease',
+        }}
+      >
+        {/* Amount */}
+        <TableCell sx={{ backgroundColor: 'transparent' }}>
+          <Box>
+            <Typography sx={{ color: amountData.color, fontWeight: 600, fontSize: '0.9rem' }}>
+              {amountData.display}
+            </Typography>
+            <Typography sx={{ color: isDarkMode ? '#ccc' : '#666', fontSize: '0.75rem' }}>
+              {amountData.usd}
+            </Typography>
+          </Box>
+        </TableCell>
 
-  // New styles for action buttons
-  const actionButtonStyle = {
-    minWidth: 'fit-content',
-    borderRadius: '8px',
-    fontWeight: 'medium',
-    transition: 'all 0.2s',
-    py: 0.5,
-    px: 1.5,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 0.5,
-    fontSize: '0.75rem',
-  };
+        {/* Time */}
+        <TableCell sx={{ backgroundColor: 'transparent' }}>
+          <Typography sx={{ color: isDarkMode ? '#fff' : '#333', fontSize: '0.8rem' }}>
+            {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
+          </Typography>
+        </TableCell>
 
-  const viewButtonStyle = {
-    ...actionButtonStyle,
-    bgcolor: 'rgba(255, 236, 179, 0.15)',
-    color: '#ffecb3',
-    '&:hover': {
-      bgcolor: 'rgba(255, 236, 179, 0.25)',
-      transform: 'translateY(-2px)',
-    },
-  };
+        {/* Description */}
+        <TableCell sx={{ backgroundColor: 'transparent' }}>
+          <Typography sx={{ 
+            color: isDarkMode ? '#fff' : '#333', 
+            fontSize: '0.8rem',
+            maxWidth: '200px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {transaction.description}
+          </Typography>
+        </TableCell>
 
-  const joinButtonStyle = {
-    ...actionButtonStyle,
-    bgcolor: 'rgba(52, 152, 219, 0.15)',
-    color: '#5daefd',
-    '&:hover': {
-      bgcolor: 'rgba(52, 152, 219, 0.25)',
-      transform: 'translateY(-2px)',
-    },
-  };
+        {/* Status */}
+        <TableCell sx={{ backgroundColor: 'transparent' }}>
+          <Chip 
+            label={transaction.status?.toUpperCase() || 'UNKNOWN'}
+            size="small"
+            sx={{
+              bgcolor: statusColors.bg,
+              color: statusColors.color,
+              borderRadius: '6px',
+              fontWeight: 600,
+              fontSize: '0.7rem',
+              height: '24px',
+            }}
+          />
+        </TableCell>
 
-  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+        {/* Transaction Hash */}
+        <TableCell sx={{ backgroundColor: 'transparent' }}>
+          {transaction.hash ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Tooltip title={transaction.hash} placement="top">
+                <Typography sx={{ 
+                  color: isDarkMode ? '#ccc' : '#666', 
+                  fontSize: '0.75rem',
+                  fontFamily: 'monospace'
+                }}>
+                  {truncateHash(transaction.hash)}
+                </Typography>
+              </Tooltip>
+              
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <Tooltip title="Copy Hash">
+                  <IconButton 
+                    size="small" 
+                    onClick={() => copyTxHash(transaction.hash)}
+                    sx={{ 
+                      color: '#ff0000', 
+                      p: 0.5,
+                      '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
+                    }}
+                  >
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                
+                <Tooltip title="View on Solscan">
+                  <IconButton
+                    component={Link}
+                    href={`https://solscan.io/tx/${transaction.hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    sx={{ 
+                      color: '#ff0000', 
+                      p: 0.5,
+                      '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
+                    }}
+                  >
+                    <LaunchIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          ) : (
+            <Typography sx={{ color: isDarkMode ? '#666' : '#999', fontSize: '0.75rem', fontStyle: 'italic' }}>
+              No hash
+            </Typography>
+          )}
+        </TableCell>
 
-  // Function to truncate transaction hash for display
-  const truncateHash = (hash) => {
-    if (!hash) return '';
-    return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
+        {/* Action */}
+        <TableCell sx={{ backgroundColor: 'transparent' }}>
+          {transaction.room ? (
+            <Button
+              component={Link}
+              href={`/join/${transaction.room}`}
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<MeetingRoomIcon />}
+              sx={{
+                fontSize: '0.7rem',
+                py: 0.5,
+                px: 1,
+                minWidth: 'auto',
+                '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
+              }}
+            >
+              Join
+            </Button>
+          ) : (
+            <Typography sx={{ color: isDarkMode ? '#666' : '#999', fontSize: '0.75rem', fontStyle: 'italic' }}>
+              —
+            </Typography>
+          )}
+        </TableCell>
+      </TableRow>
+    );
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <Modal
         open={modalIsOpen || false}
         onClose={close}
@@ -237,390 +430,239 @@ function AllTransactionsModal({
           style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
-        <Box
+        <Paper
+          elevation={24}
           sx={{
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: { xs: '90vw', sm: '80vw', md: '70vw', lg: '65vw' },
+            width: { xs: '95vw', sm: '90vw', md: '85vw', lg: '80vw' },
+            maxWidth: '1400px',
             maxHeight: '90vh',
             overflowY: 'auto',
             borderRadius: 3,
             p: { xs: 2, sm: 3, md: 4 },
-            // Glassmorphism
-            background: 'rgba(30, 30, 30, 0.3)',
-            backdropFilter: 'blur(15px)',
-            WebkitBackdropFilter: 'blur(15px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            // Fallback
-            '@supports not (backdrop-filter: blur(15px))': {
-              background: 'rgba(30, 30, 30, 0.6)',
-            },
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'transparent',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '4px',
-            },
+            background: isDarkMode 
+              ? 'rgba(30, 30, 30, 0.95)' 
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+            color: isDarkMode ? '#fff' : '#333',
           }}
         >
-          {/* HEADER */}
-          <Box sx={headerStyle}>
-            <Typography
-              variant="h6"
-              sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
-            >
-              <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: 8 }} />
-              ALL TRANSACTIONS
-            </Typography>
-            <Button
+          {/* Header */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FontAwesomeIcon icon={faCreditCard} style={{ color: '#ff0000' }} />
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                ALL TRANSACTIONS
+              </Typography>
+              {totalCount > 0 && (
+                <Chip 
+                  label={`${totalCount} Total`} 
+                  size="small" 
+                  sx={{ 
+                    backgroundColor: '#ff0000',
+                    color: '#fff',
+                    fontWeight: 600
+                  }} 
+                />
+              )}
+            </Box>
+            <IconButton
               onClick={close}
               sx={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                minWidth: 'auto',
-                p: 1,
-                bgcolor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
-                borderRadius: '50%',
+                color: isDarkMode ? '#fff' : '#333',
+                '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
               }}
             >
               <CloseIcon />
-            </Button>
+            </IconButton>
           </Box>
 
-          {/* BODY */}
-          <Box>
-            {/**
-             * 1) If we're still loading the very first batch => show Skeleton
-             *    - i.e. all_transactions is null (hasn't been set yet) and transactions_loading is true
-             */}
-            {all_transactions === null && transactions_loading ? (
-              <Box sx={{ mt: 2 }}>
-                <Skeleton
-                  variant="rectangular"
-                  width="100%"
-                  height={40}
-                  sx={{ mb: 1 }}
-                />
-                <Skeleton
-                  variant="rectangular"
-                  width="100%"
-                  height={40}
-                  sx={{ mb: 1 }}
-                />
-                <Skeleton
-                  variant="rectangular"
-                  width="100%"
-                  height={40}
-                  sx={{ mb: 1 }}
-                />
-              </Box>
-            ) : (
-              /**
-               * 2) If all_transactions is not null (or we have fallback transactions)
-               *    then show the table and possible spinner if loading more
-               */
-              <Box>
-                <Box>
-                  {/* FILTER / SORT / SEARCH */}
-                  <Box sx={filtersContainerStyle} className="filters">
-                    {/* Filter Button */}
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={handleFilterClick}
-                    >
-                      Filter <FilterListIcon sx={{ ml: 1 }} />
-                    </Button>
-                    <Menu
-                      anchorEl={filterAnchorEl}
-                      open={Boolean(filterAnchorEl)}
-                      onClose={() => handleFilterClose(null)}
-                    >
-                      <MenuItem
-                        onClick={() => handleFilterClose(null)}
-                        selected={filterType === null}
-                      >
-                        Show All
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleFilterClose('showDeposits')}
-                        selected={filterType === 'showDeposits'}
-                      >
-                        <ArrowUpwardIcon sx={{ mr: 1 }} />
-                        Show Deposits
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleFilterClose('showWithdrawals')}
-                        selected={filterType === 'showWithdrawals'}
-                      >
-                        <ArrowDownwardIcon sx={{ mr: 1 }} />
-                        Show Withdrawals
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleFilterClose('showTrades')}
-                        selected={filterType === 'showTrades'}
-                      >
-                        <SwapHorizIcon sx={{ mr: 1 }} />
-                        Show Trades
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleFilterClose('showTips')}
-                        selected={filterType === 'showTips'}
-                      >
-                        <CardGiftcardIcon sx={{ mr: 1 }} />
-                        Show Tips
-                      </MenuItem>
-                    </Menu>
+          {/* Filters and Search */}
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Filter Button */}
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+                endIcon={<FilterListIcon />}
+                sx={{ minWidth: 'auto' }}
+              >
+                {filterType ? TRANSACTION_TYPES[Object.keys(TRANSACTION_TYPES).find(k => TRANSACTION_TYPES[k].key === filterType)]?.label || 'Filter' : 'Filter'}
+              </Button>
 
-                    {/* Sort Button */}
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={handleSortClick}
-                    >
-                      Sort By <SortIcon sx={{ ml: 1 }} />
-                    </Button>
-                    <Menu
-                      anchorEl={sortAnchorEl}
-                      open={Boolean(sortAnchorEl)}
-                      onClose={() => handleSortClose(null)}
-                    >
-                      <MenuItem
-                        onClick={() => handleSortClose('date')}
-                        selected={sortType === 'date'}
-                      >
-                        Sort by Date
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleSortClose('amount')}
-                        selected={sortType === 'amount'}
-                      >
-                        Sort by Amount
-                      </MenuItem>
-                    </Menu>
+              {/* Sort Button */}
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={(e) => setSortAnchorEl(e.currentTarget)}
+                endIcon={<SortIcon />}
+                sx={{ minWidth: 'auto' }}
+              >
+                Sort: {SORT_OPTIONS.find(opt => opt.key === sortType)?.label || 'Date'}
+              </Button>
 
-                    {/* Search Button */}
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={handleSearchClick}
-                    >
-                      Search <SearchIcon sx={{ ml: 1 }} />
-                    </Button>
-                    <Menu
-                      anchorEl={searchAnchorEl}
-                      open={Boolean(searchAnchorEl)}
-                      onClose={() => handleSearchClose(null)}
-                    >
-                      <MenuItem>
-                        <TextField
-                          color="error"
-                          name="search"
-                          margin="normal"
-                          value={searchQuery}
-                          onChange={(e) => onSearchQueryChange(e.target.value)}
-                          fullWidth
-                          placeholder="Search all..."
-                        />
-                      </MenuItem>
-                    </Menu>
-                  </Box>
-                  <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                    Total: {totalCount}
-                  </Typography>
-                  {/* TABLE AREA */}
-                  <TableContainer
-                    component={Paper}
-                    sx={tableContainerStyle}
-                    onScroll={handleScroll}
-                  >
-                    <Table stickyHeader aria-label="all transactions table">
-                      <TableBody>
-                        {dataToRender.length === 0 ? (
-                          // If array is empty but not loading => "No transactions"
-                          <TableRow>
-                            <TableCell colSpan={5} align="center">
-                              No transactions found
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          // Otherwise, map through the transactions
-                          dataToRender.map((transaction) => (
-                            <TableRow key={transaction._id}>
-                              <TableCell
-                                sx={{
-                                  color:
-                                    transaction.status === 'waiting' ||
-                                    transaction.status === 'pending' ||
-                                    transaction.status === 'processing' ||
-                                    transaction.status === 'in_process'
-                                      ? '#888'
-                                      : transaction.amount > 0
-                                      ? '#00ff3a' // greenish
-                                      : '#FF0000', // reddish
-                                }}
-                              >
-                                {transaction.amount > 0 ? (
-                                  <>
-                                    + {parseFloat(transaction.amount).toFixed(3)} SOL (
-                                    {convertToCurrency(transaction.amount, solPrice)})
-                                  </>
-                                ) : (
-                                  <>
-                                    - {parseFloat(Math.abs(transaction.amount)).toFixed(3)} SOL (
-                                    {convertToCurrency(Math.abs(transaction.amount), solPrice)})
-                                  </>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                              {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
-                              </TableCell>
-                              <TableCell>{transaction.description}</TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={transaction.status}
-                                  size="small"
-                                  sx={{
-                                    bgcolor: 
-                                      transaction.status === 'completed' ? 'rgba(0, 255, 58, 0.15)' :
-                                      transaction.status === 'failed' ? 'rgba(255, 0, 0, 0.15)' :
-                                      'rgba(255, 255, 255, 0.15)',
-                                    color:
-                                      transaction.status === 'completed' ? '#00ff3a' :
-                                      transaction.status === 'failed' ? '#ff0000' :
-                                      '#ffffff',
-                                    borderRadius: '4px',
-                                    fontWeight: 500,
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                {transaction.hash ? (
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Tooltip title={transaction.hash} placement="top">
-                                      <Typography variant="body2" sx={{ color: '#888', fontSize: '0.75rem' }}>
-                                        {truncateHash(transaction.hash)}
-                                      </Typography>
-                                    </Tooltip>
-                                    
-                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                      <Tooltip title="Copy Transaction Hash">
-                                        <IconButton 
-                                          size="small" 
-                                          onClick={() => copyTxHash(transaction.hash)}
-                                          sx={{ color: '#888', p: 0.5 }}
-                                        >
-                                          <ContentCopyIcon fontSize="small" />
-                                        </IconButton>
-                                      </Tooltip>
-                                      
-                                      <Tooltip title="View on Solscan">
-                                        <Button
-                                          component={Link}
-                                          href={`https://solscan.io/tx/${transaction.hash}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          sx={viewButtonStyle}
-                                        >
-                                          <LaunchIcon fontSize="small" />
-                                          View
-                                        </Button>
-                                      </Tooltip>
-                                    </Box>
-                                  </Box>
-                                ) : (
-                                  <Typography variant="body2" sx={{ color: '#555', fontStyle: 'italic' }}>
-                                    No hash
-                                  </Typography>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {transaction.room ? (
-                                  <Button
-                                    component={Link}
-                                    href={`/join/${transaction.room}`}
-                                    sx={joinButtonStyle}
-                                    startIcon={<MeetingRoomIcon />}
-                                  >
-                                    Join
-                                  </Button>
-                                ) : (
-                                  <Typography variant="body2" sx={{ color: '#555', fontStyle: 'italic' }}>
-                                    No room
-                                  </Typography>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-
-                        {/**
-                         * 3) If we are loading more (subsequent fetch), show spinner row
-                         *    - i.e., we already have some data, but transactions_loading is true
-                         */}
-                        {dataToRender.length > 0 && transactions_loading && (
-                          <TableRow>
-                            <TableCell colSpan={6} align="center">
-                              <CircularProgress color="error" />
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              </Box>
-            )}
-            
-            {/* Copied notification */}
-            <Snackbar
-              open={copiedTxHash}
-              autoHideDuration={2000}
-              onClose={() => setCopiedTxHash(false)}
-              message="Transaction hash copied to clipboard"
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            />
+              {/* Search Field */}
+              <TextField
+                size="small"
+                placeholder="Search transactions..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                sx={{ 
+                  minWidth: '250px',
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
+                    color: isDarkMode ? '#fff' : '#333',
+                    '& fieldset': { borderColor: '#ff0000' },
+                    '&:hover fieldset': { borderColor: '#ff0000' },
+                    '&.Mui-focused fieldset': { borderColor: '#ff0000' },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: isDarkMode ? '#fff' : '#333',
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: isDarkMode ? '#ccc' : '#666',
+                    opacity: 1,
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: '#ff0000' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={clearSearch} sx={{ color: isDarkMode ? '#fff' : '#333' }}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
           </Box>
-        </Box>
+
+          {/* Content */}
+          {all_transactions === null && transactions_loading ? (
+            renderLoadingSkeleton()
+          ) : (
+            <TableContainer
+              component={Paper}
+              sx={{
+                height: 500,
+                overflowY: 'auto',
+                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                borderRadius: 2,
+                backgroundColor: isDarkMode ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+              }}
+              onScroll={handleScroll}
+            >
+              <Table stickyHeader>
+                {renderTableHeader()}
+                <TableBody>
+                  {dataToRender.length === 0 ? (
+                    <TableRow sx={{ backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)' }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4, backgroundColor: 'transparent' }}>
+                        <Typography sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
+                          No transactions found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    dataToRender.map(renderTransactionRow)
+                  )}
+
+                  {/* Loading more indicator */}
+                  {dataToRender.length > 0 && transactions_loading && (
+                    <TableRow sx={{ backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)' }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 2, backgroundColor: 'transparent' }}>
+                        <CircularProgress color="error" size={24} />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          {/* Filter Menu */}
+          <Menu
+            anchorEl={filterAnchorEl}
+            open={Boolean(filterAnchorEl)}
+            onClose={() => setFilterAnchorEl(null)}
+          >
+            <MenuItem onClick={() => handleFilterSelect(null)} selected={!filterType}>
+              Show All
+            </MenuItem>
+            <Divider />
+            {Object.entries(TRANSACTION_TYPES).map(([key, config]) => {
+              const IconComponent = config.icon;
+              const count = getFilteredCount(config.key);
+              return (
+                <MenuItem 
+                  key={key}
+                  onClick={() => handleFilterSelect(config.key)}
+                  selected={filterType === config.key}
+                >
+                  <IconComponent sx={{ mr: 1, color: config.color }} />
+                  {config.label}
+                  <Badge badgeContent={count} color="primary" sx={{ ml: 'auto' }} />
+                </MenuItem>
+              );
+            })}
+          </Menu>
+
+          {/* Sort Menu */}
+          <Menu
+            anchorEl={sortAnchorEl}
+            open={Boolean(sortAnchorEl)}
+            onClose={() => setSortAnchorEl(null)}
+          >
+            {SORT_OPTIONS.map((option) => {
+              const IconComponent = option.icon;
+              return (
+                <MenuItem 
+                  key={option.key}
+                  onClick={() => handleSortSelect(option.key)}
+                  selected={sortType === option.key}
+                >
+                  <IconComponent sx={{ mr: 1 }} />
+                  {option.label}
+                </MenuItem>
+              );
+            })}
+          </Menu>
+        </Paper>
       </Modal>
-    </ThemeProvider>
+
+      {/* Copy notification */}
+      {copiedTxHash && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bgcolor: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            px: 3,
+            py: 1.5,
+            borderRadius: 1,
+            zIndex: 9999,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          ✅ Transaction hash copied to clipboard
+        </Box>
+      )}
+    </>
   );
 }
-
-// Add Snackbar for copy notification
-const Snackbar = ({ open, autoHideDuration, onClose, message, anchorOrigin }) => {
-  return open ? (
-    <Box
-      sx={{
-        position: 'fixed',
-        bottom: anchorOrigin.vertical === 'bottom' ? 20 : 'auto',
-        top: anchorOrigin.vertical === 'top' ? 20 : 'auto',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        bgcolor: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
-        px: 3,
-        py: 1.5,
-        borderRadius: 1,
-        zIndex: 9999,
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-      }}
-    >
-      {message}
-    </Box>
-  ) : null;
-};
 
 export default AllTransactionsModal;

@@ -1,11 +1,5 @@
 /* eslint-disable consistent-return */
-/* eslint-disable no-underscore-dangle */
 const express = require('express');
-const {
-  calculate7dayProfit,
-  calculate1dayProfit,
-  calculateAllTimeProfit
-} = require('../helper/util/profitCalculation');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const moment = require('moment');
 const socket = require('../socketController.js');
@@ -15,17 +9,11 @@ const bcrypt = require('bcryptjs');
 // User Model
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
-const Message = require('../model/Message');
 const Transaction = require('../model/Transaction');
 const ChangePasswordRequest = require('../model/ChangePasswordRequest');
 const { OAuth2Client } = require('google-auth-library');
 
 const auth = require('../middleware/auth');
-
-// @route   POST api/auth
-// @desc    Auth user
-// @access  Public
-// eslint-disable-next-line consistent-return
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const generateRandomPassword = (length = 12) => {
@@ -638,22 +626,6 @@ router.post('/resetPassword', async (req, res) => {
 });
 
 
-// New endpoint for fetching profit data
-router.get('/profit', auth, async (req, res) => {
-  try {
-    const user = req.user._id;
-    const allTransactions = await Transaction.find({ user: user });
-
-    const profitData = getProfitData(allTransactions);
-    res.json({
-      success: true,
-      user: req.user,
-      profitData,
-    });
-  } catch (error) {
-    res.json({ success: false, error: error.message });
-  }
-});
 
 router.post('/set-referral', auth, async (req, res) => {
   try {
@@ -810,13 +782,6 @@ router.get('/transactions', auth, async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
-
-const getProfitData = (transactions) => ({
-  sevenDayProfit: calculate7dayProfit(transactions),
-  oneDayProfit: calculate1dayProfit(transactions),
-  allTimeProfit: calculateAllTimeProfit(transactions),
-});
-
 
 // Change Password in EditAccountModal
 router.post('/changePasswordAndAvatar', auth, async (req, res) => {

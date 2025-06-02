@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFocused } from '../redux/Auth/user.actions';
-import { generateReactGameFromPrompt, proxyAsset, getCommentsForRoom, updateRoomGameCode } from '../redux/Logic/logic.actions';
+import { generateReactGameFromPrompt, proxyAsset, getCommentsForRoom, updateRoomGameCode, autopopulateRoomInfo } from '../redux/Logic/logic.actions';
 import {
   Paper,
   Button,
@@ -44,7 +44,6 @@ import {
 import styled from 'styled-components';
 import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
-import LockIcon from '@mui/icons-material/Lock';
 import { green, yellow, blue, grey } from '@mui/material/colors';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -101,6 +100,22 @@ const glassmorphismStyle = {
   },
 };
 
+const GlassContainer = styled(Box)`
+  background: ${({ isDarkMode }) =>
+    isDarkMode ? 'rgba(30, 30, 30, 0.3)' : 'rgba(255, 255, 255, 0.65)'};
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid ${({ isDarkMode }) =>
+    isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'};
+  box-shadow: ${({ isDarkMode }) =>
+    isDarkMode
+      ? '0 8px 32px rgba(0, 0, 0, 0.3)'
+      : '0 8px 32px rgba(31, 38, 135, 0.1)'};
+  padding: 24px;
+  transition: all 0.3s ease;
+`;
+
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
   txt.innerHTML = html;
@@ -129,13 +144,13 @@ const SettingsRef = ({
   setGameCode,
   settings_panel_opened,
   settingsRef,
-  creator_prompt,
   my_games = false,
   updateUserPrompt,
   onClose,
   room_id,
   proxiedAssets: initialProxiedAssets,
-  setProxiedAssets
+  setProxiedAssets,
+  isDarkMode
 }) => {
   const dispatch = useDispatch();
   const [gameLoading, setGameLoading] = useState(false);
@@ -148,20 +163,26 @@ const SettingsRef = ({
   const [showChat, setShowChat] = useState(false);
   const [processingMessage, setProcessingMessage] = useState(null);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const [localPrompt, setLocalPrompt] = useState(creator_prompt || prompt || '');
+  const [localPrompt, setLocalPrompt] = useState(prompt || '');
   const [suggestedPrompts, setSuggestedPrompts] = useState([]);
   const [hasGeneratedSuggestions, setHasGeneratedSuggestions] = useState(false);
   const [commentsFetched, setCommentsFetched] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [Physics, setPhysics] = useState(null);
   const [isPhysicsLoading, setIsPhysicsLoading] = useState(true);
-  const [localCredits, setLocalCredits] = useState(user_credits); // Track credits locally
+  const [localCredits, setLocalCredits] = useState(user_credits);
+  const [streamingProgress, setStreamingProgress] = useState(0);
+  const [streamingStatus, setStreamingStatus] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isAutopopulating, setIsAutopopulating] = useState(false);
+
 
   const chatEndRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(max-width: 1024px)');
   const loading = useSelector((state) => state.loading);
   const comments = useSelector((state) => state.logic.comments);
+  const creator_prompt = useSelector((state) => state.logic.creator_prompt);
   const isMounted = useRef(true);
 
   // Available models
@@ -170,7 +191,7 @@ const SettingsRef = ({
     { name: 'o3', levelToUnlock: 5, cost: 12 }
   ];
 
-  const currentModel = selectedModel || 'o3-mini'; // Default to o3-mini
+  const currentModel = selectedModel || 'o3-mini';
   const modelCost = models.find(m => m.name === currentModel).cost;
 
   useEffect(() => {
@@ -311,6 +332,7 @@ const SettingsRef = ({
   }, [initialGameCode, initialProxiedAssets, rowName, creator_prompt, prompt, setGameCode, setProxiedAssets]);
 
   useEffect(() => {
+    console.log('[SettingsRef] Initializing game generation with creator prompt:', creator_prompt); 
     if (creator_prompt && !hasGenerated && !gameLoading && !saving && !initialGameCode && !initialProxiedAssets) {
       setLocalPrompt(creator_prompt);
       handleGenerateClick();
@@ -318,36 +340,24 @@ const SettingsRef = ({
     }
   }, [creator_prompt, hasGenerated, gameLoading, saving, initialGameCode, initialProxiedAssets]);
 
-  useEffect(() => {
-    if (showChat && (chatMessages.length > 0 || processingMessage) && chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages, processingMessage, showChat]);
-
   // useEffect(() => {
-  //   const checkTokenStatus = async () => {
-  //     try {
-  //       const res = await axios.post('/game/checkTokens');
-  //       setTokenStatus(res.data.status ?? false);
-  //     } catch (error) {
-  //       console.error('Error checking tokens:', error);
-  //     }
-  //   };
-  //   checkTokenStatus();
-  // }, []);
+  //   if (showChat && (chatMessages.length > 0 || processingMessage) && chatEndRef.current) {
+  //     chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, [chatMessages, processingMessage, showChat]);
 
   useEffect(() => {
     if (initialGameCode && Physics && !isPhysicsLoading) {
       let isMounted = true;
       setComponentError(null);
       console.log('[Raw initialGameCode]', initialGameCode);
-
+  
       const processGameCode = async () => {
         try {
           if (!Physics || !Physics.World) {
             throw new Error('Matter.js not loaded or missing World property');
           }
-
+  
           let cleanedCode = initialGameCode
             .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
             .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
@@ -356,7 +366,7 @@ const SettingsRef = ({
             .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
             .trim();
           console.log('[Cleaned Code]', cleanedCode);
-
+  
           const babelHelpers = `
             function _defineProperty(obj, key, value) {
               if (key in obj) {
@@ -428,7 +438,7 @@ const SettingsRef = ({
               return target;
             }
           `;
-
+  
           let transpiledCode;
           try {
             transpiledCode = Babel.transform(cleanedCode, {
@@ -440,7 +450,7 @@ const SettingsRef = ({
             console.error('[Babel Transpile Error]', babelError);
             throw new Error(`Babel transpilation failed: ${babelError.message}`);
           }
-
+  
           const componentFactory = new Function(
             'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'useAnimation',
             'Grid', 'Box', 'Typography', 'TextField', 'Button', 'Slider', 'Dialog', 'Divider', 'Paper', 'Chip',
@@ -459,7 +469,7 @@ const SettingsRef = ({
               };
             `
           );
-
+  
           const GeneratedApp = componentFactory(
             React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
             Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
@@ -472,7 +482,7 @@ const SettingsRef = ({
             faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull, faClock, faBolt, faMoneyBillWave,
             initialProxiedAssets, faQuestionCircle, Modal,
           );
-
+  
           if (typeof GeneratedApp === 'function') {
             if (isMounted) {
               setGameComponent(() => (props) => <GeneratedApp {...props} Physics={Physics} />);
@@ -480,6 +490,7 @@ const SettingsRef = ({
           } else {
             throw new Error('Generated code did not return a valid React component');
           }
+  
         } catch (error) {
           console.error('Error creating component:', error);
           if (isMounted) {
@@ -488,8 +499,18 @@ const SettingsRef = ({
           }
         }
       };
-
+  
+      // Process the game code first
       processGameCode();
+  
+      if (!hasGenerated && !rowName && !prompt && !initialProxiedAssets?.images?.length) {
+        setTimeout(() => {
+          if (isMounted) {
+            triggerAutopopulate(initialGameCode);
+          }
+        }, 1000);
+      }
+  
       return () => {
         isMounted = false;
       };
@@ -499,12 +520,11 @@ const SettingsRef = ({
       setGameComponent(null);
       setComponentError(null);
     }
-  }, [initialGameCode, Physics, isPhysicsLoading, initialProxiedAssets]);
+  }, [initialGameCode, Physics, isPhysicsLoading, initialProxiedAssets, hasGenerated, rowName]);
 
   const handlePromptChange = (e) => setLocalPrompt(e.target.value || '');
 
   const preProxyAssets = async (prompt, backendAssets = { images: [], audio: [], theme: {}, background: {} }) => {
-    const promptLower = prompt.toLowerCase();
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
     const promptUrls = (prompt.match(urlRegex) || []).filter((url) => url.length < 500);
     const imageUrlsFromPrompt = promptUrls.filter((url) => /\.(jpg|jpeg|png)$/i.test(url));
@@ -574,29 +594,48 @@ const SettingsRef = ({
     setChatMessages((prev) => [...prev, { type: 'ai', content: message, timestamp: new Date() }]);
   };
 
+  // Enhanced processing messages for better UX
   const startProcessingUpdates = () => {
-    setProcessingMessage({ type: 'processing', content: 'Generating your game...' });
-    const processingMessages = [
-      'Analyzing your prompt...',
-      'Designing game mechanics...',
-      'Creating interactive elements...',
-      'Adding particle effects...',
-      'Implementing multiplier logic...',
-      'Setting up game physics...',
-      'Polishing visual elements...',
-      'Finalizing your game...',
-    ];
-    let messageIndex = 0;
-    const interval = setInterval(() => {
-      if (messageIndex < processingMessages.length) {
-        setProcessingMessage({ type: 'processing', content: processingMessages[messageIndex] });
-        messageIndex++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 2000);
-    return () => clearInterval(interval);
+    setProcessingMessage({ type: 'processing', content: 'Initializing game generation...' });
+    setStreamingProgress(0);
+    setIsStreaming(true);
   };
+
+  // Streaming callback function
+  const handleStreamUpdate = useCallback((update) => {
+    switch (update.type) {
+      case 'status':
+        setProcessingMessage({
+          type: 'processing',
+          content: update.message
+        });
+        setStreamingProgress(update.progress || 0);
+        setStreamingStatus(update.message);
+        break;
+
+      case 'code_update':
+        // Real-time code updates - you could show a preview here
+        setStreamingProgress(update.progress || 0);
+        break;
+
+      case 'complete':
+        setProcessingMessage({
+          type: 'success',
+          content: update.message
+        });
+        setStreamingProgress(100);
+        setIsStreaming(false);
+        setTimeout(() => {
+          setProcessingMessage(null);
+          setStreamingProgress(0);
+          setStreamingStatus('');
+        }, 2000);
+        break;
+
+      default:
+        break;
+    }
+  }, []);
 
   const handleGenerateClick = async () => {
     if (!localPrompt || (typeof localPrompt === 'string' && !localPrompt.trim())) return;
@@ -604,14 +643,16 @@ const SettingsRef = ({
       addAIMessage('Insufficient credits to generate game. Please add more credits.');
       return;
     }
-
+  
     setSaving(true);
     setGameLoading(true);
     setComponentError(null);
     addUserMessage(localPrompt);
     setShowChat(true);
-    const stopProcessingUpdates = startProcessingUpdates();
+    startProcessingUpdates();
+  
     const assets = await preProxyAssets(localPrompt);
+  
     try {
       const response = await dispatch(
         generateReactGameFromPrompt(
@@ -625,21 +666,67 @@ const SettingsRef = ({
           updateUserPrompt,
           setGameLoading,
           assets,
-          currentModel
+          currentModel,
+          handleStreamUpdate
         )
       );
+  
       const backendAssets = response.payload?.proxiedAssets || { images: [], audio: [], theme: {}, background: {} };
       await preProxyAssets(localPrompt, backendAssets);
       setLocalCredits(prev => prev - modelCost);
       addAIMessage('Game generated successfully! What would you like to modify or improve?');
       setLocalPrompt('');
+      setHasGenerated(true); // Set after auto-population to avoid blocking
+  
+      // Trigger auto-populate after successful generation
+      if (response.payload?.finalApp) {
+        await triggerAutopopulate(response.payload.finalApp);
+      }
     } catch (error) {
       setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
       addAIMessage(`I encountered an error: ${error.message || 'Unknown error'}`);
+      setIsStreaming(false);
+      setProcessingMessage(null);
+      setStreamingProgress(0);
     } finally {
       setSaving(false);
-      setProcessingMessage(null);
-      stopProcessingUpdates();
+      if (!isStreaming) {
+        setProcessingMessage(null);
+        setStreamingProgress(0);
+      }
+      setGameLoading(false);
+    }
+  };
+
+  const triggerAutopopulate = async (generatedGameCode, force = false) => {
+    const currentName = rowName || '';
+    const currentTicker = ticker || '';
+    const currentImage = image || '';
+    const currentDescription = description || '';
+  
+    // Only check conditions if not forcing auto-population
+    if (!force && (currentName.trim() || currentTicker.trim() || currentImage.trim() || currentDescription.trim())) {
+      console.log('[SettingsRef] Skipping auto-populate: Room info already populated');
+      return;
+    }
+  
+    setIsAutopopulating(true);
+    try {
+      const extractedInfo = await autopopulateRoomInfo(
+        generatedGameCode,
+        onChangeState,
+        dispatch
+      );
+  
+      if (extractedInfo) {
+        console.log('[SettingsRef] Auto-populated room info successfully');
+        addAIMessage(`I've auto-populated the room info: "${extractedInfo.name}" ($${extractedInfo.ticker}). Feel free to modify these suggestions!`);
+      }
+    } catch (error) {
+      console.error('[SettingsRef] Auto-populate failed:', error);
+      addAIMessage('Failed to auto-populate room info. Please enter details manually.');
+    } finally {
+      setIsAutopopulating(false);
     }
   };
 
@@ -657,8 +744,36 @@ const SettingsRef = ({
     setSaving(true);
     setGameLoading(true);
     addUserMessage(promptToUse);
-    const stopProcessingUpdates = startProcessingUpdates();
 
+    // Enhanced progress updates for modifications
+    let progressInterval = null;
+    if (handleStreamUpdate && typeof handleStreamUpdate === 'function') {
+      let progress = 0;
+      const modificationMessages = [
+        { progress: 10, message: 'Analyzing your modification request...' },
+        { progress: 25, message: 'Understanding current game structure...' },
+        { progress: 40, message: 'Implementing requested changes...' },
+        { progress: 60, message: 'Updating game mechanics...' },
+        { progress: 75, message: 'Preserving existing features...' },
+        { progress: 90, message: 'Finalizing modifications...' },
+      ];
+
+      let messageIndex = 0;
+
+      progressInterval = setInterval(() => {
+        if (messageIndex < modificationMessages.length) {
+          const currentMessage = modificationMessages[messageIndex];
+          handleStreamUpdate({
+            type: 'status',
+            message: currentMessage.message,
+            progress: currentMessage.progress
+          });
+          messageIndex++;
+        }
+      }, 1500);
+    }
+
+    // Determine if this is a background change request
     const isBackgroundChange = /change\s+background|switch\s+background|new\s+background|update\s+background/i.test(promptToUse.toLowerCase());
 
     const imageUrls = isBackgroundChange
@@ -668,7 +783,7 @@ const SettingsRef = ({
       : initialProxiedAssets.images.map(asset => asset.proxiedUrl);
 
     try {
-      const response = await axios.post('/game/openai/update-react', {
+      const response = await axios.post('/game/update-react', {
         prompt: promptToUse,
         currentCode: initialGameCode,
         imageUrls,
@@ -680,26 +795,52 @@ const SettingsRef = ({
         },
         model: currentModel
       });
+
+      // Clear progress interval
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+
       const updatedCode = response.data.finalApp;
       const backendAssets = response.data.proxiedAssets || initialProxiedAssets;
+
+      // Update assets if needed
       await preProxyAssets(promptToUse, backendAssets);
+
       setGameCode(updatedCode);
       setProxiedAssets(backendAssets);
       setLocalCredits(prev => prev - modelCost);
+
+      // Final progress update
+      if (handleStreamUpdate) {
+        handleStreamUpdate({
+          type: 'complete',
+          message: 'Game updated successfully!',
+          progress: 100
+        });
+      }
+
       addAIMessage('Game updated successfully! What else would you like to change?');
       if (!suggestedPrompt) setLocalPrompt('');
+
     } catch (error) {
+      // Clear progress interval on error
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+
       console.error('[handleFollowUpPrompt] Error updating React app:', error);
       const errorMessage = isBackgroundChange
-        ? 'Failed to change background: ' + (error.message || 'Unknown error')
-        : `Failed to update game: ${error.message || 'Unknown error'}`;
+        ? 'Failed to change background: ' + (error.response?.data?.message || error.message || 'Unknown error')
+        : `Failed to update game: ${error.response?.data?.message || error.message || 'Unknown error'}`;
       addAIMessage(errorMessage);
-      setGameCode(initialGameCode);
+      setGameCode(initialGameCode); // Revert to previous version on error
     } finally {
       setSaving(false);
       setGameLoading(false);
-      setProcessingMessage(null);
-      stopProcessingUpdates();
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
     }
   };
 
@@ -766,6 +907,533 @@ const SettingsRef = ({
     }
   };
 
+  // For embedded mode (not modal), render directly without modal wrapper
+  if (!settings_panel_opened) {
+    return null;
+  }
+
+  // If this is for CreateGame (no modal), render as embedded component
+  if (!rowName && !room_id) {
+    return (
+      <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              fontWeight: 700,
+              color: isDarkMode ? '#fff' : '#000',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            AI Game Generator
+            <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.5rem', color: 'error.main' }} />
+          </Typography>
+
+          {/* Credits Display */}
+          <Box
+            sx={{
+              ...glassmorphismStyle,
+              p: 2,
+              borderRadius: 2,
+              mb: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000', mb: 0.5 }}>
+              Credit Balance
+            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Chip
+                icon={<FontAwesomeIcon icon={faCoins} style={{ color: yellow[700], fontSize: '14px' }} />}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+                      {localCredits}
+                    </Typography>
+                    <Typography variant="caption">Credits</Typography>
+                  </Box>
+                }
+                sx={{
+                  bgcolor: localCredits < modelCost ? 'rgba(244, 67, 54, 0.15)' : 'rgba(255, 193, 7, 0.15)',
+                  color: localCredits < modelCost ? '#ff1744' : isDarkMode ? '#fff' : '#000',
+                  border: `1px solid ${localCredits < modelCost ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255, 193, 7, 0.5)'}`,
+                  borderRadius: '16px',
+                  height: 32,
+                  '& .MuiChip-icon': {
+                    color: yellow[700],
+                    mr: 0.5
+                  }
+                }}
+              />
+
+              <Chip
+                icon={<FontAwesomeIcon icon={faCog} style={{ color: blue[400], fontSize: '14px' }} />}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+                      {modelCost}
+                    </Typography>
+                    <Typography variant="caption">Cost per Generation</Typography>
+                  </Box>
+                }
+                sx={{
+                  bgcolor: 'rgba(33, 150, 243, 0.15)',
+                  color: isDarkMode ? '#fff' : '#000',
+                  border: '1px solid rgba(33, 150, 243, 0.5)',
+                  borderRadius: '16px',
+                  height: 32,
+                  '& .MuiChip-icon': {
+                    color: blue[400],
+                    mr: 0.5
+                  }
+                }}
+              />
+            </Box>
+
+            {localCredits < modelCost && (
+              <Alert
+                severity="error"
+                variant="outlined"
+                icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
+                sx={{
+                  mt: 1,
+                  bgcolor: 'rgba(244, 67, 54, 0.1)',
+                  color: '#ff1744',
+                  border: '1px solid rgba(244, 67, 54, 0.5)',
+                  '& .MuiAlert-icon': {
+                    color: '#ff1744'
+                  }
+                }}
+              >
+                Insufficient credits. You need {modelCost - localCredits} more credits to proceed.
+              </Alert>
+            )}
+
+            <Box sx={{ mt: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  Credits Available
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  {localCredits}/{modelCost} Required
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  height: 6,
+                  borderRadius: 3,
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  overflow: 'hidden',
+                  position: 'relative',
+                }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    height: '100%',
+                    width: `${Math.min(100, (localCredits / modelCost) * 100)}%`,
+                    bgcolor: localCredits < modelCost ? '#ff1744' : '#4caf50',
+                    borderRadius: 3,
+                    transition: 'width 0.5s ease-in-out',
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Suggested Prompts */}
+          {isLoadingSuggestions ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
+              <CircularProgress size={20} sx={{ mr: 1, color: '#ff4081' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
+                Generating Suggested Prompts...
+              </Typography>
+            </Box>
+          ) : suggestedPrompts.length > 0 ? (
+            <Box sx={{ mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: isDarkMode ? '#fff' : '#000' }}>
+                Suggested Prompts
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {suggestedPrompts.map((prompt, index) => (
+                  <Chip
+                    key={index}
+                    label={prompt}
+                    onClick={() => handleFollowUpPrompt(prompt)}
+                    color={prompt.startsWith('[User Feedback]') ? 'error' : 'warning'}
+                    sx={{
+                      bgcolor: prompt.startsWith('[User Feedback]') ? 'rgba(244, 67, 54, 0.2)' : 'rgba(255, 193, 7, 0.2)',
+                      color: isDarkMode ? '#fff' : '#000',
+                      borderRadius: 2,
+                      '&:hover': {
+                        bgcolor: prompt.startsWith('[User Feedback]') ? 'rgba(244, 67, 54, 0.3)' : 'rgba(255, 193, 7, 0.3)',
+                        cursor: 'pointer',
+                      },
+                    }}
+                    disabled={saving || gameLoading}
+                  />
+                ))}
+              </Box>
+            </Box>
+          ) : null}
+
+          {isAutopopulating && (
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              mb: 2,
+              ...glassmorphismStyle,
+              p: 2,
+              borderRadius: 2
+            }}>
+              <CircularProgress size={20} sx={{ mr: 1, color: '#ff4081' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
+                Auto-populating room information...
+              </Typography>
+            </Box>
+          )}
+          {/* Chat Interface */}
+          {showChat && (
+            <Box
+              sx={{
+                ...glassmorphismStyle,
+                borderRadius: 2,
+                mb: 2,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                height: 250,
+                minHeight: 200,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                  p: 1.5,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar sx={{ width: 24, height: 24, fontSize: '0.875rem', mr: 1 }}>
+                    AI
+                  </Avatar>
+                  <Typography variant="subtitle2" sx={{ color: isDarkMode ? '#fff' : '#000' }}>
+                    AI Game Assistant
+                  </Typography>
+                </Box>
+                <Button
+                  color="inherit"
+                  variant="outlined"
+                  size="small"
+                  onClick={resetGame}
+                  startIcon={<FontAwesomeIcon icon={faRedo} />}
+                  sx={{
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    color: isDarkMode ? '#fff' : '#000',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    },
+                  }}
+                >
+                  Reset
+                </Button>
+              </Box>
+              <Box
+                sx={{
+                  p: 2,
+                  flexGrow: 1,
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  bgcolor: 'rgba(0, 0, 0, 0.05)',
+                }}
+              >
+                {chatMessages.length > 0 ? (
+                  chatMessages.map((message, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
+                        maxWidth: '80%',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        {message.type === 'ai' && (
+                          <Avatar sx={{ width: 24, height: 24, fontSize: '0.775rem', mr: 1 }}>
+                            AI
+                          </Avatar>
+                        )}
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                          {formatTime(message.timestamp)}
+                        </Typography>
+                        {message.type === 'user' && (
+                          <Avatar sx={{ width: 24, height: 24, bgcolor: blue[500], fontSize: '0.775rem', ml: 1 }}>
+                            U
+                          </Avatar>
+                        )}
+                      </Box>
+                      <Paper
+                        sx={{
+                          p: 1.5,
+                          bgcolor: message.type === 'user' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                          borderRadius: 2,
+                          border: 'none',
+                          color: isDarkMode ? '#fff' : '#000',
+                          ...glassmorphismStyle,
+                        }}
+                      >
+                        <Typography variant="body2">{message.content}</Typography>
+                      </Paper>
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
+                    No messages yet. Start by sending a prompt!
+                  </Typography>
+                )}
+
+                {processingMessage && (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-start', maxWidth: '80%' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <Avatar sx={{ width: 24, height: 24, fontSize: '0.775rem', mr: 1 }}>
+                        AI
+                      </Avatar>
+                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {formatTime(new Date())}
+                      </Typography>
+                    </Box>
+                    <Paper
+                      sx={{
+                        p: 1.5,
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: 2,
+                        border: 'none',
+                        color: isDarkMode ? '#fff' : '#000',
+                        ...glassmorphismStyle,
+                        minWidth: 250,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <CircularProgress color='error' size={16} sx={{ mr: 1 }} />
+                        <Typography variant="body2">{processingMessage.content}</Typography>
+                      </Box>
+
+                      {isStreaming && streamingProgress > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                              Progress
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                              {streamingProgress.toFixed(0)}%
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              height: 4,
+                              borderRadius: 2,
+                              bgcolor: 'rgba(255, 255, 255, 0.2)',
+                              overflow: 'hidden',
+                              position: 'relative',
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
+                                height: '100%',
+                                width: `${streamingProgress}%`,
+                                bgcolor: '#f50057',
+                                borderRadius: 2,
+                                transition: 'width 0.3s ease-in-out',
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      )}
+                    </Paper>
+                  </Box>
+                )}
+                <div ref={chatEndRef} />
+              </Box>
+            </Box>
+          )}
+
+          {/* Prompt Input */}
+          <Box sx={{ ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
+            <TextField
+              multiline
+              rows={3}
+              variant="outlined"
+              fullWidth
+              color='error'
+              label={chatMessages.length > 0 ? 'Continue the conversation' : 'Custom Game Prompt'}
+              value={localPrompt}
+              onChange={handlePromptChange}
+              inputProps={{ maxLength: 1800 }}
+              onFocus={() => dispatch(setFocused(true))}
+              onBlur={() => dispatch(setFocused(false))}
+              placeholder={
+                chatMessages.length > 0
+                  ? "Describe how you'd like to modify the game..."
+                  : 'Describe the game you want to create...'
+              }
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: isDarkMode ? '#fff' : '#000',
+                  borderRadius: 2,
+                },
+              }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {chatMessages.length > 0 && (
+                  <Button
+                    color="inherit"
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setShowChat(!showChat)}
+                    startIcon={<ChatIcon />}
+                    sx={{
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      color: isDarkMode ? '#fff' : '#000',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                      },
+                    }}
+                  >
+                    {showChat ? 'Hide Chat' : 'Show Chat'}
+                  </Button>
+                )}
+              </Box>
+              <Button
+                variant="contained"
+                color='error'
+                onClick={() => (room_id || chatMessages.length > 0 ? handleFollowUpPrompt() : handleGenerateClick())}
+                disabled={loading || saving || gameLoading || localCredits < modelCost}
+                startIcon={loading || saving || gameLoading ? <CircularProgress color='error' size={20} sx={{ color: '#fff' }} /> : <SendIcon />}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                  '&:hover': {
+                    bgcolor: 'linear-gradient(45deg, #f50057, #ff4081)',
+                    transform: 'scale(1.05)',
+                    transition: 'all 0.3s ease',
+                  },
+                  '&:disabled': {
+                    bgcolor: grey[700],
+                    color: grey[400],
+                  },
+                }}
+              >
+                {room_id || chatMessages.length > 0 ? 'Update Game' : 'Generate'}
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Game Preview */}
+          {gameLoading ? (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: 300,
+                ...glassmorphismStyle,
+                borderRadius: 2,
+              }}
+            >
+              <CircularProgress color='error' size={60} sx={{ mb: 2 }} />
+              <Typography variant="body1" sx={{ color: isDarkMode ? '#fff' : '#000' }}>
+                Generating your game...
+              </Typography>
+            </Box>
+          ) : componentError ? (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: 300,
+                ...glassmorphismStyle,
+                borderRadius: 2,
+                p: 3,
+              }}
+            >
+              <Typography variant="h6" sx={{ mb: 2, color: '#ff1744' }}>
+                Error
+              </Typography>
+              <Typography sx={{ color: isDarkMode ? '#fff' : '#000' }}>{componentError}</Typography>
+            </Box>
+          ) : GameComponent ? (
+            <Box
+              sx={{
+                width: '100%',
+                borderRadius: 2,
+                overflow: 'auto',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                ...glassmorphismStyle,
+                position: 'relative',
+              }}
+            >
+              {(() => {
+                try {
+                  return <GameComponent proxiedAssets={initialProxiedAssets} logEvent={logEvent} Physics={Physics} />;
+                } catch (error) {
+                  setComponentError(`Runtime error: ${error.message}`);
+                  return (
+                    <Typography sx={{ color: '#ff1744', p: 2 }}>
+                      Failed to render game: {error.message}
+                    </Typography>
+                  );
+                }
+              })()}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: 300,
+                ...glassmorphismStyle,
+                p: 2,
+                textAlign: 'center',
+                borderRadius: 2,
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                No game generated yet. Enter a prompt and click Generate.
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </GlassContainer>
+    );
+  }
+
+  // Original modal version for other use cases
   return (
     <Modal
       open={settings_panel_opened}

@@ -36,7 +36,12 @@ import {
   TOGGLE_LOW_GRAPHICS,
   TOGGLE_MUSIC_ENABLED,
   TOGGLE_DRAWER,
-  SET_NOTIFICATIONS_ALLOWED
+  SET_NOTIFICATIONS_ALLOWED,
+  API_KEYS_LOADING,
+  API_KEYS_LOADED,
+  API_KEYS_ERROR,
+  API_KEY_GENERATED,
+  API_KEY_REVOKED,
 } from '../types';
 
 const initialState = {
@@ -74,7 +79,9 @@ const initialState = {
   totalCount: 0,
   hasMore: false,
   transactions_loading: false,
-  vaultTransactions: [],
+  apiKeys: [],
+  apiKeysLoading: false,
+  apiKeysError: null,
   sevenDayProfit: null,
   oneDayProfit: null,
   allTimeProfit: null,
@@ -85,6 +92,41 @@ export default function (state = initialState, action) {
   const { type, payload } = action;
 
   switch (type) {
+    case API_KEYS_LOADING:
+      return {
+        ...state,
+        apiKeysLoading: true,
+        apiKeysError: null,
+      };
+
+    case API_KEYS_LOADED:
+      return {
+        ...state,
+        apiKeys: payload,
+        apiKeysLoading: false,
+        apiKeysError: null,
+      };
+
+    case API_KEYS_ERROR:
+      return {
+        ...state,
+        apiKeysLoading: false,
+        apiKeysError: payload,
+      };
+
+    case API_KEY_GENERATED:
+      return {
+        ...state,
+        apiKeys: [...state.apiKeys, payload],
+      };
+
+    case API_KEY_REVOKED:
+      return {
+        ...state,
+        apiKeys: state.apiKeys.map(key => 
+          key.keyId === payload ? { ...key, isActive: false } : key
+        ),
+      };
     case SET_DARK_MODE:
       localStorage.setItem('darkMode', payload);
       return {

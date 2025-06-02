@@ -9,6 +9,7 @@ import LoadingComponent from '../../components/LoadingComponent';
 
 const CreateGame = lazy(() => import('../main_pages/CreateGame'));
 const MainPage = lazy(() => import('../main_pages/MainPage'));
+const ApiDocumentation = lazy(() => import('../main_pages/ApiDocumentation'));
 const JoinGame = lazy(() => import('../main_pages/JoinGame'));
 const ChatPage = lazy(() => import('../MyGames/ChatPage'));
 const LeaderboardsModal = lazy(() => import('../modal/LeaderboardsModal'));
@@ -144,6 +145,14 @@ function GameMainRoute() {
               element={
                 <Suspense fallback={<LoadingComponent />}>
                   <MainPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="api/docs"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <ApiDocumentation />
                 </Suspense>
               }
             />

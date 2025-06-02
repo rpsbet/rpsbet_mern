@@ -36,22 +36,22 @@ const GlassButton = styled.button`
         ? 'rgba(211, 47, 47, 0.8)'
         : 'rgba(211, 47, 47, 0.8)'
       : isDarkMode
-      ? 'rgba(255, 255, 255, 0.12)'
-      : 'rgba(255, 255, 255, 0.5)'};
+        ? 'rgba(255, 255, 255, 0.12)'
+        : 'rgba(255, 255, 255, 0.5)'};
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid ${({ isActive, isDarkMode }) =>
     isActive
       ? 'rgba(211, 47, 47, 0.8)'
       : isDarkMode
-      ? 'rgba(255, 255, 255, 0.08)'
-      : 'rgba(255, 255, 255, 0.5)'};
+        ? 'rgba(255, 255, 255, 0.08)'
+        : 'rgba(255, 255, 255, 0.5)'};
   color: ${({ isActive, isDarkMode }) =>
     isActive
       ? 'white'
       : isDarkMode
-      ? 'rgba(255, 255, 255, 0.9)'
-      : 'rgba(0, 0, 0, 0.8)'};
+        ? 'rgba(255, 255, 255, 0.9)'
+        : 'rgba(0, 0, 0, 0.8)'};
   font-weight: ${({ isActive }) => (isActive ? '600' : '400')};
   padding: 8px 16px;
   border-radius: 8px;
@@ -60,7 +60,7 @@ const GlassButton = styled.button`
 
   &:hover {
     background: ${({ isDarkMode }) =>
-      isDarkMode ? 'rgba(211, 47, 47, 0.6)' : 'rgba(211, 47, 47, 0.6)'};
+    isDarkMode ? 'rgba(211, 47, 47, 0.6)' : 'rgba(211, 47, 47, 0.6)'};
     color: white;
   }
 `;
@@ -177,7 +177,6 @@ function DefaultBetAmountPanel({
           variant="outlined"
           sx={{
             mt: 3,
-            mb: 3,
             '& .MuiOutlinedInput-root': {
               background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
               backdropFilter: 'blur(4px)',
@@ -211,7 +210,7 @@ function DefaultBetAmountPanel({
         />
 
         {/* Health (SOL) Header */}
-        <Box
+        {/* <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -294,7 +293,7 @@ function DefaultBetAmountPanel({
             },
           }}
           helperText="Minimum 10 SOL"
-        />
+        /> */}
       </GlassContainer>
     </ThemeProvider>
   );

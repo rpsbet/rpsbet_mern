@@ -3,7 +3,6 @@ const router = express.Router();
 const axios = require('axios');
 const auth = require('../middleware/auth');
 const Receipt = require('../model/Receipt');
-const Vault = require('../model/Vault');
 const User = require('../model/User');
 const GameLog = require('../model/GameLog');
 const Loan = require('../model/Loan');

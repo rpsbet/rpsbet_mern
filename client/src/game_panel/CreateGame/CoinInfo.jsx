@@ -7,13 +7,15 @@ import {
   Typography,
   InputAdornment,
   alpha,
+  CircularProgress,
 } from '@mui/material';
-import { CloudUpload as UploadIcon, Info } from '@mui/icons-material';
+import { CloudUpload as UploadIcon, Info, AutoAwesome } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setFocused } from '../../redux/Auth/user.actions';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import styled from 'styled-components';
+import { manualAutopopulate } from '../../redux/Logic/logic.actions';
 
 // Styled components for glassmorphism effect
 const GlassContainer = styled(Box)`
@@ -98,10 +100,12 @@ const CoinInfo = ({
   ticker,
   image,
   isDarkMode,
+  gameCode, // NEW: Pass gameCode from parent
 }) => {
   const [nameError, setNameError] = useState('');
   const [tickerError, setTickerError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [isAutopopulating, setIsAutopopulating] = useState(false); // NEW: Auto-populate loading state
 
   const theme = getCustomTheme(isDarkMode);
   const dispatch = useDispatch();
@@ -148,10 +152,34 @@ const CoinInfo = ({
     reader.readAsDataURL(file);
   };
 
+  // NEW: Handle auto-populate button click
+  const handleAutopopulate = async () => {
+    if (!gameCode || !gameCode.trim()) {
+      dispatch({
+        type: 'MSG_ERROR',
+        payload: 'No game code available to analyze. Please generate a game first.'
+      });
+      return;
+    }
+
+    setIsAutopopulating(true);
+    try {
+      await manualAutopopulate(gameCode, onChangeState, dispatch, true);
+    } catch (error) {
+      console.error('Manual auto-populate failed:', error);
+      dispatch({
+        type: 'MSG_ERROR',
+        payload: 'Failed to auto-populate room information. Please try again.'
+      });
+    } finally {
+      setIsAutopopulating(false);
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
-      <GlassContainer isDarkMode={isDarkMode} className="coin-info-panel" sx={{ marginBottom: '24px' }}>
-        {/* Title + Tooltip */}
+      <GlassContainer isDarkMode={isDarkMode} className="coin-info-panel" sx={{ mb: 2, mt: 3 }}>
+        {/* Title + Tooltip + Auto-populate Button */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Typography
             variant="h6"
@@ -175,21 +203,66 @@ const CoinInfo = ({
           >
             Room Information
           </Typography>
-          <Tooltip
-            title="For when room hits 69K, liquidity will be moved to a pool."
-            placement="top"
-          >
-            <Info
-              sx={{
-                cursor: 'pointer',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-                '&:hover': {
-                  color: theme.palette.error.main,
-                },
-                transition: 'color 0.2s ease',
-              }}
-            />
-          </Tooltip>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Auto-populate Button */}
+            {gameCode && (
+              <Tooltip
+                title="Auto-populate room info based on generated game"
+                placement="top"
+              >
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={handleAutopopulate}
+                  disabled={isAutopopulating || !gameCode}
+                  startIcon={
+                    isAutopopulating ? (
+                      <CircularProgress size={16} color="error" />
+                    ) : (
+                      <AutoAwesome />
+                    )
+                  }
+                  sx={{
+                    borderColor: 'rgba(211, 47, 47, 0.5)',
+                    color: isDarkMode ? '#fff' : '#000',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    minWidth: 'auto',
+                    px: 1.5,
+                    py: 0.5,
+                    '&:hover': {
+                      borderColor: theme.palette.error.main,
+                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                    },
+                    '&:disabled': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                  }}
+                >
+                  {isAutopopulating ? 'Analyzing...' : 'Auto-fill'}
+                </Button>
+              </Tooltip>
+            )}
+
+            <Tooltip
+              title="For when room hits 69K, liquidity will be moved to a pool."
+              placement="top"
+            >
+              <Info
+                sx={{
+                  cursor: 'pointer',
+                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  '&:hover': {
+                    color: theme.palette.error.main,
+                  },
+                  transition: 'color 0.2s ease',
+                }}
+              />
+            </Tooltip>
+          </Box>
         </Box>
 
         {/* NAME Field */}
@@ -237,6 +310,9 @@ const CoinInfo = ({
             },
             '& .MuiFormHelperText-root': {
               color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+            },
+            '& .MuiInputBase-input': {
+              color: isDarkMode ? '#fff' : '#000',
             },
           }}
         />
@@ -290,6 +366,12 @@ const CoinInfo = ({
               },
             },
             '& .MuiFormHelperText-root': {
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+            },
+            '& .MuiInputBase-input': {
+              color: isDarkMode ? '#fff' : '#000',
+            },
+            '& .MuiInputAdornment-root': {
               color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
             },
           }}
