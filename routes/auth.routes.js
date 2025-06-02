@@ -240,6 +240,78 @@ router.post('/', (req, res) => {
   });
 });
 
+//Privy Login
+router.post('/privy', async (req, res) => {
+  const { privyId, email, wallet } = req.body;
+
+  if (!privyId) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing Privy user ID',
+    });
+  }
+
+  try {
+    // Step 1: Look up user by privyId or wallet/email fallback
+    let user = await User.findOne({
+      $or: [
+        { privyId },
+        wallet ? { accounts: wallet } : null,
+        email ? { email } : null,
+      ].filter(Boolean)
+    });
+
+    if (!user) {
+      // Step 2: Create new user
+      const username = `PRIVY_${privyId.slice(-6)}`;
+
+      user = new User({
+        privyId,
+        username,
+        email: email || '',
+        password: generateRandomPassword(),
+        bio: '',
+        totalWagered: 0,
+        totalTraded: 0,
+        balance: 0,
+        rewards: [],
+        credit_score: 1000,
+        ai_mode: 'Random',
+        status: 'off',
+        avatar: '',
+        referralCode: generateReferralCode(),
+        referralUsername: '',
+        accounts: wallet ? [wallet] : [],
+      });
+
+      await user.save();
+    }
+
+    // Step 3: Generate JWT
+    const token = jwt.sign(
+      { id: user._id, is_admin: user.is_admin },
+      process.env.SECRET_OR_KEY,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Logged in via Privy',
+      token,
+      user,
+    });
+
+  } catch (error) {
+    console.error('Error in /auth/privy route:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server error during Privy authentication.',
+    });
+  }
+});
+
+
+
 router.post('/users/add-wallet', auth, async (req, res) => {
   try {
     const { walletAddress } = req.body;

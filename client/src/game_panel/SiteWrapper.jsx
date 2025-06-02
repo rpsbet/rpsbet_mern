@@ -99,6 +99,8 @@ import {
   getHistory,
   endLoading,
 } from '../redux/Logic/logic.actions';
+import PrivyLogin from './modal/PrivyLogin.jsx';
+import { usePrivy } from '@privy-io/react-auth';
 
 // Lazy-loaded components
 const HistoryTable = lazy(() => import('../game_panel/LiveGames/HistoryTable.jsx'));
@@ -198,6 +200,7 @@ function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = usePrivy();
 
   // Split useSelector calls
   const isDarkMode = useSelector((state) => state.auth.isDarkMode);
@@ -569,7 +572,11 @@ function SiteWrapper({ children }) {
     setSolanaBalance(null);
     setAnchorElProfile(null);
     if (socket) socket.disconnect();
+    console.log("----logout---");
+    logout();
+
     dispatch(userSignOut(clearToken, navigate));
+
   };
 
   // Modal toggle handlers
@@ -1143,27 +1150,28 @@ function SiteWrapper({ children }) {
                   </Menu>
                 </>
               ) : (
-                <Button
-                  id="btn-login"
-                  onClick={handleOpenLoginModal}
-                  variant="contained"
-                  sx={{
-                    backgroundColor: '#ff3030',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    px: 3,
-                    py: 1,
-                    borderRadius: '4px',
-                    '&:hover': {
-                      backgroundColor: '#d42020',
-                    },
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  CONNECT
-                </Button>
+                // <Button
+                //   id="btn-login"
+                //   onClick={handleOpenLoginModal}
+                //   variant="contained"
+                //   sx={{
+                //     backgroundColor: '#ff3030',
+                //     color: '#ffffff',
+                //     fontWeight: 600,
+                //     px: 3,
+                //     py: 1,
+                //     borderRadius: '4px',
+                //     '&:hover': {
+                //       backgroundColor: '#d42020',
+                //     },
+                //     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                //     textTransform: 'uppercase',
+                //     letterSpacing: '0.5px',
+                //   }}
+                // >
+                //   CONNECT
+                // </Button>
+                <PrivyLogin />
               )}
             </div>
           </div>
