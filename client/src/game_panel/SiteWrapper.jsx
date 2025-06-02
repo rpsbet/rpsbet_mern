@@ -30,7 +30,7 @@ import {
   TableContainer,
   TableRow,
   Badge,
-  DialogTitle
+  DialogTitle,
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
@@ -51,6 +51,8 @@ import {
   QuestionMark,
   LeaderboardOutlined,
   NotificationsOutlined,
+  PersonOutline,
+  Settings,
 } from '@mui/icons-material';
 import socketIOClient from 'socket.io-client';
 import { formatDistanceToNow } from 'date-fns';
@@ -92,7 +94,7 @@ import {
 } from '../redux/Logic/logic.actions';
 import PrivyLogin from './modal/PrivyLogin.jsx';
 import { usePrivy } from '@privy-io/react-auth';
-
+import { faCoins } from '@fortawesome/free-solid-svg-icons';
 // Lazy-loaded components
 const HistoryTable = lazy(() => import('../game_panel/LiveGames/HistoryTable.jsx'));
 const BonusModal = lazy(() => import('./modal/BonusModal.jsx'));
@@ -262,7 +264,8 @@ function SiteWrapper({ children }) {
     websiteLoading: true,
     isInitialized: false,
   });
-
+  const [isHovered, setIsHovered] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   // Refs
   const notificationSoundRef = useRef(null);
   const needALoanRef = useRef(null);
@@ -558,7 +561,7 @@ function SiteWrapper({ children }) {
   const handleLogout = clearToken => {
     setWalletAddress(null);
     setSolanaBalance(null);
-    setAnchorElProfile(null);
+    updateState({ anchorElProfile: null })
     if (socket) socket.disconnect();
     console.log("----logout---");
     logout();
@@ -866,7 +869,17 @@ function SiteWrapper({ children }) {
       </DialogContent>
     </Dialog>
   );
-
+  const handleOpenSettingsModal = () => setShowSettingsModal(true);
+  const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
+  const handleOpenProfileMenu = e => updateState({ anchorElProfile: e.currentTarget })
+  const handleCloseProfileMenu = () => updateState({ anchorElProfile: null })
+  const handleOpenEliteSubscriptionModal = () => {
+    setEliteModalOpen(true);
+  };
+  const handleOpenProfileModal = () => {
+    setShowProfileModal(true);
+    updateState({ anchorElProfile: null })
+  };
   const renderNegativeBalanceDialog = () => (
     <Dialog
       open={state.showNegativeBalanceDialog}
@@ -927,31 +940,7 @@ function SiteWrapper({ children }) {
       );
     }
 
-    if (!user?._id) {
-      return (
-        <Button
-          id="btn-login"
-          onClick={() => updateState({ showLoginModal: true })}
-          variant="contained"
-          sx={{
-            backgroundColor: '#ff3030',
-            color: '#ffffff',
-            fontWeight: 600,
-            px: 3,
-            py: 1,
-            borderRadius: '4px',
-            '&:hover': {
-              backgroundColor: '#d42020',
-            },
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          CONNECT
-        </Button>
-      );
-    }
+    
 
     return (
       <>
@@ -1039,93 +1028,93 @@ function SiteWrapper({ children }) {
     );
   };
 
-  const renderProfileMenu = () => (
-    <Menu
-      anchorEl={state.anchorElProfile}
-      open={Boolean(state.anchorElProfile)}
-      onClose={() => updateState({ anchorElProfile: null })}
-      transitionDuration={200}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      PaperProps={{
-        sx: {
-          background: 'rgba(20, 20, 25, 0.95)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '8px',
-          minWidth: '180px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-          mt: 1,
-          '& .MuiMenuItem-root': {
-            py: 1,
-            px: 2,
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#ffffff',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              backgroundColor: '#ff3030',
-              color: '#ffffff',
-            },
-          },
-          '& .MuiListItemIcon-root': {
-            color: '#ffffff',
-            minWidth: '36px',
-          },
-          '& .MuiDivider-root': {
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            my: 0.5,
-          },
-        },
-      }}
-      BackdropProps={{ invisible: true }}
-    >
-      <MenuItem onClick={() => {
-        updateState({ showAccountModal: true, anchorElProfile: null });
-      }}>
-        <ListItemIcon>
-          <ManageAccounts fontSize="small" />
-        </ListItemIcon>
-        <ListItemText primary="ACCOUNT" />
-      </MenuItem>
+  // const renderProfileMenu = () => (
+  //   <Menu
+  //     anchorEl={state.anchorElProfile}
+  //     open={Boolean(state.anchorElProfile)}
+  //     onClose={() => updateState({ anchorElProfile: null })}
+  //     transitionDuration={200}
+  //     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+  //     transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+  //     PaperProps={{
+  //       sx: {
+  //         background: 'rgba(20, 20, 25, 0.95)',
+  //         backdropFilter: 'blur(10px)',
+  //         WebkitBackdropFilter: 'blur(10px)',
+  //         border: '1px solid rgba(255, 255, 255, 0.1)',
+  //         borderRadius: '8px',
+  //         minWidth: '180px',
+  //         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+  //         mt: 1,
+  //         '& .MuiMenuItem-root': {
+  //           py: 1,
+  //           px: 2,
+  //           fontSize: '14px',
+  //           fontWeight: 500,
+  //           color: '#ffffff',
+  //           transition: 'all 0.2s ease',
+  //           '&:hover': {
+  //             backgroundColor: '#ff3030',
+  //             color: '#ffffff',
+  //           },
+  //         },
+  //         '& .MuiListItemIcon-root': {
+  //           color: '#ffffff',
+  //           minWidth: '36px',
+  //         },
+  //         '& .MuiDivider-root': {
+  //           borderColor: 'rgba(255, 255, 255, 0.1)',
+  //           my: 0.5,
+  //         },
+  //       },
+  //     }}
+  //     BackdropProps={{ invisible: true }}
+  //   >
+  //     <MenuItem onClick={() => {
+  //       updateState({ showAccountModal: true, anchorElProfile: null });
+  //     }}>
+  //       <ListItemIcon>
+  //         <ManageAccounts fontSize="small" />
+  //       </ListItemIcon>
+  //       <ListItemText primary="ACCOUNT" />
+  //     </MenuItem>
 
-      <Divider />
+  //     <Divider />
 
-      <MenuItem className="desktop-only" onClick={handlePortfolio}>
-        <ListItemIcon>
-          <ListTwoTone fontSize="small" />
-        </ListItemIcon>
-        <ListItemText primary="PORTFOLIO" />
-      </MenuItem>
+  //     <MenuItem className="desktop-only" onClick={handlePortfolio}>
+  //       <ListItemIcon>
+  //         <ListTwoTone fontSize="small" />
+  //       </ListItemIcon>
+  //       <ListItemText primary="PORTFOLIO" />
+  //     </MenuItem>
 
-      <MenuItem onClick={() => updateState({ showHowToPlayModal: true })}>
-        <ListItemIcon>
-          <Help fontSize="small" />
-        </ListItemIcon>
-        <ListItemText primary="HOW IT WORKS" />
-      </MenuItem>
+  //     <MenuItem onClick={() => updateState({ showHowToPlayModal: true })}>
+  //       <ListItemIcon>
+  //         <Help fontSize="small" />
+  //       </ListItemIcon>
+  //       <ListItemText primary="HOW IT WORKS" />
+  //     </MenuItem>
 
-      <MenuItem onClick={() => updateState({ eliteModalOpen: true })}>
-        <ListItemIcon>
-          <Star fontSize="small" sx={{ color: '#ffd700' }} />
-        </ListItemIcon>
-        <ListItemText primary="ELITE" />
-      </MenuItem>
+  //     <MenuItem onClick={() => updateState({ eliteModalOpen: true })}>
+  //       <ListItemIcon>
+  //         <Star fontSize="small" sx={{ color: '#ffd700' }} />
+  //       </ListItemIcon>
+  //       <ListItemText primary="ELITE" />
+  //     </MenuItem>
 
-      <Divider />
+  //     <Divider />
 
-      <MenuItem
-        onClick={() => handleLogout(true)}
-        sx={{ color: '#ffffff' }}
-      >
-        <ListItemIcon>
-          <ExitToApp fontSize="small" />
-        </ListItemIcon>
-        <ListItemText primary="LOG OUT" />
-      </MenuItem>
-    </Menu>
-  );
+  //     <MenuItem
+  //       onClick={() => handleLogout(true)}
+  //       sx={{ color: '#ffffff' }}
+  //     >
+  //       <ListItemIcon>
+  //         <ExitToApp fontSize="small" />
+  //       </ListItemIcon>
+  //       <ListItemText primary="LOG OUT" />
+  //     </MenuItem>
+  //   </Menu>
+  // );
 
   const renderNotificationsPopover = () => (
     <Popover
@@ -1643,7 +1632,7 @@ function SiteWrapper({ children }) {
                 </>
               )}
 
-              {websiteLoading ? (
+              {state.websiteLoading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Skeleton variant="text" sx={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
                   <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
@@ -1680,7 +1669,7 @@ function SiteWrapper({ children }) {
                               color: '#ff0000', // Adjust color to match your theme
                             }}
                           />
-                          {isHovered ? (
+                          {state.isHovered ? (
                             <Typography variant="body2">
                               ${((solanaBalance * solPrice) || 0).toFixed(numDecimals)}
                             </Typography>
@@ -1764,8 +1753,8 @@ function SiteWrapper({ children }) {
                   </Button>
 
                   <Menu
-                    anchorEl={anchorElProfile}
-                    open={Boolean(anchorElProfile)}
+                    anchorEl={state.anchorElProfile}
+                    open={Boolean(state.anchorElProfile)}
                     onClose={handleCloseProfileMenu}
                     transitionDuration={200}
                     anchorOrigin={{
@@ -1865,32 +1854,11 @@ function SiteWrapper({ children }) {
                   </Menu>
                 </>
               ) : (
-                // <Button
-                //   id="btn-login"
-                //   onClick={handleOpenLoginModal}
-                //   variant="contained"
-                //   sx={{
-                //     backgroundColor: '#ff3030',
-                //     color: '#ffffff',
-                //     fontWeight: 600,
-                //     px: 3,
-                //     py: 1,
-                //     borderRadius: '4px',
-                //     '&:hover': {
-                //       backgroundColor: '#d42020',
-                //     },
-                //     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                //     textTransform: 'uppercase',
-                //     letterSpacing: '0.5px',
-                //   }}
-                // >
-                //   CONNECT
-                // </Button>
                 <PrivyLogin />
               )}
-
+{/* 
               {renderUserActions()}
-              {renderProfileMenu()}
+              {renderProfileMenu()} */}
             </div>
           </div>
 
