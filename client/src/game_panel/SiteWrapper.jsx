@@ -216,7 +216,6 @@ function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = usePrivy();
 
   // Stable selectors to prevent unnecessary re-renders
   const userData = useSelector(selectUserData);
