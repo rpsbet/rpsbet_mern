@@ -90,6 +90,8 @@ import {
   getHistory,
   endLoading,
 } from '../redux/Logic/logic.actions';
+import PrivyLogin from './modal/PrivyLogin.jsx';
+import { usePrivy } from '@privy-io/react-auth';
 
 // Lazy-loaded components
 const HistoryTable = lazy(() => import('../game_panel/LiveGames/HistoryTable.jsx'));
@@ -150,19 +152,19 @@ const updateFromNow = (items, timestampField = 'created_at') => {
 
   return items.map(item => {
     if (!item[timestampField]) return item;
-    
+
     try {
       const fromNow = formatDistanceToNow(new Date(item[timestampField]), { addSuffix: true });
-      const processedTime = fromNow === 'less than a minute ago' 
-        ? 'just now' 
+      const processedTime = fromNow === 'less than a minute ago'
+        ? 'just now'
         : fromNow
-            .replace('less than a minute', 'a few s')
-            .replace('about ', '')
-            .replace(/ (seconds|minutes|hours|days|weeks|months|years)/g, (match, unit) => 
-              ({ seconds: 's', minutes: 'm', hours: 'h', days: 'd', weeks: 'w', months: 'mo', years: 'y' })[unit]
-            )
-            .replace(/^(a|an) /g, '1')
-            .replace(' ago', '');
+          .replace('less than a minute', 'a few s')
+          .replace('about ', '')
+          .replace(/ (seconds|minutes|hours|days|weeks|months|years)/g, (match, unit) =>
+            ({ seconds: 's', minutes: 'm', hours: 'h', days: 'd', weeks: 'w', months: 'mo', years: 'y' })[unit]
+          )
+          .replace(/^(a|an) /g, '1')
+          .replace(' ago', '');
 
       return { ...item, from_now: processedTime };
     } catch (error) {
@@ -214,11 +216,12 @@ function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Stable selectors to prevent unnecessary re-renders
   const userData = useSelector(selectUserData);
   const logicData = useSelector(selectLogicData);
   const loanData = useSelector(selectLoanData);
+  const { logout } = usePrivy();
 
   // Destructure with defaults
   const {
@@ -245,12 +248,12 @@ function SiteWrapper({ children }) {
     showBonusModal: false,
     eliteModalOpen: false,
     showAllGameLogs: false,
-    
+
     // Anchor states
     anchorElProfile: null,
     anchorElNotifications: null,
     anchorElGameLog: null,
-    
+
     // Other states
     walletAddress: connectedAccount || null,
     selectedCreator: null,
@@ -269,16 +272,16 @@ function SiteWrapper({ children }) {
   const initializationRef = useRef(false);
 
   // Stable endpoint
-  const endpoint = useMemo(() => 
-    process.env.NODE_ENV === 'production' 
-      ? 'https://catsino.fun' 
+  const endpoint = useMemo(() =>
+    process.env.NODE_ENV === 'production'
+      ? 'https://catsino.fun'
       : `http://${window.location.hostname}:5001`,
     []
   );
 
   // Memoized theme
-  const theme = useMemo(() => 
-    isDarkMode ? THEMES.dark : THEMES.main, 
+  const theme = useMemo(() =>
+    isDarkMode ? THEMES.dark : THEMES.main,
     [isDarkMode]
   );
 
@@ -293,8 +296,8 @@ function SiteWrapper({ children }) {
     return updateFromNow(transactions, 'created_at');
   }, [transactions]);
 
-  const unreadNotificationsCount = useMemo(() => 
-    processedNotifications?.filter(n => !n?.is_read)?.length || 0, 
+  const unreadNotificationsCount = useMemo(() =>
+    processedNotifications?.filter(n => !n?.is_read)?.length || 0,
     [processedNotifications]
   );
 
@@ -341,15 +344,15 @@ function SiteWrapper({ children }) {
   // Stable Solana functions
   const fetchSolanaBalance = useCallback(async (walletAddress) => {
     if (!walletAddress) return null;
-    
+
     try {
       const response = await axios.get('/stripe/get_provider_url');
       if (!response?.data?.providerUrl) return null;
-      
+
       const solanaConnection = new Connection(response.data.providerUrl, 'confirmed');
       const solBalLamports = await solanaConnection.getBalance(new PublicKey(walletAddress));
       const solBalance = solBalLamports / LAMPORTS_PER_SOL;
-      
+
       dispatch(setSolanaBalance({ solanaBalance: solBalance }));
       return solBalance;
     } catch (error) {
@@ -393,7 +396,7 @@ function SiteWrapper({ children }) {
       handleSendChat: (data) => {
         try {
           if (!isMuted && notificationSounds && notificationSoundRef.current) {
-            notificationSoundRef.current.play().catch(() => {});
+            notificationSoundRef.current.play().catch(() => { });
           }
           dispatch(addChatLog(data));
 
@@ -414,7 +417,7 @@ function SiteWrapper({ children }) {
         try {
           dispatch(openOfferLoanModal());
           if (!isMuted && needALoanRef.current) {
-            needALoanRef.current.play().catch(() => {});
+            needALoanRef.current.play().catch(() => { });
           }
           if (user?._id) {
             dispatch(setCurrentOfferTargetInfo({
@@ -443,17 +446,17 @@ function SiteWrapper({ children }) {
       handleSendNotification: (data) => {
         try {
           if (!isMuted && notificationSounds && notificationSoundRef.current) {
-            notificationSoundRef.current.play().catch(() => {});
+            notificationSoundRef.current.play().catch(() => { });
           }
-          
+
           if (isNotificationsAllowed && window.Notification && Notification.permission === 'granted') {
-            new Notification('New Notification', { 
-              body: data.message, 
+            new Notification('New Notification', {
+              body: data.message,
               silent: false,
               tag: 'game-notification'
             });
           }
-          
+
           dispatch(addNewNotification(data));
         } catch (error) {
           console.error('Error handling notification:', error);
@@ -463,10 +466,10 @@ function SiteWrapper({ children }) {
       handleAddTransaction: async (data) => {
         try {
           dispatch(addNewTransaction(data));
-          
-          if (connectedAccount && user?._id && data.user === user._id && 
-              data.status === 'completed' && 
-              (data.description?.startsWith('Joined') || data.description?.startsWith('Pumped'))) {
+
+          if (connectedAccount && user?._id && data.user === user._id &&
+            data.status === 'completed' &&
+            (data.description?.startsWith('Joined') || data.description?.startsWith('Pumped'))) {
             await fetchSolanaBalance(connectedAccount);
           }
         } catch (error) {
@@ -541,17 +544,28 @@ function SiteWrapper({ children }) {
     }
   }, [state.anchorElProfile, updateState]);
 
-  const handleLogout = useCallback((clearToken) => {
-    updateState({ 
-      walletAddress: null,
-      anchorElProfile: null 
-    });
-    dispatch(setSolanaBalance(null));
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
+  // const handleLogout = useCallback((clearToken) => {
+  //   updateState({ 
+  //     walletAddress: null,
+  //     anchorElProfile: null 
+  //   });
+  //   dispatch(setSolanaBalance(null));
+  //   if (socketRef.current) {
+  //     socketRef.current.disconnect();
+  //   }
+  //   dispatch(userSignOut(clearToken, navigate));
+  // }, [dispatch, navigate, updateState]);
+  const handleLogout = clearToken => {
+    setWalletAddress(null);
+    setSolanaBalance(null);
+    setAnchorElProfile(null);
+    if (socket) socket.disconnect();
+    console.log("----logout---");
+    logout();
+
     dispatch(userSignOut(clearToken, navigate));
-  }, [dispatch, navigate, updateState]);
+
+  };
 
   const handlePortfolio = useCallback(() => {
     navigate('/portfolio');
@@ -584,7 +598,7 @@ function SiteWrapper({ children }) {
         // Load wallet after initial data
         if (mounted) {
           await loadSolanaWallet();
-          
+
           // Check location
           try {
             const { data } = await axios.get('/user/location');
@@ -599,9 +613,9 @@ function SiteWrapper({ children }) {
             updateState({ tokenModalOpen: false });
           }
 
-          updateState({ 
-            websiteLoading: false, 
-            isInitialized: true 
+          updateState({
+            websiteLoading: false,
+            isInitialized: true
           });
         }
       } catch (error) {
@@ -688,7 +702,7 @@ function SiteWrapper({ children }) {
     if (!currentSocket || !currentSocket.connected) return;
 
     const handlers = createSocketHandlers();
-    
+
     const globalEvents = {
       'ONLINE_STATUS_UPDATED': handlers.handleOnlineStatusUpdated,
       'GLOBAL_CHAT_RECEIVED': handlers.handleGlobalChat,
@@ -950,7 +964,7 @@ function SiteWrapper({ children }) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <AccountBalanceWallet sx={{ width: '18px', height: '18px', color: '#ff0000' }} />
                 <Typography variant="body2">
-                  {state.isHovered 
+                  {state.isHovered
                     ? `${((solanaBalance * solPrice) || 0).toFixed(balanceDisplay)}`
                     : solanaBalance || '0'
                   }
@@ -1177,9 +1191,9 @@ function SiteWrapper({ children }) {
                   <a
                     className="player"
                     onClick={() => {
-                      updateState({ 
+                      updateState({
                         selectedCreator: notification._id,
-                        showPlayerModal: true 
+                        showPlayerModal: true
                       });
                     }}
                     style={{ display: 'flex', flexDirection: 'row', cursor: 'pointer' }}
@@ -1347,7 +1361,7 @@ function SiteWrapper({ children }) {
           </TableBody>
         </Table>
       </TableContainer>
-      
+
       <Button
         color="error"
         variant="outlined"
@@ -1488,9 +1502,9 @@ function SiteWrapper({ children }) {
         <GamePasswordModal />
       </Suspense>
 
-      <ConflictDialog 
-        open={state.walletConflictOpen} 
-        onClose={() => updateState({ walletConflictOpen: false })} 
+      <ConflictDialog
+        open={state.walletConflictOpen}
+        onClose={() => updateState({ walletConflictOpen: false })}
       />
     </>
   );
@@ -1528,7 +1542,7 @@ function SiteWrapper({ children }) {
   return (
     <ThemeProvider theme={theme}>
       {showCookieConsent && <CookieConsent />}
-      
+
       {renderNegativeBalanceDialog()}
       {renderRestrictedCountryDialog()}
 
@@ -1627,6 +1641,252 @@ function SiteWrapper({ children }) {
                     </Badge>
                   </Box>
                 </>
+              )}
+
+              {websiteLoading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Skeleton variant="text" sx={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Skeleton variant="circular" width={40} height={40} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                </Box>
+              ) : user?._id ? (
+                <>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    <Chip
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleBalanceClick(e);
+                      }}
+                      color="error"
+                      variant="outlined"
+                      label={
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5, // Adjust spacing between icon and text
+                          }}
+                        >
+                          <AccountBalanceWallet
+                            sx={{
+                              width: '18px',
+                              height: '18px',
+                              color: '#ff0000', // Adjust color to match your theme
+                            }}
+                          />
+                          {isHovered ? (
+                            <Typography variant="body2">
+                              ${((solanaBalance * solPrice) || 0).toFixed(numDecimals)}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2">
+                              {solanaBalance}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                      onMouseEnter={() => setIsHovered(true)}
+                      onMouseLeave={() => setIsHovered(false)}
+                    />
+                  </Box>
+
+                  <Box
+                    component="a"
+                    href="#"
+                    className="mobile-only"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNotificationsClick(e);
+                    }}
+                    id="btn_notifications_mobile"
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#ffffff',
+                      mx: 1.5,
+                      '&:hover': {
+                        color: '#ff3030',
+                      }
+                    }}
+                  >
+                    <Badge
+                      badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
+                      color="error"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          fontSize: '10px',
+                          height: '16px',
+                          minWidth: '16px',
+                          backgroundColor: '#ff3030'
+                        }
+                      }}
+                    >
+                      <NotificationsOutlined fontSize="medium" />
+                    </Badge>
+                  </Box>
+
+                  <Button
+                    aria-controls="profile-menu"
+                    aria-haspopup="true"
+                    onClick={handleOpenProfileMenu}
+                    className="profile-menu"
+                    sx={{
+                      padding: '4px',
+                      minWidth: 'auto',
+                      borderRadius: '50%',
+                      ml: 1,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    <Avatar
+                      src={user.avatar}
+                      user_id={user._id}
+                      rank={user.totalWagered}
+                      accessory={user.accessory}
+                      elite={user.elite}
+                      alt=""
+                      username={user.username}
+                      className="avatar"
+                      darkMode={isDarkMode}
+                      sx={{ width: 38, height: 38 }}
+                    />
+                    <ArrowDropDown sx={{ color: '#ffffff' }} />
+                  </Button>
+
+                  <Menu
+                    anchorEl={anchorElProfile}
+                    open={Boolean(anchorElProfile)}
+                    onClose={handleCloseProfileMenu}
+                    transitionDuration={200}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    PaperProps={{
+                      sx: {
+                        background: 'rgba(20, 20, 25, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        minWidth: '180px',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                        mt: 1,
+                        '& .MuiMenuItem-root': {
+                          py: 1,
+                          px: 2,
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: '#ffffff',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: '#ff3030',
+                            color: '#ffffff',
+                          },
+                        },
+                        '& .MuiListItemIcon-root': {
+                          color: '#ffffff',
+                          minWidth: '36px',
+                        },
+                        '& .MuiDivider-root': {
+                          borderColor: 'rgba(255, 255, 255, 0.1)',
+                          my: 0.5,
+                        },
+                      },
+                    }}
+                    BackdropProps={{
+                      invisible: true,
+                    }}
+                  >
+                    <MenuItem onClick={handleOpenProfileModal}>
+                      <ListItemIcon>
+                        <PersonOutline fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="PROFILE" />
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem className="desktop-only" onClick={handlePortfolio}>
+                      <ListItemIcon>
+                        <ListTwoTone fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="PORTFOLIO" />
+                    </MenuItem>
+                    <MenuItem onClick={handleOpenSettingsModal}>
+                      <ListItemIcon>
+                        <Settings fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="SETTINGS" />
+                    </MenuItem>
+                    <MenuItem onClick={handleOpenHowToPlayModal}>
+                      <ListItemIcon>
+                        <Help fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="HOW IT WORKS" />
+                    </MenuItem>
+                    <MenuItem onClick={handleOpenEliteSubscriptionModal}>
+                      <ListItemIcon>
+                        <Star fontSize="small" sx={{ color: '#ffd700' }} />
+                      </ListItemIcon>
+                      <ListItemText primary="ELITE" />
+                    </MenuItem>
+                    <MenuItem onClick={() => setShowBonusModal(true)}>
+                      <ListItemIcon>
+                        <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
+                      </ListItemIcon>
+                      <ListItemText primary="BONUS" />
+                    </MenuItem>
+                    <Divider />
+
+                    <MenuItem
+                      onClick={() => {
+                        handleLogout(true);
+                      }}
+                      sx={{ color: '#ffffff' }}
+                    >
+                      <ListItemIcon>
+                        <ExitToApp fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="LOG OUT" />
+                    </MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                // <Button
+                //   id="btn-login"
+                //   onClick={handleOpenLoginModal}
+                //   variant="contained"
+                //   sx={{
+                //     backgroundColor: '#ff3030',
+                //     color: '#ffffff',
+                //     fontWeight: 600,
+                //     px: 3,
+                //     py: 1,
+                //     borderRadius: '4px',
+                //     '&:hover': {
+                //       backgroundColor: '#d42020',
+                //     },
+                //     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                //     textTransform: 'uppercase',
+                //     letterSpacing: '0.5px',
+                //   }}
+                // >
+                //   CONNECT
+                // </Button>
+                <PrivyLogin />
               )}
 
               {renderUserActions()}
