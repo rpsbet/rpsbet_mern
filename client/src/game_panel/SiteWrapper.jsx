@@ -250,6 +250,7 @@ function SiteWrapper({ children }) {
     showBonusModal: false,
     eliteModalOpen: false,
     showAllGameLogs: false,
+    showSettingsModal: false,
 
     // Anchor states
     anchorElProfile: null,
@@ -266,6 +267,7 @@ function SiteWrapper({ children }) {
   });
   const [isHovered, setIsHovered] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  
   // Refs
   const notificationSoundRef = useRef(null);
   const needALoanRef = useRef(null);
@@ -305,6 +307,14 @@ function SiteWrapper({ children }) {
   );
 
   const balanceDisplay = useMemo(() => {
+    if (!balance) return 0;
+    const balanceString = balance.toString();
+    const decimalIndex = balanceString.indexOf('.');
+    return decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
+  }, [balance]);
+
+  // Helper for calculating decimal places
+  const numDecimals = useMemo(() => {
     if (!balance) return 0;
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
@@ -548,7 +558,7 @@ function SiteWrapper({ children }) {
   }, [state.anchorElProfile, updateState]);
 
   const handleLogout = (clearToken) => {
-    updateState({ walletAddress: null }); // Fix: Use updateState to update walletAddress
+    updateState({ walletAddress: null });
     dispatch(setSolanaBalance(null));
     updateState({ anchorElProfile: null });
     if (socket) socket.disconnect();
@@ -561,6 +571,29 @@ function SiteWrapper({ children }) {
     navigate('/portfolio');
     dispatch(selectMainTab(1));
   }, [navigate, dispatch]);
+
+  // Handler functions
+  const handleOpenSettingsModal = () => updateState({ showSettingsModal: true });
+  const handleOpenHowToPlayModal = () => updateState({ showHowToPlayModal: true });
+  const handleOpenProfileMenu = (e) => updateState({ anchorElProfile: e.currentTarget });
+  const handleCloseProfileMenu = () => updateState({ anchorElProfile: null });
+  const handleOpenEliteSubscriptionModal = () => updateState({ eliteModalOpen: true });
+  const handleOpenProfileModal = () => {
+    setShowProfileModal(true);
+    updateState({ anchorElProfile: null });
+  };
+
+  // Balance click handler
+  const handleBalanceClick = (e) => {
+    e.preventDefault();
+    updateState({ anchorElGameLog: e.currentTarget });
+  };
+
+  // Notifications click handler
+  const handleNotificationsClick = (e) => {
+    e.preventDefault();
+    updateState({ anchorElNotifications: e.currentTarget });
+  };
 
   // Initialize app only once
   useEffect(() => {
@@ -588,16 +621,6 @@ function SiteWrapper({ children }) {
         // Load wallet after initial data
         if (mounted) {
           await loadSolanaWallet();
-
-          // Check location
-          // try {
-          //   const { data } = await axios.get('/user/location');
-          //   if (mounted && RESTRICTED_COUNTRIES.includes(data?.location?.country_code)) {
-          //     updateState({ isRestrictedCountry: true });
-          //   }
-          // } catch (error) {
-          //   console.warn('Location check failed:', error);
-          // }
 
           if (location.pathname.startsWith('/play')) {
             updateState({ tokenModalOpen: false });
@@ -644,7 +667,7 @@ function SiteWrapper({ children }) {
         const newSocket = socketIOClient(endpoint, {
           transports: ['websocket'],
           withCredentials: true,
-          forceNew: false, // Changed to false to prevent unnecessary reconnections
+          forceNew: false,
           timeout: 10000,
           reconnection: true,
           reconnectionAttempts: 3,
@@ -684,7 +707,7 @@ function SiteWrapper({ children }) {
         socketRef.current = null;
       }
     };
-  }, [state.isInitialized, endpoint, dispatch]); // Removed createSocketHandlers from deps
+  }, [state.isInitialized, endpoint, dispatch]);
 
   // Global socket events - separate from user events
   useEffect(() => {
@@ -713,7 +736,7 @@ function SiteWrapper({ children }) {
         currentSocket.off(event);
       });
     };
-  }, [createSocketHandlers]); // Only depend on handlers, not socket state
+  }, [createSocketHandlers]);
 
   // User-specific socket events
   useEffect(() => {
@@ -748,7 +771,7 @@ function SiteWrapper({ children }) {
     } catch (error) {
       console.error('Error setting up user socket events:', error);
     }
-  }, [user?._id, createSocketHandlers]); // Removed socket from deps
+  }, [user?._id, createSocketHandlers]);
 
   // Render functions for complex UI parts
   const renderRestrictedCountryDialog = () => (
@@ -856,17 +879,7 @@ function SiteWrapper({ children }) {
       </DialogContent>
     </Dialog>
   );
-  const handleOpenSettingsModal = () => setShowSettingsModal(true);
-  const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
-  const handleOpenProfileMenu = e => updateState({ anchorElProfile: e.currentTarget })
-  const handleCloseProfileMenu = () => updateState({ anchorElProfile: null })
-  const handleOpenEliteSubscriptionModal = () => {
-    setEliteModalOpen(true);
-  };
-  const handleOpenProfileModal = () => {
-    setShowProfileModal(true);
-    updateState({ anchorElProfile: null })
-  };
+
   const renderNegativeBalanceDialog = () => (
     <Dialog
       open={state.showNegativeBalanceDialog}
@@ -916,192 +929,105 @@ function SiteWrapper({ children }) {
     </Dialog>
   );
 
-  const renderUserActions = () => {
-    if (state.websiteLoading) {
-      return (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Skeleton variant="text" sx={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-          <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-          <Skeleton variant="circular" width={40} height={40} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-        </Box>
-      );
-    }
-
-    
-
-    return (
-      <>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip
-            onClick={(e) => updateState({ anchorElGameLog: e.currentTarget })}
-            color="error"
-            variant="outlined"
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AccountBalanceWallet sx={{ width: '18px', height: '18px', color: '#ff0000' }} />
-                <Typography variant="body2">
-                  {state.isHovered
-                    ? `${((solanaBalance * solPrice) || 0).toFixed(balanceDisplay)}`
-                    : solanaBalance || '0'
-                  }
-                </Typography>
-              </Box>
-            }
-            onMouseEnter={() => updateState({ isHovered: true })}
-            onMouseLeave={() => updateState({ isHovered: false })}
-          />
-        </Box>
-
-        <Box
-          component="a"
-          href="#"
-          className="mobile-only"
-          onClick={(e) => {
-            e.preventDefault();
-            updateState({ anchorElNotifications: e.currentTarget });
-          }}
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
+  const renderProfileMenu = () => (
+    <Menu
+      anchorEl={state.anchorElProfile}
+      open={Boolean(state.anchorElProfile)}
+      onClose={handleCloseProfileMenu}
+      transitionDuration={200}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      PaperProps={{
+        sx: {
+          background: 'rgba(20, 20, 25, 0.95)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '8px',
+          minWidth: '180px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+          mt: 1,
+          '& .MuiMenuItem-root': {
+            py: 1,
+            px: 2,
+            fontSize: '14px',
+            fontWeight: 500,
             color: '#ffffff',
-            mx: 1.5,
-            '&:hover': { color: '#ff3030' }
-          }}
-        >
-          <Badge
-            badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
-            color="error"
-            sx={{
-              '& .MuiBadge-badge': {
-                fontSize: '10px',
-                height: '16px',
-                minWidth: '16px',
-                backgroundColor: '#ff3030'
-              }
-            }}
-          >
-            <NotificationsOutlined fontSize="medium" />
-          </Badge>
-        </Box>
-
-        <Button
-          onClick={(e) => updateState({ anchorElProfile: e.currentTarget })}
-          className="profile-menu"
-          sx={{
-            padding: '4px',
-            minWidth: 'auto',
-            borderRadius: '50%',
-            ml: 1,
-            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' }
-          }}
-        >
-          <Avatar
-            src={user.avatar}
-            user_id={user._id}
-            rank={user.totalWagered}
-            accessory={user.accessory}
-            elite={user.elite}
-            alt=""
-            username={user.username}
-            className="avatar"
-            darkMode={isDarkMode}
-            sx={{ width: 38, height: 38 }}
-          />
-          <ArrowDropDown sx={{ color: '#ffffff' }} />
-        </Button>
-      </>
-    );
-  };
-
-  // const renderProfileMenu = () => (
-  //   <Menu
-  //     anchorEl={state.anchorElProfile}
-  //     open={Boolean(state.anchorElProfile)}
-  //     onClose={() => updateState({ anchorElProfile: null })}
-  //     transitionDuration={200}
-  //     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-  //     transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-  //     PaperProps={{
-  //       sx: {
-  //         background: 'rgba(20, 20, 25, 0.95)',
-  //         backdropFilter: 'blur(10px)',
-  //         WebkitBackdropFilter: 'blur(10px)',
-  //         border: '1px solid rgba(255, 255, 255, 0.1)',
-  //         borderRadius: '8px',
-  //         minWidth: '180px',
-  //         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-  //         mt: 1,
-  //         '& .MuiMenuItem-root': {
-  //           py: 1,
-  //           px: 2,
-  //           fontSize: '14px',
-  //           fontWeight: 500,
-  //           color: '#ffffff',
-  //           transition: 'all 0.2s ease',
-  //           '&:hover': {
-  //             backgroundColor: '#ff3030',
-  //             color: '#ffffff',
-  //           },
-  //         },
-  //         '& .MuiListItemIcon-root': {
-  //           color: '#ffffff',
-  //           minWidth: '36px',
-  //         },
-  //         '& .MuiDivider-root': {
-  //           borderColor: 'rgba(255, 255, 255, 0.1)',
-  //           my: 0.5,
-  //         },
-  //       },
-  //     }}
-  //     BackdropProps={{ invisible: true }}
-  //   >
-  //     <MenuItem onClick={() => {
-  //       updateState({ showAccountModal: true, anchorElProfile: null });
-  //     }}>
-  //       <ListItemIcon>
-  //         <ManageAccounts fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="ACCOUNT" />
-  //     </MenuItem>
-
-  //     <Divider />
-
-  //     <MenuItem className="desktop-only" onClick={handlePortfolio}>
-  //       <ListItemIcon>
-  //         <ListTwoTone fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="PORTFOLIO" />
-  //     </MenuItem>
-
-  //     <MenuItem onClick={() => updateState({ showHowToPlayModal: true })}>
-  //       <ListItemIcon>
-  //         <Help fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="HOW IT WORKS" />
-  //     </MenuItem>
-
-  //     <MenuItem onClick={() => updateState({ eliteModalOpen: true })}>
-  //       <ListItemIcon>
-  //         <Star fontSize="small" sx={{ color: '#ffd700' }} />
-  //       </ListItemIcon>
-  //       <ListItemText primary="ELITE" />
-  //     </MenuItem>
-
-  //     <Divider />
-
-  //     <MenuItem
-  //       onClick={() => handleLogout(true)}
-  //       sx={{ color: '#ffffff' }}
-  //     >
-  //       <ListItemIcon>
-  //         <ExitToApp fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="LOG OUT" />
-  //     </MenuItem>
-  //   </Menu>
-  // );
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: '#ff3030',
+              color: '#ffffff',
+            },
+          },
+          '& .MuiListItemIcon-root': {
+            color: '#ffffff',
+            minWidth: '36px',
+          },
+          '& .MuiDivider-root': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            my: 0.5,
+          },
+        },
+      }}
+      BackdropProps={{
+        invisible: true,
+      }}
+    >
+      <MenuItem onClick={handleOpenProfileModal}>
+        <ListItemIcon>
+          <PersonOutline fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="PROFILE" />
+      </MenuItem>
+      <Divider />
+      <MenuItem className="desktop-only" onClick={handlePortfolio}>
+        <ListItemIcon>
+          <ListTwoTone fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="PORTFOLIO" />
+      </MenuItem>
+      <MenuItem onClick={handleOpenSettingsModal}>
+        <ListItemIcon>
+          <Settings fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="SETTINGS" />
+      </MenuItem>
+      <MenuItem onClick={handleOpenHowToPlayModal}>
+        <ListItemIcon>
+          <Help fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="HOW IT WORKS" />
+      </MenuItem>
+      <MenuItem onClick={handleOpenEliteSubscriptionModal}>
+        <ListItemIcon>
+          <Star fontSize="small" sx={{ color: '#ffd700' }} />
+        </ListItemIcon>
+        <ListItemText primary="ELITE" />
+      </MenuItem>
+      <MenuItem onClick={() => updateState({ showBonusModal: true })}>
+        <ListItemIcon>
+          <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
+        </ListItemIcon>
+        <ListItemText primary="BONUS" />
+      </MenuItem>
+      <Divider />
+      <MenuItem
+        onClick={() => handleLogout(true)}
+        sx={{ color: '#ffffff' }}
+      >
+        <ListItemIcon>
+          <ExitToApp fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="LOG OUT" />
+      </MenuItem>
+    </Menu>
+  );
 
   const renderNotificationsPopover = () => (
     <Popover
@@ -1382,7 +1308,7 @@ function SiteWrapper({ children }) {
 
   const renderModals = () => (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div></div>}>
         <EliteSubscriptionModal
           user={user}
           open={state.eliteModalOpen}
@@ -1474,7 +1400,7 @@ function SiteWrapper({ children }) {
         </Suspense>
       )}
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div></div>}>
         <GamePasswordModal />
       </Suspense>
 
@@ -1506,7 +1432,7 @@ function SiteWrapper({ children }) {
           <div className="game_wrapper">
             <div className="contents_wrapper">
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <Typography>Loading...</Typography>
+                <Typography></Typography>
               </Box>
             </div>
           </div>
@@ -1635,10 +1561,7 @@ function SiteWrapper({ children }) {
                     }}
                   >
                     <Chip
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleBalanceClick(e);
-                      }}
+                      onClick={handleBalanceClick}
                       color="error"
                       variant="outlined"
                       label={
@@ -1646,17 +1569,17 @@ function SiteWrapper({ children }) {
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 0.5, // Adjust spacing between icon and text
+                            gap: 0.5,
                           }}
                         >
                           <AccountBalanceWallet
                             sx={{
                               width: '18px',
                               height: '18px',
-                              color: '#ff0000', // Adjust color to match your theme
+                              color: '#ff0000',
                             }}
                           />
-                          {state.isHovered ? (
+                          {isHovered ? (
                             <Typography variant="body2">
                               ${((solanaBalance * solPrice) || 0).toFixed(numDecimals)}
                             </Typography>
@@ -1676,10 +1599,7 @@ function SiteWrapper({ children }) {
                     component="a"
                     href="#"
                     className="mobile-only"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNotificationsClick(e);
-                    }}
+                    onClick={handleNotificationsClick}
                     id="btn_notifications_mobile"
                     sx={{
                       display: 'inline-flex',
@@ -1739,113 +1659,11 @@ function SiteWrapper({ children }) {
                     <ArrowDropDown sx={{ color: '#ffffff' }} />
                   </Button>
 
-                  <Menu
-                    anchorEl={state.anchorElProfile}
-                    open={Boolean(state.anchorElProfile)}
-                    onClose={handleCloseProfileMenu}
-                    transitionDuration={200}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    PaperProps={{
-                      sx: {
-                        background: 'rgba(20, 20, 25, 0.95)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        minWidth: '180px',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-                        mt: 1,
-                        '& .MuiMenuItem-root': {
-                          py: 1,
-                          px: 2,
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          color: '#ffffff',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            backgroundColor: '#ff3030',
-                            color: '#ffffff',
-                          },
-                        },
-                        '& .MuiListItemIcon-root': {
-                          color: '#ffffff',
-                          minWidth: '36px',
-                        },
-                        '& .MuiDivider-root': {
-                          borderColor: 'rgba(255, 255, 255, 0.1)',
-                          my: 0.5,
-                        },
-                      },
-                    }}
-                    BackdropProps={{
-                      invisible: true,
-                    }}
-                  >
-                    <MenuItem onClick={handleOpenProfileModal}>
-                      <ListItemIcon>
-                        <PersonOutline fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="PROFILE" />
-                    </MenuItem>
-                    <Divider />
-                    <MenuItem className="desktop-only" onClick={handlePortfolio}>
-                      <ListItemIcon>
-                        <ListTwoTone fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="PORTFOLIO" />
-                    </MenuItem>
-                    <MenuItem onClick={handleOpenSettingsModal}>
-                      <ListItemIcon>
-                        <Settings fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="SETTINGS" />
-                    </MenuItem>
-                    <MenuItem onClick={handleOpenHowToPlayModal}>
-                      <ListItemIcon>
-                        <Help fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="HOW IT WORKS" />
-                    </MenuItem>
-                    <MenuItem onClick={handleOpenEliteSubscriptionModal}>
-                      <ListItemIcon>
-                        <Star fontSize="small" sx={{ color: '#ffd700' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="ELITE" />
-                    </MenuItem>
-                    <MenuItem onClick={() => setShowBonusModal(true)}>
-                      <ListItemIcon>
-                        <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="BONUS" />
-                    </MenuItem>
-                    <Divider />
-
-                    <MenuItem
-                      onClick={() => {
-                        handleLogout(true);
-                      }}
-                      sx={{ color: '#ffffff' }}
-                    >
-                      <ListItemIcon>
-                        <ExitToApp fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="LOG OUT" />
-                    </MenuItem>
-                  </Menu>
+                  {renderProfileMenu()}
                 </>
               ) : (
                 <PrivyLogin />
               )}
-{/* 
-              {renderUserActions()}
-              {renderProfileMenu()} */}
             </div>
           </div>
 
