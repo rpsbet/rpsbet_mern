@@ -590,14 +590,14 @@ function SiteWrapper({ children }) {
           await loadSolanaWallet();
 
           // Check location
-          try {
-            const { data } = await axios.get('/user/location');
-            if (mounted && RESTRICTED_COUNTRIES.includes(data?.location?.country_code)) {
-              updateState({ isRestrictedCountry: true });
-            }
-          } catch (error) {
-            console.warn('Location check failed:', error);
-          }
+          // try {
+          //   const { data } = await axios.get('/user/location');
+          //   if (mounted && RESTRICTED_COUNTRIES.includes(data?.location?.country_code)) {
+          //     updateState({ isRestrictedCountry: true });
+          //   }
+          // } catch (error) {
+          //   console.warn('Location check failed:', error);
+          // }
 
           if (location.pathname.startsWith('/play')) {
             updateState({ tokenModalOpen: false });
