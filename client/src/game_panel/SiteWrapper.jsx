@@ -547,27 +547,14 @@ function SiteWrapper({ children }) {
     }
   }, [state.anchorElProfile, updateState]);
 
-  // const handleLogout = useCallback((clearToken) => {
-  //   updateState({ 
-  //     walletAddress: null,
-  //     anchorElProfile: null 
-  //   });
-  //   dispatch(setSolanaBalance(null));
-  //   if (socketRef.current) {
-  //     socketRef.current.disconnect();
-  //   }
-  //   dispatch(userSignOut(clearToken, navigate));
-  // }, [dispatch, navigate, updateState]);
-  const handleLogout = clearToken => {
-    setWalletAddress(null);
-    setSolanaBalance(null);
-    updateState({ anchorElProfile: null })
+  const handleLogout = (clearToken) => {
+    updateState({ walletAddress: null }); // Fix: Use updateState to update walletAddress
+    dispatch(setSolanaBalance(null));
+    updateState({ anchorElProfile: null });
     if (socket) socket.disconnect();
     console.log("----logout---");
     logout();
-
     dispatch(userSignOut(clearToken, navigate));
-
   };
 
   const handlePortfolio = useCallback(() => {
