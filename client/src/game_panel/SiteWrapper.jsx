@@ -559,11 +559,10 @@ function SiteWrapper({ children }) {
   //   dispatch(userSignOut(clearToken, navigate));
   // }, [dispatch, navigate, updateState]);
   const handleLogout = clearToken => {
-    setWalletAddress(null);
+    updateState({ walletAddres: null })
     setSolanaBalance(null);
     updateState({ anchorElProfile: null })
     if (socket) socket.disconnect();
-    console.log("----logout---");
     logout();
 
     dispatch(userSignOut(clearToken, navigate));
