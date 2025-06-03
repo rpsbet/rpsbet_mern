@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Box,
   Tooltip,
@@ -77,6 +79,7 @@ function MyGamesTable() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   // Map state from Redux using useSelector
   const {
@@ -496,7 +499,7 @@ function MyGamesTable() {
         borderRadius: 0,
         overflow: 'hidden',
         background: isDarkMode
-          ? 'rgba(18, 18, 20, 0.95)'
+          ? 'rgba(34, 34, 34, 0.95)'
           : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
       }}
@@ -505,9 +508,7 @@ function MyGamesTable() {
       <Box
         sx={{
           p: 2,
-          background: isDarkMode
-            ? 'linear-gradient(90deg, rgba(32, 32, 36, 0.95) 0%, rgba(24, 24, 28, 0.95) 100%)'
-            : 'linear-gradient(90deg, rgba(245, 245, 247, 0.95) 0%, rgba(235, 235, 240, 0.95) 100%)',
+          background:'#1e1e1e',
           borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
         }}
       >
@@ -551,6 +552,7 @@ function MyGamesTable() {
               variant="outlined"
               placeholder="Search games..."
               size="small"
+              color='error'
               value={searchTerm}
               onChange={handleSearchChange}
               InputProps={{
@@ -560,12 +562,7 @@ function MyGamesTable() {
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
-                },
-              }}
+             
             />
           </Grid>
         </Grid>
@@ -604,7 +601,7 @@ function MyGamesTable() {
                   textAlign: 'center',
                   p: 4,
                   borderRadius: 2,
-                  backgroundColor: isDarkMode ? 'rgba(30, 30, 35, 0.5)' : 'rgba(250, 250, 255, 0.5)',
+                  backgroundColor: isDarkMode ? 'rgba(46, 46, 46, 0.5)' : 'rgba(250, 250, 255, 0.5)',
                 }}
               >
                 <Lottie options={defaultOptions} height={100} width={100} />
@@ -618,8 +615,8 @@ function MyGamesTable() {
                   variant="contained"
                   color="error"
                   sx={{ mt: 2 }}
-                  onClick={() => { /* Navigate to create game */ }}
-                >
+                  onClick={() => { navigate('/create'); }}
+                  >
                   Create New Game
                 </Button>
               </Card>

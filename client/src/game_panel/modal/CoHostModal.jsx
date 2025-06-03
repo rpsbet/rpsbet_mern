@@ -853,8 +853,6 @@ function CoHostModal({
               gap: 3,
             }}
           >
-           
-
               {/* Trade Type Selection */}
               <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <Button
@@ -1286,15 +1284,9 @@ function CoHostModal({
 
         {/* Chart Container */}
         {!input_only && (
-          <Box sx={{ px: 3, pb: 3 }}>
+          <Box sx={{  }}>
             <Card
-              sx={{
-                borderRadius: '20px',
-                overflow: 'hidden',
-                backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-              }}
+           
             >
               <div
                 ref={chartContainerRef}
