@@ -16,20 +16,30 @@ const interestCron = require('./helper/util/interestCron.js');
 
 const app = express();
 
+// Log environment variables at startup to verify configuration
+console.log('Environment Configuration:', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  MONGODB_URI: process.env.MONGODB_URI ? '[REDACTED]' : undefined, // Avoid logging sensitive data
+  REDIS_URL: process.env.REDIS_URL ? '[REDACTED]' : undefined,
+  SESSION_SECRET: process.env.SESSION_SECRET ? '[REDACTED]' : undefined,
+});
+
 // -------------------- Redis Client Setup --------------------
 const redisClient = redis.createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379', // Use env variable or default
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+redisClient.on('error', (err) => console.error('Redis Client Error:', err.message, err.stack));
 redisClient.on('connect', () => console.log('Connected to Redis'));
 
 // Connect to Redis
 (async () => {
   try {
     await redisClient.connect();
+    console.log('Redis connection successful');
   } catch (err) {
-    console.error('Failed to connect to Redis:', err);
+    console.error('Failed to connect to Redis:', err.message, err.stack);
   }
 })();
 
@@ -55,10 +65,33 @@ const io = socketController.socketio(server, {
   transports: ['websocket'],
 });
 
-setTimeout(() => callCronJob.callCronJobs(io), 500);
-setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
-setTimeout(() => cronJob.checkConfirmations(), 5000);
-setTimeout(() => interestCron.updateRoomInterests(io), 11000);
+// Log Socket.io connections and disconnections
+io.on('connection', (socket) => {
+  console.log(`Socket.io client connected: ${socket.id}, origin: ${socket.handshake.headers.origin}`);
+  socket.on('disconnect', (reason) => {
+    console.log(`Socket.io client disconnected: ${socket.id}, reason: ${reason}`);
+  });
+  socket.on('error', (err) => {
+    console.error(`Socket.io error for client ${socket.id}:`, err.message, err.stack);
+  });
+});
+
+setTimeout(() => {
+  console.log('Starting callCronJobs');
+  callCronJob.callCronJobs(io);
+}, 500);
+setTimeout(() => {
+  console.log('Starting checkSubscriptionPayments');
+  eliteCron.checkSubscriptionPayments(io);
+}, 3000);
+setTimeout(() => {
+  console.log('Starting checkConfirmations');
+  cronJob.checkConfirmations();
+}, 5000);
+setTimeout(() => {
+  console.log('Starting updateRoomInterests');
+  interestCron.updateRoomInterests(io);
+}, 11000);
 
 // Attach io instance to each request for easy access
 app.use((req, res, next) => {
@@ -67,23 +100,21 @@ app.use((req, res, next) => {
 });
 
 // -------------------- CORS Configuration --------------------
-// Updated CORS to allow API access from external sources
+// Log CORS decisions for debugging
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'http://localhost:3000', 
       'https://catsino.fun',
-      // Add your external API domains here if needed
-      // 'https://your-external-app.com'
     ];
     
-    // Allow requests with no origin (mobile apps, server-to-server, etc.)
+    console.log(`CORS check for origin: ${origin || 'No origin'}`);
     if (!origin || allowedOrigins.includes(origin)) {
+      console.log(`CORS allowed for origin: ${origin || 'No origin'}`);
       callback(null, true);
     } else {
-      // For public API, you might want to allow all origins for specific routes
-      // This will be handled by route-specific CORS if needed
-      callback(null, true); // Changed to allow all for API access
+      console.log(`CORS allowed for public API access: ${origin}`);
+      callback(null, true); // Allow all for API access
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -95,6 +126,12 @@ const compression = require('compression');
 app.use(compression());
 
 // -------------------- Middleware --------------------
+// Log incoming requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip}`);
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
 }));
@@ -122,13 +159,14 @@ app.use('/img', express.static(path.join(__dirname, 'public/img')));
 // -------------------- MongoDB Connection --------------------
 const connectWithRetry = async () => {
   try {
+    console.log('Attempting MongoDB connection...');
     await mongoose.connect(process.env.MONGODB_URI, {
       maxPoolSize: 20,
-      serverSelectionTimeoutMS: 5000, 
+      serverSelectionTimeoutMS: 10000, // Increased timeout
     });
     console.log('*** MongoDB connected');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error.message, error.stack);
     console.log('Retrying MongoDB connection in 5 seconds...');
     setTimeout(connectWithRetry, 5000); // Retry connection after 5 seconds
   }
@@ -150,7 +188,8 @@ const systemSettingRoutes = require('./routes/settings.routes');
 const apiKeyRoutes = require('./routes/api-keys');
 const publicApiRoutes = require('./routes/public-api');
 
-// Existing API routes (protected by user auth)
+// Log route registration
+console.log('Registering API routes...');
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/game', gameRoutes);
@@ -159,23 +198,26 @@ app.use('/api/loan', loanRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/settings', systemSettingRoutes);
-
-// New API routes
-app.use('/api/keys', apiKeyRoutes); // Protected by user auth - for managing API keys
-app.use('/api/v1', publicApiRoutes); // Protected by API key auth - for external access
+app.use('/api/keys', apiKeyRoutes);
+app.use('/api/v1', publicApiRoutes);
 
 // Health check endpoint for API monitoring
 app.get('/health', (req, res) => {
+  console.log('Health check requested');
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: '1.0.0'
+    version: '1.0.0',
+    // Add database and Redis status
+    mongoConnected: mongoose.connection.readyState === 1,
+    redisConnected: redisClient.isOpen,
   });
 });
 
 // API documentation endpoint
 app.get('/api/docs', (req, res) => {
+  console.log('API docs requested');
   res.json({
     name: 'Game Creation API',
     version: '1.0.0',
@@ -188,15 +230,15 @@ app.get('/api/docs', (req, res) => {
         'POST /api/v1/create-room': 'Create a new game room',
         'POST /api/v1/generate-image': 'Generate AI images',
         'POST /api/v1/generate-react': 'Generate React components',
-        'POST /api/v1/extract-room-info': 'Extract game information'
+        'POST /api/v1/extract-room-info': 'Extract game information',
       },
       rateLimit: '100 requests/hour, 1000 requests/day (configurable per key)',
-      support: 'https://catsino.fun/api-support'
+      support: 'https://catsino.fun/api-support',
     },
     examples: {
       headers: {
         'X-API-Key': 'your_api_key_here',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       createRoom: {
         url: '/api/v1/create-room',
@@ -206,18 +248,20 @@ app.get('/api/docs', (req, res) => {
           name: 'My Game',
           game_type: 1,
           connectedAccount: 'your_wallet_address',
-          description: 'An exciting new game'
-        }
-      }
-    }
+          description: 'An exciting new game',
+        },
+      },
+    },
   });
 });
 
 // -------------------- Static Files --------------------
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
+  console.log('Serving static files for production');
   app.use(express.static(path.resolve(__dirname, 'client', 'build')));
   app.get('*', (req, res) => {
+    console.log(`Serving index.html for ${req.url}`);
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
 }
@@ -225,7 +269,7 @@ if (process.env.NODE_ENV === 'production') {
 // -------------------- Error Handling --------------------
 // Enhanced error handling for API routes
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error(`Error in ${req.method} ${req.url}:`, err.message, err.stack);
   
   // API routes get JSON error responses
   if (req.path.startsWith('/api/')) {
@@ -234,7 +278,7 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({
       success: false,
       error: err.message || 'Internal server error',
-      ...(isDevelopment && { stack: err.stack })
+      ...(isDevelopment && { stack: err.stack }),
     });
   } else {
     // Non-API routes get HTML error responses
@@ -244,6 +288,7 @@ app.use((err, req, res, next) => {
 
 // 404 handler for API routes
 app.use('/api/*', (req, res) => {
+  console.log(`404 for ${req.method} ${req.url}`);
   res.status(404).json({
     success: false,
     error: 'API endpoint not found',
@@ -253,8 +298,8 @@ app.use('/api/*', (req, res) => {
       'GET /api/docs',
       'GET /api/v1/info',
       'POST /api/v1/create-room',
-      'GET /health'
-    ]
+      'GET /health',
+    ],
   });
 });
 
@@ -264,8 +309,18 @@ process.on('SIGTERM', async () => {
   server.close(() => {
     console.log('Server closed');
   });
-  await redisClient.quit(); // Close Redis connection
-  mongoose.disconnect();
+  try {
+    await redisClient.quit();
+    console.log('Redis connection closed');
+  } catch (err) {
+    console.error('Error closing Redis:', err.message);
+  }
+  try {
+    await mongoose.disconnect();
+    console.log('MongoDB connection closed');
+  } catch (err) {
+    console.error('Error closing MongoDB:', err.message);
+  }
   process.exit(0);
 });
 
