@@ -473,7 +473,7 @@ function MainPage() {
         </Box>
 
         {/* Mobile Bottom Navigation */}
-        {isMobile && (
+        {isMobile && selectedMobileTab !== MOBILE_TABS.CHAT && (
           <Box className="mobile-only main-page-nav-button-group">
             <MobileNavButton
               isActive={selectedMobileTab === MOBILE_TABS.LIVE_GAMES}

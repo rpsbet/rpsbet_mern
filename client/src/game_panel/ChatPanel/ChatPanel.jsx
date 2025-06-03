@@ -183,9 +183,9 @@ const useLocalStorage = (key, initialValue) => {
 const EmojiGrid = React.memo(({ emojis, onEmojiSelect, searchTerm = '' }) => {
   const filteredEmojis = useMemo(() => {
     if (!searchTerm.trim()) return emojis;
-    
+
     const term = searchTerm.toLowerCase();
-    return emojis.filter(emoji => 
+    return emojis.filter(emoji =>
       emoji.command.toLowerCase().includes(term) ||
       emoji.alt.toLowerCase().includes(term) ||
       emoji.category.toLowerCase().includes(term)
@@ -216,8 +216,8 @@ const EmojiGrid = React.memo(({ emojis, onEmojiSelect, searchTerm = '' }) => {
               borderRadius: 1,
               border: '2px solid transparent',
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': { 
-                opacity: 0.8, 
+              '&:hover': {
+                opacity: 0.8,
                 transform: 'scale(1.15)',
                 borderColor: 'error.main',
                 boxShadow: '0 4px 12px rgba(255, 0, 0, 0.3)',
@@ -274,8 +274,8 @@ const GifGrid = React.memo(({ gifs, onGifSelect, loading }) => {
       {gifs.map((gif, index) => (
         <Box
           key={`${gif.url}-${index}`}
-          sx={{ 
-            position: 'relative', 
+          sx={{
+            position: 'relative',
             aspectRatio: '1',
             borderRadius: 1,
             overflow: 'hidden',
@@ -327,7 +327,6 @@ const ReplyPreview = React.memo(({ selectedMessage, onClear }) => {
         left: 0,
         right: 0,
         p: 2,
-        mb: 1,
         zIndex: 1,
         bgcolor: (theme) => alpha(theme.palette.background.paper, 0.95),
         backdropFilter: 'blur(12px)',
@@ -359,17 +358,17 @@ const ReplyPreview = React.memo(({ selectedMessage, onClear }) => {
               color="error"
               variant="outlined"
               size="small"
-              sx={{ minWidth: '32px', width: '32px', height: '32px', p: 0 }}
+              sx={{ minWidth: '32px', width: '32px', height: '32px', p: 0, position: 'absolute', right: '10px', top: '10px' }}
             >
               <Clear sx={{ fontSize: '16px' }} />
             </Button>
           </Tooltip>
         </Box>
         {selectedMessage.message && (
-          <Typography 
-            variant="caption" 
+          <Typography
+            variant="caption"
             color="text.secondary"
-            sx={{ 
+            sx={{
               display: 'block',
               mt: 0.5,
               ml: 4,
@@ -379,8 +378,8 @@ const ReplyPreview = React.memo(({ selectedMessage, onClear }) => {
               // whiteSpace: 'nowrap',
             }}
           >
-            "{selectedMessage.message.length > 50 
-              ? `${selectedMessage.message.substring(0, 50)}...` 
+            "{selectedMessage.message.length > 50
+              ? `${selectedMessage.message.substring(0, 50)}...`
               : selectedMessage.message}"
           </Typography>
         )}
@@ -440,8 +439,8 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
 
   // Memoized computed values
   const customTheme = useMemo(() => getCustomTheme(isDarkMode ? 'dark' : 'light'), [isDarkMode]);
-  const isChatEnabled = useMemo(() => 
-    isAuthenticated && getRank(user?.totalWagered) >= 1, 
+  const isChatEnabled = useMemo(() =>
+    isAuthenticated && getRank(user?.totalWagered) >= 1,
     [isAuthenticated, user?.totalWagered]
   );
 
@@ -506,10 +505,10 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
   // Enhanced text input handler with typing indicators
   const handleTextChange = useCallback((e) => {
     const newText = e.target.value;
-    
+
     if (newText.length <= CONFIG.MAX_MESSAGE_LENGTH) {
       setText(newText);
-      
+
       // Typing indicator logic
       if (newText.trim() && !isTyping) {
         setIsTyping(true);
@@ -526,13 +525,13 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
   // Enhanced keyboard handler
   const handleKeyDown = useCallback((e) => {
     e.stopPropagation();
-    
+
     if (!socket || !user?._id || !isChatEnabled) return;
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const trimmedText = text.trim();
-      
+
       if (trimmedText) {
         const message = {
           sender: userName,
@@ -589,7 +588,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
       messageType: 'gif',
       timestamp: Date.now(),
     };
-    
+
     handleSendMessage(message);
     setGifAnchorEl(null);
     setGifSearchTerm('');
@@ -622,77 +621,262 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
     setSelectedTabIndex(newValue);
   }, [setSelectedTabIndex]);
 
-  // Enhanced tabs with badges for notifications
+  // Enhanced tabs with modern glassmorphism and better visual hierarchy
   const renderTabs = () => (
-    <Box sx={{ borderBottom: '1px solid', borderColor: 'divider'}}>
+    <Box sx={{
+      position: 'relative',
+     
+      borderBottom: '1px solid',
+      borderColor: isDarkMode ? 'rgba(255, 71, 87, 0.2)' : 'rgba(255, 0, 21, 0.15)',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255, 0, 21, 0.5), transparent)',
+        zIndex: 1,
+      },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255, 71, 87, 0.3), transparent)',
+        zIndex: 1,
+      }
+    }}>
       <Tabs
         value={selectedTabIndex}
         onChange={handleTabChange}
         variant="fullWidth"
         TabIndicatorProps={{
-          style: { 
-            backgroundColor: theme.palette.error.main,
+          style: {
             height: '3px',
             borderRadius: '3px 3px 0 0',
+            boxShadow: '0 0 20px rgba(255, 0, 21, 0.6)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           },
         }}
         sx={{
+          minHeight: '64px',
+          '& .MuiTabs-flexContainer': {
+            height: '64px',
+          },
           '& .MuiTab-root': {
             textTransform: 'none',
-            color: 'text.secondary',
-            minHeight: '56px',
+            background: '#1e1e1e',
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+            minHeight: '64px',
+            fontSize: '0.9rem',
+            marginBottom: 0,
+            fontWeight: 500,
+            position: 'relative',
+            overflow: 'hidden',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(135deg, rgba(255, 0, 21, 0.05), rgba(255, 0, 21, 0.02))',
+              opacity: 0,
+              transition: 'opacity 0.3s ease',
+            },
             '&:hover': {
-              color: 'text.primary',
-              backgroundColor: alpha(theme.palette.error.main, 0.08),
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 0, 0, 0.9)',
+              '&::before': {
+                opacity: 1,
+              },
+              '& .MuiSvgIcon-root': {
+                filter: 'drop-shadow(0 0 8px rgba(255, 71, 87, 0.4))',
+              },
+              '& .tab-label': {
+                transform: 'translateY(-1px)',
+              }
             },
             '&.Mui-selected': {
-              color: 'error.main',
+              color: '#ff4757',
               fontWeight: 600,
+              background: isDarkMode
+                ? 'linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(255, 0, 21, 0.08))'
+                : 'linear-gradient(135deg, rgba(255, 71, 87, 0.12), rgba(255, 0, 21, 0.06))',
+           
+              '& .tab-label': {
+                background: 'linear-gradient(135deg,rgb(255, 0, 21),rgb(255, 0, 25))',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: 'none',
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                bottom: 0,
+                left: '20%',
+                right: '20%',
+                height: '2px',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 0, 21, 0.8), transparent)',
+                borderRadius: '1px',
+              }
             },
           },
+          '& .MuiTabs-indicator': {
+            display: 'none', // We'll use our custom indicator
+          }
         }}
       >
         <Tab
           icon={
-            <Badge 
-              color="error" 
-              variant="dot" 
-              invisible={true} // Add notification logic here
-            >
-              <ChatOutlined />
-            </Badge>
+            <Box sx={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+
+              <ChatOutlined sx={{
+                fontSize: '1.4rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }} />
+            </Box>
           }
-          label="Inbox"
+          label={
+            <Typography
+              variant="body2"
+              className="tab-label"
+              sx={{
+                fontWeight: 'inherit',
+                fontSize: 'inherit',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Inbox
+            </Typography>
+          }
           onMouseEnter={() => setHoverTabIndex(0)}
           onMouseLeave={() => setHoverTabIndex(-1)}
+          sx={{
+            flexDirection: 'column',
+            '&:hover': {
+              '& .tab-notification': {
+                opacity: hoverTabIndex === 0 ? 1 : 0,
+              }
+            }
+          }}
         />
         <Tab
           icon={
-            <Badge 
-              color="error" 
-              variant="dot" 
-              invisible={true} // Add notification logic here
-            >
-              <Public />
-            </Badge>
+            <Box sx={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+
+              <Public sx={{
+                fontSize: '1.4rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }} />
+              {/* Online users indicator */}
+              {/* {onlineUserList && onlineUserList.length > 0 && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -8,
+                    background: 'linear-gradient(45deg, #00ff41, #00cc33)',
+                    color: 'white',
+                    borderRadius: '10px',
+                    minWidth: '20px',
+                    height: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    px: 0.5,
+                    boxShadow: '0 2px 8px rgba(0, 255, 65, 0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite',
+                  }}
+                >
+                  {onlineUserList.length}
+                </Box>
+              )} */}
+            </Box>
           }
-          label="Global Chat"
+          label={
+            <Typography
+              variant="body2"
+              className="tab-label"
+              sx={{
+                fontWeight: 'inherit',
+                fontSize: 'inherit',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Global Chat
+            </Typography>
+          }
           onMouseEnter={() => setHoverTabIndex(1)}
           onMouseLeave={() => setHoverTabIndex(-1)}
+          sx={{
+            flexDirection: 'column',
+          }}
         />
       </Tabs>
+
+      {/* Animated background effect */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: selectedTabIndex === 0 ? '0%' : '50%',
+          width: '50%',
+          height: '100%',
+          background: isDarkMode
+            ? 'linear-gradient(135deg, rgba(255, 0, 21, 0.08), rgba(255, 0, 21, 0.04))'
+            : 'linear-gradient(135deg, rgba(255, 0, 21, 0.06), rgba(255, 0, 21, 0.03))',
+          transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Tab separator */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '25%',
+          left: '50%',
+          width: '1px',
+          height: '50%',
+          background: isDarkMode
+            ? 'linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
+            : 'linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.1), transparent)',
+          transform: 'translateX(-50%)',
+          opacity: selectedTabIndex === 0 || selectedTabIndex === 1 ? 0.5 : 1,
+          transition: 'opacity 0.3s ease',
+        }}
+      />
     </Box>
   );
+
 
   // Enhanced input area with better UX
   const renderChatInput = () => (
     <Box sx={{ position: 'relative' }}>
-      <ReplyPreview 
+      <ReplyPreview
         selectedMessage={selectedMessage}
         onClear={() => setSelectedMessage(INITIAL_STATES.SELECTED_MESSAGE)}
       />
-      
+
       <Box sx={{
         display: 'flex',
         gap: 1,
@@ -745,10 +929,10 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
                       color="error"
                       variant={emojiAnchorEl ? "contained" : "outlined"}
                       size="small"
-                      sx={{ 
-                        minWidth: '40px', 
-                        width: '40px', 
-                        height: '40px', 
+                      sx={{
+                        minWidth: '40px',
+                        width: '40px',
+                        height: '40px',
                         p: 0,
                         borderRadius: '8px',
                       }}
@@ -756,17 +940,17 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
                       <InsertEmoticon sx={{ fontSize: '20px' }} />
                     </Button>
                   </Tooltip>
-                  
+
                   <Tooltip title="Add GIF" arrow>
                     <Button
                       onClick={handleGifToggle}
                       color="error"
                       variant={gifAnchorEl ? "contained" : "outlined"}
                       size="small"
-                      sx={{ 
-                        minWidth: '40px', 
-                        width: '40px', 
-                        height: '40px', 
+                      sx={{
+                        minWidth: '40px',
+                        width: '40px',
+                        height: '40px',
                         p: 0,
                         borderRadius: '8px',
                       }}
@@ -779,12 +963,12 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
             ),
           }}
         />
-        
+
         <Tooltip title="Send message" arrow>
           <Button
             onClick={() => {
               if (text.trim()) {
-                const e = { key: 'Enter', shiftKey: false, preventDefault: () => {}, stopPropagation: () => {} };
+                const e = { key: 'Enter', shiftKey: false, preventDefault: () => { }, stopPropagation: () => { } };
                 handleKeyDown(e);
               }
             }}
@@ -808,13 +992,13 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
           </Button>
         </Tooltip>
       </Box>
-      
+
       {/* Character count indicator */}
       {text.length > CONFIG.MAX_MESSAGE_LENGTH * 0.8 && (
-        <Typography 
-          variant="caption" 
+        <Typography
+          variant="caption"
           color={text.length >= CONFIG.MAX_MESSAGE_LENGTH ? "error" : "text.secondary"}
-          sx={{ 
+          sx={{
             position: 'absolute',
             bottom: '-20px',
             right: '8px',
@@ -853,7 +1037,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           Choose an Emoji
         </Typography>
-        
+
         <TextField
           ref={emojiSearchRef}
           size="small"
@@ -871,8 +1055,8 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
             ),
           }}
         />
-        
-        <EmojiGrid 
+
+        <EmojiGrid
           emojis={EMOJI_LIST}
           onEmojiSelect={handleEmojiSelect}
           searchTerm={emojiSearchTerm}
@@ -907,7 +1091,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           Choose a GIF
         </Typography>
-        
+
         <TextField
           ref={gifSearchRef}
           size="small"
@@ -925,8 +1109,8 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
             ),
           }}
         />
-        
-        <GifGrid 
+
+        <GifGrid
           gifs={gifs}
           onGifSelect={handleGifSelect}
           loading={isGifLoading}
@@ -937,10 +1121,10 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
 
   // Loading fallback for lazy components
   const LazyComponentFallback = ({ height = "400px" }) => (
-    <Box sx={{ 
-      height, 
-      display: 'flex', 
-      alignItems: 'center', 
+    <Box sx={{
+      height,
+      display: 'flex',
+      alignItems: 'center',
       justifyContent: 'center',
       flexDirection: 'column',
       gap: 2,
@@ -1006,7 +1190,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
 
         {/* Chat input (only for Global Chat) */}
         {selectedTabIndex === 1 && (
-          <Box sx={{ pt: 1 }}>
+          <Box >
             {renderChatInput()}
           </Box>
         )}
