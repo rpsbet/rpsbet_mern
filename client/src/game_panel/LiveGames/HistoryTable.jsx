@@ -163,7 +163,7 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
 
   // Build compact message content
   const buildMessage = useCallback((logItem) => {
-    if (!solPrice || !logItem) return 'Loading...';
+    if (!solPrice || !logItem) return '';
 
     const betAmt = convertToCurrency(logItem.bet_amount, solPrice);
     const winnings = convertToCurrency(logItem.winnings, solPrice);
