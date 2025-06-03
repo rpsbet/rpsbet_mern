@@ -6,6 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { SnackbarProvider } from 'notistack';
 import { PrivyProvider } from '@privy-io/react-auth';
+import {toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 import { Alert } from '@mui/material';
 import store from './redux/store';
 import App from './App';
@@ -156,11 +157,43 @@ root.render(
   <PrivyProvider
     appId="cm9i6xoyw033ll80ntlqnl78e"
     config={{
-      loginMethods: ['wallet', 'google', 'email'],
+      loginMethods: [ 'google', 'email', 'wallet'],
       appearance: {
         theme: 'dark', 
-        showWalletLoginFirst: true
+        showWalletLoginFirst: false,
+        walletChainType: 'solana-only',
+        walletList: [
+          "detected_solana_wallets",
+          "phantom",
+          "solflare",
+          "backpack",
+          "okx_wallet"
+        ]
       },
+      fundingMethodConfig: {
+        moonpay: {
+          useSandbox: true
+        }
+      },
+      embeddedWallets: {
+        requireUserPasswordOnCreate: false,
+        showWalletUIs: true,
+        ethereum: {
+          createOnLogin: "off"
+        },
+        solana: {
+          createOnLogin: "users-without-wallets"
+        }
+      },
+      mfa: {
+        noPromptOnMfaRequired: false
+      },
+      externalWallets: {
+        solana: {
+          connectors: toSolanaWalletConnectors(), 
+        }
+      }
+
     }}
   >
     <Provider store={store}>
@@ -184,3 +217,5 @@ root.render(
     </Provider>
   </PrivyProvider>
 );
+
+
