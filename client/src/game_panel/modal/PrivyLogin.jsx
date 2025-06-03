@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { useLogin, usePrivy } from '@privy-io/react-auth';
@@ -8,11 +8,6 @@ import {
   } from '@mui/material';
 
 import {
-    setFocused,
-    userSignIn,
-    getUser,
-    authenticateWithGoogle,
-    authenticateWithPhantom,
     authenticateWithPrivy,
   } from '../../redux/Auth/user.actions';
 import {

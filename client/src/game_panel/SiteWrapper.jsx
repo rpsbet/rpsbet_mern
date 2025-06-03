@@ -562,7 +562,6 @@ function SiteWrapper({ children }) {
     dispatch(setSolanaBalance(null));
     updateState({ anchorElProfile: null });
     if (socket) socket.disconnect();
-    console.log("----logout---");
     logout();
     dispatch(userSignOut(clearToken, navigate));
   };
