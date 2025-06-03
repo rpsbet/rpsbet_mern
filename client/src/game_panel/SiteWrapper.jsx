@@ -32,6 +32,7 @@ import {
   TableRow,
   Badge,
   DialogTitle,
+  Chip,
 } from '@mui/material';
 import { ArrowForwardIos } from '@mui/icons-material';
 
