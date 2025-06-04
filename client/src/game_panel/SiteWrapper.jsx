@@ -486,6 +486,8 @@ function SiteWrapper({ children }) {
   }, [state.anchorElProfile, updateState]);
 
   const handleLogout = (clearToken) => {
+    updateState({ walletAddress: null }); // Fix: Use updateState to update walletAddress
+    dispatch(setSolanaBalance(null));
     updateState({ anchorElProfile: null });
     if (socket) socket.disconnect();
     logout();
@@ -542,6 +544,18 @@ function SiteWrapper({ children }) {
         ]);
 
         if (mounted) {
+          await loadSolanaWallet();
+
+          // Check location
+          // try {
+          //   const { data } = await axios.get('/user/location');
+          //   if (mounted && RESTRICTED_COUNTRIES.includes(data?.location?.country_code)) {
+          //     updateState({ isRestrictedCountry: true });
+          //   }
+          // } catch (error) {
+          //   console.warn('Location check failed:', error);
+          // }
+
           if (location.pathname.startsWith('/play')) {
             updateState({ tokenModalOpen: false });
           }
