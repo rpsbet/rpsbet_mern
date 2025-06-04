@@ -53,6 +53,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
   // Memoize hasSufficientBalance results
   const sufficientBalance = useMemo(() => {
     const subscriptionAmounts = { red: 0.1, black: 0.4 };
+    console.log("--balance--", user?.balance);
     return {
       red: user?.balance >= subscriptionAmounts.red,
       black: user?.balance >= subscriptionAmounts.black,

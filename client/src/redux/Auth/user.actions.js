@@ -46,7 +46,7 @@ import {
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
-
+import { sendSolDeposit } from '../../util/solana'; 
 export const getTransactions = (
   page = 1,
   filterType = '',
@@ -394,11 +394,36 @@ export const cancelEliteSubscription = () => async (dispatch) => {
   return false;
 };
 
-export const purchaseEliteSubscription = (type) => async (dispatch) => {
+export const purchaseEliteSubscription = (type) => async (dispatch, getState) => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
 
-    const res = await axios.post('/auth/purchase-elite', { type });
+    const state = getState();
+    const user = state.user.data;
+    const solanaBalance = state.logic.solanaBalance;
+    const account = state.logic.account;
+    const prices = { red: 0.2, black: 0.4 };
+    const amount = prices[type];
+    const txResult = await sendSolDeposit(
+      dispatch,
+      amount,
+      null,
+      'elite',
+      account,
+      solanaBalance,
+      () => {}, // onSuccess
+      () => {}, // onError
+      () => {}, // onPopupOpen
+      () => {}  // onPopupClose
+    );
+    if (!txResult.success || !txResult.signature) {
+      dispatch({
+        type: MSG_ERROR,
+        payload: 'Transaction failed or was rejected',
+      });
+      return false;
+    }
+    const res = await axios.post('/auth/purchase-elite', { type, signature: txResult.signature});
 
     if (res.data.success) {
       dispatch({ type: UPDATED_USER, payload: res.data.user });

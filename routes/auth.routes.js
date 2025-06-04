@@ -2,6 +2,7 @@
 const express = require('express');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const moment = require('moment');
+const { Connection, PublicKey } = require('@solana/web3.js');
 const socket = require('../socketController.js');
 const Notification = require('../model/Notification');
 const router = express.Router();
@@ -428,7 +429,7 @@ router.post('/cancel-elite', auth, async (req, res) => {
 });
 
 router.post('/purchase-elite', auth, async (req, res) => {
-  const { type } = req.body;
+  const { type, signature } = req.body;
   const userId = req.user.id;
   const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   // Define subscription amounts
@@ -462,118 +463,186 @@ router.post('/purchase-elite', auth, async (req, res) => {
       });
     }
 
-    // Add IP to user's IP history if not already present
-    if (!user.ip_addresses.includes(clientIp)) {
-      user.ip_addresses.push(clientIp);
-      await user.save();
-    }
 
-    // Check for free trial eligibility (only for red tier)
-    let amount = subscriptionAmounts[type];
-    let isFreeMonth = false;
-    let message = `Successfully subscribed to ${type.charAt(0).toUpperCase() + type.slice(1)} Elite membership`;
-
-    if (type === 'red' && !user.elite_free_used) {
-      // Check if any other accounts with this IP have used the free trial
-      const ipMatch = await User.findOne({
-        ip_addresses: clientIp,
-        elite_free_used: true,
-        _id: { $ne: userId } // Not the current user
-      });
-
-      if (!ipMatch) {
-        // User is eligible for free month
-        amount = 0;
-        isFreeMonth = true;
-        message = 'Successfully activated your FREE first month of Red Elite membership!';
+      const getProviderUrl = await axios.get('/stripe/get_provider_url');
+      const providerUrl = getProviderUrl.data.providerUrl;
+      if (!providerUrl) {
+          const errorText = 'Failed to retrieve RPC provider URL.';
+          console.error('[sendSolDeposit] API Error:', errorText);
       }
-    }
-
-    // Check if user has enough balance when not free
-    if (!isFreeMonth && user.balance < amount) {
-      return res.status(400).json({
-        success: false,
-        message: 'Insufficient balance to purchase subscription',
-      });
-    }
-
-    // Update user's balance, elite status, and subscription date
-    const updateData = {
-      elite: type,
-      last_elite_payment: new Date()
-    };
-
-    // Only deduct balance if not free
-    if (!isFreeMonth) {
-      updateData.$inc = { balance: -amount };
-    }
-
-    // Mark free trial as used if applicable
-    if (isFreeMonth) {
-      updateData.elite_free_used = true;
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true }
-    );
-
-    // Create new transaction (only if not free)
-    if (!isFreeMonth) {
-      const newTransaction = new Transaction({
+      const connection = new Connection(providerUrl, 'confirmed');
+      const parsedTx = await connection.getParsedTransaction(signature, 'confirmed');
+      if (!parsedTx) {
+        return res.status(400).json({ success: false, message: 'Invalid or unconfirmed transaction signature' });
+      }
+      const amountLamports = Math.floor(subscriptionAmounts[type] * 1e9);
+      const transferInstruction = parsedTx.transaction.message.instructions.find(ix =>
+        ix.parsed?.type === 'transfer' &&
+        ix.parsed?.info?.destination === adminWallet &&
+        parseInt(ix.parsed?.info?.lamports) === amountLamports
+      );
+  
+      if (!transferInstruction) {
+        return res.status(400).json({ success: false, message: 'Transaction does not match required payment criteria' });
+      }
+  
+      const payerPubkey = transferInstruction.parsed.info.source;
+      user.elite = type;
+      user.last_elite_payment = new Date();
+      await user.save();
+  
+      // Save transaction record
+      const newTransaction = new TransactionModel({
         user: userId,
-        amount: -amount,
-        description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription Purchase`,
+        amount: -subscriptionAmounts[type],
+        description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription (On-chain)`,
+        txtHash: signature,
       });
       await saveDocumentWithRetry(newTransaction);
       socket.newTransaction(newTransaction);
-    }
 
-    // Create notification with appropriate message
-    const notificationText = isFreeMonth 
-      ? `Activated FREE first month of Red Elite subscription` 
-      : `Purchased ${type} elite subscription`;
+      const notification = new Notification({
+        from: userId,
+        to: userId,
+        message: `Subscribed to ${type} elite via Solana`,
+        amount: subscriptionAmounts[type],
+        is_read: false,
+      });
+      await saveDocumentWithRetry(notification);
+      socket.sendNotification(userId, {
+        message: notification.message,
+        username: user.username,
+        avatar: user.avatar,
+        elite: type,
+        created_at: moment().format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment().format('LLL'),
+      });
+  
+      return res.json({
+        success: true,
+        message: `Successfully subscribed to ${type} elite`,
+        user: {
+          elite: user.elite,
+          last_elite_payment: user.last_elite_payment,
+        },
+      });
 
-    const notification = new Notification({
-      from: userId,
-      to: userId,
-      room: null,
-      message: notificationText,
-      amount: isFreeMonth ? 0 : amount,
-      is_read: false,
-    });
 
-    const notificationData = {
-      message: notification.message,
-      username: user.username,
-      avatar: user.avatar,
-      accessory: user.accessory,
-      elite: type,
-      room: null,
-      amount: isFreeMonth ? 0 : amount,
-      rank: user.totalWagered || 0,
-      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment(new Date()).format('LLL'),
-      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      is_read: false,
-    };
 
-    // Save notification
-    await saveDocumentWithRetry(notification);
-    socket.sendNotification(userId, notificationData);
 
-    // Return success response
-    return res.json({
-      success: true,
-      message: message,
-      user: {
-        balance: updatedUser.balance,
-        elite: updatedUser.elite,
-        elite_free_used: updatedUser.elite_free_used,
-        last_elite_payment: updatedUser.last_elite_payment,
-      },
-    });
+
+    // // Add IP to user's IP history if not already present
+    // if (!user.ip_addresses.includes(clientIp)) {
+    //   user.ip_addresses.push(clientIp);
+    //   await user.save();
+    // }
+
+    // // Check for free trial eligibility (only for red tier)
+    // let amount = subscriptionAmounts[type];
+    // let isFreeMonth = false;
+    // let message = `Successfully subscribed to ${type.charAt(0).toUpperCase() + type.slice(1)} Elite membership`;
+
+    // if (type === 'red' && !user.elite_free_used) {
+    //   // Check if any other accounts with this IP have used the free trial
+    //   const ipMatch = await User.findOne({
+    //     ip_addresses: clientIp,
+    //     elite_free_used: true,
+    //     _id: { $ne: userId } // Not the current user
+    //   });
+
+    //   if (!ipMatch) {
+    //     // User is eligible for free month
+    //     amount = 0;
+    //     isFreeMonth = true;
+    //     message = 'Successfully activated your FREE first month of Red Elite membership!';
+    //   }
+    // }
+
+    // // Check if user has enough balance when not free
+    // if (!isFreeMonth && user.balance < amount) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'Insufficient balance to purchase subscription',
+    //   });
+    // }
+
+    // // Update user's balance, elite status, and subscription date
+    // const updateData = {
+    //   elite: type,
+    //   last_elite_payment: new Date()
+    // };
+
+    // // Only deduct balance if not free
+    // if (!isFreeMonth) {
+    //   updateData.$inc = { balance: -amount };
+    // }
+
+    // // Mark free trial as used if applicable
+    // if (isFreeMonth) {
+    //   updateData.elite_free_used = true;
+    // }
+
+    // const updatedUser = await User.findByIdAndUpdate(
+    //   userId,
+    //   updateData,
+    //   { new: true }
+    // );
+
+    // // Create new transaction (only if not free)
+    // if (!isFreeMonth) {
+    //   const newTransaction = new Transaction({
+    //     user: userId,
+    //     amount: -amount,
+    //     description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription Purchase`,
+    //   });
+    //   await saveDocumentWithRetry(newTransaction);
+    //   socket.newTransaction(newTransaction);
+    // }
+
+    // // Create notification with appropriate message
+    // const notificationText = isFreeMonth 
+    //   ? `Activated FREE first month of Red Elite subscription` 
+    //   : `Purchased ${type} elite subscription`;
+
+    // const notification = new Notification({
+    //   from: userId,
+    //   to: userId,
+    //   room: null,
+    //   message: notificationText,
+    //   amount: isFreeMonth ? 0 : amount,
+    //   is_read: false,
+    // });
+
+    // const notificationData = {
+    //   message: notification.message,
+    //   username: user.username,
+    //   avatar: user.avatar,
+    //   accessory: user.accessory,
+    //   elite: type,
+    //   room: null,
+    //   amount: isFreeMonth ? 0 : amount,
+    //   rank: user.totalWagered || 0,
+    //   created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+    //   created_at_str: moment(new Date()).format('LLL'),
+    //   updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+    //   is_read: false,
+    // };
+
+    // // Save notification
+    // await saveDocumentWithRetry(notification);
+    // socket.sendNotification(userId, notificationData);
+
+    // // Return success response
+    // return res.json({
+    //   success: true,
+    //   message: message,
+    //   user: {
+    //     balance: updatedUser.balance,
+    //     elite: updatedUser.elite,
+    //     elite_free_used: updatedUser.elite_free_used,
+    //     last_elite_payment: updatedUser.last_elite_payment,
+    //   },
+    // });
   } catch (err) {
     console.error('Elite subscription error:', err);
     return res.status(500).json({
