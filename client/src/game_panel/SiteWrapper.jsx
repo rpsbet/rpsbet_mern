@@ -34,12 +34,10 @@ import {
   DialogTitle,
   Chip,
 } from '@mui/material';
-import { ArrowForwardIos } from '@mui/icons-material';
 
 import { ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from '../util/Api.js';
 import LoadingOverlay from 'react-loading-overlay';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram } from '@fortawesome/free-brands-svg-icons';
@@ -58,13 +56,12 @@ import {
   Notifications as NotificationsIcon,
   NotificationsOff as NotificationsOffIcon,
   History as HistoryIcon,
-  TrendingUp as TrendingUpIcon,
+  TrendingUp,
 } from '@mui/icons-material';
 import socketIOClient from 'socket.io-client';
 import { formatDistanceToNow } from 'date-fns';
 import Avatar from '../components/Avatar.jsx';
 
-// Actions (grouped by feature)
 import { setCurrentOfferTargetInfo } from '../redux/Loan/loan.action.js';
 import CookieConsent from '../util/cookieConsent.jsx';
 import { convertToCurrency } from '../util/conversion.js';
@@ -73,7 +70,6 @@ import {
   userSignOut,
   getUser,
   setUnreadMessageCount,
-  setNotificationsAllowed,
 } from '../redux/Auth/user.actions.js';
 import { openOfferLoanModal } from '../redux/Notification/notification.actions.js';
 import { ConflictDialog } from './modal/ConfirmAlerts.jsx';
