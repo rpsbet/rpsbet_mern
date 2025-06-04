@@ -15,9 +15,10 @@ import {
   ListItemIcon,
   Box,
   Dialog,
-  Chip,
+  ButtonBase,
   DialogContent,
   Skeleton,
+  IconButton,
   ListItemText,
   Divider,
   Tooltip,
@@ -31,11 +32,14 @@ import {
   TableRow,
   Badge,
   DialogTitle,
+  Chip,
 } from '@mui/material';
+import { ArrowForwardIos } from '@mui/icons-material';
+
 import { ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from '../util/Api';
+import axios from '../util/Api.js';
 import LoadingOverlay from 'react-loading-overlay';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram } from '@fortawesome/free-brands-svg-icons';
@@ -51,28 +55,27 @@ import {
   QuestionMark,
   LeaderboardOutlined,
   NotificationsOutlined,
-  PersonOutline,
-  Settings,
+  Notifications as NotificationsIcon,
+  NotificationsOff as NotificationsOffIcon,
+  History as HistoryIcon,
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import socketIOClient from 'socket.io-client';
 import { formatDistanceToNow } from 'date-fns';
-import Avatar from '../components/Avatar';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import Avatar from '../components/Avatar.jsx';
 
 // Actions (grouped by feature)
-import { setCurrentOfferTargetInfo } from '../redux/Loan/loan.action';
-import CookieConsent from '../util/cookieConsent';
-import { convertToCurrency } from '../util/conversion';
+import { setCurrentOfferTargetInfo } from '../redux/Loan/loan.action.js';
+import CookieConsent from '../util/cookieConsent.jsx';
+import { convertToCurrency } from '../util/conversion.js';
 import {
   setSocket,
   userSignOut,
   getUser,
   setUnreadMessageCount,
   setNotificationsAllowed,
-  checkAndAddWalletAddress,
-  disconnectWalletAddress,
-} from '../redux/Auth/user.actions';
-import { openOfferLoanModal } from '../redux/Notification/notification.actions';
+} from '../redux/Auth/user.actions.js';
+import { openOfferLoanModal } from '../redux/Notification/notification.actions.js';
 import { ConflictDialog } from './modal/ConfirmAlerts.jsx';
 import {
   setRoomList,
@@ -82,8 +85,6 @@ import {
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
-  setSolanaAccount,
-  setSolanaBalance,
   updateBetResult,
   getNotifications,
   readNotifications,
@@ -91,21 +92,20 @@ import {
   getGlobalChatLogs,
   getHistory,
   endLoading,
-} from '../redux/Logic/logic.actions';
+} from '../redux/Logic/logic.actions.js';
 import PrivyLogin from './modal/PrivyLogin.jsx';
 import { usePrivy } from '@privy-io/react-auth';
-import { faCoins } from '@fortawesome/free-solid-svg-icons';
+
 // Lazy-loaded components
-const HistoryTable = lazy(() => import('../game_panel/LiveGames/HistoryTable.jsx'));
-const BonusModal = lazy(() => import('./modal/BonusModal.jsx'));
+const HistoryTable = lazy(() => import('./LiveGames/HistoryTable.jsx'));
 const AllTransactionsModal = lazy(() => import('./modal/AllTransactionsModal.jsx'));
 const AccountManagementModal = lazy(() => import('./modal/AccountManagementModal.jsx'));
-const PlayerModal = lazy(() => import('./modal/PlayerModal'));
-const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal'));
-const LeaderboardsModal = lazy(() => import('./modal/LeaderboardsModal'));
-const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal'));
-const LoginModal = lazy(() => import('./modal/LoginModal'));
-const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal'));
+const PlayerModal = lazy(() => import('./modal/PlayerModal.jsx'));
+const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal.jsx'));
+const LeaderboardsModal = lazy(() => import('./modal/LeaderboardsModal.jsx'));
+const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal.jsx'));
+const LoginModal = lazy(() => import('./modal/LoginModal.jsx'));
+const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal.jsx'));
 
 // Constants and utilities
 LoadingOverlay.propTypes = undefined;
@@ -200,14 +200,11 @@ const selectUserData = (state) => ({
   notificationSounds: state.auth?.notificationSounds ?? true,
   isLowGraphics: state.auth?.isLowGraphics ?? false,
   showCookieConsent: state.auth?.showCookieConsent ?? false,
-  connectedAccount: state.auth?.connectedAccount,
 });
 
 const selectLogicData = (state) => ({
-  solanaBalance: state.logic?.solanaBalance ?? 0,
   solPrice: state.logic?.solPrice ?? 0,
   notifications: state.logic?.notifications ?? [],
-  account: state.logic?.account,
 });
 
 const selectLoanData = (state) => ({
@@ -229,10 +226,10 @@ function SiteWrapper({ children }) {
   const {
     isDarkMode, user, userName, balance, socket, transactions,
     isNotificationsAllowed, isMuted, notificationSounds, isLowGraphics,
-    showCookieConsent, connectedAccount
+    showCookieConsent
   } = userData;
 
-  const { solanaBalance, solPrice, notifications, account } = logicData;
+  const { solPrice, notifications } = logicData;
   const { remainingLoans } = loanData;
 
   // Local state with stable initial values
@@ -247,7 +244,6 @@ function SiteWrapper({ children }) {
     showNegativeBalanceDialog: false,
     walletConflictOpen: false,
     tokenModalOpen: true,
-    showBonusModal: false,
     eliteModalOpen: false,
     showAllGameLogs: false,
 
@@ -257,7 +253,6 @@ function SiteWrapper({ children }) {
     anchorElGameLog: null,
 
     // Other states
-    walletAddress: connectedAccount || null,
     selectedCreator: null,
     isRestrictedCountry: false,
     isHovered: false,
@@ -265,7 +260,7 @@ function SiteWrapper({ children }) {
     isInitialized: false,
   });
   const [isHovered, setIsHovered] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+
   // Refs
   const notificationSoundRef = useRef(null);
   const needALoanRef = useRef(null);
@@ -311,6 +306,14 @@ function SiteWrapper({ children }) {
     return decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
   }, [balance]);
 
+  // Helper for calculating decimal places
+  const numDecimals = useMemo(() => {
+    if (!balance) return 0;
+    const balanceString = balance.toString();
+    const decimalIndex = balanceString.indexOf('.');
+    return decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
+  }, [balance]);
+
   // Stable update function
   const updateState = useCallback((updates) => {
     setState(prev => ({ ...prev, ...updates }));
@@ -343,55 +346,6 @@ function SiteWrapper({ children }) {
       console.warn('Audio initialization failed:', error);
     }
   }, []);
-
-  // Stable Solana functions
-  const fetchSolanaBalance = useCallback(async (walletAddress) => {
-    if (!walletAddress) return null;
-
-    try {
-      const response = await axios.get('/stripe/get_provider_url');
-      if (!response?.data?.providerUrl) return null;
-
-      const solanaConnection = new Connection(response.data.providerUrl, 'confirmed');
-      const solBalLamports = await solanaConnection.getBalance(new PublicKey(walletAddress));
-      const solBalance = solBalLamports / LAMPORTS_PER_SOL;
-
-      dispatch(setSolanaBalance({ solanaBalance: solBalance }));
-      return solBalance;
-    } catch (error) {
-      console.error('Failed to fetch Solana balance:', error);
-      return null;
-    }
-  }, [dispatch]);
-
-  const loadSolanaWallet = useCallback(async () => {
-    if (!window.solana?.isPhantom || !user?._id) return;
-
-    try {
-      await window.solana.connect();
-      const wAddress = window.solana.publicKey?.toString();
-      if (!wAddress) return;
-
-      const result = await dispatch(checkAndAddWalletAddress(wAddress));
-      if (!result?.success && user._id) {
-        console.warn('Wallet conflict:', result?.message);
-        updateState({ walletConflictOpen: true });
-        return;
-      }
-
-      updateState({ walletAddress: wAddress });
-      dispatch(setSolanaAccount({ publicKey: new PublicKey(wAddress) }));
-      await fetchSolanaBalance(wAddress);
-    } catch (error) {
-      console.error('Failed to connect Phantom:', error);
-    }
-  }, [dispatch, user?._id, fetchSolanaBalance, updateState]);
-
-  const disconnectWeb3 = useCallback(() => {
-    updateState({ walletAddress: null });
-    dispatch(setSolanaBalance(null));
-    dispatch(disconnectWalletAddress());
-  }, [dispatch, updateState]);
 
   // Stable socket handlers with fewer dependencies
   const createSocketHandlers = useCallback(() => {
@@ -469,24 +423,8 @@ function SiteWrapper({ children }) {
       handleAddTransaction: async (data) => {
         try {
           dispatch(addNewTransaction(data));
-
-          if (connectedAccount && user?._id && data.user === user._id &&
-            data.status === 'completed' &&
-            (data.description?.startsWith('Joined') || data.description?.startsWith('Pumped'))) {
-            await fetchSolanaBalance(connectedAccount);
-          }
         } catch (error) {
           console.error('Error handling transaction:', error);
-        }
-      },
-
-      handleBalanceUpdate: (data) => {
-        try {
-          if (typeof data.solanaBalance === 'number') {
-            dispatch(setSolanaBalance({ solanaBalance: data.solanaBalance }));
-          }
-        } catch (error) {
-          console.error('Error handling balance update:', error);
         }
       },
 
@@ -537,7 +475,7 @@ function SiteWrapper({ children }) {
     };
   }, [
     dispatch, user?._id, isMuted, notificationSounds, isNotificationsAllowed,
-    location.pathname, connectedAccount, fetchSolanaBalance
+    location.pathname
   ]);
 
   // Event handlers
@@ -560,6 +498,27 @@ function SiteWrapper({ children }) {
     navigate('/portfolio');
     dispatch(selectMainTab(1));
   }, [navigate, dispatch]);
+
+  // Handler functions
+  const handleOpenHowToPlayModal = () => updateState({ showHowToPlayModal: true });
+  const handleOpenProfileMenu = (e) => updateState({ anchorElProfile: e.currentTarget });
+  const handleCloseProfileMenu = () => updateState({ anchorElProfile: null });
+  const handleOpenEliteSubscriptionModal = () => updateState({ eliteModalOpen: true });
+  const handleOpenAccountManagementModal = () => {
+    updateState({ showAccountModal: true, anchorElProfile: null });
+  };
+
+  // Balance click handler
+  const handleBalanceClick = (e) => {
+    e.preventDefault();
+    updateState({ anchorElGameLog: e.currentTarget });
+  };
+
+  // Notifications click handler
+  const handleNotificationsClick = (e) => {
+    e.preventDefault();
+    updateState({ anchorElNotifications: e.currentTarget });
+  };
 
   // Initialize app only once
   useEffect(() => {
@@ -584,7 +543,6 @@ function SiteWrapper({ children }) {
           dispatch(getNotifications()),
         ]);
 
-        // Load wallet after initial data
         if (mounted) {
           await loadSolanaWallet();
 
@@ -625,7 +583,7 @@ function SiteWrapper({ children }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [state.isInitialized, dispatch, handleClickOutside, initializeAudio, loadSolanaWallet, location.pathname, updateState]);
+  }, [state.isInitialized, dispatch, handleClickOutside, initializeAudio, location.pathname, updateState]);
 
   // Handle balance changes
   useEffect(() => {
@@ -643,7 +601,7 @@ function SiteWrapper({ children }) {
         const newSocket = socketIOClient(endpoint, {
           transports: ['websocket'],
           withCredentials: true,
-          forceNew: false, // Changed to false to prevent unnecessary reconnections
+          forceNew: false,
           timeout: 10000,
           reconnection: true,
           reconnectionAttempts: 3,
@@ -683,7 +641,7 @@ function SiteWrapper({ children }) {
         socketRef.current = null;
       }
     };
-  }, [state.isInitialized, endpoint, dispatch]); // Removed createSocketHandlers from deps
+  }, [state.isInitialized, endpoint, dispatch]);
 
   // Global socket events - separate from user events
   useEffect(() => {
@@ -712,7 +670,7 @@ function SiteWrapper({ children }) {
         currentSocket.off(event);
       });
     };
-  }, [createSocketHandlers]); // Only depend on handlers, not socket state
+  }, [createSocketHandlers]);
 
   // User-specific socket events
   useEffect(() => {
@@ -729,7 +687,6 @@ function SiteWrapper({ children }) {
         'UPDATE_BET_RESULT': handlers.handleBetResult,
         'SEND_NOTIFICATION': handlers.handleSendNotification,
         'NEW_TRANSACTION': handlers.handleAddTransaction,
-        'UPDATE_SOLANA_BALANCE': handlers.handleBalanceUpdate,
         'SET_UNREAD_MESSAGE_COUNT': handlers.handleUnreadCount,
       };
 
@@ -747,7 +704,7 @@ function SiteWrapper({ children }) {
     } catch (error) {
       console.error('Error setting up user socket events:', error);
     }
-  }, [user?._id, createSocketHandlers]); // Removed socket from deps
+  }, [user?._id, createSocketHandlers]);
 
   // Render functions for complex UI parts
   const renderRestrictedCountryDialog = () => (
@@ -855,17 +812,7 @@ function SiteWrapper({ children }) {
       </DialogContent>
     </Dialog>
   );
-  const handleOpenSettingsModal = () => setShowSettingsModal(true);
-  const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
-  const handleOpenProfileMenu = e => updateState({ anchorElProfile: e.currentTarget })
-  const handleCloseProfileMenu = () => updateState({ anchorElProfile: null })
-  const handleOpenEliteSubscriptionModal = () => {
-    setEliteModalOpen(true);
-  };
-  const handleOpenProfileModal = () => {
-    setShowProfileModal(true);
-    updateState({ anchorElProfile: null })
-  };
+
   const renderNegativeBalanceDialog = () => (
     <Dialog
       open={state.showNegativeBalanceDialog}
@@ -915,193 +862,324 @@ function SiteWrapper({ children }) {
     </Dialog>
   );
 
-  const renderUserActions = () => {
-    if (state.websiteLoading) {
-      return (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Skeleton variant="text" sx={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-          <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-          <Skeleton variant="circular" width={40} height={40} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-        </Box>
-      );
-    }
+  // Compact Profile Menu with Red Theme - No Animations
+  const renderProfileMenu = () => (
+    <Menu
+      anchorEl={state.anchorElProfile}
+      open={Boolean(state.anchorElProfile)}
+      onClose={handleCloseProfileMenu}
+      transitionDuration={0}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      PaperProps={{
+        sx: {
+          background: isDarkMode
+            ? 'rgba(5, 5, 5, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid #ff0000',
+          borderRadius: '6px',
+          minWidth: '160px',
+          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)',
+          mt: 0.5,
+          '& .MuiMenuItem-root': {
+            py: 0.75,
+            px: 1.5,
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            color: isDarkMode ? '#ffffff' : '#333333',
+            minHeight: '36px',
+            '&:hover': {
+              backgroundColor: '#ff0000',
+              color: '#ffffff',
+            },
+            '&.elite-item': {
+              background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05))',
+              borderLeft: '3px solid #ffd700',
+              '&:hover': {
+                backgroundColor: '#ff0000',
+                borderLeftColor: '#ffd700',
+              },
+            },
+            '&.logout-item': {
+              '&:hover': {
+                backgroundColor: '#cc0000',
+              },
+            },
+          },
+          '& .MuiListItemIcon-root': {
+            color: isDarkMode ? '#ffffff' : '#333333',
+            minWidth: '28px',
+            '& .MuiSvgIcon-root': {
+              fontSize: '1rem',
+            },
+          },
+          '& .MuiMenuItem-root:hover .MuiListItemIcon-root': {
+            color: '#ffffff',
+          },
+          '& .MuiListItemText-root': {
+            '& .MuiListItemText-primary': {
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              letterSpacing: '0.5px',
+            },
+          },
+          '& .MuiDivider-root': {
+            borderColor: isDarkMode
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(0, 0, 0, 0.1)',
+            my: 0.25,
+          },
+        },
+      }}
+      BackdropProps={{
+        invisible: true,
+      }}
+    >
+      {/* Account Management */}
+      <MenuItem onClick={handleOpenAccountManagementModal}>
+        <ListItemIcon>
+          <ManageAccounts />
+        </ListItemIcon>
+        <ListItemText primary="ACCOUNT" />
+      </MenuItem>
 
-    
+      <Divider />
 
-    return (
-      <>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip
-            onClick={(e) => updateState({ anchorElGameLog: e.currentTarget })}
-            color="error"
-            variant="outlined"
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AccountBalanceWallet sx={{ width: '18px', height: '18px', color: '#ff0000' }} />
-                <Typography variant="body2">
-                  {state.isHovered
-                    ? `${((solanaBalance * solPrice) || 0).toFixed(balanceDisplay)}`
-                    : solanaBalance || '0'
-                  }
-                </Typography>
-              </Box>
-            }
-            onMouseEnter={() => updateState({ isHovered: true })}
-            onMouseLeave={() => updateState({ isHovered: false })}
-          />
-        </Box>
+      {/* Portfolio - Desktop Only */}
+      <MenuItem className="desktop-only" onClick={handlePortfolio}>
+        <ListItemIcon>
+          <ListTwoTone />
+        </ListItemIcon>
+        <ListItemText primary="PORTFOLIO" />
+      </MenuItem>
 
-        <Box
-          component="a"
-          href="#"
-          className="mobile-only"
-          onClick={(e) => {
-            e.preventDefault();
-            updateState({ anchorElNotifications: e.currentTarget });
-          }}
-          sx={{
-            display: 'inline-flex',
+      {/* How to Play */}
+      <MenuItem onClick={handleOpenHowToPlayModal}>
+        <ListItemIcon>
+          <Help />
+        </ListItemIcon>
+        <ListItemText primary="HOW IT WORKS" />
+      </MenuItem>
+
+      {/* Elite Subscription - Special Styling */}
+      <MenuItem
+        onClick={handleOpenEliteSubscriptionModal}
+        className="elite-item"
+      >
+        <ListItemIcon>
+          <Star sx={{ color: '#ffd700' }} />
+        </ListItemIcon>
+        <ListItemText primary="ELITE" />
+      </MenuItem>
+
+      <Divider />
+
+      {/* Logout */}
+      <MenuItem
+        onClick={() => handleLogout(true)}
+        className="logout-item"
+      >
+        <ListItemIcon>
+          <ExitToApp />
+        </ListItemIcon>
+        <ListItemText primary="LOG OUT" />
+      </MenuItem>
+    </Menu>
+  );
+
+  const renderGameLogPopover = () => (
+    <Popover
+      open={Boolean(state.anchorElGameLog)}
+      anchorEl={state.anchorElGameLog}
+      onClose={() => updateState({ anchorElGameLog: null })}
+      transitionDuration={0}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      slotProps={{
+        paper: {
+          sx: {
+            background: isDarkMode
+              ? 'rgba(2, 2, 2, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid #ff0000',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            color: isDarkMode ? '#fff' : '#333',
+            minWidth: '350px',
+            maxWidth: '90vw',
+          },
+        },
+      }}
+    >
+      {/* Compact Header */}
+      <Box sx={{
+        p: 2,
+        borderBottom: '1px solid',
+        borderColor: 'rgba(255, 0, 0, 0.2)',
+        background: 'rgba(255, 0, 0, 0.05)',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{
+            width: 28,
+            height: 28,
+            borderRadius: '6px',
+            background: '#ff0000',
+            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#ffffff',
-            mx: 1.5,
-            '&:hover': { color: '#ff3030' }
-          }}
-        >
-          <Badge
-            badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
-            color="error"
-            sx={{
-              '& .MuiBadge-badge': {
-                fontSize: '10px',
-                height: '16px',
-                minWidth: '16px',
-                backgroundColor: '#ff3030'
-              }
-            }}
+          }}>
+            <HistoryIcon sx={{ color: 'white', fontSize: '16px' }} />
+          </Box>
+
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 600,
+            color: '#ff0000',
+            fontSize: '0.95rem',
+          }}>
+            BALANCE HISTORY
+          </Typography>
+
+          <Tooltip
+            title="Net profit shown (winnings - bet - fees)"
+            placement="top"
+            arrow
           >
-            <NotificationsOutlined fontSize="medium" />
-          </Badge>
+            <IconButton
+              size="small"
+              sx={{
+                ml: 'auto',
+                color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                '&:hover': { color: '#ff0000' },
+              }}
+            >
+              <QuestionMark sx={{ fontSize: '16px' }} />
+            </IconButton>
+          </Tooltip>
         </Box>
+      </Box>
 
-        <Button
-          onClick={(e) => updateState({ anchorElProfile: e.currentTarget })}
-          className="profile-menu"
+      {/* Compact Content */}
+      <Box sx={{ p: 2 }}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
           sx={{
-            padding: '4px',
-            minWidth: 'auto',
-            borderRadius: '50%',
-            ml: 1,
-            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' }
+            background: 'transparent',
+            mb: 2,
+            borderRadius: '6px',
+            border: '1px solid',
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
           }}
         >
-          <Avatar
-            src={user.avatar}
-            user_id={user._id}
-            rank={user.totalWagered}
-            accessory={user.accessory}
-            elite={user.elite}
-            alt=""
-            username={user.username}
-            className="avatar"
-            darkMode={isDarkMode}
-            sx={{ width: 38, height: 38 }}
-          />
-          <ArrowDropDown sx={{ color: '#ffffff' }} />
+          <Table size="small">
+            <TableBody>
+              {processedTransactions.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={3}
+                    sx={{
+                      textAlign: 'center',
+                      py: 3,
+                      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                    }}
+                  >
+                    No transactions available
+                  </TableCell>
+                </TableRow>
+              ) : (
+                processedTransactions.slice(0, 5).map((row, key) => {
+                  const clickable = row.hash && row.hash.length !== 10 && row.status !== 'processing';
+                  const isPositive = parseFloat(row.amount) > 0;
+                  const amount = parseFloat(row.amount);
+
+                  return (
+                    <TableRow
+                      key={`transaction-${row._id}-${key}`}
+                      onClick={() => {
+                        if (clickable) {
+                          window.open(
+                            `https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`,
+                            '_blank'
+                          );
+                        }
+                      }}
+                      sx={{
+                        cursor: clickable ? 'pointer' : 'default',
+                        '&:hover': {
+                          backgroundColor: clickable
+                            ? 'rgba(255, 0, 0, 0.05)'
+                            : 'inherit',
+                        },
+                        '& .MuiTableCell-root': {
+                          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                          py: 1,
+                          px: 1.5,
+                        }
+                      }}
+                    >
+                      <TableCell sx={{
+                        color: isPositive ? '#00ff00' : '#ff0000',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                      }}>
+                        {isPositive
+                          ? `+ ${amount.toFixed(4)} SOL (${convertToCurrency(amount, solPrice)})`
+                          : `- ${Math.abs(amount).toFixed(4)} SOL (${convertToCurrency(Math.abs(amount), solPrice)})`}
+                      </TableCell>
+                      <TableCell sx={{
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
+                        fontSize: '0.8rem',
+                      }}>
+                        {row.description}
+                      </TableCell>
+                      <TableCell sx={{
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                        fontSize: '0.75rem',
+                      }}>
+                        {row.from_now || 'Invalid Date'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Compact Button */}
+        <Button
+          color="error"
+          variant="contained"
+          onClick={() => updateState({ showAllGameLogs: true })}
+          fullWidth
+          sx={{
+            borderRadius: '6px',
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none',
+            backgroundColor: '#ff0000',
+            '&:hover': {
+              backgroundColor: '#cc0000',
+            },
+          }}
+        >
+          All Transactions
         </Button>
-      </>
-    );
-  };
+      </Box>
+    </Popover>
+  );
 
-  // const renderProfileMenu = () => (
-  //   <Menu
-  //     anchorEl={state.anchorElProfile}
-  //     open={Boolean(state.anchorElProfile)}
-  //     onClose={() => updateState({ anchorElProfile: null })}
-  //     transitionDuration={200}
-  //     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-  //     transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-  //     PaperProps={{
-  //       sx: {
-  //         background: 'rgba(20, 20, 25, 0.95)',
-  //         backdropFilter: 'blur(10px)',
-  //         WebkitBackdropFilter: 'blur(10px)',
-  //         border: '1px solid rgba(255, 255, 255, 0.1)',
-  //         borderRadius: '8px',
-  //         minWidth: '180px',
-  //         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-  //         mt: 1,
-  //         '& .MuiMenuItem-root': {
-  //           py: 1,
-  //           px: 2,
-  //           fontSize: '14px',
-  //           fontWeight: 500,
-  //           color: '#ffffff',
-  //           transition: 'all 0.2s ease',
-  //           '&:hover': {
-  //             backgroundColor: '#ff3030',
-  //             color: '#ffffff',
-  //           },
-  //         },
-  //         '& .MuiListItemIcon-root': {
-  //           color: '#ffffff',
-  //           minWidth: '36px',
-  //         },
-  //         '& .MuiDivider-root': {
-  //           borderColor: 'rgba(255, 255, 255, 0.1)',
-  //           my: 0.5,
-  //         },
-  //       },
-  //     }}
-  //     BackdropProps={{ invisible: true }}
-  //   >
-  //     <MenuItem onClick={() => {
-  //       updateState({ showAccountModal: true, anchorElProfile: null });
-  //     }}>
-  //       <ListItemIcon>
-  //         <ManageAccounts fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="ACCOUNT" />
-  //     </MenuItem>
-
-  //     <Divider />
-
-  //     <MenuItem className="desktop-only" onClick={handlePortfolio}>
-  //       <ListItemIcon>
-  //         <ListTwoTone fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="PORTFOLIO" />
-  //     </MenuItem>
-
-  //     <MenuItem onClick={() => updateState({ showHowToPlayModal: true })}>
-  //       <ListItemIcon>
-  //         <Help fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="HOW IT WORKS" />
-  //     </MenuItem>
-
-  //     <MenuItem onClick={() => updateState({ eliteModalOpen: true })}>
-  //       <ListItemIcon>
-  //         <Star fontSize="small" sx={{ color: '#ffd700' }} />
-  //       </ListItemIcon>
-  //       <ListItemText primary="ELITE" />
-  //     </MenuItem>
-
-  //     <Divider />
-
-  //     <MenuItem
-  //       onClick={() => handleLogout(true)}
-  //       sx={{ color: '#ffffff' }}
-  //     >
-  //       <ListItemIcon>
-  //         <ExitToApp fontSize="small" />
-  //       </ListItemIcon>
-  //       <ListItemText primary="LOG OUT" />
-  //     </MenuItem>
-  //   </Menu>
-  // );
-
+  // Compact Notifications Popover with Red Theme
   const renderNotificationsPopover = () => (
     <Popover
       open={Boolean(state.anchorElNotifications)}
@@ -1113,37 +1191,81 @@ function SiteWrapper({ children }) {
       transitionDuration={0}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-      PaperProps={{
-        sx: {
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: 'rgba(0, 0, 0, 0.4)',
+      slotProps={{
+        paper: {
+          sx: {
+            background: isDarkMode
+              ? 'rgb(13, 13, 13)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid #ff0000',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            color: isDarkMode ? '#fff' : '#333',
+            width: 320,
+            maxWidth: '90vw',
+            maxHeight: '70vh',
+            display: 'flex',
+            flexDirection: 'column',
           },
-          borderRadius: '16px',
-          color: '#fff',
-          width: 320,
-          maxWidth: '90vw',
-          display: 'flex',
-          flexDirection: 'column',
         },
       }}
     >
-      <Typography
-        variant="h6"
-        sx={{
-          position: 'sticky',
-          top: 0,
-          color: '#fff',
-          p: 2,
-          zIndex: 2
-        }}
-      >
-        NOTIFICATIONS
-      </Typography>
-      <Box sx={{ maxHeight: 300, overflowY: 'auto', px: 2, pb: 2 }}>
+      {/* Compact Header */}
+      <Box sx={{
+        p: 2,
+        borderBottom: '1px solid',
+        borderColor: 'rgba(255, 0, 0, 0.2)',
+        background: 'rgba(255, 0, 0, 0.05)',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{
+            width: 28,
+            height: 28,
+            borderRadius: '6px',
+            background: '#ff0000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <NotificationsIcon sx={{ color: 'white', fontSize: '16px' }} />
+          </Box>
+
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 600,
+            color: '#ff0000',
+            fontSize: '0.95rem',
+          }}>
+            NOTIFICATIONS
+          </Typography>
+
+          {/* Notification count */}
+          {processedNotifications.filter(n => !n.is_read).length > 0 && (
+            <Chip
+              label={processedNotifications.filter(n => !n.is_read).length}
+              size="small"
+              sx={{
+                ml: 'auto',
+                backgroundColor: '#ff0000',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.7rem',
+                height: '20px',
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+          )}
+        </Box>
+      </Box>
+
+      {/* Compact Content */}
+      <Box sx={{
+        flex: 1,
+        overflowY: 'auto',
+        px: 1,
+        pb: 1,
+      }}>
         {processedNotifications.length > 0 ? (
           processedNotifications.map((notification, index) => {
             const processedMessage = appendCurrencyBracket(
@@ -1157,21 +1279,37 @@ function SiteWrapper({ children }) {
                 <Box
                   sx={{
                     display: 'flex',
-                    flexDirection: 'row',
                     alignItems: 'flex-start',
-                    py: 1.5
+                    gap: 1.5,
+                    p: 1.5,
+                    mx: 0.5,
+                    my: 0.5,
+                    borderRadius: '6px',
+                    background: notification.is_read
+                      ? 'transparent'
+                      : 'rgba(255, 0, 0, 0.05)',
+                    border: '1px solid',
+                    borderColor: notification.is_read
+                      ? 'transparent'
+                      : 'rgba(255, 0, 0, 0.2)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    '&:hover': {
+                      background: 'rgba(255, 0, 0, 0.08)',
+                      borderColor: 'rgba(255, 0, 0, 0.3)',
+                    }
                   }}
                   className={`notification-container ${notification.is_read ? 'read' : ''}`}
                 >
-                  <a
-                    className="player"
+                  {/* Avatar */}
+                  <ButtonBase
                     onClick={() => {
                       updateState({
                         selectedCreator: notification._id,
                         showPlayerModal: true
                       });
                     }}
-                    style={{ display: 'flex', flexDirection: 'row', cursor: 'pointer' }}
+                    sx={{ borderRadius: '6px' }}
                   >
                     <Avatar
                       user_id={notification._id}
@@ -1181,207 +1319,107 @@ function SiteWrapper({ children }) {
                       elite={notification.elite}
                       username={notification.username}
                       className="avatar"
+                      style={{ width: 36, height: 36 }}
                     />
-                  </a>
-                  <a
-                    href={`/join/${notification.room}/`}
-                    style={{
-                      width: '100%',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      marginLeft: '0.75rem',
-                      position: 'relative'
-                    }}
-                  >
-                    {!notification.is_read && (
-                      <Box
+                  </ButtonBase>
+
+                  {/* Content */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box
+                      component="a"
+                      href={`/join/${notification.room}/`}
+                      sx={{
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        display: 'block',
+                        position: 'relative',
+                      }}
+                    >
+                      {/* Unread indicator */}
+                      {!notification.is_read && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: -2,
+                            right: -2,
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            backgroundColor: '#ff0000',
+                          }}
+                        />
+                      )}
+
+                      <Typography
+                        variant="body2"
+                        component="div"
                         sx={{
-                          position: 'absolute',
-                          top: 0,
-                          right: 10,
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: '#FF0000',
+                          mb: 0.25,
+                          lineHeight: 1.3,
+                          fontWeight: notification.is_read ? 400 : 600,
+                          color: isDarkMode ? '#e1e5e9' : '#2c3e50',
+                          fontSize: '0.8rem',
                         }}
+                        dangerouslySetInnerHTML={{ __html: processedMessage }}
                       />
-                    )}
-                    <Typography
-                      variant="body2"
-                      component="div"
-                      sx={{ mb: 0.5 }}
-                      dangerouslySetInnerHTML={{ __html: processedMessage }}
-                    />
-                    <Typography variant="caption" sx={{ color: '#ccc' }}>
-                      {notification.from_now}
-                    </Typography>
-                  </a>
+
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                          fontSize: '0.7rem',
+                        }}
+                      >
+                        {notification.from_now}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Box>
+
                 {index < processedNotifications.length - 1 && (
-                  <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                  <Divider
+                    sx={{
+                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                      mx: 1,
+                    }}
+                  />
                 )}
               </Box>
             );
           })
         ) : (
-          <Typography variant="body2" sx={{ fontStyle: 'italic', mt: 1 }}>
-            No notifications available.
-          </Typography>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            py: 4,
+            gap: 1,
+          }}>
+            <NotificationsOffIcon sx={{
+              fontSize: '2rem',
+              opacity: 0.3,
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+            }} />
+            <Typography
+              variant="body2"
+              sx={{
+                color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                textAlign: 'center',
+                fontSize: '0.85rem',
+              }}
+            >
+              No notifications available
+            </Typography>
+          </Box>
         )}
       </Box>
     </Popover>
   );
 
-  const renderGameLogPopover = () => (
-    <Popover
-      open={Boolean(state.anchorElGameLog)}
-      anchorEl={state.anchorElGameLog}
-      onClose={() => updateState({ anchorElGameLog: null })}
-      transitionDuration={0}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-      PaperProps={{
-        sx: {
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: 'rgba(0, 0, 0, 0.4)',
-          },
-          borderRadius: '16px',
-          color: '#fff',
-          p: 2,
-          '& .MuiPaper-root': { background: 'inherit', color: 'inherit' },
-          '& .MuiTableContainer-root': { background: 'inherit', color: 'inherit' },
-          '& .MuiTableCell-root': { color: '#fff', borderColor: '#2c2c2c' },
-          '& #wallet-address': {
-            background: 'rgba(0, 0, 0, 0.3)',
-            color: '#fff',
-            border: '1px solid #2c2c2c',
-            borderRadius: '4px',
-            width: '100%',
-            padding: '0.5rem',
-            marginTop: '0.5rem',
-            marginBottom: '0.5rem',
-            fontSize: '0.9rem',
-          },
-        },
-      }}
-    >
-      <Box sx={{ position: 'relative' }}>
-        <Tooltip
-          style={{ position: 'absolute', right: '20px' }}
-          title="Why do my winnings appear less? You see net profit (winning - bet amount) minus platform fees."
-          placement="top"
-        >
-          <QuestionMark
-            style={{
-              cursor: 'pointer',
-              float: 'right',
-              color: isDarkMode ? '#f9f9f9' : '#333'
-            }}
-          />
-        </Tooltip>
-      </Box>
-
-      <Typography sx={{ mt: 1, mb: 2 }} variant="h6">
-        BALANCE HISTORY
-      </Typography>
-
-      <TableContainer component={Paper} style={{ marginBottom: '15px' }} elevation={0}>
-        <Table aria-label="balance history table" size="small">
-          <TableBody>
-            {processedTransactions.length === 0 ? (
-              <TableRow>
-                <TableCell>No transactions available</TableCell>
-              </TableRow>
-            ) : (
-              processedTransactions.slice(0, 5).map((row, key) => {
-                const clickable = row.hash && row.hash.length !== 10 && row.status !== 'processing';
-                const isPositive = parseFloat(row.amount) > 0;
-                const amount = parseFloat(row.amount);
-
-                return (
-                  <TableRow
-                    key={`transaction-${row._id}-${key}`}
-                    onClick={() => {
-                      if (clickable) {
-                        window.open(
-                          `https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`,
-                          '_blank'
-                        );
-                      }
-                    }}
-                    sx={{
-                      cursor: clickable ? 'pointer' : 'default',
-                      '&:hover': {
-                        backgroundColor: clickable ? 'rgba(255,255,255,0.05)' : 'inherit'
-                      }
-                    }}
-                  >
-                    <TableCell className={isPositive ? 'green-text' : 'red-text'}>
-                      {isPositive
-                        ? `+ ${amount.toFixed(4)} SOL (${convertToCurrency(amount, solPrice)})`
-                        : `- ${Math.abs(amount).toFixed(4)} SOL (${convertToCurrency(Math.abs(amount), solPrice)})`}
-                    </TableCell>
-                    <TableCell sx={{ color: '#fff' }}>{row.description}</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>
-                      {row.from_now || 'Invalid Date'}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Button
-        color="error"
-        variant="outlined"
-        onClick={() => updateState({ showAllGameLogs: true })}
-        sx={{
-          '&:hover': {
-            backgroundColor: 'error.main',
-            color: '#fff'
-          },
-          width: '100%'
-        }}
-      >
-        ALL TRANSACTIONS
-      </Button>
-
-      {connectedAccount ? (
-        <Box sx={{ mt: 2 }}>
-          <input id="wallet-address" type="text" value={connectedAccount} readOnly />
-          <Button
-            color="error"
-            variant="outlined"
-            onClick={disconnectWeb3}
-            fullWidth
-            sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' }, mt: 1 }}
-          >
-            Disconnect
-          </Button>
-        </Box>
-      ) : (
-        <Button
-          color="error"
-          variant="outlined"
-          fullWidth
-          onClick={loadSolanaWallet}
-          sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' }, mt: 2 }}
-        >
-          CONNECT WALLET
-        </Button>
-      )}
-    </Popover>
-  );
-
   const renderModals = () => (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div></div>}>
         <EliteSubscriptionModal
           user={user}
           open={state.eliteModalOpen}
@@ -1391,17 +1429,10 @@ function SiteWrapper({ children }) {
       </Suspense>
 
       {state.showAccountModal && (
-        <Suspense fallback={<div>Loading Profile...</div>}>
+        <Suspense fallback={<div>Loading Account Management...</div>}>
           <AccountManagementModal
             modalIsOpen={state.showAccountModal}
             closeModal={() => updateState({ showAccountModal: false })}
-            player_name={userName}
-            balance={balance}
-            accessory={user?.accessory}
-            elite={user?.elite}
-            avatar={user?.avatar}
-            totalWagered={user?.totalWagered}
-            selectedCreator={user?._id}
           />
         </Suspense>
       )}
@@ -1412,17 +1443,6 @@ function SiteWrapper({ children }) {
             selectedCreator={state.selectedCreator}
             modalIsOpen={state.showPlayerModal}
             closeModal={() => updateState({ showPlayerModal: false })}
-          />
-        </Suspense>
-      )}
-
-      {state.showBonusModal && (
-        <Suspense fallback={<div>Loading Bonus...</div>}>
-          <BonusModal
-            modalIsOpen={state.showBonusModal}
-            closeModal={() => updateState({ showBonusModal: false })}
-            user={user}
-            solPrice={solPrice}
           />
         </Suspense>
       )}
@@ -1473,7 +1493,7 @@ function SiteWrapper({ children }) {
         </Suspense>
       )}
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div></div>}>
         <GamePasswordModal />
       </Suspense>
 
@@ -1505,7 +1525,7 @@ function SiteWrapper({ children }) {
           <div className="game_wrapper">
             <div className="contents_wrapper">
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <Typography>Loading...</Typography>
+                <Typography></Typography>
               </Box>
             </div>
           </div>
@@ -1633,52 +1653,82 @@ function SiteWrapper({ children }) {
                       gap: 1,
                     }}
                   >
-                    <Chip
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleBalanceClick(e);
+                    <Tooltip
+                      title={`${((balance * solPrice) || 0).toFixed(numDecimals)} USD`}
+                      arrow
+                      placement="top"
+                      componentsProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'rgba(0, 0, 0, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '8px',
+                            fontSize: '0.8rem',
+                          }
+                        }
                       }}
-                      color="error"
-                      variant="outlined"
-                      label={
+                    >
+                      <ButtonBase
+                        onClick={handleBalanceClick}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        sx={{
+                          position: 'relative',
+                          padding: '6px 12px',
+                          borderRadius: '12px',
+                          background: 'transparent',
+                          backdropFilter: 'blur(15px)',
+                          border: '1px solid rgba(255, 0, 21, 0.2)',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                            borderColor: 'rgba(255, 0, 21, 0.4)',
+                            boxShadow: '0 4px 20px rgba(255, 0, 21, 0.3)',
+                          },
+                        }}
+                      >
                         <Box
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 0.5, // Adjust spacing between icon and text
+                            gap: 0.75,
                           }}
                         >
                           <AccountBalanceWallet
                             sx={{
-                              width: '18px',
-                              height: '18px',
-                              color: '#ff0000', // Adjust color to match your theme
+                              width: '14px',
+                              height: '14px',
+                              color: '#ff0000',
+                              transition: 'transform 0.2s ease',
+                              transform: isHovered ? 'rotate(10deg)' : 'rotate(0deg)',
                             }}
                           />
-                          {state.isHovered ? (
-                            <Typography variant="body2">
-                              ${((solanaBalance * solPrice) || 0).toFixed(numDecimals)}
-                            </Typography>
-                          ) : (
-                            <Typography variant="body2">
-                              {solanaBalance}
-                            </Typography>
-                          )}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 600,
+                              color: '#e1e5e9',
+                              fontSize: '0.8rem',
+                              transition: 'color 0.2s ease',
+                            }}
+                          >
+                            {isHovered
+                              ? `${((balance * solPrice) || 0).toFixed(numDecimals)}`
+                              : balance
+                            }
+                          </Typography>
                         </Box>
-                      }
-                      onMouseEnter={() => setIsHovered(true)}
-                      onMouseLeave={() => setIsHovered(false)}
-                    />
+                      </ButtonBase>
+                    </Tooltip>
                   </Box>
 
                   <Box
                     component="a"
                     href="#"
                     className="mobile-only"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNotificationsClick(e);
-                    }}
+                    onClick={handleNotificationsClick}
                     id="btn_notifications_mobile"
                     sx={{
                       display: 'inline-flex',
@@ -1738,113 +1788,11 @@ function SiteWrapper({ children }) {
                     <ArrowDropDown sx={{ color: '#ffffff' }} />
                   </Button>
 
-                  <Menu
-                    anchorEl={state.anchorElProfile}
-                    open={Boolean(state.anchorElProfile)}
-                    onClose={handleCloseProfileMenu}
-                    transitionDuration={200}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    PaperProps={{
-                      sx: {
-                        background: 'rgba(20, 20, 25, 0.95)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        minWidth: '180px',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-                        mt: 1,
-                        '& .MuiMenuItem-root': {
-                          py: 1,
-                          px: 2,
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          color: '#ffffff',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            backgroundColor: '#ff3030',
-                            color: '#ffffff',
-                          },
-                        },
-                        '& .MuiListItemIcon-root': {
-                          color: '#ffffff',
-                          minWidth: '36px',
-                        },
-                        '& .MuiDivider-root': {
-                          borderColor: 'rgba(255, 255, 255, 0.1)',
-                          my: 0.5,
-                        },
-                      },
-                    }}
-                    BackdropProps={{
-                      invisible: true,
-                    }}
-                  >
-                    <MenuItem onClick={handleOpenProfileModal}>
-                      <ListItemIcon>
-                        <PersonOutline fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="PROFILE" />
-                    </MenuItem>
-                    <Divider />
-                    <MenuItem className="desktop-only" onClick={handlePortfolio}>
-                      <ListItemIcon>
-                        <ListTwoTone fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="PORTFOLIO" />
-                    </MenuItem>
-                    <MenuItem onClick={handleOpenSettingsModal}>
-                      <ListItemIcon>
-                        <Settings fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="SETTINGS" />
-                    </MenuItem>
-                    <MenuItem onClick={handleOpenHowToPlayModal}>
-                      <ListItemIcon>
-                        <Help fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="HOW IT WORKS" />
-                    </MenuItem>
-                    <MenuItem onClick={handleOpenEliteSubscriptionModal}>
-                      <ListItemIcon>
-                        <Star fontSize="small" sx={{ color: '#ffd700' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="ELITE" />
-                    </MenuItem>
-                    <MenuItem onClick={() => setShowBonusModal(true)}>
-                      <ListItemIcon>
-                        <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="BONUS" />
-                    </MenuItem>
-                    <Divider />
-
-                    <MenuItem
-                      onClick={() => {
-                        handleLogout(true);
-                      }}
-                      sx={{ color: '#ffffff' }}
-                    >
-                      <ListItemIcon>
-                        <ExitToApp fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="LOG OUT" />
-                    </MenuItem>
-                  </Menu>
+                  {renderProfileMenu()}
                 </>
               ) : (
                 <PrivyLogin />
               )}
-{/* 
-              {renderUserActions()}
-              {renderProfileMenu()} */}
             </div>
           </div>
 

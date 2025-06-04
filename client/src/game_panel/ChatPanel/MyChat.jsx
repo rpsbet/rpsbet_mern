@@ -158,9 +158,9 @@ function MyChat({ highlightChatId }) {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ borderRadius: '0.3em', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ borderRadius: '0.3em', height: '100%', display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
         {/* Search Header */}
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider'}}>
           <TextField
             fullWidth
             size="small"
@@ -393,9 +393,8 @@ function MyChat({ highlightChatId }) {
                           alignItems: 'center',
                           py: 1.5,
                           px: 2,
-                          backgroundColor: isActive ? 'rgba(255, 0, 0, 0.1)' : 'inherit',
-                          borderRight: isActive ? '4px solid' : 'none',
-                          borderRightColor: 'error.main',
+                          backgroundColor: isActive ? 'rgba(255, 0, 0, 0.15)' : 'inherit',
+                          borderRight: isActive ? '3px solid #ff0000' : 'none',
                           borderBottom: '1px solid',
                           borderColor: 'divider',
                           cursor: 'pointer',

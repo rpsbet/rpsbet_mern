@@ -59,7 +59,7 @@ const createEmojiWrapper = (() => {
                 margin: '0 2px',
                 objectFit: 'contain'
               }}
-              loading="lazy"
+              // loading="lazy"
             />
           );
         }
@@ -78,7 +78,7 @@ const createEmojiWrapper = (() => {
   };
 })();
 
-// Enhanced message item with better performance
+// Enhanced message item with better performance and modern styling
 const ChatMessageItem = React.memo(({
   chat,
   isPending,
@@ -87,7 +87,7 @@ const ChatMessageItem = React.memo(({
   onOpenPlayerModal,
   onMessageClick,
   isSelected,
-  style // For virtualization
+  style
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -136,45 +136,93 @@ const ChatMessageItem = React.memo(({
     setImageError(true);
   }, []);
 
-  // Enhanced styling with better visual feedback
+  // Enhanced modern styling with glassmorphism
   const messageStyle = {
-    background: effectiveIsDarkMode
-      ? 'rgba(20, 20, 20, 0.65)'
-      : 'rgba(255, 255, 255, 0.25)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    background: '#2f2f2f',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
     border: isSelected 
-      ? '2px solid #ff0000' 
-      : '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '8px',
-    transition: 'all 0.2s ease',
-    transform: isPending ? 'scale(0.98)' : 'scale(1)',
+      ? '2px solidrgb(255, 0, 21)' 
+      : effectiveIsDarkMode 
+        ? '1px solid rgba(255, 255, 255, 0.1)' 
+        : '1px solid rgba(0, 0, 0, 0.05)',
+    borderRadius: '12px',
+    boxShadow: isSelected 
+      ? '0 8px 32px rgba(255, 71, 87, 0.3), 0 0 0 1px rgba(255, 0, 21, 0.2)' 
+      : effectiveIsDarkMode 
+        ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+        : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: isPending ? 0.7 : 1,
+    position: 'relative',
+    overflow: 'hidden',
   };
 
+  // Add subtle animated gradient for special messages
+  const specialMessageOverlay = chat.sender === 'SYSTEM' ? {
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: 'linear-gradient(90deg, transparent, rgba(0, 255, 58, 0.1), transparent)',
+      animation: 'shimmer 2s infinite',
+    }
+  } : {};
+
   return (
-    <div style={style}> {/* Wrapper for virtualization */}
-      <div
+    <div style={style}>
+      <Box
         className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${
           chat.sender === 'SYSTEM' && chat.message?.includes('debt') ? 'special-message-rent' : ''
         } ${isPending ? 'pending-message' : ''} ${isSelected ? 'selected-message' : ''}`}
         onClick={handleItemClick}
-        style={{ cursor: 'pointer' }}
+        sx={{
+          position: 'relative',
+          cursor: 'pointer',
+          mb: 2,
+          transition: 'transform 0.2s ease',
+      
+          ...specialMessageOverlay,
+        }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && handleItemClick(e)}
       >
-        {/* Reply Section with enhanced styling */}
+        {/* Reply Section with enhanced glassmorphism */}
         {chat.replyTo?.message && (
-          <Fade in timeout={200}>
-            <Box className="reply-to" sx={{ mb: 1 }}>
-              <Tooltip title={`Reply to ${chat.replyTo.username}`} arrow>
+          <Fade in timeout={300}>
+            <Box className="reply-to" sx={{ 
+              mb: 1, 
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 45,
+                top: -10,
+                width: 2,
+                height: 30,
+              }
+            }}>
+              <Tooltip 
+                title={`Reply to ${chat.replyTo.username}`} 
+                arrow
+                placement="top"
+                
+              >
                 <ButtonBase
                   className="chat-player"
                   onClick={handleReplyAvatarClick}
-                  sx={{ borderRadius: '50%' }}
+                 
                 >
-                  <div className="reply-border" />
+                    <div className="reply-border" style={{
+                    borderColor: 'rgba(255, 0, 21, 0.3)',
+                    borderWidth: '2px',
+                    borderStyle: 'solid solid solid solid',
+                    borderRight: 'none',
+                  }} />
                   <Avatar
                     className="avatar"
                     src={chat.replyTo.avatar}
@@ -191,7 +239,11 @@ const ChatMessageItem = React.memo(({
               <Typography 
                 variant="caption" 
                 className="reply-sender sender-name"
-                sx={{ fontWeight: 600 }}
+                sx={{ 
+                  fontWeight: 700,
+                  color: '#ff4757',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                }}
               >
                 {chat.replyTo.username}
               </Typography>
@@ -202,7 +254,9 @@ const ChatMessageItem = React.memo(({
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: '200px'
+                  maxWidth: '200px',
+                  opacity: 0.8,
+                  fontStyle: 'italic',
                 }}
               >
                 {replyGifContent?.content ? (
@@ -212,10 +266,10 @@ const ChatMessageItem = React.memo(({
                     style={{ 
                       maxHeight: '60px', 
                       maxWidth: '100px', 
-                      borderRadius: '4px',
-                      objectFit: 'cover'
+                      borderRadius: '8px',
+                      objectFit: 'cover',
+                      border: '2px solid rgba(255, 255, 255, 0.1)',
                     }}
-                    loading="lazy"
                   />
                 ) : (
                   wrappedReplyMessage
@@ -227,11 +281,21 @@ const ChatMessageItem = React.memo(({
 
         {/* Main Message Content */}
         <div className="chat-content">
-          <Tooltip title={`View ${chat.sender}'s profile`} arrow>
+          <Tooltip 
+            title={`View ${chat.sender}'s profile`} 
+            arrow
+            placement="top"
+            
+          >
             <ButtonBase
               className="chat-player"
               onClick={handleAvatarClick}
-              sx={{ borderRadius: '50%', zIndex: 1 }}
+              sx={{ 
+                zIndex: 1,
+                '&:active': {
+                  transform: 'scale(0.95)',
+                },
+              }}
             >
               <Avatar
                 className="avatar"
@@ -247,14 +311,19 @@ const ChatMessageItem = React.memo(({
             </ButtonBase>
           </Tooltip>
 
-          <div className="chat-msg" style={messageStyle}>
+          <Box className="chat-msg" sx={messageStyle}>
             <Typography 
               variant="subtitle2" 
               className="sender-name"
               sx={{ 
-                fontWeight: 600,
-                color: '#b9bbbe',
-                mb: 0.5
+                fontWeight: 700,
+                background: 'linear-gradient(135deg,rgb(255, 0, 21),rgb(255, 0, 25))',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 0.5,
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                fontSize: '0.9rem',
               }}
             >
               {chat.sender}
@@ -264,12 +333,19 @@ const ChatMessageItem = React.memo(({
               variant="body2" 
               className="chat-text"
               component="div"
-              sx={{ wordBreak: 'break-word' }}
+              sx={{ 
+                wordBreak: 'break-word',
+                lineHeight: 1.5,
+                color: effectiveIsDarkMode ? '#e1e5e9' : '#2c3e50',
+              }}
             >
               {isPending ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={16} color="inherit" />
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                  <CircularProgress size={16} sx={{ color: '#ff4757' }} />
+                  <Typography variant="caption" sx={{ 
+                    opacity: 0.7,
+                    fontStyle: 'italic',
+                  }}>
                     Sending...
                   </Typography>
                 </Box>
@@ -280,7 +356,10 @@ const ChatMessageItem = React.memo(({
                       variant="rectangular" 
                       width={200} 
                       height={150} 
-                      sx={{ borderRadius: '4px' }}
+                      sx={{ 
+                        borderRadius: '12px',
+                        bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      }}
                     />
                   )}
                   {!imageError && (
@@ -289,26 +368,26 @@ const ChatMessageItem = React.memo(({
                       alt="GIF message" 
                       style={{ 
                         maxHeight: '150px', 
-                        maxWidth: '200px', 
-                        borderRadius: '4px',
+                        maxWidth: '100%', 
+                        borderRadius: '12px',
                         display: imageLoaded ? 'block' : 'none',
-                        objectFit: 'cover'
+                        objectFit: 'cover',
+                        border: '2px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
                       }}
                       onLoad={handleImageLoad}
                       onError={handleImageError}
-                      loading="lazy"
                     />
                   )}
                   {imageError && (
-                    <Box 
-                      sx={{ 
-                        p: 2, 
-                        bgcolor: 'rgba(255,0,0,0.1)', 
-                        borderRadius: '4px',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <Typography variant="caption" color="error">
+                    <Box sx={{ 
+                      p: 2, 
+                      background: 'linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05))',
+                      borderRadius: '12px',
+                      textAlign: 'center',
+                      backdropFilter: 'blur(10px)',
+                    }}>
+                      <Typography variant="caption" sx={{ color: '#ff4757', fontWeight: 600 }}>
                         Failed to load GIF
                       </Typography>
                     </Box>
@@ -318,24 +397,33 @@ const ChatMessageItem = React.memo(({
                 wrappedMessage
               )}
             </Typography>
-          </div>
+          </Box>
 
-          {/* Enhanced timestamp */}
-          <div className="chat-time">
-            <Tooltip title={new Date(chat.time).toLocaleString()} arrow>
-              <div>
+          {/* Enhanced timestamp with modern styling */}
+          <Box className="chat-time" sx={{ position: 'absolute', right: '10px' }}>
+           
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  opacity: 0.6,
+                  color: effectiveIsDarkMode ? '#a0a6ab' : '#6c757d',
+                 
+                  display: 'inline-block',
+                  cursor: 'pointer',
+                  
+                }}
+              >
                 {typeof chat.time === 'string' || typeof chat.time === 'number' 
                   ? chat.time 
                   : ''}
-              </div>
-            </Tooltip>
-          </div>
+              </Typography>
+          </Box>
         </div>
-      </div>
+      </Box>
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison for better performance
   return (
     prevProps.chat.id === nextProps.chat.id &&
     prevProps.isPending === nextProps.isPending &&
@@ -344,7 +432,7 @@ const ChatMessageItem = React.memo(({
   );
 });
 
-// Enhanced Global Chat with virtualization and better performance
+// Enhanced Global Chat with modern styling
 function GlobalChatComponent(props) {
   const {
     globalChatList: propGlobalChatList = [],
@@ -394,7 +482,6 @@ function GlobalChatComponent(props) {
       seen.add(key);
       return true;
     }).sort((a, b) => {
-      // Ensure proper chronological order
       const timeA = new Date(a.time || 0).getTime();
       const timeB = new Date(b.time || 0).getTime();
       return timeA - timeB;
@@ -541,9 +628,22 @@ function GlobalChatComponent(props) {
       className="chat-panel global-chat"
       sx={{
         position: 'relative',
+        height: '100%',
+        background: '#1e1e1e',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        overflow: 'hidden',
         '&::-webkit-scrollbar': { display: 'none' },
         scrollbarWidth: 'none',
         msOverflowStyle: 'none',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '1px',
+          zIndex: 1,
+        },
       }}
     >
       {/* Enhanced new message notification */}
@@ -554,27 +654,29 @@ function GlobalChatComponent(props) {
             className="msgtooltip"
             sx={{
               position: 'absolute',
-              bottom: '10px',
-              left: '50%',
+              bottom: '20px',
               transform: 'translateX(-50%)',
               zIndex: 10,
-              bgcolor: 'error.main',
+              background: 'linear-gradient(135deg, #ff4757, #ff6b7a)',
               color: 'white',
-              px: 2,
-              py: 1,
-              borderRadius: '20px',
-              boxShadow: 3,
+              px: 3,
+              py: 1.5,
+              borderRadius: '25px',
+              boxShadow: '0 8px 32px rgba(255, 71, 87, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               '&:hover': {
-                bgcolor: 'error.dark',
-                transform: 'translateX(-50%) scale(1.05)',
+                background: 'linear-gradient(135deg, #ff3742, #ff5a6b)',
+                transform: 'translateX(-50%) translateY(-2px) scale(1.05)',
+                boxShadow: '0 12px 40px rgba(255, 71, 87, 0.5)',
               },
-              transition: 'all 0.2s ease',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            <Typography variant="caption" sx={{ mr: 1 }}>
+            <Typography variant="caption" sx={{ mr: 1, fontWeight: 600 }}>
               {newMessages} new message{newMessages > 1 ? 's' : ''}
             </Typography>
-            <FontAwesomeIcon icon={faHandPointDown} />
+            <FontAwesomeIcon icon={faHandPointDown} style={{ fontSize: '14px' }} />
           </ButtonBase>
         </Fade>
       )}
@@ -588,9 +690,13 @@ function GlobalChatComponent(props) {
               top: '50%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
-              zIndex: 9999
+              zIndex: 9999,
+              background: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              p: 3,
             }}>
-              <CircularProgress />
+              <CircularProgress sx={{ color: '#ff4757' }} />
             </Box>
           }
         >
@@ -607,10 +713,13 @@ function GlobalChatComponent(props) {
         isVirtualized ? (
           <VirtualizedList
             ref={virtualListRef}
-            height={400} // Adjust based on your container
+            height={400}
             itemCount={uniqueMessagesToRender.length}
-            itemSize={120} // Estimated item height
+            itemSize={120}
             onScroll={evaluateUserPosition}
+            style={{
+              background: 'transparent',
+            }}
           >
             {VirtualizedMessageItem}
           </VirtualizedList>
@@ -620,7 +729,21 @@ function GlobalChatComponent(props) {
             sx={{ 
               height: '100%',
               overflowY: 'auto',
-              p: 1
+              p: 2,
+              pt: 3,
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'linear-gradient(180deg, rgba(255, 71, 87, 0.6), rgba(255, 71, 87, 0.3))',
+                borderRadius: '3px',
+                '&:hover': {
+                  background: 'linear-gradient(180deg, rgba(255, 71, 87, 0.8), rgba(255, 71, 87, 0.5))',
+                },
+              },
             }}
             onScroll={evaluateUserPosition}
           >
@@ -648,19 +771,49 @@ function GlobalChatComponent(props) {
           </Box>
         )
       ) : (
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 3 }}>
           {[...Array(10)].map((_, index) => (
             <Fade in timeout={200 * (index + 1)} key={`skeleton-${index}`}>
               <Box sx={{
                 display: 'flex',
                 alignItems: 'center',
-                mb: 2,
-                gap: 1,
+                mb: 3,
+                gap: 2,
+                p: 2,
+                borderRadius: '16px',
+                background: effectiveIsDarkMode 
+                  ? 'linear-gradient(135deg, rgba(30, 30, 35, 0.4), rgba(20, 20, 25, 0.3))'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(250, 250, 250, 0.4))',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid',
+                borderColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
               }}>
-                <Skeleton variant="circular" width={50} height={50} />
+                <Skeleton 
+                  variant="circular" 
+                  width={50} 
+                  height={50} 
+                  sx={{
+                    bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  }}
+                />
                 <Box sx={{ flex: 1 }}>
-                  <Skeleton variant="text" width="30%" height={20} sx={{ mb: 0.5 }} />
-                  <Skeleton variant="text" width="70%" height={16} />
+                  <Skeleton 
+                    variant="text" 
+                    width="30%" 
+                    height={20} 
+                    sx={{ 
+                      mb: 1,
+                      bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    }} 
+                  />
+                  <Skeleton 
+                    variant="text" 
+                    width="70%" 
+                    height={16} 
+                    sx={{
+                      bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+                    }}
+                  />
                 </Box>
               </Box>
             </Fade>

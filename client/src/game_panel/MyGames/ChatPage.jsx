@@ -398,9 +398,7 @@ const ChatMessageItem = memo(({
               position: 'relative',
               backdropFilter: 'blur(10px)',
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              boxShadow: isMyMessage 
-                ? `0 4px 12px #ff0000dd`
-                : `0 4px 12px #00000011`,
+            
               transition: 'all 0.2s ease',
               '&:hover': {
                 transform: 'translateY(-1px)',
@@ -517,7 +515,7 @@ const ChatLogDisplay = memo(({
         overflowX: 'hidden',
         position: 'relative',
         background: `linear-gradient(to bottom, 
-          ${alpha(theme.palette.background.default, 0.8)}, 
+          #1e1e1e, 
           ${alpha(theme.palette.background.default, 0.9)}
         )`,
         '&::-webkit-scrollbar': {
@@ -1345,7 +1343,7 @@ function ChatPage() {
         display: 'flex', 
         flexDirection: 'column', 
         height: '100vh',
-        bgcolor: 'background.default',
+        bgcolor: '#1e1e1e',
         position: 'relative',
       }}>
         {/* Connection status indicator */}
