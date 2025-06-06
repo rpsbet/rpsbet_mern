@@ -218,6 +218,7 @@ app.get('/api/api-docs-json', (req, res) => {
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.resolve(__dirname, 'client', 'build')));
+  
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
@@ -251,7 +252,7 @@ app.use('/api/*', (req, res) => {
     path: req.path,
     method: req.method,
     available_endpoints: [
-      'GET /api/docs',
+      'GET /api/api-docs-json',
       'GET /api/v1/info',
       'POST /api/v1/create-room',
       'GET /health'
