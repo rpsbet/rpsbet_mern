@@ -218,7 +218,13 @@ app.get('/api/api-docs-json', (req, res) => {
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.resolve(__dirname, 'client', 'build')));
-  
+
+  // Explicitly allow /api/docs to serve the frontend React route
+  app.get('/api/docs', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  });
+
+  // Catch-all for the React Router (must come after your specific routes)
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
