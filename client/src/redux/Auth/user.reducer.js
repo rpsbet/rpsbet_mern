@@ -42,6 +42,10 @@ import {
   API_KEYS_ERROR,
   API_KEY_GENERATED,
   API_KEY_REVOKED,
+  UPDATE_WALLET_BALANCE,
+  UPDATE_WALLET_BALANCE_START,
+  UPDATE_WALLET_BALANCE_SUCCESS,
+  UPDATE_WALLET_BALANCE_FAIL,
 } from '../types';
 
 const initialState = {
@@ -85,7 +89,10 @@ const initialState = {
   sevenDayProfit: null,
   oneDayProfit: null,
   allTimeProfit: null,
-  referralCode: null
+  referralCode: null,
+  balance: 0,
+  isWalletBalanceLoading: false,
+  walletBalanceError: null,
 };
 
 export default function (state = initialState, action) {
@@ -123,7 +130,7 @@ export default function (state = initialState, action) {
     case API_KEY_REVOKED:
       return {
         ...state,
-        apiKeys: state.apiKeys.map(key => 
+        apiKeys: state.apiKeys.map(key =>
           key.keyId === payload ? { ...key, isActive: false } : key
         ),
       };
@@ -145,6 +152,32 @@ export default function (state = initialState, action) {
         ...state,
         isMuted: payload
       };
+    case UPDATE_WALLET_BALANCE_START:
+      return {
+        ...state,
+        isWalletBalanceLoading: true,
+        walletBalanceError: null
+      };
+
+    case UPDATE_WALLET_BALANCE_SUCCESS:
+    case UPDATE_WALLET_BALANCE:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          walletBalance: action.payload.walletBalance,
+          walletAddress: action.payload.walletAddress
+        },
+        isWalletBalanceLoading: false,
+        walletBalanceError: null
+      };
+
+    case UPDATE_WALLET_BALANCE_FAIL:
+      return {
+        ...state,
+        isWalletBalanceLoading: false,
+        walletBalanceError: action.payload
+      };
     case UPDATE_USER_ASSOCIATED_ACCOUNTS:
       return {
         ...state,
@@ -154,6 +187,38 @@ export default function (state = initialState, action) {
       return {
         ...state,
         connectedAccount: action.payload,
+      };
+
+    case 'SET_LIVE_WALLET_BALANCE':
+      return {
+        ...state,
+        liveWalletBalance: action.payload.balance,
+        walletAddress: action.payload.walletAddress,
+        walletBalanceTimestamp: action.payload.timestamp,
+        walletBalanceError: null
+      };
+
+    case 'WALLET_BALANCE_LOADING':
+      return {
+        ...state,
+        isWalletBalanceLoading: action.payload
+      };
+
+    case 'SET_WALLET_BALANCE_ERROR':
+      return {
+        ...state,
+        walletBalanceError: action.payload,
+        isWalletBalanceLoading: false
+      };
+
+    case 'LOGOUT':
+      return {
+        ...initialState,
+        // Clear all wallet-related state on logout
+        liveWalletBalance: 0,
+        walletAddress: null,
+        walletBalanceTimestamp: null,
+        walletBalanceError: null
       };
     case TOGGLE_CLICK_SOUNDS:
       localStorage.setItem('clickSounds', payload);

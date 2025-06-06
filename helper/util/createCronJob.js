@@ -166,6 +166,160 @@ async function checkConfirmations(io) {
       }
     }
 
+    const pendingEliteSubscriptions = await GameTransaction.find({
+      status: 'pending',
+      $or: [
+        { description: { $regex: 'Elite Subscription', $options: 'i' } },
+        { type: 'elite_subscription' }
+      ]
+    });
+
+    for (const transaction of pendingEliteSubscriptions) {
+      const txSignature = transaction.txtHash || transaction.hash;
+      if (!txSignature) {
+        console.error('No transaction signature found for elite subscription:', transaction._id);
+        continue;
+      }
+
+      // Get transaction info from blockchain
+      const txInfo = await provider.getTransaction(txSignature, { commitment: 'confirmed' });
+      if (!txInfo || !txInfo.slot || !txInfo.meta) {
+        console.log('Elite subscription transaction not yet confirmed:', txSignature);
+        continue;
+      }
+
+      // Check confirmations
+      const currentSlot = await provider.getSlot('confirmed');
+      const confirmationCount = currentSlot - txInfo.slot;
+
+      if (confirmationCount < depositConfirmationThreshold) {
+        console.log(`Elite subscription needs more confirmations: ${confirmationCount}/${depositConfirmationThreshold}`);
+        continue;
+      }
+
+      // Verify transaction was successful
+      if (txInfo.meta.err) {
+        console.error('Elite subscription transaction failed on blockchain:', txSignature, txInfo.meta.err);
+        transaction.status = 'failed';
+        await saveDocumentWithRetry(transaction);
+        continue;
+      }
+
+      // Get admin wallet and verify payment
+      const adminWallet = process.env.adminWallet;
+      const adminPubkey = new PublicKey(adminWallet);
+
+      const adminIndex = txInfo.transaction.message.accountKeys.findIndex((acc) =>
+        acc.equals(adminPubkey)
+      );
+      
+      if (adminIndex === -1) {
+        console.error('Admin wallet not found in elite subscription transaction:', txSignature);
+        continue;
+      }
+
+      // Calculate the actual deposit amount
+      const preBalLamports = txInfo.meta.preBalances[adminIndex];
+      const postBalLamports = txInfo.meta.postBalances[adminIndex];
+      const depositLamports = postBalLamports - preBalLamports;
+      const depositSOL = depositLamports / LAMPORTS_PER_SOL;
+
+      // Verify amount matches expected subscription cost
+      const expectedAmount = Math.abs(transaction.amount);
+      const epsilon = 0.00001;
+      const amountDiff = Math.abs(depositSOL - expectedAmount);
+
+      if (amountDiff > epsilon) {
+        console.error(`Elite subscription amount mismatch. On-chain: ${depositSOL}, expected: ${expectedAmount}`);
+        continue;
+      }
+
+      // Find user and update elite status
+      const user = await User.findById(transaction.user);
+      if (!user) {
+        console.error('User not found for elite subscription:', transaction._id);
+        continue;
+      }
+
+      // Determine subscription type from transaction
+      let subscriptionType = transaction.subscriptionType;
+      if (!subscriptionType) {
+        // Fallback: determine from amount
+        if (Math.abs(expectedAmount - 0.1) < epsilon) {
+          subscriptionType = 'red';
+        } else if (Math.abs(expectedAmount - 0.4) < epsilon) {
+          subscriptionType = 'black';
+        } else {
+          console.error('Cannot determine subscription type for transaction:', transaction._id);
+          continue;
+        }
+      }
+
+      console.log(`Processing elite subscription: ${subscriptionType} for user ${user.username}`);
+
+      // Update user's elite status
+      const previousElite = user.elite;
+      user.elite = subscriptionType;
+      user.last_elite_payment = new Date();
+
+      // Add to subscription history if field exists
+      if (user.subscriptionHistory !== undefined) {
+        if (!Array.isArray(user.subscriptionHistory)) {
+          user.subscriptionHistory = [];
+        }
+        
+        user.subscriptionHistory.push({
+          type: subscriptionType,
+          transactionSignature: txSignature,
+          amount: expectedAmount,
+          date: new Date(),
+          previousType: previousElite
+        });
+      }
+
+      // Mark transaction as completed
+      transaction.status = 'completed';
+      transaction.amount = -depositSOL; // Update with actual amount
+
+      // Save everything
+      await saveDocumentWithRetry(user);
+      await saveDocumentWithRetry(transaction);
+
+      // Create success notification
+      const notification = new Notification({
+        from: user._id,
+        to: user._id,
+        message: `Successfully upgraded to ${subscriptionType.charAt(0).toUpperCase() + subscriptionType.slice(1)} Elite`,
+        amount: depositSOL,
+        is_read: false,
+      });
+
+      const notificationData = {
+        message: notification.message,
+        username: user.username,
+        avatar: user.avatar,
+        accessory: user.accessory,
+        elite: subscriptionType, // Send updated elite status
+        rank: user.totalWagered,
+        amount: depositSOL,
+        created_at: moment().format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment().format('LLL'),
+        updated_at: moment().format('YYYY-MM-DD HH:mm'),
+        is_read: false,
+      };
+
+      await saveDocumentWithRetry(notification);
+      
+      // Send real-time updates
+      socketController.sendNotification(user._id, notificationData);
+      socketController.newTransaction(transaction);
+      
+      // Note: User elite status will be updated when they refresh or through other mechanisms
+      // You could add a custom socket event here if needed
+
+      console.log(`Elite subscription completed: ${subscriptionType} for user ${user.username}`);
+    }
+
     // --- Process Pending Withdrawals (Winnings) ---
     const pendingWithdrawals = await GameTransaction.find({
       status: 'pending',

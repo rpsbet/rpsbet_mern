@@ -8,6 +8,6 @@ export default axios.create({
       : `http://${window.location.hostname}:5001/api`, //YOUR_API_URL HERE
   headers: {
     'Content-Type': 'application/json'
-  }
-  // withCredentials: true
+  },
+  withCredentials: true
 });

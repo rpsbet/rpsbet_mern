@@ -1,88 +1,241 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { usePrivy } from '@privy-io/react-auth';
 import { purchaseEliteSubscription, cancelEliteSubscription } from '../../redux/Auth/user.actions';
+import { sendSolDeposit, createAccountFromPrivyUser } from '../../util/solana';
 import {
-  Box,
-  Typography,
-  Button,
-  Modal,
-  Card,
-  CardContent,
-  CardMedia,
-  CardActions,
-  Grid,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  AlertTitle
+  Box, Typography, Button, Modal, Card, CardContent, CardActions, Grid,
+  List, ListItem, ListItemIcon, ListItemText, CircularProgress, Dialog,
+  DialogTitle, DialogContent, DialogActions, Alert, AlertTitle, Chip, Stack, Avatar,
+  CardMedia, Divider
 } from '@mui/material';
 import {
-  AutoAwesome as AutoAwesomeIcon,
-  Add as AddIcon,
-  Close as CloseIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Warning as WarningIcon
+  Close as CloseIcon, Warning as WarningIcon, Star as StarIcon, Code as CodeIcon,
+  Support as SupportIcon, Percent as PercentIcon, AccountBalanceWallet as WalletIcon,
+  AutoAwesome as SparkleIcon, Bolt as BoltIcon, Shield as ShieldIcon,
+  CheckCircle as CheckCircleIcon, Cancel as CancelIcon
 } from '@mui/icons-material';
 import Lottie from 'react-lottie';
 import verified from '../LottieAnimations/verified.json';
 
-function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
+const themeColors = {
+  backgroundPrimary: '#2a2a2a',
+  backgroundSecondary: '#3a3a3a',
+  backgroundTertiary: '#424850',
+  textPrimary: '#F0F2F5',
+  textSecondary: '#BCC0C4',
+  textDisabled: '#656A70',
+  accentRedPrimary: '#D32F2F',
+  accentRedSecondary: '#C62828',
+  accentRedLight: 'rgba(211, 47, 47, 0.08)',
+  accentRedBorder: 'rgba(211, 47, 47, 0.35)',
+  borderColor: 'rgba(255, 255, 255, 0.12)',
+  modalBackdrop: 'rgba(10, 12, 15, 0.85)',
+  headerBackground: '#1a1a1a',
+  buttonDisabledBg: '#40454A',
+  chipPopularBg: '#D32F2F',
+
+  redPlan: {
+    main: '#D32F2F',
+    lightHover: '#E53935',
+    contrastText: '#ffffff',
+    headerGradient: 'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)',
+    featureBg: 'rgba(211, 47, 47, 0.1)',
+  },
+  blackPlan: {
+    main: '#C62828',
+    lightHover: '#D32F2F',
+    contrastText: '#ffffff',
+    cardBg: '#2e2e2e',
+    headerBg: '#1b1b1b',
+    headerText: '#D32F2F',
+    featureBg: 'rgba(198, 40, 40, 0.09)',
+  },
+};
+
+function EliteSubscriptionModal({
+  open,
+  onClose,
+  isLowGraphics,
+  user,
+  walletBalance
+}) {
   const dispatch = useDispatch();
+  const { user: privyUser } = usePrivy();
+  
+  // Get account from Redux state as fallback
+  const reduxAccount = useSelector(state => state.logic?.account);
+  
+  const numericWalletBalance = parseFloat(walletBalance);
   const [loading, setLoading] = useState({ red: false, black: false, cancel: false });
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
+  // Subscription amounts matching original logic
+  const subscriptionAmounts = useMemo(() => ({ red: 0.1, black: 0.4 }), []);
+
+  // Check sufficient balance using walletBalance prop
+  const sufficientBalance = useMemo(() => {
+    return {
+      red: numericWalletBalance >= subscriptionAmounts.red,
+      black: numericWalletBalance >= subscriptionAmounts.black,
+    };
+  }, [numericWalletBalance, subscriptionAmounts]);
 
   const getButtonText = useCallback((type) => {
-    if (type === '#FF0000' && !user?.elite && !user?.elite_free_used) return 'Start Free Month';
-    if (!user?.elite) return 'Subscribe Now';
+    if (!user?.elite) return type === 'red' ? 'Subscribe Now' : 'Subscribe Now';
     if (type === user.elite) return 'Current Plan';
-    if (type === '#FF0000' && user.elite === 'black') return 'Downgrade';
+    if (type === 'red' && user.elite === 'black') return 'Downgrade';
     if (type === 'black' && user.elite === 'red') return 'Upgrade';
     return 'Subscribe Now';
   }, [user]);
 
-  // Memoize hasSufficientBalance results
-  const sufficientBalance = useMemo(() => {
-    const subscriptionAmounts = { red: 0.1, black: 0.4 };
-    console.log("--balance--", user?.balance);
-    return {
-      red: user?.balance >= subscriptionAmounts.red,
-      black: user?.balance >= subscriptionAmounts.black,
-    };
-  }, [user?.balance]);
-
   const handlePurchaseSubscription = async (type) => {
-    if (type === '#FF0000' && !user?.elite_free_used) {
-      setLoading((prev) => ({ ...prev, [type]: true }));
-      await dispatch(purchaseEliteSubscription(type));
-      setLoading((prev) => ({ ...prev, [type]: false }));
-      onClose();
+    if (!sufficientBalance[type]) {
+      console.error('Insufficient balance for subscription');
+      return;
+    }
+    
+    // Enhanced account creation with multiple fallbacks
+    let account = null;
+    
+    // Method 1: Try creating from Privy user
+    if (privyUser?.wallet?.address) {
+      try {
+        account = createAccountFromPrivyUser(privyUser);
+        console.log('Account created from Privy user:', account);
+      } catch (error) {
+        console.error('Failed to create account from Privy user:', error);
+      }
+    }
+    
+    // Method 2: Try using Redux account
+    if (!account && reduxAccount?.publicKey) {
+      account = reduxAccount;
+      console.log('Using Redux account:', account);
+    }
+    
+    // Method 3: Try getting from connected wallet directly
+    if (!account && window.solana?.publicKey) {
+      try {
+        account = {
+          publicKey: window.solana.publicKey
+        };
+        console.log('Account created from window.solana:', account);
+      } catch (error) {
+        console.error('Failed to create account from window.solana:', error);
+      }
+    }
+    
+    // Method 4: Try connecting wallet if not connected
+    if (!account && window.solana) {
+      try {
+        if (!window.solana.isConnected) {
+          console.log('Wallet not connected, attempting to connect...');
+          await window.solana.connect();
+        }
+        
+        if (window.solana.publicKey) {
+          account = {
+            publicKey: window.solana.publicKey
+          };
+          console.log('Account created after wallet connection:', account);
+        }
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
+      }
+    }
+
+    // Final validation
+    if (!account?.publicKey) {
+      console.error('Failed to create account - no valid source found', {
+        privyUser: !!privyUser?.wallet?.address,
+        reduxAccount: !!reduxAccount?.publicKey,
+        windowSolana: !!window.solana?.publicKey,
+        walletConnected: window.solana?.isConnected
+      });
+      
+      // Show user-friendly error
+      dispatch({
+        type: 'MSG_ERROR',
+        payload: 'Wallet not connected. Please connect your Solana wallet and try again.'
+      });
       return;
     }
 
-    if (!sufficientBalance[type]) return;
+    console.log('Final account object:', {
+      publicKey: account.publicKey.toString(),
+      source: privyUser?.wallet?.address ? 'privy' : 
+              reduxAccount?.publicKey ? 'redux' : 'wallet'
+    });
+
     setLoading((prev) => ({ ...prev, [type]: true }));
-    await dispatch(purchaseEliteSubscription(type));
-    setLoading((prev) => ({ ...prev, [type]: false }));
-    onClose();
+    
+    try {
+      // Use sendSolDeposit for blockchain transaction with elite subscription info
+      const solResult = await sendSolDeposit(
+        dispatch,
+        subscriptionAmounts[type],
+        null, // room_id
+        `Elite ${type.charAt(0).toUpperCase() + type.slice(1)} Subscription`, // room_name  
+        'elite_subscription', // type
+        account,
+        numericWalletBalance,
+        () => {
+          // onSuccess - transaction completed successfully
+          console.log('SOL transaction successful');
+        },
+        (error) => {
+          // onError - transaction failed
+          console.log('SOL transaction failed:', error);
+        },
+        () => {
+          // onPopupOpen
+          console.log('Wallet popup opened');
+        },
+        () => {
+          // onPopupClose
+          console.log('Wallet popup closed');
+        },
+        // Additional subscription info
+        {
+          subscriptionType: type,
+          subscriptionTier: type === 'red' ? 'Red Elite' : 'Black Elite',
+          features: type === 'red' 
+            ? ['150 Game Credits per month', '24/7 Support']
+            : ['800 Game Credits per month', 'Developer Access', '50% Fee Reduction', 'Priority Support'],
+          monthlyPrice: subscriptionAmounts[type]
+        }
+      );
+
+      if (solResult.success) {
+        // Extract transaction signature from the result
+        const signature = solResult.result?.txtHash || 
+                         solResult.result?.signature || 
+                         solResult.result?.transactionSignature;
+        
+        if (signature) {
+          // If SOL transaction succeeds, verify with backend
+          const backendResult = await dispatch(purchaseEliteSubscription(type, signature));
+          if (backendResult) {
+            onClose();
+          }
+        } else {
+          console.error('No transaction signature found in result:', solResult);
+          dispatch({
+            type: 'MSG_ERROR',
+            payload: 'Transaction completed but signature not found. Please contact support.'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during subscription purchase:', error);
+    } finally {
+      setLoading((prev) => ({ ...prev, [type]: false }));
+    }
   };
 
-  const openCancelConfirmation = () => {
-    setCancelConfirmOpen(true);
-  };
-
-  const closeCancelConfirmation = () => {
-    setCancelConfirmOpen(false);
-  };
+  const openCancelConfirmation = () => setCancelConfirmOpen(true);
+  const closeCancelConfirmation = () => setCancelConfirmOpen(false);
 
   const handleCancelSubscription = async () => {
     setLoading((prev) => ({ ...prev, cancel: true }));
@@ -93,519 +246,332 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
   };
 
   const getSubscriptionPrice = useCallback((type) => {
-    if (type === '#FF0000' && !user?.elite && !user?.elite_free_used) {
-      return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', textDecoration: 'line-through' }}>
-            0.2 <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
-          </Typography>
-          <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: '#d81719' }}>
-            FREE 1st MONTH
-          </Typography>
-        </Box>
-      );
-    }
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-          {type === '#FF0000' ? '0.1' : '0.4'} <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
+        <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', fontSize: '1.75rem' }}>
+          {type === 'red' ? '0.1' : '0.4'} <Typography component="span" sx={{ fontSize: '0.8rem', ml: 0.5 }}>SOL</Typography>
         </Typography>
-        <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary' }}>/month</Typography>
+        <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary', fontSize: '0.65rem' }}>/month</Typography>
       </Box>
     );
-  }, [user?.elite, user?.elite_free_used]);
+  }, []);
 
-  // ------------------ RENDER ------------------
+  const cardBaseSx = {
+    height: '100%', position: 'relative', borderRadius: 1.5, display: 'flex',
+    flexDirection: 'column', color: themeColors.textPrimary, border: `1px solid ${themeColors.borderColor}`,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+  };
+
+  const cardHeaderBaseSx = { color: themeColors.textPrimary, p: 1.5, textAlign: 'center' };
+  
+  const planButtonBaseSx = (mainColor, hoverColor, textColor = themeColors.textPrimary) => ({
+    py: 1, fontSize: '0.8rem', fontWeight: 'bold', borderRadius: 1,
+    bgcolor: mainColor, color: textColor,
+    '&:hover': { bgcolor: hoverColor, boxShadow: `0 0 8px ${hoverColor}AA` },
+    '&.Mui-disabled': {
+      background: themeColors.buttonDisabledBg,
+      color: themeColors.textDisabled,
+      boxShadow: 'none'
+    },
+  });
+
   return (
     <>
-      <Modal
-        open={open}
-        onClose={onClose}
-        aria-labelledby="elite-subscription-modal"
-        aria-describedby="elite-subscription-packages"
-        sx={{ zIndex: 1300 }}
-        BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
-        }}
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            borderRadius: 3,
-            p: { xs: 2, sm: 3, md: 4 },
-            // Glassmorphism
-            background: 'rgba(30, 30, 30, 0.3)',
-            backdropFilter: 'blur(15px)',
-            WebkitBackdropFilter: 'blur(15px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            // Fallback
-            '@supports not (backdrop-filter: blur(15px))': {
-              background: 'rgba(30, 30, 30, 0.6)',
-            },
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'transparent',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '4px',
-            },
-          }}
-        >
+      <Modal open={open} onClose={onClose} sx={{ zIndex: 1300 }} BackdropProps={{ style: { backgroundColor: themeColors.modalBackdrop } }}>
+        <Box sx={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            width: { xs: '90vw', sm: '600px', md: '680px' }, maxHeight: '90vh', overflowY: 'auto',
+            borderRadius: 2.5, bgcolor: themeColors.backgroundPrimary, outline: 'none',
+            border: `1px solid ${themeColors.borderColor}`, boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
+        }}>
+          {/* Header with banner */}
           <Box sx={{ position: 'relative' }}>
             <CardMedia
               component="img"
               image="/img/pro-banner.svg"
               alt="Elite Membership Banner"
-              sx={{ height: 180 }}
+              sx={{ height: 120 }}
             />
-            <Button
-              onClick={onClose}
-              sx={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                minWidth: 'auto',
-                p: 1,
-                bgcolor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
-                borderRadius: '50%',
-              }}
-            >
-              <CloseIcon />
-            </Button>
+            <Button onClick={onClose} sx={{
+                position: 'absolute', top: 8, right: 8, minWidth: 'auto', p: 0.75,
+                bgcolor: 'rgba(0,0,0,0.5)', color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }, borderRadius: '50%',
+            }}> <CloseIcon fontSize="small" /> </Button>
           </Box>
 
-          <Typography
-            variant="h4"
-            align="center"
-            sx={{
-              mt: 2,
-              mb: 1,
-              fontWeight: 'bold',
-              background: `
-                linear-gradient(45deg, #ff0000 0%, #ff6b6b 50%, #ff0000 100%),
-                linear-gradient(45deg, #d81719 0%, #ff9999 50%, #d81719 100%),
-                linear-gradient(45deg, #ffffff 0%, #ffffff 50%, #ffffff 100%)
-              `,
-              backgroundSize: '100% 33.33%, 100% 33.33%, 100% 33.33%',
-              backgroundPosition: '0 0, 0 33.33%, 0 66.66%',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              color: 'transparent',
-              textShadow: `
-                0 0 5px rgba(255, 0, 0, 0.5),
-                0 0 10px rgba(255, 0, 0, 0.3),
-                0 0 15px rgba(255, 0, 0, 0.2)
-              `,
-              position: 'relative',
-              '&:before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: 0.3,
-                zIndex: -1,
-                pointerEvents: 'none',
-              },
-            }}
-          >
-            Upgrade to Elite
-          </Typography>
-          <Typography variant="body1" align="center" sx={{ mb: 3, px: 3 }}>
-            Unlock gate-kept financial tools and take your profits to the next level
-          </Typography>
+          {/* Title Section */}
+          <Box sx={{ background: themeColors.headerBackground, color: themeColors.textPrimary, p: {xs: 1.5, md: 2} }}>
+            <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.75} sx={{ mb: 1 }}>
+              <SparkleIcon sx={{ fontSize: '24px', color: themeColors.accentRedPrimary }} />
+              <Typography variant="h6" sx={{ fontWeight: 'bold', color: themeColors.textPrimary, fontSize: '1.1rem' }}>
+                Upgrade to Elite
+              </Typography>
+            </Stack>
+            <Typography variant="body2" align="center" sx={{ opacity: 0.7, fontWeight: 300, fontSize: '0.85rem', mb: 1.5 }}>
+              Unlock gate-kept financial tools and take your profits to the next level
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: themeColors.backgroundSecondary, borderRadius: 1.5, p: 1, border: `1px solid ${themeColors.borderColor}` }}>
+              <Avatar sx={{ bgcolor: themeColors.accentRedPrimary, color: themeColors.textPrimary, mr: 1, width: 30, height: 30 }}>
+                <WalletIcon sx={{fontSize: '1rem'}}/>
+              </Avatar>
+              <Box>
+                <Typography variant="caption" sx={{ opacity: 0.7, fontSize: '0.7rem', color: themeColors.textSecondary }}>Wallet Balance</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem', color: themeColors.textPrimary }}>{numericWalletBalance.toFixed(3)} SOL</Typography>
+              </Box>
+            </Box>
+          </Box>
 
-          <Grid container spacing={3} sx={{ px: 3, pb: 3 }}>
-            {/* Red Elite Card */}
-            <Grid item xs={12} md={6}>
-              <Card sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '12px',
-                boxShadow: '0 6px 20px rgba(216, 23, 25, 0.15)',
-                '&:hover': {
-                  boxShadow: '0 8px 25px rgba(216, 23, 25, 0.25)',
-                  transform: 'translateY(-4px)',
-                },
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'visible',
-                border: '1px solid rgba(216, 23, 25, 0.3)',
-              }}>
-                <Box
-                  sx={{
-                    bgcolor: '#d81719',
-                    color: 'white',
-                    py: 2,
-                    borderTopLeftRadius: '12px',
-                    borderTopRightRadius: '12px',
-                    textAlign: 'center'
-                  }}
-                >
-                  <Typography variant="h5" fontWeight="bold">
-                    <Box
-                      sx={{
-                        width: '50px',
-                        alignItems: 'center',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        margin: '0 auto',
-                        filter: 'hue-rotate(132deg)',
-                      }}
-                    >
+          <Box sx={{ p: {xs: 1.5, md: 2} }}>
+            <Grid container spacing={2}>
+              {/* Red Elite Card */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ ...cardBaseSx, bgcolor: themeColors.backgroundSecondary, borderColor: user?.elite === 'red' ? themeColors.redPlan.main : themeColors.borderColor }}>
+                  {user?.elite === 'red' && <Chip label="CURRENT" size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: themeColors.redPlan.main, color: themeColors.redPlan.contrastText, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, height: '18px' }} />}
+                  <Box sx={{ ...cardHeaderBaseSx, background: themeColors.redPlan.headerGradient }}>
+                    <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'hue-rotate(132deg)' }}>
                       <Lottie
                         options={{
                           loop: !isLowGraphics,
                           autoplay: !isLowGraphics,
                           animationData: verified,
                         }}
+                        width={40}
+                        height={40}
                       />
                     </Box>
-                    Red Elite
-                  </Typography>
-                </Box>
-                <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                  {getSubscriptionPrice('#FF0000')}
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <List sx={{ py: 0 }}>
-                    <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#d81719' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="150 Game Creation Credits per month" />
-                    </ListItem>
-                    {/* <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#d81719' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="1 SOL limit in Loan creation" />
-                    </ListItem> */}
-                    <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#d81719' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="24/7 Support" />
-                    </ListItem>
-                  </List>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
-                  <Button
-                    variant="contained"
-                    onClick={() => handlePurchaseSubscription('#FF0000')}
-                    disabled={loading.red || !sufficientBalance.red || user?.elite === 'red'}
-                    sx={{
-                      bgcolor: '#d81719',
-                      px: 4,
-                      py: 1,
-                      '&:hover': { bgcolor: '#b01416' },
-                      '&.Mui-disabled': {
-                        bgcolor: '#d81719',
-                        color: '#ffffff',
-                        opacity: 0.6,
-                        '& .MuiButton-label': {
-                          opacity: 1,
-                        },
-                      },
-                    }}
-                  >
-                    {loading.red ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : !sufficientBalance.red ? (
-                      'Not Enough Balance'
-                    ) : (
-                      getButtonText('#FF0000')
-                    )}
-                  </Button>
-                </CardActions>
-                {user?.elite === 'red' && (
-                  <Box sx={{ textAlign: 'center', mb: 2 }}>
-                    <Button
-                      variant="text"
-                      onClick={openCancelConfirmation}
-                      startIcon={<CancelIcon />}
-                      sx={{
-                        borderColor: '#d81719',
-                        color: '#d81719',
-                        '&:hover': {
-                          borderColor: '#b01416',
-                          color: '#b01416',
-                          bgcolor: 'rgba(216, 23, 25, 0.04)',
-                        },
-                      }}
-                    >
-                      Cancel Subscription
-                    </Button>
+                    <Typography variant="h6" sx={{fontSize: '1rem', fontWeight: 'bold'}}>Red Elite</Typography>
                   </Box>
-                )}
-              </Card>
-            </Grid>
-
-            {/* Black Elite Card */}
-            <Grid item xs={12} md={6}>
-              <Card sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '12px',
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
-                '&:hover': {
-                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.25)',
-                  transform: 'translateY(-4px)',
-                },
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'visible',
-                border: '1px solid rgba(0, 0, 0, 0.3)',
-              }}>
-                <Box
-                  sx={{
-                    bgcolor: '#000000',
-                    color: 'white',
-                    py: 2,
-                    borderTopLeftRadius: '12px',
-                    borderTopRightRadius: '12px',
-                    textAlign: 'center'
-                  }}
-                >
-                  <Typography variant="h5" fontWeight="bold">
-                    <Box
-                      sx={{
-                        width: '50px',
-                        alignItems: 'center',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        margin: '0 auto',
-                        filter: 'grayscale(1)',
-                      }}
-                    >
-                      <Lottie
-                        options={{
-                          loop: !isLowGraphics,
-                          autoplay: !isLowGraphics,
-                          animationData: verified,
-                        }}
-                      />
-                    </Box>
-                    Black Elite
-                  </Typography>
-                </Box>
-                <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                  {getSubscriptionPrice('black')}
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <List sx={{ py: 0 }}>
-                    <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#000000' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="800 Game Creation Credits per month" primaryTypographyProps={{ fontWeight: 'medium' }} />
-                    </ListItem>
-                    {/* <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#000000' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="10 SOL limit in Loan creation" primaryTypographyProps={{ fontWeight: 'medium' }} />
-                    </ListItem> */}
-                    <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#000000' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="Reduced fees by 50%" primaryTypographyProps={{ fontWeight: 'medium' }} />
-                    </ListItem>
-                    <ListItem sx={{ py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '36px' }}>
-                        <CheckCircleIcon sx={{ color: '#000000' }} />
-                      </ListItemIcon>
-                      <ListItemText primary="24/7 Priority Support" primaryTypographyProps={{ fontWeight: 'medium' }} />
-                    </ListItem>
-                  </List>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
-                  {user?.elite === 'black' && (
+                  <CardContent sx={{ p: 1.5, flexGrow: 1 }}>
                     <Box sx={{ textAlign: 'center', mb: 2 }}>
-                      <Button
-                        variant="text"
-                        onClick={openCancelConfirmation}
+                      {getSubscriptionPrice('red')}
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+                    <List sx={{ py: 0 }}>
+                      <ListItem sx={{ py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: '36px' }}>
+                          <CheckCircleIcon sx={{ color: themeColors.redPlan.main }} />
+                        </ListItemIcon>
+                        <ListItemText primary="150 Game Creation Credits per month" />
+                      </ListItem>
+                      <ListItem sx={{ py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: '36px' }}>
+                          <CheckCircleIcon sx={{ color: themeColors.redPlan.main }} />
+                        </ListItemIcon>
+                        <ListItemText primary="24/7 Support" />
+                      </ListItem>
+                    </List>
+                  </CardContent>
+                  <CardActions sx={{ p: 1.5, pt: 0, mt: 'auto' }}>
+                    <Button 
+                      fullWidth 
+                      variant="contained" 
+                      onClick={() => handlePurchaseSubscription('red')} 
+                      disabled={loading.red || !sufficientBalance.red || user?.elite === 'red'}
+                      sx={planButtonBaseSx(themeColors.redPlan.main, themeColors.redPlan.lightHover, themeColors.redPlan.contrastText)}
+                    >
+                      {loading.red ? (
+                        <CircularProgress size={18} color="inherit" />
+                      ) : !sufficientBalance.red ? (
+                        'Not Enough Balance'
+                      ) : (
+                        getButtonText('red')
+                      )}
+                    </Button>
+                  </CardActions>
+                  {user?.elite === 'red' && (
+                    <Box sx={{ px: 1.5, pb: 1 }}>
+                      <Button 
+                        fullWidth 
+                        variant="text" 
+                        size="small" 
+                        onClick={openCancelConfirmation} 
                         startIcon={<CancelIcon />}
-                        sx={{
-                          borderColor: '#d81719',
-                          color: '#d81719',
-                          '&:hover': {
-                            borderColor: '#b01416',
-                            color: '#b01416',
-                            bgcolor: 'rgba(216, 23, 25, 0.04)',
-                          },
-                        }}
+                        sx={{ color: themeColors.redPlan.lightHover, fontWeight: '500', fontSize: '0.75rem', '&:hover': { bgcolor: themeColors.redPlan.featureBg } }}
                       >
                         Cancel Subscription
                       </Button>
                     </Box>
                   )}
-                  <Button
-                    variant="contained"
-                    onClick={() => handlePurchaseSubscription('black')}
-                    disabled={loading.black || !sufficientBalance.black || user?.elite === 'black'}
-                    sx={{
-                      bgcolor: '#000000',
-                      px: 4,
-                      py: 1,
-                      '&:hover': { bgcolor: '#333333' },
-                      '&.Mui-disabled': {
-                        bgcolor: '#000000',
-                        color: '#ffffff',
-                        opacity: 0.6,
-                        '& .MuiButton-label': {
-                          opacity: 1,
-                        },
-                      },
-                    }}
-                  >
-                    {loading.black ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : !sufficientBalance.black ? (
-                      'Not Enough Balance'
-                    ) : (
-                      getButtonText('black')
-                    )}
-                  </Button>
-                </CardActions>
-              </Card>
+                </Card>
+              </Grid>
+
+              {/* Black Elite Card */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ ...cardBaseSx, bgcolor: themeColors.blackPlan.cardBg, borderColor: user?.elite === 'black' ? themeColors.blackPlan.main : themeColors.borderColor }}>
+                  {(!user?.elite || user?.elite === 'red') && <Chip icon={<StarIcon sx={{fontSize: '0.8rem !important'}}/>} label="POPULAR" size="small" sx={{ position: 'absolute', top: 8, left: 8, bgcolor: themeColors.chipPopularBg, color: themeColors.textPrimary, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, '& .MuiChip-icon': { color: themeColors.textPrimary, ml: '3px', height: '18px' } }} />}
+                  {user?.elite === 'black' && <Chip label="CURRENT" size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: themeColors.blackPlan.main, color: themeColors.blackPlan.contrastText, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, height: '18px' }} />}
+                  <Box sx={{ ...cardHeaderBaseSx, background: themeColors.blackPlan.headerBg }}>
+                    <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'grayscale(1)' }}>
+                      <Lottie
+                        options={{
+                          loop: !isLowGraphics,
+                          autoplay: !isLowGraphics,
+                          animationData: verified,
+                        }}
+                        width={40}
+                        height={40}
+                      />
+                    </Box>
+                    <Typography variant="h6" sx={{fontSize: '1rem', fontWeight: 'bold', color: themeColors.blackPlan.headerText }}>Black Elite</Typography>
+                  </Box>
+                  <CardContent sx={{ p: 1.5, flexGrow: 1 }}>
+                    <Box sx={{ textAlign: 'center', mb: 2 }}>
+                      {getSubscriptionPrice('black')}
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+                    <List sx={{ py: 0 }}>
+                      <ListItem sx={{ py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: '36px' }}>
+                          <CheckCircleIcon sx={{ color: themeColors.blackPlan.main }} />
+                        </ListItemIcon>
+                        <ListItemText primary="800 Game Creation Credits per month" primaryTypographyProps={{ fontWeight: 'medium' }} />
+                      </ListItem>
+                      <ListItem sx={{ py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: '36px' }}>
+                          <CheckCircleIcon sx={{ color: themeColors.blackPlan.main }} />
+                        </ListItemIcon>
+                        <ListItemText primary="Reduced fees by 50%" primaryTypographyProps={{ fontWeight: 'medium' }} />
+                      </ListItem>
+                      <ListItem sx={{ py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: '36px' }}>
+                          <CheckCircleIcon sx={{ color: themeColors.blackPlan.main }} />
+                        </ListItemIcon>
+                        <ListItemText primary="24/7 Priority Support" primaryTypographyProps={{ fontWeight: 'medium' }} />
+                      </ListItem>
+                    </List>
+                  </CardContent>
+                  <CardActions sx={{ p: 1.5, pt: 0, mt: 'auto' }}>
+                    <Button 
+                      fullWidth 
+                      variant="contained" 
+                      onClick={() => handlePurchaseSubscription('black')} 
+                      disabled={loading.black || !sufficientBalance.black || user?.elite === 'black'}
+                      sx={planButtonBaseSx(themeColors.blackPlan.main, themeColors.blackPlan.lightHover, themeColors.blackPlan.contrastText)}
+                    >
+                      {loading.black ? (
+                        <CircularProgress size={18} color="inherit"/>
+                      ) : !sufficientBalance.black ? (
+                        'Not Enough Balance'
+                      ) : (
+                        getButtonText('black')
+                      )}
+                    </Button>
+                  </CardActions>
+                  {user?.elite === 'black' && (
+                    <Box sx={{ px: 1.5, pb: 1 }}>
+                      <Button 
+                        fullWidth 
+                        variant="text" 
+                        size="small" 
+                        onClick={openCancelConfirmation} 
+                        startIcon={<CancelIcon />}
+                        sx={{ color: themeColors.blackPlan.lightHover, fontWeight: '500', fontSize: '0.75rem', '&:hover': { bgcolor: themeColors.blackPlan.featureBg } }}
+                      >
+                        Cancel Subscription
+                      </Button>
+                    </Box>
+                  )}
+                </Card>
+              </Grid>
             </Grid>
-          </Grid>
+
+            {/* Footer info */}
+            <Box sx={{ mt: 2, p: 1.5, background: themeColors.backgroundSecondary, borderRadius: 1.5, border: `1px solid ${themeColors.borderColor}` }}>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.75 }}>
+                <Avatar sx={{ bgcolor: themeColors.accentRedPrimary, width: 30, height: 30, color: themeColors.textPrimary }}>
+                  <WalletIcon sx={{ fontSize: '1rem' }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="body1" fontWeight="500" sx={{ color: themeColors.textPrimary, fontSize: '0.9rem' }}>Secure Blockchain Payment</Typography>
+                  <Typography variant="body2" sx={{ color: themeColors.textSecondary, fontSize: '0.75rem' }}>Powered by Solana</Typography>
+                </Box>
+              </Stack>
+              <Typography variant="caption" sx={{ color: themeColors.textSecondary, lineHeight: 1.4, fontSize: '0.75rem', display:'block' }}>
+                Pay directly from your Solana wallet. Monthly subscription billing.
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       </Modal>
 
       {/* Cancel Confirmation Dialog */}
-      <Dialog
-        open={cancelConfirmOpen}
-        onClose={closeCancelConfirmation}
-        PaperProps={{
-          sx: {
-            bgcolor: '#0a0a0a',
-            color: '#fff',
-            maxWidth: '500px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(216, 23, 25, 0.25)',
-            border: '1px solid rgba(216, 23, 25, 0.3)',
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pt: 3,
-          flexDirection: 'column'
-        }}>
-          <WarningIcon
-            sx={{
-              fontSize: '54px',
-              color: '#d81719',
-              mb: 2
-            }}
-          />
-          <Typography variant="h5" fontWeight="bold">
-            Cancel Elite Subscription?
-          </Typography>
+      <Dialog open={cancelConfirmOpen} onClose={closeCancelConfirmation} maxWidth="xs" fullWidth PaperProps={{ sx: { background: themeColors.backgroundSecondary, color: themeColors.textPrimary, borderRadius: 2, border: `1px solid ${themeColors.accentRedBorder}` } }}>
+        <DialogTitle sx={{ textAlign: 'center', p: 2, pb: 0.5 }}>
+          <Avatar sx={{ bgcolor: themeColors.accentRedLight, color: themeColors.accentRedPrimary, width: 44, height: 44, mx: 'auto', mb: 1 }}>
+            <WarningIcon sx={{ fontSize: '22px' }} />
+          </Avatar>
+          <Typography variant="h6" fontWeight="bold" sx={{fontSize: '1.05rem'}}>Cancel Elite Subscription?</Typography>
+          <Typography variant="body2" sx={{ color: themeColors.textSecondary, fontSize: '0.8rem' }}>This action is irreversible.</Typography>
         </DialogTitle>
-
-        <DialogContent>
-          <Alert
-            severity="warning"
-            variant="outlined"
-            icon={false}
-            sx={{
-              mb: 3,
-              bgcolor: 'rgba(216, 23, 25, 0.05)',
-              borderColor: 'rgba(216, 23, 25, 0.3)',
-              color: '#fff'
+        <DialogContent sx={{ px: {xs:1.5, md:2}, pb: 1.5 }}>
+          <Alert 
+            severity="warning" 
+            icon={<WarningIcon sx={{ color: themeColors.accentRedPrimary, fontSize: '1.2rem' }}/>} 
+            sx={{ 
+              mb: 1.5, 
+              bgcolor: themeColors.accentRedLight, 
+              border: `1px solid ${themeColors.accentRedBorder}66`, 
+              borderRadius: 1, 
+              color: themeColors.textPrimary, 
+              p:1.5, 
+              '& .MuiAlert-icon': {alignSelf: 'center', mr: 1} 
             }}
           >
-            <AlertTitle sx={{ color: '#d81719', fontWeight: 'bold' }}>
+            <AlertTitle sx={{ fontSize: '0.85rem', mb: 0.5, fontWeight: 'bold' }}>
               Important: Service Limitations
             </AlertTitle>
-            <Typography variant="body2" component="div" sx={{ color: '#fff' }}>
+            <Typography variant="body2" component="div" sx={{ color: themeColors.textPrimary }}>
               After cancellation, the following services will be paused immediately:
               <List dense disablePadding sx={{ mt: 1 }}>
                 <ListItem sx={{ py: 0.5 }}>
                   <ListItemIcon sx={{ minWidth: '32px' }}>
-                    <CancelIcon fontSize="small" sx={{ color: '#d81719' }} />
+                    <CancelIcon fontSize="small" sx={{ color: themeColors.accentRedPrimary }} />
                   </ListItemIcon>
                   <ListItemText primary="All active game houses" />
                 </ListItem>
-                {/* <ListItem sx={{ py: 0.5 }}>
-                  <ListItemIcon sx={{ minWidth: '32px' }}>
-                    <CancelIcon fontSize="small" sx={{ color: '#d81719' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Any loan creation services" />
-                </ListItem> */}
                 <ListItem sx={{ py: 0.5 }}>
                   <ListItemIcon sx={{ minWidth: '32px' }}>
-                    <CancelIcon fontSize="small" sx={{ color: '#d81719' }} />
+                    <CancelIcon fontSize="small" sx={{ color: themeColors.accentRedPrimary }} />
                   </ListItemIcon>
                   <ListItemText primary="Access to Elite benefits and features" />
                 </ListItem>
               </List>
             </Typography>
           </Alert>
-
-          <Typography variant="body1" sx={{ mb: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2, fontSize: '0.85rem' }}>
             These services will remain paused until you renew your Elite subscription.
           </Typography>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          <Typography variant="caption" sx={{ color: themeColors.textSecondary, lineHeight: 1.4, textAlign: 'center', display: 'block', fontStyle: 'italic', fontSize: '0.7rem' }}>
             Your subscription will be cancelled immediately and you will lose access to Elite features.
           </Typography>
         </DialogContent>
-
-        <DialogActions sx={{ p: 3, justifyContent: 'space-between' }}>
-          <Button
-            onClick={closeCancelConfirmation}
-            variant="outlined"
-            sx={{
-              color: '#fff',
-              borderColor: 'rgba(255,255,255,0.3)',
-              '&:hover': {
-                borderColor: '#fff',
-                bgcolor: 'rgba(255,255,255,0.05)',
-              }
+        <DialogActions sx={{ p: 1.5, gap: 1, justifyContent: 'center' }}>
+          <Button 
+            onClick={closeCancelConfirmation} 
+            variant="outlined" 
+            size="small" 
+            sx={{ 
+              color: themeColors.textSecondary, 
+              borderColor: themeColors.borderColor, 
+              fontSize: '0.75rem', 
+              '&:hover': { borderColor: themeColors.textPrimary, bgcolor: 'rgba(255,255,255,0.05)' } 
             }}
           >
             Keep Subscription
           </Button>
-          <Button
-            onClick={handleCancelSubscription}
-            disabled={loading.cancel}
-            variant="contained"
-            sx={{
-              bgcolor: '#d81719',
-              '&:hover': { bgcolor: '#b01416' },
+          <Button 
+            onClick={handleCancelSubscription} 
+            disabled={loading.cancel} 
+            variant="contained" 
+            size="small"
+            sx={{ 
+              bgcolor: themeColors.accentRedPrimary, 
+              color: themeColors.textPrimary, 
+              fontSize: '0.75rem', 
+              '&:hover': { bgcolor: themeColors.accentRedSecondary } 
             }}
           >
-            {loading.cancel ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              'Confirm Cancellation'
-            )}
+            {loading.cancel ? <CircularProgress size={16} color="inherit" /> : 'Confirm Cancellation'}
           </Button>
         </DialogActions>
       </Dialog>

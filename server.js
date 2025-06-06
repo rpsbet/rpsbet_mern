@@ -160,9 +160,10 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/settings', systemSettingRoutes);
 
+
 // New API routes
-app.use('/api/keys', apiKeyRoutes); // Protected by user auth - for managing API keys
-app.use('/api/v1', publicApiRoutes); // Protected by API key auth - for external access
+app.use('/api/api-keys', apiKeyRoutes); // Changed from '/api/keys' to '/api/api-keys'
+app.use('/api/v1', publicApiRoutes); 
 
 // Health check endpoint for API monitoring
 app.get('/health', (req, res) => {

@@ -736,7 +736,7 @@ const GetHelpContent = React.memo(() => (
     </Box>
 
     {/* FAQ Suggestion */}
-    <Box sx={{ 
+    {/* <Box sx={{ 
       mt: 2,
       p: 2,
       background: 'rgba(255, 152, 0, 0.1)',
@@ -754,7 +754,7 @@ const GetHelpContent = React.memo(() => (
       >
         💡 Check our FAQ first - your answer might be there already!
       </Typography>
-    </Box>
+    </Box> */}
   </Box>
 ));
 
@@ -907,7 +907,7 @@ function HowToPlayModalComponent({ modalIsOpen, closeModal }) {
         {accordionSections.map(({ id, title, ContentComponent }) => (
           <Accordion
             key={id} // Use stable ID from data
-            defaultExpanded={id === 'how-it-works'} // Optionally expand the first item by default
+            // defaultExpanded={id === 'how-it-works'} // Optionally expand the first item by default
             sx={{ // Existing styling
               background: 'rgba(40, 40, 40, 0.4)',
               backdropFilter: 'blur(10px)',

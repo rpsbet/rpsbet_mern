@@ -55,10 +55,22 @@ const MOBILE_TABS = {
   CHAT: 'chat',
 };
 
+const selectWalletBalance = (state) => {
+  const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
+  const backendBalance = state?.auth?.user?.balance ?? 0;
+  const walletAddress = state?.auth?.walletAddress;
+  
+  // Use live wallet balance if available, otherwise fall back to backend balance
+  return {
+    balance: walletAddress ? liveWalletBalance : backendBalance,
+    isWalletBalance: Boolean(walletAddress),
+    walletAddress
+  };
+};
 // Custom hooks
 const useMainPageState = () => {
   const location = useLocation();
-  
+
   return useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
     roomList: state.logic.roomList,
@@ -75,13 +87,13 @@ const useMainPageState = () => {
 };
 
 // Styled components
-const CreateRoomPanel = ({ 
-  user, 
-  aiPrompt, 
-  setAiPrompt, 
-  onPromptSubmit, 
-  onCreatePreMade, 
-  isLowGraphics 
+const CreateRoomPanel = ({
+  user,
+  aiPrompt,
+  setAiPrompt,
+  onPromptSubmit,
+  onCreatePreMade,
+  isLowGraphics
 }) => {
   const isEliteUser = user?.elite === 'red' || user?.elite === 'black';
 
@@ -92,7 +104,7 @@ const CreateRoomPanel = ({
 
   return (
     <Box className="create-room-btn-panel">
-      
+
       <Box
         className="btn-create-room"
         sx={{
@@ -103,19 +115,19 @@ const CreateRoomPanel = ({
         }}
       >
         {/* Header */}
-        <Typography 
-          variant="h6" 
-          className="title" 
-          sx={{ 
-            mb: 2, 
-            display: 'flex', 
+        <Typography
+          variant="h6"
+          className="title"
+          sx={{
+            mb: 2,
+            display: 'flex',
             alignItems: 'center',
             gap: 1,
           }}
         >
           <FontAwesomeIcon icon={faHome} />
           Be The House👇😼
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
             <Box
               sx={{
@@ -137,7 +149,7 @@ const CreateRoomPanel = ({
             <Typography
               variant="caption"
               sx={{
-                color: isEliteUser 
+                color: isEliteUser
                   ? (user.elite === 'red' ? '#ff0000' : '#e5e5e5')
                   : '#ff0000',
                 fontWeight: 'bold',
@@ -249,7 +261,7 @@ const CreateRoomPanel = ({
           ))}
         </Box>
 
-       
+
       </Box>
     </Box>
   );
@@ -281,7 +293,7 @@ function MainPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Custom hook for Redux state
   const state = useMainPageState();
   const {
@@ -375,22 +387,23 @@ function MainPage() {
     }
   }, [user, dispatch, navigate, aiPrompt]);
 
-  const shouldShowCreatePanel = 
+  const shouldShowCreatePanel =
     (isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame !== 1) ||
     (!isMobile && selectedMainTabIndex === 0);
 
-  const shouldShowOpenGames = 
+  const shouldShowOpenGames =
     ((!isMobile && selectedMainTabIndex === 0) ||
-     (isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame === 0)) &&
+      (isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame === 0)) &&
     location.pathname !== '/portfolio';
 
-  const shouldShowMyGames = 
+  const shouldShowMyGames =
     selectedMobileTab === MOBILE_TABS.MY_GAMES && showOpenGame === 0;
 
-  const shouldShowHistory = 
+  const shouldShowHistory =
     isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame === 1;
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+  const walletData = useSelector(selectWalletBalance);
 
   return (
     <ThemeProvider theme={theme}>
@@ -414,7 +427,9 @@ function MainPage() {
 
         {/* Elite Subscription Modal */}
         <Suspense fallback={null}>
-          <EliteSubscriptionModal 
+            <EliteSubscriptionModal 
+            walletBalance={walletData.balance}
+            isWalletBalance={walletData.isWalletBalance}
             user={user} 
             isLowGraphics={isLowGraphics} 
             open={openModal} 

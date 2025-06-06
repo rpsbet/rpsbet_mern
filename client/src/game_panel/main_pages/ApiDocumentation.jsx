@@ -313,7 +313,7 @@ const ApiDocumentation = () => {
           p: 4,
           mb: 4,
           background: isDarkMode 
-            ? 'linear-gradient(135deg, rgba(255, 48, 48, 0.15), rgba(20, 20, 25, 0.95))' 
+            ? 'linear-gradient(135deg, rgba(255, 48, 48, 0.15), rgba(23, 23, 23, 0.95))' 
             : 'linear-gradient(135deg, rgba(255, 48, 48, 0.1), rgba(255, 255, 255, 0.95))',
           border: `1px solid ${isDarkMode ? 'rgba(255, 48, 48, 0.3)' : 'rgba(255, 48, 48, 0.2)'}`,
           borderRadius: 2,

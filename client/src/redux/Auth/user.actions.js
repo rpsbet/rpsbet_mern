@@ -43,10 +43,15 @@ import {
   API_KEYS_ERROR,
   API_KEY_GENERATED,
   API_KEY_REVOKED,
+  UPDATE_WALLET_BALANCE,
+  UPDATE_WALLET_BALANCE_START,
+  UPDATE_WALLET_BALANCE_SUCCESS,
+  UPDATE_WALLET_BALANCE_FAIL,
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
 import { sendSolDeposit } from '../../util/solana'; 
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 export const getTransactions = (
   page = 1,
   filterType = '',
@@ -394,59 +399,96 @@ export const cancelEliteSubscription = () => async (dispatch) => {
   return false;
 };
 
-export const purchaseEliteSubscription = (type) => async (dispatch, getState) => {
+export const purchaseEliteSubscription = (type, transactionSignature) => async (dispatch, getState) => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
 
-    const state = getState();
-    const user = state.user.data;
-    const solanaBalance = state.logic.solanaBalance;
-    const account = state.logic.account;
-    const prices = { red: 0.2, black: 0.4 };
-    const amount = prices[type];
-    const txResult = await sendSolDeposit(
-      dispatch,
-      amount,
-      null,
-      'elite',
-      account,
-      solanaBalance,
-      () => {}, // onSuccess
-      () => {}, // onError
-      () => {}, // onPopupOpen
-      () => {}  // onPopupClose
-    );
-    if (!txResult.success || !txResult.signature) {
+    console.log('[purchaseEliteSubscription] Submitting for verification:', {
+      type,
+      transactionSignature
+    });
+
+    if (!transactionSignature) {
+      const errorMsg = 'Transaction signature is required for verification.';
+      console.error('[purchaseEliteSubscription] Missing signature');
+      
       dispatch({
         type: MSG_ERROR,
-        payload: 'Transaction failed or was rejected',
+        payload: errorMsg,
       });
+      dispatch({ type: TNX_COMPLETE });
       return false;
     }
-    const res = await axios.post('/auth/purchase-elite', { type, signature: txResult.signature});
+
+    // Send to backend - this will create a pending transaction
+    const res = await axios.post('/auth/purchase-elite', {
+      type,
+      signature: transactionSignature,
+      amount: type === 'red' ? 0.1 : 0.4,
+      timestamp: Date.now()
+    });
 
     if (res.data.success) {
-      dispatch({ type: UPDATED_USER, payload: res.data.user });
+      console.log('[purchaseEliteSubscription] Transaction submitted successfully:', res.data);
+      
+      // Show pending message
       dispatch({
         type: MSG_SUCCESS,
-        payload: res.data.message || `Successfully subscribed to ${type.toUpperCase()} Elite membership!`,
+        payload: `${type.toUpperCase()} Elite subscription submitted! Verification in progress...`,
       });
+
+      // Note: Don't update user.elite immediately
+      // The cron job will verify the transaction and send real-time updates
+      // Your socket listeners should handle the actual user updates
+      
+      dispatch({ type: TNX_COMPLETE });
       return res.data;
     } else {
+      const errorMsg = res.data.message || 'Failed to submit subscription for verification.';
+      console.error('[purchaseEliteSubscription] Backend submission failed:', res.data);
+      
       dispatch({
         type: MSG_ERROR,
-        payload: res.data.message || 'Failed to purchase subscription',
+        payload: errorMsg,
       });
+      dispatch({ type: TNX_COMPLETE });
+      return false;
     }
+    
   } catch (err) {
-    console.error('Purchase error:', err.response?.data);
+    console.error('[purchaseEliteSubscription] Caught error:', err);
+    
+    let errorMessage = 'An unexpected error occurred while submitting your subscription.';
+
+    if (err.isAxiosError) {
+      if (err.response) {
+        console.error('[purchaseEliteSubscription] Server Response Error:', err.response.data);
+        errorMessage = err.response.data?.message || 
+                      err.response.statusText || 
+                      'Server error during subscription submission.';
+      } else if (err.request) {
+        console.error('[purchaseEliteSubscription] Network Error:', err.request);
+        errorMessage = 'Cannot connect to the server. Please check your internet connection and try again.';
+      } else {
+        console.error('[purchaseEliteSubscription] Request Setup Error:', err.message);
+        errorMessage = err.message || 'Error setting up the subscription request.';
+      }
+    } else {
+      console.error('[purchaseEliteSubscription] Non-Axios Error:', err);
+      if (err.message) {
+        errorMessage = err.message;
+      }
+    }
+
     dispatch({
       type: MSG_ERROR,
-      payload: err.response?.data?.message || 'Error processing your subscription',
+      payload: errorMessage,
     });
+    
   } finally {
     dispatch({ type: TNX_COMPLETE });
   }
+  
   return false;
 };
 
@@ -490,6 +532,18 @@ export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) =
   }
 };
 
+export const refreshWalletBalance = (privyUser) => async (dispatch) => {
+  dispatch({ type: 'WALLET_BALANCE_LOADING', payload: true });
+  
+  try {
+    const result = await dispatch(getPrivyWalletBalance(privyUser));
+    return result;
+  } finally {
+    dispatch({ type: 'WALLET_BALANCE_LOADING', payload: false });
+  }
+};
+
+// Update authenticateWithPrivy to handle wallet balance
 export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
   try {
     dispatch({ type: START_LOADING });
@@ -499,19 +553,29 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
       email: privyUser.email?.address,
       wallet: privyUser.wallet?.address,
     });
+    
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
       const token = res.data.token;
 
-      // Save token in session
       localStorage.setItem('token', token);
       localStorage.setItem('isAuthenticated', '1');
-
-      // Attach token to axios
       setAuthToken(token);
 
-      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
+      // Store user data WITHOUT wallet balance - we'll fetch it separately
+      dispatch({ 
+        type: LOGIN_SUCCESS, 
+        payload: {
+          ...res.data,
+          user: {
+            ...res.data.user,
+            // Remove walletBalance from here - we'll get it from Privy directly
+            primaryWallet: res.data.user.primaryWallet
+          }
+        }
+      });
+      
       dispatch({ type: MSG_SUCCESS, payload: res.data.message });
 
       return { status: 'success', user: res.data.user };
@@ -519,6 +583,69 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
   } catch (err) {
     dispatch({ type: MSG_WARNING, payload: err.message });
     return { status: 'failed' };
+  }
+};
+
+export const getPrivyWalletBalance = (privyUser) => async (dispatch) => {
+  try {
+    
+    if (!privyUser?.wallet?.address) {
+      console.log('No wallet address found');
+      return { success: false, error: 'No wallet connected' };
+    }
+
+    const getProviderUrl = await axios.get('/stripe/get_provider_url');
+    const providerUrl = getProviderUrl.data.providerUrl;
+    
+    if (!providerUrl) {
+      throw new Error('Failed to retrieve RPC provider URL');
+    }
+
+    const connection = new Connection(providerUrl, 'confirmed');
+    
+    // Convert wallet address to PublicKey
+    const walletPublicKey = new PublicKey(privyUser.wallet.address);
+    
+    const solBalLamports = await connection.getBalance(walletPublicKey);
+    const solanaBalance = solBalLamports / LAMPORTS_PER_SOL;
+    
+    dispatch({
+      type: 'SET_LIVE_WALLET_BALANCE',
+      payload: {
+        balance: solanaBalance,
+        walletAddress: privyUser.wallet.address,
+        timestamp: Date.now()
+      }
+    });
+
+    return { success: true, balance: solanaBalance };
+  } catch (error) {
+    console.error('Error getting wallet balance:', error);
+    
+    // Fallback to backend API if direct Solana connection fails
+    try {
+      const response = await axios.get(`/auth/wallet-balance/${privyUser.wallet.address}`);
+      
+      if (response.data.success) {
+        dispatch({
+          type: 'SET_LIVE_WALLET_BALANCE',
+          payload: {
+            balance: response.data.balance,
+            walletAddress: privyUser.wallet.address,
+            timestamp: Date.now()
+          }
+        });
+        return { success: true, balance: response.data.balance };
+      }
+    } catch (fallbackError) {
+      console.error('Fallback API also failed:', fallbackError);
+    }
+    
+    dispatch({
+      type: 'SET_WALLET_BALANCE_ERROR',
+      payload: error.message
+    });
+    return { success: false, error: error.message };
   }
 };
 
@@ -596,22 +723,60 @@ export const deleteAccount = () => async dispatch => {
 
 // Logout / Clear Profile
 export const userSignOut = (clear_token, navigate) => async (dispatch) => {
-  dispatch({ type: LOGOUT });
   try {
-    console.log("---logout2")
+    console.log("Starting backend logout process...");
+    
     const { data } = await axios.post('/auth/logout');
+    
     if (data.success) {
-      if (clear_token) setAuthToken();
+      console.log("Backend logout successful");
+      
+      // Clear token and auth state AFTER successful backend response
+      if (clear_token) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAuthenticated');
+        setAuthToken();
+      }
+      
+      // Clear Redux state
+      dispatch({ type: 'LOGOUT' });
+      
+      // Navigate
       navigate('/');
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      
+      // Show success message
+      dispatch({ type: 'MSG_SUCCESS', payload: data.message });
+      
+      return { success: true };
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
+      console.error("Backend logout failed:", data.error);
+      dispatch({ type: 'MSG_ERROR', payload: data.error });
+      return { success: false, error: data.error };
     }
   } catch (error) {
-    console.log('error', error);
-    dispatch({ type: MSG_WARNING, payload: error });
+    console.error('Backend logout error:', error);
+    
+    // If it's a 401 error, the user is already logged out on backend
+    if (error.response?.status === 401) {
+      
+      if (clear_token) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAuthenticated');
+        setAuthToken();
+      }
+      
+      dispatch({ type: 'LOGOUT' });
+      navigate('/');
+      
+      return { success: true };
+    }
+    
+    // For other errors, return failure but don't throw
+    dispatch({ type: 'MSG_WARNING', payload: error.message || 'Logout failed' });
+    return { success: false, error: error.message };
   }
 };
+
 
 export const setSocket = socket => dispatch => {
   dispatch({ type: SET_SOCKET, payload: socket });

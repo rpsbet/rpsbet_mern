@@ -593,6 +593,7 @@ const getJWTToken = async (email, password) => {
 // **************************************** //
 // ************* WEB3 SOLANA ******************** //
 // **************************************** //
+// Add this to your existing sol_deposit route to handle elite subscription type
 router.post('/sol_deposit', auth, async (req, res) => {
   try {
     let { amount, txtHash, account, room_id, room_name, type } = req.body;
@@ -623,8 +624,8 @@ router.post('/sol_deposit', auth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid input' });
     }
 
-    // Validate type
-    const validTypes = ['join', 'pump', 'create_game'];
+    // Updated valid types to include elite_subscription
+    const validTypes = ['join', 'pump', 'create_game', 'elite_subscription'];
     if (!validTypes.includes(type)) {
       console.error('Invalid type:', type);
       return res.status(400).json({ success: false, message: 'Invalid transaction type' });
@@ -634,6 +635,12 @@ router.post('/sol_deposit', auth, async (req, res) => {
     if (type === 'create_game' && !room_name) {
       console.error('Room name required for create_game');
       return res.status(400).json({ success: false, message: 'Room name is required for creating a game' });
+    }
+
+    // For elite_subscription, room_name should contain subscription info
+    if (type === 'elite_subscription' && !room_name) {
+      console.error('Subscription info required for elite_subscription');
+      return res.status(400).json({ success: false, message: 'Subscription information is required' });
     }
 
     // Make sure this transaction hash hasn't been used before
@@ -661,6 +668,9 @@ router.post('/sol_deposit', auth, async (req, res) => {
       case 'create_game':
         description = `Created ${room_name}`;
         break;
+      case 'elite_subscription':
+        description = `Elite Subscription Payment: ${room_name}`;
+        break;
       default:
         description = `Transaction for ${room_name}`;
     }
@@ -670,9 +680,10 @@ router.post('/sol_deposit', auth, async (req, res) => {
       amount: -numericAmount,
       description,
       hash: txtHash,
-      room: room_id || null, // Allow null for create_game
+      room: room_id || null, // Allow null for create_game and elite_subscription
       room_name: room_name,
       status: 'pending',
+      type: type, // Add type field to track transaction purpose
     });
     await newTransaction.save();
 
@@ -680,7 +691,7 @@ router.post('/sol_deposit', auth, async (req, res) => {
     const receipt = new Receipt({
       user_id: currentUser._id,
       payment_method: 'Web3',
-      payment_type: 'Deposit',
+      payment_type: type === 'elite_subscription' ? 'Elite Subscription' : 'Deposit',
       amount: -numericAmount,
     });
     await receipt.save();
@@ -692,12 +703,19 @@ router.post('/sol_deposit', auth, async (req, res) => {
       console.log('Added new wallet address to user:', account);
     }
 
-    // Return success
+    // Return appropriate message based on transaction type
+    let message = 'Creating Block...';
+    if (type === 'elite_subscription') {
+      message = 'Processing Elite Subscription Payment...';
+    }
+
+    // Return success - note: we return txtHash for elite subscriptions
     return res.json({
       success: true,
       balance: currentUser.balance,
       newTransaction,
-      message: `Creating Block...`,
+      txtHash: txtHash, // Include transaction hash for elite subscription verification
+      message: message,
     });
   } catch (err) {
     console.log('Error in sol_deposit:', err);

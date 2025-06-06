@@ -59,7 +59,7 @@ const getTheme = (mode) =>
         contrastText: '#fff',
       },
       background: {
-        default: mode === 'dark' ? '#151718' : '#f4f6f8',
+        default: mode === 'dark' ? '#262626' : '#f4f6f8',
         paper: '#ffffff',
       },
       text: {

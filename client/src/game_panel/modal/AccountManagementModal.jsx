@@ -116,7 +116,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const fetchApiKeys = async () => {
     try {
       setLoadingApiKeys(true);
-      const response = await axios.get('/api/api-keys/list');
+      const response = await axios.get('/api-keys/list');
       if (response.data.success) {
         setApiKeys(response.data.apiKeys);
       }
@@ -237,7 +237,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
     
     setIsLoading(true);
     try {
-      const response = await axios.post('/api/api-keys/generate', {
+      const response = await axios.post('/api-keys/generate', {
         name: newKeyData.name,
         permissions: newKeyData.permissions,
         rateLimit: newKeyData.rateLimit
@@ -563,11 +563,14 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(200, 200, 200, 0.3)',
-                                color: isDarkMode ? '#ccc' : '#666',
+                                '& input': {
+                                  color: isDarkMode ? '#ccc' : '#666', // Explicitly set input text color
+                                  WebkitTextFillColor: isDarkMode ? '#ccc' : '#666', // For browser compatibility
+                                },
                               },
                               '& .MuiInputLabel-root': {
                                 color: isDarkMode ? '#ccc' : '#666',
-                              }
+                              },
                             }}
                           />
                         </Grid>
@@ -575,17 +578,20 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           <TextField
                             fullWidth
                             label="Total Wagered"
-                            value={`${user?.totalWagered || 0} SOL`}
+                            value={`${(user?.totalWagered).toFixed(4) || 0} SOL`}
                             variant="outlined"
                             disabled
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(200, 200, 200, 0.3)',
-                                color: isDarkMode ? '#ccc' : '#666',
+                                '& input': {
+                                  color: isDarkMode ? '#ccc' : '#666', // Explicitly set input text color
+                                  WebkitTextFillColor: isDarkMode ? '#ccc' : '#666', // For browser compatibility
+                                },
                               },
                               '& .MuiInputLabel-root': {
                                 color: isDarkMode ? '#ccc' : '#666',
-                              }
+                              },
                             }}
                           />
                         </Grid>
@@ -657,10 +663,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                               color="error"
                             />
                           }
-                          label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Game Sounds</Typography>}
+                          label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Sound</Typography>}
                           sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
                         />
-                        <FormControlLabel
+                        {/* <FormControlLabel
                           control={
                             <Switch
                               checked={notificationSounds}
@@ -681,7 +687,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           }
                           label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Background Music</Typography>}
                           sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                        />
+                        /> */}
                       </Box>
                     </Paper>
                   </Grid>
@@ -699,7 +705,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                       <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
                         🎨 Appearance
                       </Typography>
-                      <FormControlLabel
+                      {/* <FormControlLabel
                         control={
                           <Switch
                             checked={isDarkMode}
@@ -709,7 +715,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         }
                         label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Dark Mode</Typography>}
                         sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}
-                      />
+                      /> */}
                       <FormControlLabel
                         control={
                           <Switch
@@ -821,13 +827,13 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                     >
                                       <LinkIcon fontSize="small" />
                                     </IconButton>
-                                    <IconButton
+                                    {/* <IconButton
                                       size="small"
                                       onClick={() => handleDisconnectWallet(account)}
                                       sx={{ color: '#ff0000' }}
                                     >
                                       <DeleteIcon fontSize="small" />
-                                    </IconButton>
+                                    </IconButton> */}
                                   </Box>
                                 </Box>
                               </Grid>
@@ -1192,6 +1198,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 <Button
                   onClick={() => setShowPasswordDialog(false)}
                   variant="outlined"
+                  fullWidth
                   sx={{
                     color: isDarkMode ? '#fff' : '#333',
                     borderColor: isDarkMode ? '#fff' : '#333',
@@ -1307,6 +1314,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                 <Button
                   onClick={() => setShowNewKeyDialog(false)}
+                  fullWidth
                   variant="outlined"
                   sx={{
                     color: isDarkMode ? '#fff' : '#333',

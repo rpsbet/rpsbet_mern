@@ -58,6 +58,7 @@ import {
   History as HistoryIcon,
   TrendingUp,
 } from '@mui/icons-material';
+import WalletBalanceDisplay from '../components/WalletBalanceDisplay.jsx';
 import socketIOClient from 'socket.io-client';
 import { formatDistanceToNow } from 'date-fns';
 import Avatar from '../components/Avatar.jsx';
@@ -71,6 +72,7 @@ import {
   getUser,
   setUnreadMessageCount,
 } from '../redux/Auth/user.actions.js';
+import setAuthToken from '../util/setAuthToken.js';
 import { openOfferLoanModal } from '../redux/Notification/notification.actions.js';
 import { ConflictDialog } from './modal/ConfirmAlerts.jsx';
 import {
@@ -207,6 +209,19 @@ const selectLoanData = (state) => ({
   remainingLoans: state.loanReducer?.remainingLoans ?? 0,
 });
 
+const selectWalletBalance = (state) => {
+  const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
+  const backendBalance = state?.auth?.user?.balance ?? 0;
+  const walletAddress = state?.auth?.walletAddress;
+  console.log('Live wallet balance:', liveWalletBalance, 'Backend balance:', backendBalance, 'Wallet address:', walletAddress);
+  // Use live wallet balance if available, otherwise fall back to backend balance
+  return {
+    balance: walletAddress ? liveWalletBalance : backendBalance,
+    isWalletBalance: Boolean(walletAddress),
+    walletAddress
+  };
+};
+
 function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -216,6 +231,8 @@ function SiteWrapper({ children }) {
   const userData = useSelector(selectUserData);
   const logicData = useSelector(selectLogicData);
   const loanData = useSelector(selectLoanData);
+  const walletData = useSelector(selectWalletBalance);
+
   const { logout } = usePrivy();
 
   // Destructure with defaults
@@ -481,12 +498,81 @@ function SiteWrapper({ children }) {
     }
   }, [state.anchorElProfile, updateState]);
 
-  const handleLogout = (clearToken) => {
-    updateState({ anchorElProfile: null });
-    if (socket) socket.disconnect();
-    logout();
-    dispatch(userSignOut(clearToken, navigate));
-  };
+  const handleLogout = useCallback(async (clearToken) => {
+    console.log('Starting logout process...');
+
+    // Prevent multiple logout attempts
+    if (handleLogout.isLoggingOut) {
+      console.log('Logout already in progress, skipping...');
+      return;
+    }
+
+    handleLogout.isLoggingOut = true;
+
+    try {
+      // Step 1: Close UI elements first
+      updateState({ anchorElProfile: null });
+
+      // Step 2: Backend logout with proper error handling
+      console.log('Calling backend logout...');
+      try {
+        const logoutResult = await dispatch(userSignOut(clearToken, navigate));
+        console.log('Backend logout result:', logoutResult);
+      } catch (backendError) {
+        console.warn('Backend logout failed:', backendError);
+        // Continue with cleanup even if backend fails
+      }
+
+      // Step 3: Disconnect socket
+      console.log('Disconnecting socket...');
+      if (socket) {
+        socket.disconnect();
+      }
+
+      // Step 4: Privy logout with error handling
+      console.log('Calling Privy logout...');
+      try {
+        await logout();
+        console.log('Privy logout successful');
+      } catch (privyError) {
+        console.error('Privy logout failed:', privyError);
+        // This is expected if already logged out, continue with cleanup
+      }
+
+      // Step 5: Force cleanup to ensure consistent state
+      console.log('Performing final cleanup...');
+      if (clearToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAuthenticated');
+        setAuthToken();
+      }
+
+      // Clear Redux state
+      dispatch({ type: 'LOGOUT' });
+
+      // Navigate to home
+      navigate('/');
+
+      console.log('Logout process completed successfully');
+
+    } catch (error) {
+      console.error('Logout error, forcing cleanup:', error);
+
+      // Force cleanup even if there's an error
+      if (socket) socket.disconnect();
+
+      if (clearToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAuthenticated');
+        setAuthToken();
+      }
+
+      dispatch({ type: 'LOGOUT' });
+      navigate('/');
+    } finally {
+      handleLogout.isLoggingOut = false;
+    }
+  }, [dispatch, navigate, socket, logout, updateState]);
 
   const handlePortfolio = useCallback(() => {
     navigate('/portfolio');
@@ -861,12 +947,10 @@ function SiteWrapper({ children }) {
       }}
       PaperProps={{
         sx: {
-          background: isDarkMode
-            ? 'rgba(5, 5, 5, 0.95)'
-            : 'rgba(255, 255, 255, 0.95)',
+          background: '#1a1a1a',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid #ff0000',
+          // border: '1px solid #ff0000',
           borderRadius: '6px',
           minWidth: '160px',
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)',
@@ -988,12 +1072,10 @@ function SiteWrapper({ children }) {
       slotProps={{
         paper: {
           sx: {
-            background: isDarkMode
-              ? 'rgba(2, 2, 2, 0.95)'
-              : 'rgba(255, 255, 255, 0.95)',
+            background: '#1a1a1a',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid #ff0000',
+            // border: '1px solid #ff0000',
             borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             color: isDarkMode ? '#fff' : '#333',
@@ -1008,7 +1090,7 @@ function SiteWrapper({ children }) {
         p: 2,
         borderBottom: '1px solid',
         borderColor: 'rgba(255, 0, 0, 0.2)',
-        background: 'rgba(255, 0, 0, 0.05)',
+        background: 'rgba(32, 32, 32, 0.05)',
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{
@@ -1176,12 +1258,10 @@ function SiteWrapper({ children }) {
       slotProps={{
         paper: {
           sx: {
-            background: isDarkMode
-              ? 'rgb(13, 13, 13)'
-              : 'rgba(255, 255, 255, 0.95)',
+            background: '#1a1a1a',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid #ff0000',
+            // border: '1px solid #ff0000',
             borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             color: isDarkMode ? '#fff' : '#333',
@@ -1198,7 +1278,7 @@ function SiteWrapper({ children }) {
       <Box sx={{
         p: 2,
         borderBottom: '1px solid',
-        borderColor: 'rgba(255, 0, 0, 0.2)',
+        borderColor: 'rgba(45, 45, 45, 0.2)',
         background: 'rgba(255, 0, 0, 0.05)',
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -1404,6 +1484,8 @@ function SiteWrapper({ children }) {
       <Suspense fallback={<div></div>}>
         <EliteSubscriptionModal
           user={user}
+          walletBalance={walletData.balance}
+          isWalletBalance={walletData.isWalletBalance}
           open={state.eliteModalOpen}
           onClose={() => updateState({ eliteModalOpen: false })}
           isLowGraphics={isLowGraphics}
@@ -1628,82 +1710,13 @@ function SiteWrapper({ children }) {
                 </Box>
               ) : user?._id ? (
                 <>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <Tooltip
-                      title={`${((balance * solPrice) || 0).toFixed(numDecimals)} USD`}
-                      arrow
-                      placement="top"
-                      componentsProps={{
-                        tooltip: {
-                          sx: {
-                            bgcolor: 'rgba(0, 0, 0, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
-                          }
-                        }
-                      }}
-                    >
-                      <ButtonBase
-                        onClick={handleBalanceClick}
-                        onMouseEnter={() => setIsHovered(true)}
-                        onMouseLeave={() => setIsHovered(false)}
-                        sx={{
-                          position: 'relative',
-                          padding: '6px 12px',
-                          borderRadius: '12px',
-                          background: 'transparent',
-                          backdropFilter: 'blur(15px)',
-                          border: '1px solid rgba(255, 0, 21, 0.2)',
-                          transition: 'all 0.2s ease',
-                          cursor: 'pointer',
-                          '&:hover': {
-                            transform: 'scale(1.05)',
-                            borderColor: 'rgba(255, 0, 21, 0.4)',
-                            boxShadow: '0 4px 20px rgba(255, 0, 21, 0.3)',
-                          },
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.75,
-                          }}
-                        >
-                          <AccountBalanceWallet
-                            sx={{
-                              width: '14px',
-                              height: '14px',
-                              color: '#ff0000',
-                              transition: 'transform 0.2s ease',
-                              transform: isHovered ? 'rotate(10deg)' : 'rotate(0deg)',
-                            }}
-                          />
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 600,
-                              color: '#e1e5e9',
-                              fontSize: '0.8rem',
-                              transition: 'color 0.2s ease',
-                            }}
-                          >
-                            {isHovered
-                              ? `${((balance * solPrice) || 0).toFixed(numDecimals)}`
-                              : balance
-                            }
-                          </Typography>
-                        </Box>
-                      </ButtonBase>
-                    </Tooltip>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {/* Use WalletBalanceDisplay instead of the old balance button */}
+                    <WalletBalanceDisplay
+                      onBalanceClick={handleBalanceClick}
+                      isHovered={isHovered}
+                      setIsHovered={setIsHovered}
+                    />
                   </Box>
 
                   <Box

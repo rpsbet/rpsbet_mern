@@ -581,8 +581,8 @@ function CreateGame() {
             onClick={() => navigate('/')}
             sx={{
               textTransform: 'none',
+              position: 'relative',
               fontWeight: 500,
-              position: 'absolute',
               p: isMobile ? '6px' : '8px 16px',
               minWidth: isMobile ? 'auto' : undefined,
               '& .MuiButton-startIcon': {
@@ -598,9 +598,9 @@ function CreateGame() {
           >
             {isMobile ? null : 'Go Back'}
           </Button>
-          <Box sx={{ mb: 3 }}>
+          {/* <Box sx={{ mb: 3 }}>
             <Summary shortVersion={false} />
-          </Box>
+          </Box> */}
           {step === 1 && step1()}
           {step === 2 && step2()}
         </Paper>

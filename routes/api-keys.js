@@ -1,9 +1,12 @@
 // routes/api-keys.js - Updated API key management routes
 const express = require('express');
 const crypto = require('crypto');
-const auth = require('../middleware/auth'); // Your existing auth middleware
+const auth = require('../middleware/auth'); // Your existing auth middleware - KEEP THIS
 const ApiKey = require('../model/ApiKey');
 const router = express.Router();
+
+// IMPORTANT: These routes should use 'auth' middleware (user authentication)
+// NOT 'apiAuth' middleware, because these are for managing API keys in the web interface
 
 // Generate new API key
 router.post('/generate', auth, async (req, res) => {

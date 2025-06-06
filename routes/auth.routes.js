@@ -262,7 +262,7 @@ router.post('/privy', async (req, res) => {
         bio: '',
         totalWagered: 0,
         totalTraded: 0,
-        balance: 0,
+        balance: 0, // This is the backend balance, separate from wallet
         rewards: [],
         credit_score: 1000,
         ai_mode: 'Random',
@@ -273,6 +273,10 @@ router.post('/privy', async (req, res) => {
         accounts: wallet ? [wallet] : [],
       });
 
+      await user.save();
+    } else if (wallet && !user.accounts.includes(wallet)) {
+      // Update user with new wallet if not already present
+      user.accounts.push(wallet);
       await user.save();
     }
 
@@ -285,9 +289,13 @@ router.post('/privy', async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Logged in via Privy',
+      message: 'Success :)',
       token,
-      user,
+      user: {
+        ...user.toObject(),
+        // Don't include wallet balance here - frontend will get it from Privy
+        primaryWallet: wallet || (user.accounts.length > 0 ? user.accounts[0] : null)
+      },
     });
 
   } catch (error) {
@@ -299,7 +307,33 @@ router.post('/privy', async (req, res) => {
   }
 });
 
+router.get('/wallet-balance/:walletAddress', auth, async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    
+    if (!walletAddress) {
+      return res.status(400).json({
+        success: false,
+        error: 'Wallet address required'
+      });
+    }
 
+    const SolanaBalanceChecker = require('../helper/util/solanaBalance');
+    const balance = await SolanaBalanceChecker.getSOLBalance(walletAddress);
+
+    res.json({
+      success: true,
+      balance,
+      walletAddress
+    });
+  } catch (error) {
+    console.error('Error fetching wallet balance:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch wallet balance'
+    });
+  }
+});
 
 router.post('/users/add-wallet', auth, async (req, res) => {
   try {
@@ -429,13 +463,13 @@ router.post('/cancel-elite', auth, async (req, res) => {
 });
 
 router.post('/purchase-elite', auth, async (req, res) => {
-  const { type, signature } = req.body;
+  const { type, signature, amount } = req.body;
   const userId = req.user.id;
-  const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  // Define subscription amounts
+  
+  // Define subscription amounts (use the FRONTEND amounts, not backend amounts)
   const subscriptionAmounts = {
-    red: 0.2,
-    black: 1.0,
+    red: 0.1,   // Changed from 0.2 to match frontend
+    black: 0.4, // Changed from 1.0 to match frontend
   };
 
   if (!['red', 'black'].includes(type)) {
@@ -445,10 +479,16 @@ router.post('/purchase-elite', auth, async (req, res) => {
     });
   }
 
+  if (!signature) {
+    return res.status(400).json({
+      success: false,
+      message: 'Transaction signature is required',
+    });
+  }
+
   try {
     // Find the user
     const user = await User.findById(userId);
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -456,193 +496,72 @@ router.post('/purchase-elite', auth, async (req, res) => {
       });
     }
 
-    if (user.elite === type) {
+    // Check if this transaction signature has already been used
+    const existingTransaction = await Transaction.findOne({ txtHash: signature });
+    if (existingTransaction) {
       return res.status(400).json({
         success: false,
-        message: `You are already subscribed to ${type} elite membership`,
+        message: 'Transaction signature has already been used',
       });
     }
 
+    // Get the expected amount for this subscription type
+    const expectedAmount = subscriptionAmounts[type];
+    const actualAmount = amount || expectedAmount;
 
-      const getProviderUrl = await axios.get('/stripe/get_provider_url');
-      const providerUrl = getProviderUrl.data.providerUrl;
-      if (!providerUrl) {
-          const errorText = 'Failed to retrieve RPC provider URL.';
-          console.error('[sendSolDeposit] API Error:', errorText);
+    // Validate amount if provided
+    if (amount && Math.abs(amount - expectedAmount) > 0.001) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid amount. Expected ${expectedAmount} SOL for ${type} subscription`,
+      });
+    }
+
+    console.log('[purchase-elite] Creating pending transaction:', {
+      userId,
+      type,
+      signature,
+      amount: actualAmount
+    });
+
+    // Create PENDING transaction - let cron job verify and complete it
+    const newTransaction = new Transaction({
+      user: userId,
+      amount: -actualAmount, // Negative because it's an expense
+      description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription`, // This should match the cron job pattern
+      txtHash: signature,
+      hash: signature, // Some parts of your code use 'hash', others use 'txtHash'
+      status: 'pending', // Important: Let cron job verify this
+      type: 'elite_subscription', // Add type for easier filtering
+      subscriptionType: type, // Store the subscription type
+    });
+
+    await saveDocumentWithRetry(newTransaction);
+    
+    console.log('[purchase-elite] Pending transaction created:', newTransaction._id);
+
+    // Emit the pending transaction immediately
+    socket.newTransaction(newTransaction);
+
+    // Return success - the cron job will handle verification and user updates
+    return res.json({
+      success: true,
+      message: `Elite subscription transaction submitted. Verification in progress...`,
+      transaction: {
+        id: newTransaction._id,
+        signature,
+        type,
+        amount: actualAmount,
+        status: 'pending'
+      },
+      // Don't update user.elite yet - let cron job do it after verification
+      user: {
+        id: user._id,
+        elite: user.elite, // Return current status
+        // The cron job will update this and send real-time updates
       }
-      const connection = new Connection(providerUrl, 'confirmed');
-      const parsedTx = await connection.getParsedTransaction(signature, 'confirmed');
-      if (!parsedTx) {
-        return res.status(400).json({ success: false, message: 'Invalid or unconfirmed transaction signature' });
-      }
-      const amountLamports = Math.floor(subscriptionAmounts[type] * 1e9);
-      const transferInstruction = parsedTx.transaction.message.instructions.find(ix =>
-        ix.parsed?.type === 'transfer' &&
-        ix.parsed?.info?.destination === adminWallet &&
-        parseInt(ix.parsed?.info?.lamports) === amountLamports
-      );
-  
-      if (!transferInstruction) {
-        return res.status(400).json({ success: false, message: 'Transaction does not match required payment criteria' });
-      }
-  
-      const payerPubkey = transferInstruction.parsed.info.source;
-      user.elite = type;
-      user.last_elite_payment = new Date();
-      await user.save();
-  
-      // Save transaction record
-      const newTransaction = new TransactionModel({
-        user: userId,
-        amount: -subscriptionAmounts[type],
-        description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription (On-chain)`,
-        txtHash: signature,
-      });
-      await saveDocumentWithRetry(newTransaction);
-      socket.newTransaction(newTransaction);
+    });
 
-      const notification = new Notification({
-        from: userId,
-        to: userId,
-        message: `Subscribed to ${type} elite via Solana`,
-        amount: subscriptionAmounts[type],
-        is_read: false,
-      });
-      await saveDocumentWithRetry(notification);
-      socket.sendNotification(userId, {
-        message: notification.message,
-        username: user.username,
-        avatar: user.avatar,
-        elite: type,
-        created_at: moment().format('YYYY-MM-DD HH:mm'),
-        created_at_str: moment().format('LLL'),
-      });
-  
-      return res.json({
-        success: true,
-        message: `Successfully subscribed to ${type} elite`,
-        user: {
-          elite: user.elite,
-          last_elite_payment: user.last_elite_payment,
-        },
-      });
-
-
-
-
-
-    // // Add IP to user's IP history if not already present
-    // if (!user.ip_addresses.includes(clientIp)) {
-    //   user.ip_addresses.push(clientIp);
-    //   await user.save();
-    // }
-
-    // // Check for free trial eligibility (only for red tier)
-    // let amount = subscriptionAmounts[type];
-    // let isFreeMonth = false;
-    // let message = `Successfully subscribed to ${type.charAt(0).toUpperCase() + type.slice(1)} Elite membership`;
-
-    // if (type === 'red' && !user.elite_free_used) {
-    //   // Check if any other accounts with this IP have used the free trial
-    //   const ipMatch = await User.findOne({
-    //     ip_addresses: clientIp,
-    //     elite_free_used: true,
-    //     _id: { $ne: userId } // Not the current user
-    //   });
-
-    //   if (!ipMatch) {
-    //     // User is eligible for free month
-    //     amount = 0;
-    //     isFreeMonth = true;
-    //     message = 'Successfully activated your FREE first month of Red Elite membership!';
-    //   }
-    // }
-
-    // // Check if user has enough balance when not free
-    // if (!isFreeMonth && user.balance < amount) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: 'Insufficient balance to purchase subscription',
-    //   });
-    // }
-
-    // // Update user's balance, elite status, and subscription date
-    // const updateData = {
-    //   elite: type,
-    //   last_elite_payment: new Date()
-    // };
-
-    // // Only deduct balance if not free
-    // if (!isFreeMonth) {
-    //   updateData.$inc = { balance: -amount };
-    // }
-
-    // // Mark free trial as used if applicable
-    // if (isFreeMonth) {
-    //   updateData.elite_free_used = true;
-    // }
-
-    // const updatedUser = await User.findByIdAndUpdate(
-    //   userId,
-    //   updateData,
-    //   { new: true }
-    // );
-
-    // // Create new transaction (only if not free)
-    // if (!isFreeMonth) {
-    //   const newTransaction = new Transaction({
-    //     user: userId,
-    //     amount: -amount,
-    //     description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription Purchase`,
-    //   });
-    //   await saveDocumentWithRetry(newTransaction);
-    //   socket.newTransaction(newTransaction);
-    // }
-
-    // // Create notification with appropriate message
-    // const notificationText = isFreeMonth 
-    //   ? `Activated FREE first month of Red Elite subscription` 
-    //   : `Purchased ${type} elite subscription`;
-
-    // const notification = new Notification({
-    //   from: userId,
-    //   to: userId,
-    //   room: null,
-    //   message: notificationText,
-    //   amount: isFreeMonth ? 0 : amount,
-    //   is_read: false,
-    // });
-
-    // const notificationData = {
-    //   message: notification.message,
-    //   username: user.username,
-    //   avatar: user.avatar,
-    //   accessory: user.accessory,
-    //   elite: type,
-    //   room: null,
-    //   amount: isFreeMonth ? 0 : amount,
-    //   rank: user.totalWagered || 0,
-    //   created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-    //   created_at_str: moment(new Date()).format('LLL'),
-    //   updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-    //   is_read: false,
-    // };
-
-    // // Save notification
-    // await saveDocumentWithRetry(notification);
-    // socket.sendNotification(userId, notificationData);
-
-    // // Return success response
-    // return res.json({
-    //   success: true,
-    //   message: message,
-    //   user: {
-    //     balance: updatedUser.balance,
-    //     elite: updatedUser.elite,
-    //     elite_free_used: updatedUser.elite_free_used,
-    //     last_elite_payment: updatedUser.last_elite_payment,
-    //   },
-    // });
   } catch (err) {
     console.error('Elite subscription error:', err);
     return res.status(500).json({
@@ -907,18 +826,26 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
 // @access  Private
 router.post('/logout', auth, async (req, res) => {
   try {
+    console.log('Processing logout for user:', req.user._id);
+    
+    // Update user status
     req.user.status = 'off';
-    try {
-      await saveDocumentWithRetry(req.user);
-    } catch (error) {
-      console.error("Error saving req.user:", error);
-    }
+    
+    // Save with proper error handling
+    await saveDocumentWithRetry(req.user);
+    
+    console.log('User status updated to offline');
+    
     res.json({
       success: true,
-      message: 'LOGGED TF OUT!'
+      message: 'Successfully logged out!'
     });
   } catch (error) {
-    res.json({ success: false, error });
+    console.error('Logout error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to complete logout process' 
+    });
   }
 });
 

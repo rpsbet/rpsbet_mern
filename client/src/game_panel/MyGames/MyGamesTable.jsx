@@ -646,7 +646,7 @@ function MyGamesTable() {
                             boxShadow: 6,
                           },
                           backgroundColor: isDarkMode
-                            ? 'rgba(28, 28, 32, 0.8)'
+                            ? 'rgba(35, 35, 35, 0.8)'
                             : 'rgba(255, 255, 255, 0.8)',
                           backdropFilter: 'blur(8px)',
                           border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
