@@ -176,7 +176,7 @@ app.get('/health', (req, res) => {
 });
 
 // API documentation endpoint
-app.get('/api/docs', (req, res) => {
+app.get('/api/api-docs-json', (req, res) => {
   res.json({
     name: 'Game Creation API',
     version: '1.0.0',
