@@ -1049,7 +1049,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           }}
                           startIcon={<span>📖</span>}
                           component="a"
-                          href="/api/docs"
+                          href="/docs"
                           target="_blank"
                         >
                           View Documentation

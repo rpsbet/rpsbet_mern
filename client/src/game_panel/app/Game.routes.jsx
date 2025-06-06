@@ -149,7 +149,7 @@ function GameMainRoute() {
               }
             />
             <Route
-              path="api/docs"
+              path="docs"
               element={
                 <Suspense fallback={<LoadingComponent />}>
                   <ApiDocumentation />

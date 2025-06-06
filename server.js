@@ -160,10 +160,9 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/settings', systemSettingRoutes);
 
-
 // New API routes
-app.use('/api/api-keys', apiKeyRoutes); // Changed from '/api/keys' to '/api/api-keys'
-app.use('/api/v1', publicApiRoutes); 
+app.use('/api/keys', apiKeyRoutes); // Protected by user auth - for managing API keys
+app.use('/api/v1', publicApiRoutes); // Protected by API key auth - for external access
 
 // Health check endpoint for API monitoring
 app.get('/health', (req, res) => {
@@ -176,7 +175,7 @@ app.get('/health', (req, res) => {
 });
 
 // API documentation endpoint
-app.get('/api/api-docs-json', (req, res) => {
+app.get('/api/docs', (req, res) => {
   res.json({
     name: 'Game Creation API',
     version: '1.0.0',
@@ -218,13 +217,6 @@ app.get('/api/api-docs-json', (req, res) => {
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.resolve(__dirname, 'client', 'build')));
-
-  // Explicitly allow /api/docs to serve the frontend React route
-  app.get('/api/docs', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-  });
-
-  // Catch-all for the React Router (must come after your specific routes)
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
@@ -258,7 +250,7 @@ app.use('/api/*', (req, res) => {
     path: req.path,
     method: req.method,
     available_endpoints: [
-      'GET /api/api-docs-json',
+      'GET /api/docs',
       'GET /api/v1/info',
       'POST /api/v1/create-room',
       'GET /health'
