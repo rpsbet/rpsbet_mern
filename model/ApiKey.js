@@ -1,4 +1,4 @@
-// model/ApiKey.js - Mongoose model for API keys
+// model/ApiKey.js - Updated Mongoose model for API keys
 const mongoose = require('mongoose');
 
 const apiKeySchema = new mongoose.Schema({
@@ -26,7 +26,7 @@ const apiKeySchema = new mongoose.Schema({
   },
   permissions: [{
     type: String,
-    enum: ['create_room', 'generate_image', 'generate_react', 'extract_room_info'],
+    enum: ['create_room', 'generate_image'], // Streamlined to only 2 permissions
     required: true
   }],
   isActive: {
@@ -98,8 +98,20 @@ apiKeySchema.pre('save', function(next) {
   next();
 });
 
-// Ensure permissions array is not empty
+// Ensure permissions array is not empty and handle legacy permissions
 apiKeySchema.pre('save', function(next) {
+  // Handle legacy permissions by mapping them to new ones
+  if (this.permissions.includes('generate_react') || this.permissions.includes('extract_room_info')) {
+    // If user had these old permissions, give them create_room permission
+    if (!this.permissions.includes('create_room')) {
+      this.permissions.push('create_room');
+    }
+    // Remove the old permissions
+    this.permissions = this.permissions.filter(p => 
+      p !== 'generate_react' && p !== 'extract_room_info'
+    );
+  }
+  
   if (this.permissions.length === 0) {
     this.permissions = ['create_room']; // Default permission
   }
@@ -123,6 +135,16 @@ apiKeySchema.virtual('formattedLastUsed').get(function() {
     month: 'short',
     day: 'numeric'
   });
+});
+
+// Virtual for permission display names
+apiKeySchema.virtual('formattedPermissions').get(function() {
+  const permissionLabels = {
+    'create_room': 'Create Rooms & Generate React',
+    'generate_image': 'Generate AI Images'
+  };
+  
+  return this.permissions.map(p => permissionLabels[p] || p).join(', ');
 });
 
 // Static method to find active keys for a user
@@ -149,6 +171,31 @@ apiKeySchema.methods.incrementUsage = function() {
 // Instance method to revoke the key
 apiKeySchema.methods.revoke = function() {
   this.isActive = false;
+  return this.save();
+};
+
+// Instance method to check if key has specific permission
+apiKeySchema.methods.hasPermission = function(permission) {
+  return this.permissions.includes(permission);
+};
+
+// Instance method to add permission if not already present
+apiKeySchema.methods.addPermission = function(permission) {
+  const validPermissions = ['create_room', 'generate_image'];
+  if (validPermissions.includes(permission) && !this.permissions.includes(permission)) {
+    this.permissions.push(permission);
+    return this.save();
+  }
+  return Promise.resolve(this);
+};
+
+// Instance method to remove permission
+apiKeySchema.methods.removePermission = function(permission) {
+  this.permissions = this.permissions.filter(p => p !== permission);
+  // Ensure at least one permission remains
+  if (this.permissions.length === 0) {
+    this.permissions = ['create_room'];
+  }
   return this.save();
 };
 

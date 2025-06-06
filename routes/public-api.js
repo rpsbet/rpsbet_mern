@@ -32,11 +32,8 @@ router.get('/info', (req, res) => {
       name: 'Game Creation API',
       version: '1.0.0',
       endpoints: {
-        'POST /create-room': 'Create a new game room with blockchain deposit',
-        'POST /generate-image': 'Generate AI images for games',
-        'POST /generate-react': 'Generate React game components',
-        'POST /extract-room-info': 'Extract information from game code',
-        'GET /game-types': 'List available game types'
+        'POST /create-room': 'Create a new game room with optional React code generation and blockchain deposit',
+        'POST /generate-image': 'Generate AI images for games'
       },
       authentication: 'API Key required in X-API-Key header',
       rateLimit: {
@@ -47,25 +44,7 @@ router.get('/info', (req, res) => {
   });
 });
 
-// Get available game types
-router.get('/game-types', apiAuth, async (req, res) => {
-  try {
-    const gameTypes = await GameType.find({ isActive: true }).select('game_type_id game_type_name short_name description');
-    
-    res.json({
-      success: true,
-      gameTypes
-    });
-  } catch (error) {
-    console.error('Error fetching game types:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch game types'
-    });
-  }
-});
-
-// Create room via API (with Web3 deposit handling)
+// Create room via API (with optional React generation and Web3 deposit handling)
 router.post('/create-room', apiAuth, requirePermission('create_room'), async (req, res) => {
   try {
     const {
@@ -91,6 +70,11 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       prompt = '',
       gameCode = '',
       qs_nation = '',
+      
+      // React generation fields
+      generateReact = false,
+      reactPrompt = '',
+      imageUrls = [],
       
       // Blockchain fields
       privateKey, // Optional: for automated signing
@@ -149,6 +133,35 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         success: false,
         error: 'Invalid game type'
       });
+    }
+
+    // Generate React code if requested
+    let generatedReact = null;
+    let extractedInfo = null;
+    let finalGameCode = gameCode;
+    
+    if (generateReact && reactPrompt) {
+      try {
+        const reactResult = await generateReactComponent(reactPrompt, imageUrls);
+        generatedReact = reactResult;
+        finalGameCode = reactResult.finalApp;
+        
+        // Extract room info from generated code
+        extractedInfo = extractRoomInfoFromCode(finalGameCode);
+        
+        // Use extracted info if available and original fields are empty
+        if (extractedInfo && extractedInfo.confidence > 0.7) {
+          if (!ticker && extractedInfo.ticker) {
+            ticker = extractedInfo.ticker;
+          }
+          if (!description && extractedInfo.description) {
+            description = extractedInfo.description;
+          }
+        }
+      } catch (reactError) {
+        console.error('React generation error:', reactError);
+        // Continue with room creation even if React generation fails
+      }
     }
 
     // Handle blockchain deposit
@@ -224,8 +237,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       image,
       ticker: ticker || name.substring(0, 6).toUpperCase(),
       x_link,
-      gameCode,
-      prompt,
+      gameCode: finalGameCode,
+      prompt: reactPrompt || prompt,
       telegram_link,
       website_link,
       selectedStrategy,
@@ -238,7 +251,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       room_number,
       index: room_number,
       status: 'open',
-      description,
+      description: description || 'An exciting game room',
     });
 
     // Create game log
@@ -282,7 +295,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         bet_amount: amountAfterFee,
         status: newRoom.status,
         game_type: gameTypeDoc.game_type_name,
-        created_at: newRoom.created_at
+        created_at: newRoom.created_at,
+        gameCode: finalGameCode
       },
       deposit: depositResult,
       api_usage: {
@@ -290,6 +304,18 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         usage_count: req.apiKey.usageCount + 1
       }
     };
+
+    // Include React generation results if applicable
+    if (generatedReact) {
+      response.reactGeneration = {
+        success: true,
+        proxiedAssets: generatedReact.proxiedAssets
+      };
+    }
+
+    if (extractedInfo) {
+      response.extractedInfo = extractedInfo;
+    }
 
     res.status(201).json(response);
 
@@ -302,6 +328,138 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
     });
   }
 });
+
+// Helper function to generate React component
+async function generateReactComponent(prompt, imageUrls = []) {
+  // Process assets similar to your existing logic
+  const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
+  const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
+  const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
+  const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
+
+  const proxiedAssets = {
+    images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
+    audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
+  };
+
+  // Use your existing system prompt
+  const systemPrompt = `You are an elite React developer. Generate a complete, working React game component.
+
+Output Requirements:
+- Return ONLY valid JavaScript/React code for the App component
+- Start with "const App = ..." or "function App"
+- End with "export default App;"
+- No markdown, explanations, or extra text
+
+Required Imports:
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Box, Typography, Button, Modal } from '@mui/material';
+
+CRITICAL: NO FINANCIAL LOGIC
+- DO NOT include any bet amount, balance, wallet, or money-related state
+- Focus purely on game mechanics and user interaction
+
+Game Title Requirement:
+- Include a <Typography> component with id="game-title"
+- The title should be 3-20 characters, catchy, and relevant
+
+Rules Modal Requirement:
+- Include a rules modal with <Box> component with id="game-rules"
+- Rules should clearly explain gameplay mechanics
+
+Responsive Design:
+- Main container MUST use: width: "100%", height: "100%"
+- Glassmorphic dark theme design (#080808 background)`;
+
+  const stream = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 8000,
+    system: systemPrompt,
+    messages: [
+      {
+        role: 'user',
+        content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.`,
+      },
+    ],
+    stream: true,
+  });
+
+  let rawCode = '';
+  for await (const chunk of stream) {
+    if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+      rawCode += chunk.delta.text;
+    }
+  }
+
+  let cleanedCode = rawCode
+    .replace(/```(?:jsx?|javascript)?/g, '')
+    .replace(/^\s*[\r\n]+/gm, '')
+    .trim();
+
+  if (!cleanedCode.endsWith('export default App;')) {
+    cleanedCode = `${cleanedCode}\nexport default App;`;
+  }
+
+  return {
+    finalApp: cleanedCode,
+    proxiedAssets
+  };
+}
+
+// Helper function to extract room info from generated code
+function extractRoomInfoFromCode(gameCode) {
+  try {
+    // Use your existing extraction logic
+    const titleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>(.*?)<\/Typography>/i);
+    let name = titleMatch ? titleMatch[1].trim() : '';
+    if (!name || name.length < 3 || name.length > 20) {
+      name = 'Default Game';
+    }
+
+    const ticker = name
+      .split(/\s+/)
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 6) || 'GAME';
+
+    const rulesMatch = gameCode.match(/<Box[^>]*id="game-rules"[^>]*>([\s\S]*?)<\/Box>/i);
+    let rulesText = '';
+    if (rulesMatch && rulesMatch[1]) {
+      const textMatches = rulesMatch[1].match(/<Typography[^>]*>(.*?)<\/Typography>/gi) || [];
+      rulesText = textMatches
+        .map(match => match.match(/<Typography[^>]*>(.*?)<\/Typography>/i)[1])
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    if (!rulesText) {
+      rulesText = 'Play the game to achieve high multipliers.';
+    }
+
+    const description = rulesText.length > 200 
+      ? rulesText.substring(0, 197) + '...' 
+      : rulesText;
+
+    const themeWords = (name + ' ' + rulesText).toLowerCase();
+    let gameTheme = 'generic game';
+    if (themeWords.includes('dice')) gameTheme = 'dice game';
+    else if (themeWords.includes('card')) gameTheme = 'card game';
+    else if (themeWords.includes('race') || themeWords.includes('speed')) gameTheme = 'racing game';
+    else if (themeWords.includes('puzzle')) gameTheme = 'puzzle game';
+
+    return {
+      name,
+      ticker,
+      description,
+      gameTheme,
+      confidence: titleMatch && rulesMatch ? 0.95 : 0.7
+    };
+  } catch (error) {
+    console.error('Error extracting room info:', error);
+    return null;
+  }
+}
 
 // Helper function for automated deposits
 async function handleAutomatedDeposit({ privateKey, amount, fromAddress, roomName }) {
@@ -423,185 +581,6 @@ router.post('/generate-image', apiAuth, requirePermission('generate_image'), asy
     res.status(500).json({
       success: false,
       error: 'Image generation failed',
-      message: error.message
-    });
-  }
-});
-
-// Generate React component via API
-router.post('/generate-react', apiAuth, requirePermission('generate_react'), async (req, res) => {
-  try {
-    const { prompt, imageUrls = [] } = req.body;
-
-    if (!prompt) {
-      return res.status(400).json({
-        success: false,
-        error: 'Prompt is required'
-      });
-    }
-
-    // Process assets similar to your existing logic
-    const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
-    const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
-    const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
-    const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
-
-    const proxiedAssets = {
-      images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
-      audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
-    };
-
-    // Use your existing system prompt
-    const systemPrompt = `You are an elite React developer. Generate a complete, working React game component.
-
-Output Requirements:
-- Return ONLY valid JavaScript/React code for the App component
-- Start with "const App = ..." or "function App"
-- End with "export default App;"
-- No markdown, explanations, or extra text
-
-Required Imports:
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Typography, Button, Modal } from '@mui/material';
-
-CRITICAL: NO FINANCIAL LOGIC
-- DO NOT include any bet amount, balance, wallet, or money-related state
-- Focus purely on game mechanics and user interaction
-
-Game Title Requirement:
-- Include a <Typography> component with id="game-title"
-- The title should be 3-20 characters, catchy, and relevant
-
-Rules Modal Requirement:
-- Include a rules modal with <Box> component with id="game-rules"
-- Rules should clearly explain gameplay mechanics
-
-Responsive Design:
-- Main container MUST use: width: "100%", height: "100%"
-- Glassmorphic dark theme design (#080808 background)`;
-
-    const stream = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8000,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.`,
-        },
-      ],
-      stream: true,
-    });
-
-    let rawCode = '';
-    for await (const chunk of stream) {
-      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-        rawCode += chunk.delta.text;
-      }
-    }
-
-    let cleanedCode = rawCode
-      .replace(/```(?:jsx?|javascript)?/g, '')
-      .replace(/^\s*[\r\n]+/gm, '')
-      .trim();
-
-    if (!cleanedCode.endsWith('export default App;')) {
-      cleanedCode = `${cleanedCode}\nexport default App;`;
-    }
-
-    res.json({
-      success: true,
-      finalApp: cleanedCode,
-      proxiedAssets,
-      api_usage: {
-        key_id: req.apiKey.keyId,
-        usage_count: req.apiKey.usageCount + 1
-      }
-    });
-
-  } catch (error) {
-    console.error('API Generate React Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'React generation failed',
-      message: error.message
-    });
-  }
-});
-
-// Extract room info via API  
-router.post('/extract-room-info', apiAuth, requirePermission('extract_room_info'), async (req, res) => {
-  try {
-    const { gameCode } = req.body;
-
-    if (!gameCode) {
-      return res.status(400).json({
-        success: false,
-        error: 'Game code is required'
-      });
-    }
-
-    // Use your existing extraction logic
-    const titleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>(.*?)<\/Typography>/i);
-    let name = titleMatch ? titleMatch[1].trim() : '';
-    if (!name || name.length < 3 || name.length > 20) {
-      name = 'Default Game';
-    }
-
-    const ticker = name
-      .split(/\s+/)
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .substring(0, 6) || 'GAME';
-
-    const rulesMatch = gameCode.match(/<Box[^>]*id="game-rules"[^>]*>([\s\S]*?)<\/Box>/i);
-    let rulesText = '';
-    if (rulesMatch && rulesMatch[1]) {
-      const textMatches = rulesMatch[1].match(/<Typography[^>]*>(.*?)<\/Typography>/gi) || [];
-      rulesText = textMatches
-        .map(match => match.match(/<Typography[^>]*>(.*?)<\/Typography>/i)[1])
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-    if (!rulesText) {
-      rulesText = 'Play the game to achieve high multipliers.';
-    }
-
-    const description = rulesText.length > 200 
-      ? rulesText.substring(0, 197) + '...' 
-      : rulesText;
-
-    const themeWords = (name + ' ' + rulesText).toLowerCase();
-    let gameTheme = 'generic game';
-    if (themeWords.includes('dice')) gameTheme = 'dice game';
-    else if (themeWords.includes('card')) gameTheme = 'card game';
-    else if (themeWords.includes('race') || themeWords.includes('speed')) gameTheme = 'racing game';
-    else if (themeWords.includes('puzzle')) gameTheme = 'puzzle game';
-
-    const extractedInfo = {
-      name,
-      ticker,
-      description,
-      gameTheme,
-      confidence: titleMatch && rulesMatch ? 0.95 : 0.7
-    };
-
-    res.json({
-      success: true,
-      ...extractedInfo,
-      api_usage: {
-        key_id: req.apiKey.keyId,
-        usage_count: req.apiKey.usageCount + 1
-      }
-    });
-
-  } catch (error) {
-    console.error('API Extract Room Info Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Extraction failed',
       message: error.message
     });
   }

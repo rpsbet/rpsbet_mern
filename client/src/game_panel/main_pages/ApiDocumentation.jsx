@@ -100,16 +100,20 @@ const ApiDocumentation = () => {
       method: 'POST',
       path: '/api/public-api/create-room',
       title: 'Create Game Room',
-      description: 'Create a new game room with blockchain deposit handling. This endpoint creates a complete game room with SOL deposit processing.',
+      description: 'Create a new game room with optional React code generation and blockchain deposit handling. This unified endpoint can create rooms with existing game code or generate new React components on-the-fly.',
       permissions: ['create_room'],
       parameters: [
         { name: 'bet_amount', type: 'number', required: true, description: 'Bet amount in SOL (minimum 0.001)' },
         { name: 'name', type: 'string', required: true, description: 'Game name (3-20 characters)' },
-        // { name: 'game_type', type: 'number', required: true, description: 'Game type ID (get from /game-types)' },
+        { name: 'game_type', type: 'number', required: true, description: 'Game type ID' },
         { name: 'connectedAccount', type: 'string', required: true, description: 'Solana wallet address' },
         { name: 'image', type: 'string', required: false, description: 'Game image URL' },
         { name: 'ticker', type: 'string', required: false, description: 'Game ticker symbol (auto-generated if not provided)' },
         { name: 'description', type: 'string', required: false, description: 'Game description' },
+        { name: 'gameCode', type: 'string', required: false, description: 'Existing React game code' },
+        { name: 'generateReact', type: 'boolean', required: false, description: 'Generate React code automatically (default: false)' },
+        { name: 'reactPrompt', type: 'string', required: false, description: 'Prompt for React generation (required if generateReact is true)' },
+        { name: 'imageUrls', type: 'array', required: false, description: 'Image URLs for React component' },
         { name: 'is_private', type: 'boolean', required: false, description: 'Private room flag (default: false)' },
         { name: 'privateKey', type: 'string', required: false, description: 'Base58 private key for automated deposit' },
         { name: 'skipDeposit', type: 'boolean', required: false, description: 'Skip deposit for testing (default: false)' }
@@ -122,6 +126,9 @@ const ApiDocumentation = () => {
   "image": "https://example.com/image.jpg",
   "ticker": "EPIC",
   "description": "An epic battle game with multipliers",
+  "generateReact": true,
+  "reactPrompt": "Create a dice rolling game with animated dice and multiplier effects",
+  "imageUrls": ["https://example.com/dice.png"],
   "is_private": false,
   "privateKey": "base58_encoded_private_key_here"
 }`,
@@ -135,13 +142,27 @@ const ApiDocumentation = () => {
     "bet_amount": 0.095,
     "status": "open",
     "game_type": "Rock Paper Scissors",
-    "created_at": "2024-01-15T10:30:00Z"
+    "created_at": "2024-01-15T10:30:00Z",
+    "gameCode": "const App = () => { /* Generated React component */ };"
   },
   "deposit": {
     "success": true,
     "txHash": "5j2k3l4m5n6o7p8q9r0s1t2u3v4w5x6y7z8a9b0c1d2e3f4g5h6i7j8k9l0m1n2o",
     "amount": 0.1,
     "explorerUrl": "https://explorer.solana.com/tx/..."
+  },
+  "reactGeneration": {
+    "success": true,
+    "proxiedAssets": {
+      "images": [{"key": "image0", "proxiedUrl": "https://example.com/dice.png"}],
+      "audio": []
+    }
+  },
+  "extractedInfo": {
+    "name": "Dice Master",
+    "ticker": "DICE", 
+    "description": "A dice-based gaming experience",
+    "confidence": 0.95
   },
   "api_usage": {
     "key_id": "ak_1234567890abcdef",
@@ -177,87 +198,6 @@ const ApiDocumentation = () => {
 }`
     },
     {
-      method: 'POST',
-      path: '/api/public-api/generate-react',
-      title: 'Generate React Game',
-      description: 'Generate complete React game components using Claude AI. Creates fully functional games with proper UI components.',
-      permissions: ['generate_react'],
-      parameters: [
-        { name: 'prompt', type: 'string', required: true, description: 'Detailed game description and requirements' },
-        { name: 'imageUrls', type: 'array', required: false, description: 'Array of image URLs to include in the game' }
-      ],
-      example: `{
-  "prompt": "Create a dice rolling game with animated dice, multiplier effects, and glassmorphic design",
-  "imageUrls": ["https://example.com/dice.png", "https://example.com/background.jpg"]
-}`,
-      response: `{
-  "success": true,
-  "finalApp": "const App = () => { /* Complete React component code */ }; export default App;",
-  "proxiedAssets": {
-    "images": [
-      {"key": "image0", "proxiedUrl": "https://example.com/dice.png"},
-      {"key": "image1", "proxiedUrl": "https://example.com/background.jpg"}
-    ],
-    "audio": []
-  },
-  "api_usage": {
-    "key_id": "ak_1234567890abcdef",
-    "usage_count": 1251
-  }
-}`
-    },
-    {
-      method: 'POST',
-      path: '/api/public-api/extract-room-info',
-      title: 'Extract Game Info',
-      description: 'Extract game metadata from React component code. Analyzes code to determine game name, ticker, and description.',
-      permissions: ['extract_room_info'],
-      parameters: [
-        { name: 'gameCode', type: 'string', required: true, description: 'React component code to analyze' }
-      ],
-      example: `{
-  "gameCode": "const App = () => { return <Typography id=\\"game-title\\">Dice Master</Typography>; };"
-}`,
-      response: `{
-  "success": true,
-  "name": "Dice Master",
-  "ticker": "DICE",
-  "description": "A dice-based gaming experience with multipliers",
-  "gameTheme": "dice game",
-  "confidence": 0.95,
-  "api_usage": {
-    "key_id": "ak_1234567890abcdef",
-    "usage_count": 1252
-  }
-}`
-    },
-//     {
-//       method: 'GET',
-//       path: '/api/public-api/game-types',
-//       title: 'Get Game Types',
-//       description: 'List all available game types with their IDs and descriptions.',
-//       permissions: [],
-//       parameters: [],
-//       example: 'No request body required for GET requests',
-//       response: `{
-//   "success": true,
-//   "gameTypes": [
-//     {
-//       "game_type_id": 1,
-//       "game_type_name": "Rock Paper Scissors",
-//       "short_name": "RPS",
-//       "description": "Classic rock paper scissors game"
-//     },
-//     {
-//       "game_type_id": 2,
-//       "game_type_name": "Dice Battle",
-//       "short_name": "DICE",
-//       "description": "Dice rolling competition game"
-//     }
-//   ]
-// }`
-//     },
-    {
       method: 'GET',
       path: '/api/public-api/info',
       title: 'API Information',
@@ -271,10 +211,8 @@ const ApiDocumentation = () => {
     "name": "Game Creation API",
     "version": "1.0.0",
     "endpoints": {
-      "POST /create-room": "Create a new game room with blockchain deposit",
-      "POST /generate-image": "Generate AI images for games",
-      "POST /generate-react": "Generate React game components",
-      "POST /extract-room-info": "Extract information from game code",
+      "POST /create-room": "Create a new game room with optional React code generation and blockchain deposit",
+      "POST /generate-image": "Generate AI images for games"
     },
     "authentication": "API Key required in X-API-Key header",
     "rateLimit": {
@@ -327,7 +265,7 @@ const ApiDocumentation = () => {
           </Typography>
         </Box>
         <Typography variant="h6" sx={{ color: isDarkMode ? '#e0e0e0' : '#666', mb: 3 }}>
-          Build games, generate content, and create experiences with our powerful API
+          Build games, generate content, and create experiences with our streamlined API
         </Typography>
         
         <Grid container spacing={2}>
@@ -362,8 +300,8 @@ const ApiDocumentation = () => {
             }}>
               <CardContent sx={{ textAlign: 'center' }}>
                 <SpeedIcon sx={{ fontSize: 30, color: '#ff3030', mb: 1 }} />
-                <Typography variant="h6" sx={{ color: isDarkMode ? '#fff' : '#333' }}>Fast</Typography>
-                <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>Low Latency Responses</Typography>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#fff' : '#333' }}>Streamlined</Typography>
+                <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>Unified Endpoints</Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -433,6 +371,20 @@ const ApiDocumentation = () => {
               </Typography>
             </Alert>
 
+            <Alert 
+              severity="success" 
+              sx={{ 
+                mb: 3,
+                bgcolor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)',
+                color: isDarkMode ? '#81c784' : '#2e7d32',
+                border: `1px solid ${isDarkMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(76, 175, 80, 0.2)'}`
+              }}
+            >
+              <Typography variant="body1">
+                <strong>New:</strong> The API has been streamlined! React generation is now integrated into the create-room endpoint, and game type/extract endpoints have been removed for simplicity.
+              </Typography>
+            </Alert>
+
             <Typography variant="h6" gutterBottom sx={{ color: isDarkMode ? '#fff' : '#333', mt: 3 }}>Quick Start Guide</Typography>
             <Box sx={{ mb: 3 }}>
               <Typography variant="body1" paragraph sx={{ color: isDarkMode ? '#e0e0e0' : '#555' }}>
@@ -487,10 +439,8 @@ X-API-Key: ak_1234567890abcdef.your_secret_key_here`}</CodeBlock>
             <Typography variant="h6" gutterBottom sx={{ color: isDarkMode ? '#fff' : '#333', mt: 3 }}>Permissions</Typography>
             <Grid container spacing={2}>
               {[
-                { perm: 'create_room', desc: 'Create new game rooms with SOL deposits and blockchain transactions' },
-                { perm: 'generate_image', desc: 'Generate AI images using DALL-E 3 for game assets and promotional content' },
-                { perm: 'generate_react', desc: 'Generate complete React game components using Claude AI with advanced game logic' },
-                { perm: 'extract_room_info', desc: 'Extract metadata and game information from React component code' }
+                { perm: 'create_room', desc: 'Create new game rooms with SOL deposits, blockchain transactions, and optional React generation' },
+                { perm: 'generate_image', desc: 'Generate AI images using DALL-E 3 for game assets and promotional content' }
               ].map((item) => (
                 <Grid item xs={12} sm={6} key={item.perm}>
                   <Card 
@@ -870,7 +820,7 @@ class CatsinoGameAPI {
     };
   }
 
-  // Create a new game room with SOL deposit
+  // Create a new game room with optional React generation and SOL deposit
   async createRoom(roomData) {
     try {
       const response = await axios.post(\`\${this.baseURL}/create-room\`, roomData, {
@@ -879,7 +829,12 @@ class CatsinoGameAPI {
       
       if (response.data.success) {
         console.log('Room created:', response.data.room);
-        console.log('Deposit transaction:', response.data.deposit);
+        if (response.data.deposit) {
+          console.log('Deposit transaction:', response.data.deposit);
+        }
+        if (response.data.reactGeneration) {
+          console.log('React code generated successfully');
+        }
         return response.data;
       } else {
         throw new Error(response.data.error);
@@ -915,66 +870,32 @@ class CatsinoGameAPI {
     }
   }
 
-  // Generate React game component
-  async generateReactGame(prompt, imageUrls = []) {
-    const data = { prompt, imageUrls };
-
+  // Get API information
+  async getApiInfo() {
     try {
-      const response = await axios.post(\`\${this.baseURL}/generate-react\`, data, {
+      const response = await axios.get(\`\${this.baseURL}/info\`, {
         headers: this.headers
       });
-      
-      return {
-        gameCode: response.data.finalApp,
-        assets: response.data.proxiedAssets
-      };
-    } catch (error) {
-      throw new Error(\`React generation failed: \${error.response?.data?.error || error.message}\`);
-    }
-  }
-
-  // Extract game information from code
-  async extractGameInfo(gameCode) {
-    try {
-      const response = await axios.post(\`\${this.baseURL}/extract-room-info\`, {
-        gameCode
-      }, { headers: this.headers });
       
       return response.data;
     } catch (error) {
-      throw new Error(\`Extraction failed: \${error.response?.data?.error || error.message}\`);
-    }
-  }
-
-  // Get available game types
-  async getGameTypes() {
-    try {
-      const response = await axios.get(\`\${this.baseURL}/game-types\`, {
-        headers: this.headers
-      });
-      
-      return response.data.gameTypes;
-    } catch (error) {
-      throw new Error(\`Failed to get game types: \${error.response?.data?.error || error.message}\`);
+      throw new Error(\`Failed to get API info: \${error.response?.data?.error || error.message}\`);
     }
   }
 }
 
-// Usage example
+// Usage examples
 const api = new CatsinoGameAPI('your_api_key_here');
 
-async function createGameExample() {
+// Example 1: Create room with existing game code
+async function createRoomWithExistingCode() {
   try {
-    // First, get available game types
-    const gameTypes = await api.getGameTypes();
-    console.log('Available game types:', gameTypes);
-
-    // Create a new room
     const roomResult = await api.createRoom({
       bet_amount: 0.1,
       name: 'Epic Battle',
       game_type: 1,
       connectedAccount: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
+      gameCode: 'const App = () => { /* Your existing React code */ }; export default App;',
       description: 'An epic multiplayer battle game',
       is_private: false,
       privateKey: 'your_base58_private_key_for_automated_deposit'
@@ -988,7 +909,61 @@ async function createGameExample() {
   }
 }
 
-createGameExample();`}</CodeBlock>
+// Example 2: Create room with React generation
+async function createRoomWithReactGeneration() {
+  try {
+    // First generate an image
+    const imageUrl = await api.generateImage(
+      'A futuristic dice with neon glow effects and holographic numbers'
+    );
+
+    // Then create room with React generation
+    const roomResult = await api.createRoom({
+      bet_amount: 0.05,
+      name: 'Dice Master',
+      game_type: 1,
+      connectedAccount: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
+      generateReact: true,
+      reactPrompt: 'Create a dice rolling game with animated 3D dice, multiplier effects, and glassmorphic design',
+      imageUrls: [imageUrl],
+      description: 'AI-generated dice game with stunning visuals',
+      skipDeposit: true // For testing
+    });
+
+    console.log('Room created with generated React code:', roomResult.room);
+    console.log('Generated assets:', roomResult.reactGeneration?.proxiedAssets);
+    console.log('Extracted info:', roomResult.extractedInfo);
+
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+// Example 3: Handle deposit requirements
+async function createRoomWithManualDeposit() {
+  try {
+    const roomResult = await api.createRoom({
+      bet_amount: 0.1,
+      name: 'Manual Deposit Game',
+      game_type: 1,
+      connectedAccount: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
+      description: 'Game requiring manual deposit'
+      // No privateKey provided - will require manual deposit
+    });
+
+    if (roomResult.requiresDeposit) {
+      console.log('Manual deposit required:');
+      console.log('Amount:', roomResult.depositInstructions.amount);
+      console.log('To Address:', roomResult.depositInstructions.toAddress);
+      console.log('Instructions:', roomResult.depositInstructions.message);
+    }
+
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+createRoomWithExistingCode();`}</CodeBlock>
               </AccordionDetails>
             </Accordion>
 
@@ -1028,7 +1003,7 @@ class CatsinoGameAPI:
         return response.json()
     
     def create_room(self, room_data: Dict) -> Dict:
-        """Create a new game room with SOL deposit"""
+        """Create a new game room with optional React generation and SOL deposit"""
         response = requests.post(
             f'{self.base_url}/create-room',
             headers=self.headers,
@@ -1039,9 +1014,19 @@ class CatsinoGameAPI:
         
         if result['success']:
             print(f"Room created: {result['room']['name']}")
-            print(f"Transaction hash: {result['deposit']['txHash']}")
+            if 'deposit' in result and result['deposit']['success']:
+                print(f"Transaction hash: {result['deposit']['txHash']}")
+            if 'reactGeneration' in result:
+                print("React code generated successfully")
+            if 'extractedInfo' in result:
+                print(f"Extracted game info: {result['extractedInfo']['name']}")
             return result
         else:
+            if result.get('requiresDeposit'):
+                print("Manual deposit required:")
+                print(f"Amount: {result['depositInstructions']['amount']} SOL")
+                print(f"To: {result['depositInstructions']['toAddress']}")
+                return result
             raise Exception(result['error'])
     
     def generate_image(self, prompt: str, size: str = '1024x1024', quality: str = 'standard') -> str:
@@ -1065,93 +1050,71 @@ class CatsinoGameAPI:
         else:
             raise Exception(result['error'])
     
-    def generate_react_game(self, prompt: str, image_urls: Optional[List[str]] = None) -> Dict:
-        """Generate React game component"""
-        data = {
-            'prompt': prompt,
-            'imageUrls': image_urls or []
-        }
-        
-        response = requests.post(
-            f'{self.base_url}/generate-react',
-            headers=self.headers,
-            json=data
-        )
-        
-        result = self._handle_response(response)
-        
-        if result['success']:
-            return {
-                'game_code': result['finalApp'],
-                'assets': result['proxiedAssets']
-            }
-        else:
-            raise Exception(result['error'])
-    
-    def extract_game_info(self, game_code: str) -> Dict:
-        """Extract game metadata from React code"""
-        data = {'gameCode': game_code}
-        
-        response = requests.post(
-            f'{self.base_url}/extract-room-info',
-            headers=self.headers,
-            json=data
-        )
-        
-        result = self._handle_response(response)
-        
-        if result['success']:
-            return {
-                'name': result['name'],
-                'ticker': result['ticker'],
-                'description': result['description'],
-                'theme': result['gameTheme'],
-                'confidence': result['confidence']
-            }
-        else:
-            raise Exception(result['error'])
-    
-    def get_game_types(self) -> List[Dict]:
-        """Get available game types"""
+    def get_api_info(self) -> Dict:
+        """Get API information"""
         response = requests.get(
-            f'{self.base_url}/game-types',
+            f'{self.base_url}/info',
             headers=self.headers
         )
         
         result = self._handle_response(response)
-        return result['gameTypes']
+        return result
 
-# Usage example
+# Usage examples
 def main():
     api = CatsinoGameAPI('your_api_key_here')
     
     try:
-        # Get game types
-        game_types = api.get_game_types()
-        print("Available game types:")
-        for gt in game_types:
-            print(f"  {gt['game_type_id']}: {gt['game_type_name']}")
+        # Get API info
+        api_info = api.get_api_info()
+        print("API Info:", api_info['api']['name'])
+        print("Available endpoints:", list(api_info['api']['endpoints'].keys()))
         
-        # Generate a game image
+        # Example 1: Generate image first
         image_url = api.generate_image(
-            "A futuristic dice with neon glow effects",
+            "A cyberpunk slot machine with neon lights and digital reels",
             size="1024x1024",
             quality="hd"
         )
         print(f"Generated image: {image_url}")
         
-        # Create a room
+        # Example 2: Create room with React generation
         room_result = api.create_room({
             'bet_amount': 0.05,
-            'name': 'Python Game',
+            'name': 'Cyber Slots',
             'game_type': 1,
             'connectedAccount': '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-            'image': image_url,
-            'description': 'A game created with Python API',
-            'is_private': False
+            'generateReact': True,
+            'reactPrompt': 'Create a slot machine game with 3 reels, win animations, and cyberpunk theme',
+            'imageUrls': [image_url],
+            'description': 'AI-generated cyberpunk slot machine',
+            'skipDeposit': True  # For testing
         })
         
         print(f"Room created successfully: {room_result['room']['room_number']}")
+        if 'extractedInfo' in room_result:
+            print(f"Auto-extracted ticker: {room_result['extractedInfo']['ticker']}")
+        
+        # Example 3: Create room with existing code
+        existing_code_result = api.create_room({
+            'bet_amount': 0.1,
+            'name': 'Custom Game',
+            'game_type': 1,
+            'connectedAccount': '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
+            'gameCode': '''const App = () => {
+                return (
+                    <div>
+                        <Typography id="game-title">My Custom Game</Typography>
+                        <Box id="game-rules">
+                            <Typography>Click to win multipliers!</Typography>
+                        </Box>
+                    </div>
+                );
+            }; export default App;''',
+            'privateKey': 'your_base58_private_key_here'
+        })
+        
+        print(f"Custom game room created: {existing_code_result['room']['id']}")
         
     except Exception as e:
         print(f"Error: {e}")
@@ -1177,12 +1140,7 @@ curl -X GET "${baseUrl}/api/public-api/info" \\
   -H "X-API-Key: your_api_key_here" \\
   -H "Content-Type: application/json"
 
-# Get available game types
-curl -X GET "${baseUrl}/api/public-api/game-types" \\
-  -H "X-API-Key: your_api_key_here" \\
-  -H "Content-Type: application/json"
-
-# Create a game room with automated deposit
+# Create a game room with automated deposit and existing code
 curl -X POST "${baseUrl}/api/public-api/create-room" \\
   -H "X-API-Key: your_api_key_here" \\
   -H "Content-Type: application/json" \\
@@ -1191,9 +1149,25 @@ curl -X POST "${baseUrl}/api/public-api/create-room" \\
     "name": "cURL Game",
     "game_type": 1,
     "connectedAccount": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+    "gameCode": "const App = () => { return <div>My Game</div>; }; export default App;",
     "description": "Game created via cURL",
     "privateKey": "your_base58_private_key_here",
     "is_private": false
+  }'
+
+# Create room with React generation
+curl -X POST "${baseUrl}/api/public-api/create-room" \\
+  -H "X-API-Key: your_api_key_here" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "bet_amount": 0.05,
+    "name": "AI Game",
+    "game_type": 1,
+    "connectedAccount": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+    "generateReact": true,
+    "reactPrompt": "Create a memory card matching game with flip animations",
+    "imageUrls": ["https://example.com/card-back.png"],
+    "skipDeposit": true
   }'
 
 # Generate an AI image
@@ -1206,24 +1180,19 @@ curl -X POST "${baseUrl}/api/public-api/generate-image" \\
     "quality": "hd"
   }'
 
-# Generate a React game component
-curl -X POST "${baseUrl}/api/public-api/generate-react" \\
+# Create room without deposit (manual deposit required)
+curl -X POST "${baseUrl}/api/public-api/create-room" \\
   -H "X-API-Key: your_api_key_here" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "prompt": "Create a slot machine game with 3 reels and win animations",
-    "imageUrls": ["https://example.com/cherry.png", "https://example.com/bell.png"]
+    "bet_amount": 0.1,
+    "name": "Manual Deposit",
+    "game_type": 1,
+    "connectedAccount": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+    "description": "Requires manual deposit"
   }'
 
-# Extract game information from code
-curl -X POST "${baseUrl}/api/public-api/extract-room-info" \\
-  -H "X-API-Key: your_api_key_here" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "gameCode": "const App = () => { return <Typography id=\"game-title\">Mega Slots</Typography>; };"
-  }'
-
-# Handle rate limiting with retry
+# Handle rate limiting with retry logic
 curl -X POST "${baseUrl}/api/public-api/create-room" \\
   -H "X-API-Key: your_api_key_here" \\
   -H "Content-Type: application/json" \\
@@ -1232,7 +1201,8 @@ curl -X POST "${baseUrl}/api/public-api/create-room" \\
     "bet_amount": 0.05,
     "name": "Test Room",
     "game_type": 1,
-    "connectedAccount": "wallet_address_here"
+    "connectedAccount": "wallet_address_here",
+    "skipDeposit": true
   }'`}</CodeBlock>
               </AccordionDetails>
             </Accordion>
@@ -1253,8 +1223,9 @@ curl -X POST "${baseUrl}/api/public-api/create-room" \\
                       • Store API keys securely (environment variables)<br/>
                       • Implement proper error handling and retries<br/>
                       • Monitor rate limits in response headers<br/>
-                      • Use webhooks for real-time game events<br/>
-                      • Validate all user inputs before API calls
+                      • Use React generation for rapid prototyping<br/>
+                      • Validate all user inputs before API calls<br/>
+                      • Consider skipDeposit for testing workflows
                     </Typography>
                   </CardContent>
                 </Card>
@@ -1267,14 +1238,14 @@ curl -X POST "${baseUrl}/api/public-api/create-room" \\
                 }}>
                   <CardContent>
                     <Typography variant="h6" sx={{ color: isDarkMode ? '#2196f3' : '#1976d2', mb: 2 }}>
-                      Security Notes
+                      New Features
                     </Typography>
                     <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                      • Never expose API keys in frontend code<br/>
-                      • Use HTTPS for all API requests<br/>
-                      • Implement IP whitelisting when possible<br/>
-                      • Rotate API keys regularly<br/>
-                      • Monitor usage patterns for anomalies
+                      • Unified create-room endpoint with React generation<br/>
+                      • Automatic game info extraction from generated code<br/>
+                      • Streamlined API with fewer endpoints<br/>
+                      • Enhanced error handling and responses<br/>
+                      • Support for both existing and generated game code
                     </Typography>
                   </CardContent>
                 </Card>

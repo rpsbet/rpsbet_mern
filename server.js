@@ -161,8 +161,8 @@ app.use('/api/statistics', statisticsRoutes);
 app.use('/api/settings', systemSettingRoutes);
 
 // New API routes
-app.use('/api/keys', apiKeyRoutes); // Protected by user auth - for managing API keys
-app.use('/api/v1', publicApiRoutes); // Protected by API key auth - for external access
+app.use('/api/api-keys', apiKeyRoutes); // Protected by user auth - for managing API keys
+app.use('/api/public-api', publicApiRoutes); // Protected by API key auth - for external access
 
 // Health check endpoint for API monitoring
 app.get('/health', (req, res) => {
@@ -174,43 +174,80 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API documentation endpoint
+// Updated API documentation endpoint
 app.get('/api/docs', (req, res) => {
   res.json({
     name: 'Game Creation API',
     version: '1.0.0',
-    description: 'API for creating games and rooms programmatically',
+    description: 'Streamlined API for creating games and rooms programmatically',
     documentation: {
       authentication: 'API Key required in X-API-Key header',
       endpoints: {
-        'GET /api/v1/info': 'API information',
-        'GET /api/v1/game-types': 'List available game types',
-        'POST /api/v1/create-room': 'Create a new game room',
-        'POST /api/v1/generate-image': 'Generate AI images',
-        'POST /api/v1/generate-react': 'Generate React components',
-        'POST /api/v1/extract-room-info': 'Extract game information'
+        'GET /api/public-api/info': 'API information',
+        'POST /api/public-api/create-room': 'Create a new game room with optional React generation',
+        'POST /api/public-api/generate-image': 'Generate AI images using DALL-E 3'
       },
       rateLimit: '100 requests/hour, 1000 requests/day (configurable per key)',
-      support: 'https://catsino.fun/api-support'
+      support: 'https://catsino.fun/support',
+      changes: {
+        'v1.0.0': 'Streamlined API - React generation now integrated into create-room endpoint'
+      }
     },
     examples: {
       headers: {
         'X-API-Key': 'your_api_key_here',
         'Content-Type': 'application/json'
       },
-      createRoom: {
-        url: '/api/v1/create-room',
+      createRoomBasic: {
+        url: '/api/public-api/create-room',
         method: 'POST',
+        description: 'Create room with existing game code',
         body: {
           bet_amount: 0.01,
           name: 'My Game',
           game_type: 1,
           connectedAccount: 'your_wallet_address',
+          gameCode: 'const App = () => { /* your React code */ }; export default App;',
           description: 'An exciting new game'
+        }
+      },
+      createRoomWithGeneration: {
+        url: '/api/public-api/create-room',
+        method: 'POST',
+        description: 'Create room with automatic React generation',
+        body: {
+          bet_amount: 0.01,
+          name: 'AI Generated Game',
+          game_type: 1,
+          connectedAccount: 'your_wallet_address',
+          generateReact: true,
+          reactPrompt: 'Create a dice rolling game with animated dice and multiplier effects',
+          imageUrls: ['https://example.com/dice.png'],
+          description: 'An AI-generated game'
+        }
+      },
+      generateImage: {
+        url: '/api/public-api/generate-image',
+        method: 'POST',
+        description: 'Generate AI image for game assets',
+        body: {
+          prompt: 'A futuristic gaming interface with neon lights',
+          size: '1024x1024',
+          quality: 'hd'
         }
       }
     }
   });
+});
+
+// API documentation web page redirect
+app.get('/docs', (req, res) => {
+  // Redirect to your frontend documentation page
+  if (process.env.NODE_ENV === 'production') {
+    res.redirect('/#/api-docs'); // Assuming you have a docs page in your React app
+  } else {
+    res.redirect('http://localhost:3000/#/api-docs');
+  }
 });
 
 // -------------------- Static Files --------------------
@@ -234,6 +271,7 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({
       success: false,
       error: err.message || 'Internal server error',
+      timestamp: new Date().toISOString(),
       ...(isDevelopment && { stack: err.stack })
     });
   } else {
@@ -251,10 +289,13 @@ app.use('/api/*', (req, res) => {
     method: req.method,
     available_endpoints: [
       'GET /api/docs',
-      'GET /api/v1/info',
-      'POST /api/v1/create-room',
+      'GET /api/public-api/info',
+      'POST /api/public-api/create-room',
+      'POST /api/public-api/generate-image',
       'GET /health'
-    ]
+    ],
+    documentation: '/api/docs',
+    timestamp: new Date().toISOString()
   });
 });
 
