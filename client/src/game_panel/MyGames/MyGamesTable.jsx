@@ -102,7 +102,7 @@ function MyGamesTable() {
     my_games_loading: state.logic.my_games_loading,
     socket: state.auth.socket,
     balance: state.auth.balance,
-    connectedAccount: state.auth.connectedAccount,
+    connectedAccount: state.auth.walletAddress,
     user: state.auth.user,
     strategies: state.logic.strategies,
     solPrice: state.logic.solPrice,
@@ -458,7 +458,6 @@ function MyGamesTable() {
         onClose={() => setSettingsPanelOpened(false)}
         user_id={user?._id}
         user_credits={user.credits}
-        user_balance={balance}
         creator_prompt={user?.prompt}
       />
     ) : null;

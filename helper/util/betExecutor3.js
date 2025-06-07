@@ -647,7 +647,7 @@ const addToQueue = async (req, bot = false) => {
       user.gameProfit += newTransactionAmount;
       user.totalWagered += Math.abs(bet_item.bet_amount);
 
-      // Handle Solana transactions for winnings
+console.log(`User winning`, newTransactionAmount, req.body.connectedAccount);
       if (newTransactionAmount > 0 && req.body.connectedAccount) {
         // Validate deposit transaction (check both pending and completed)
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
@@ -677,7 +677,7 @@ const addToQueue = async (req, bot = false) => {
         } catch (error) {
           throw new Error('Invalid Solana wallet address');
         }
-
+console.log(`Processing winnings for user ${user._id} in room ${req.body._id} with amount ${newTransactionAmount}`);
         // Create a pending GameTransaction for the winnings
         const newGameTransaction = new GameTransaction({
           user: user._id,

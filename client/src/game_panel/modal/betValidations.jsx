@@ -41,6 +41,7 @@ export const validateBetAmount = (bet_amount, balance, dispatch) => {
   }
   
   if (bet_amount > balance) {
+    console.log("bet_amount > balance", bet_amount, balance)
     dispatch(errorMsgBar(`NOT ENUFF FUNDS AT THIS MEOWMENT`));
     return false;
   }

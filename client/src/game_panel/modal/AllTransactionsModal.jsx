@@ -227,42 +227,42 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
         <TableCell sx={{ 
           color: isDarkMode ? '#ccc' : '#666', 
           fontWeight: 600,
-          backgroundColor: 'transparent'
+          backgroundColor: '#222222'
         }}>
           AMOUNT
         </TableCell>
         <TableCell sx={{ 
           color: isDarkMode ? '#ccc' : '#666', 
           fontWeight: 600,
-          backgroundColor: 'transparent'
+          backgroundColor: '#222222'
         }}>
           TIME
         </TableCell>
         <TableCell sx={{ 
           color: isDarkMode ? '#ccc' : '#666', 
           fontWeight: 600,
-          backgroundColor: 'transparent'
+          backgroundColor: '#222222'
         }}>
           DESCRIPTION
         </TableCell>
         <TableCell sx={{ 
           color: isDarkMode ? '#ccc' : '#666', 
           fontWeight: 600,
-          backgroundColor: 'transparent'
+          backgroundColor: '#222222'
         }}>
           STATUS
         </TableCell>
         <TableCell sx={{ 
           color: isDarkMode ? '#ccc' : '#666', 
           fontWeight: 600,
-          backgroundColor: 'transparent'
+          backgroundColor: '#222222'
         }}>
           TRANSACTION
         </TableCell>
         <TableCell sx={{ 
           color: isDarkMode ? '#ccc' : '#666', 
           fontWeight: 600,
-          backgroundColor: 'transparent'
+          backgroundColor: '#222222'
         }}>
           ACTION
         </TableCell>

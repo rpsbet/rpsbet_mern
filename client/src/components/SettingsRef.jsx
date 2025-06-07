@@ -136,14 +136,15 @@ const SettingsRef = ({
   rank,
   user_id,
   user_credits,
-  user_balance,
   prompt,
   onChangeState,
   gameCode: initialGameCode,
   rowName,
   setGameCode,
   settings_panel_opened,
-  settingsRef,
+  ticker,
+  image,
+  description,
   my_games = false,
   updateUserPrompt,
   onClose,
@@ -340,12 +341,6 @@ const SettingsRef = ({
     }
   }, [creator_prompt, hasGenerated, gameLoading, saving, initialGameCode, initialProxiedAssets]);
 
-  // useEffect(() => {
-  //   if (showChat && (chatMessages.length > 0 || processingMessage) && chatEndRef.current) {
-  //     chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  //   }
-  // }, [chatMessages, processingMessage, showChat]);
-
   useEffect(() => {
     if (initialGameCode && Physics && !isPhysicsLoading) {
       let isMounted = true;
@@ -461,7 +456,7 @@ const SettingsRef = ({
             'Snackbar', 'Alert', 'DialogContentText', 'DialogActions', 'Zoom', 'Grow',
             'faInfoCircle', 'faChevronUp', 'faVolumeUp', 'faVolumeMute', 'faCog', 'faExclamationTriangle',
             'faCheck', 'faTimes', 'faHistory', 'faChartLine', 'faWallet', 'faShieldAlt', 'faHeart', 'faSkull', 'faClock', 'faBolt', 'faMoneyBillWave',
-            'initialProxiedAssets', 'faQuestionCircle', 'Modal',
+            'initialProxiedAssets', 'faQuestionCircle',
             `
               return function App(props) {
                 ${transpiledCode}
@@ -477,10 +472,10 @@ const SettingsRef = ({
             faDice, faCoins, faRocket, faChevronDown, faGem, faSpinner, faCogs, faExchangeAlt, faTrophy, faArrowUp, faArrowDown,
             faRedo, faBomb, faStar, faPlay, faHome, Physics, Card, CardContent, CardActions, TableContainer, Table, TableBody, TableHead, TableCell, TableRow,
             Tooltip, motion, styled, AnimatePresence, IconButton, Container, Badge,
-            Snackbar, Alert, DialogContentText, DialogActions, Zoom, Grow,
+            Snackbar, Alert, DialogContentText, DialogActions, Zoom, Grow, // Removed useMediaQuery
             faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle,
             faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull, faClock, faBolt, faMoneyBillWave,
-            initialProxiedAssets, faQuestionCircle, Modal,
+            initialProxiedAssets, faQuestionCircle,
           );
   
           if (typeof GeneratedApp === 'function') {
@@ -659,7 +654,6 @@ const SettingsRef = ({
           user_id,
           localCredits,
           localPrompt,
-          user_balance,
           setGameCode,
           setProxiedAssets,
           onChangeState,
@@ -676,11 +670,14 @@ const SettingsRef = ({
       setLocalCredits(prev => prev - modelCost);
       addAIMessage('Game generated successfully! What would you like to modify or improve?');
       setLocalPrompt('');
-      setHasGenerated(true); // Set after auto-population to avoid blocking
+      setHasGenerated(true);
   
-      // Trigger auto-populate after successful generation
+      // Trigger auto-populate ONLY if we successfully generated a game
       if (response.payload?.finalApp) {
-        await triggerAutopopulate(response.payload.finalApp);
+        console.log('[SettingsRef] Triggering auto-populate for generated game');
+        setTimeout(async () => {
+          await triggerAutopopulate(response.payload.finalApp);
+        }, 1000); // Small delay to ensure game code is processed
       }
     } catch (error) {
       setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
@@ -699,19 +696,24 @@ const SettingsRef = ({
   };
 
   const triggerAutopopulate = async (generatedGameCode, force = false) => {
-    const currentName = rowName || '';
-    const currentTicker = ticker || '';
-    const currentImage = image || '';
-    const currentDescription = description || '';
-  
-    // Only check conditions if not forcing auto-population
-    if (!force && (currentName.trim() || currentTicker.trim() || currentImage.trim() || currentDescription.trim())) {
-      console.log('[SettingsRef] Skipping auto-populate: Room info already populated');
-      return;
-    }
+    // Check if fields are already populated (unless forcing)
+    // if (!force) {
+    //   const hasName = rowName && rowName.trim();
+    //   const hasTicker = ticker && ticker.trim();
+    //   const hasImage = image && image.trim();
+    //   const hasDescription = description && description.trim();
+      
+    //   if (hasName || hasTicker || hasImage || hasDescription) {
+    //     console.log('[SettingsRef] Skipping auto-populate: Fields already populated');
+    //     return;
+    //   }
+    // }
   
     setIsAutopopulating(true);
+    
     try {
+      console.log('[SettingsRef] Starting auto-population...');
+      
       const extractedInfo = await autopopulateRoomInfo(
         generatedGameCode,
         onChangeState,
@@ -719,8 +721,11 @@ const SettingsRef = ({
       );
   
       if (extractedInfo) {
-        console.log('[SettingsRef] Auto-populated room info successfully');
-        addAIMessage(`I've auto-populated the room info: "${extractedInfo.name}" ($${extractedInfo.ticker}). Feel free to modify these suggestions!`);
+        console.log('[SettingsRef] Auto-populated successfully:', extractedInfo);
+        const imageText = extractedInfo.imageUrl ? ' with generated image' : '';
+        addAIMessage(`I've auto-populated the room info: "${extractedInfo.name}" ($${extractedInfo.ticker})${imageText}. Feel free to modify these suggestions!`);
+      } else {
+        console.log('[SettingsRef] Auto-populate returned no results');
       }
     } catch (error) {
       console.error('[SettingsRef] Auto-populate failed:', error);
@@ -1051,7 +1056,7 @@ const SettingsRef = ({
           {/* Suggested Prompts */}
           {isLoadingSuggestions ? (
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
-              <CircularProgress size={20} sx={{ mr: 1, color: '#ff4081' }} />
+              <CircularProgress size={20} sx={{ mr: 1 }} color='error' />
               <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
                 Generating Suggested Prompts...
               </Typography>
@@ -1084,21 +1089,7 @@ const SettingsRef = ({
             </Box>
           ) : null}
 
-          {isAutopopulating && (
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              mb: 2,
-              ...glassmorphismStyle,
-              p: 2,
-              borderRadius: 2
-            }}>
-              <CircularProgress size={20} sx={{ mr: 1, color: '#ff4081' }} />
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
-                Auto-populating room information...
-              </Typography>
-            </Box>
-          )}
+         
           {/* Chat Interface */}
           {showChat && (
             <Box
@@ -1425,6 +1416,21 @@ const SettingsRef = ({
             >
               <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                 No game generated yet. Enter a prompt and click Generate.
+              </Typography>
+            </Box>
+          )}
+           {isAutopopulating && (
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              mb: 2,
+              ...glassmorphismStyle,
+              p: 2,
+              borderRadius: 2
+            }}>
+              <CircularProgress size={20} sx={{ mr: 1 }} color='error' />
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
+                Auto-populating room information...
               </Typography>
             </Box>
           )}

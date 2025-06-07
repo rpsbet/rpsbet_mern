@@ -219,20 +219,19 @@ function TabbedContent(props) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
     >
       <Card
         sx={{
           ...glassmorphismStyle,
-          p: isMobile ? 2 : 2.5,
-          mt: isMobile ? 3 : 0,
-          borderRadius: '20px',
+          p: isMobile ? 1.5 : 2,
+          mt: isMobile ? 2 : 0,
+          borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
-          minWidth: isMobile ? '100%' : '280px',
-         
-          transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+          gap: 1.5,
+          minWidth: isMobile ? '100%' : '240px',
+          transition: 'all 0.2s ease',
           width: isMobile ? '100%' : 'auto',
           position: 'relative',
           overflow: 'hidden',
@@ -243,7 +242,7 @@ function TabbedContent(props) {
             left: is_betting ? '-100%' : '100%',
             width: '100%',
             height: '100%',
-            transition: 'left 2s ease-in-out',
+            transition: 'left 1.5s ease-in-out',
             ...(is_betting && { left: '100%' }),
           },
         }}
@@ -252,11 +251,12 @@ function TabbedContent(props) {
           <Chip
             label={
               <Typography
-                variant={isMobile ? 'body2' : 'body1'}
+                variant={isMobile ? 'caption' : 'body2'}
                 sx={{ 
                   color: '#fff', 
                   fontWeight: 600,
-                  letterSpacing: '0.3px',
+                  letterSpacing: '0.2px',
+                  fontSize: isMobile ? '0.75rem' : '0.85rem',
                 }}
               >
                 {result}
@@ -265,20 +265,19 @@ function TabbedContent(props) {
             sx={{
               bgcolor: 'rgba(76, 175, 80, 0.8)',
               color: '#fff',
-              borderRadius: '16px',
+              borderRadius: '10px',
               flexGrow: 1,
-              height: isMobile ? 36 : 40,
+              height: isMobile ? 28 : 32,
               border: '1px solid rgba(76, 175, 80, 0.3)',
-              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
+              boxShadow: '0 2px 8px rgba(76, 175, 80, 0.25)',
               '& .MuiChip-label': { 
-                px: 2,
-                fontSize: isMobile ? '0.85rem' : '0.95rem',
+                px: 1.5,
               },
             }}
           />
         ) : is_betting ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
-            <Box sx={{ width: isMobile ? '44px' : '52px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
+            <Box sx={{ width: isMobile ? '32px' : '36px' }}>
               <Lottie
                 options={{
                   loop: isLowGraphics ? false : true,
@@ -289,21 +288,22 @@ function TabbedContent(props) {
             </Box>
             <Box>
               <Typography
-                variant={isMobile ? 'body2' : 'body1'}
+                variant="caption"
                 sx={{
                   color: '#fff',
                   fontWeight: 600,
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                  fontSize: isMobile ? '0.9rem' : '1rem',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                  fontSize: isMobile ? '0.75rem' : '0.8rem',
                 }}
               >
-                Processing Bet...
+                Processing...
               </Typography>
               <Typography
                 variant="caption"
                 sx={{
                   color: 'rgba(255, 255, 255, 0.7)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.65rem',
+                  display: 'block',
                 }}
               >
                 Please wait
@@ -313,12 +313,12 @@ function TabbedContent(props) {
         ) : (
           <Box sx={{ flexGrow: 1, textAlign: 'center' }}>
             <Typography
-              variant={isMobile ? 'body2' : 'body1'}
+              variant="caption"
               sx={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 fontWeight: 500,
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-                fontSize: isMobile ? '0.9rem' : '1rem',
+                fontSize: isMobile ? '0.75rem' : '0.8rem',
               }}
             >
               Ready to Play
@@ -327,7 +327,8 @@ function TabbedContent(props) {
               variant="caption"
               sx={{
                 color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.75rem',
+                fontSize: '0.65rem',
+                display: 'block',
               }}
             >
               Place your bet
@@ -346,8 +347,8 @@ function TabbedContent(props) {
                   icon={faBolt} 
                   style={{ 
                     color: '#ffd700', 
-                    fontSize: '10px',
-                    filter: 'drop-shadow(0 0 4px rgba(255, 215, 0, 0.6))',
+                    fontSize: '8px',
+                    filter: 'drop-shadow(0 0 3px rgba(255, 215, 0, 0.6))',
                   }} 
                 />
               </motion.div>
@@ -355,33 +356,33 @@ function TabbedContent(props) {
           }
           sx={{
             '& .MuiBadge-badge': {
-              right: -6,
-              top: 6,
+              right: -4,
+              top: 4,
               bgcolor: 'rgba(0, 0, 0, 0.7)',
               border: '1px solid rgba(255, 215, 0, 0.5)',
               borderRadius: '50%',
-              p: 0.5,
-              minWidth: 20,
-              height: 20,
+              p: 0.3,
+              minWidth: 16,
+              height: 16,
             },
           }}
         >
           <Avatar
             sx={{
-              width: isMobile ? 36 : 40,
-              height: isMobile ? 36 : 40,
+              width: isMobile ? 28 : 32,
+              height: isMobile ? 28 : 32,
               bgcolor: is_betting ? '#2196f3' : '#666',
-              transition: 'all 0.3s ease',
-              border: `2px solid ${is_betting ? 'rgba(33, 150, 243, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+              transition: 'all 0.2s ease',
+              border: `1px solid ${is_betting ? 'rgba(33, 150, 243, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
               boxShadow: is_betting 
-                ? '0 0 20px rgba(33, 150, 243, 0.4)' 
-                : '0 4px 8px rgba(0, 0, 0, 0.2)',
+                ? '0 0 12px rgba(33, 150, 243, 0.3)' 
+                : '0 2px 6px rgba(0, 0, 0, 0.2)',
             }}
           >
             <FontAwesomeIcon
               icon={is_betting ? faDice : faClock}
               style={{ 
-                fontSize: isMobile ? '16px' : '18px', 
+                fontSize: isMobile ? '12px' : '14px', 
                 color: '#fff',
                 filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))',
               }}
@@ -497,7 +498,6 @@ function TabbedContent(props) {
                 selectedRow={roomInfo}
                 balance={balance}
                 user={user}
-                account={account}
                 togglePopup={togglePopup}
                 handleClose={handleCloseCoHostModal}
                 handleSendCoHost={handleSendCoHost}
@@ -675,17 +675,17 @@ function TabbedContent(props) {
       <Card
         sx={{
           ...glassmorphismStyle,
-          borderRadius: '24px',
-          p: 3,
-          mb: 3,
+          borderRadius: '18px',
+          p: 2.5,
+          mb: 2.5,
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: 1.75,
           flexWrap: 'wrap',
           border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', flex: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1.75, flexWrap: 'wrap', flex: 1 }}>
           {tabConfig.map((tab, index) => {
             const isActive = activeTabs.includes(index);
             return (
@@ -696,11 +696,11 @@ function TabbedContent(props) {
               >
                 <Chip
                   label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.875 }}>
                       <FontAwesomeIcon 
                         icon={tab.icon} 
                         style={{ 
-                          fontSize: '14px',
+                          fontSize: '13px',
                           color: isActive ? '#fff' : tab.color,
                         }} 
                       />
@@ -708,7 +708,8 @@ function TabbedContent(props) {
                         variant="body2"
                         sx={{
                           fontWeight: 600,
-                          letterSpacing: '0.3px',
+                          letterSpacing: '0.25px',
+                          fontSize: '0.85rem',
                         }}
                       >
                         {tab.label}
@@ -719,25 +720,24 @@ function TabbedContent(props) {
                   clickable
                   variant={isActive ? 'filled' : 'outlined'}
                   sx={{
-                    height: 44,
-                    borderRadius: '16px',
+                    height: 40,
+                    borderRadius: '14px',
                     backgroundColor: isActive ? tab.color : 'transparent',
                     borderColor: tab.color,
                     color: isActive ? '#fff' : tab.color,
                     fontWeight: 600,
-                    fontSize: '0.9rem',
-                    border: `2px solid ${tab.color}`,
+                    border: `1.5px solid ${tab.color}`,
                     transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
                     boxShadow: isActive 
-                      ? `0 8px 20px ${tab.color}40` 
-                      : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      ? `0 4px 12px ${tab.color}40` 
+                      : '0 1px 4px rgba(0, 0, 0, 0.1)',
                     '&:hover': {
                       backgroundColor: isActive ? tab.color : `${tab.color}20`,
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 12px 24px ${tab.color}50`,
+                      transform: 'translateY(-1px)',
+                      boxShadow: `0 6px 16px ${tab.color}50`,
                     },
                     '& .MuiChip-label': {
-                      px: 2,
+                      px: 1.75,
                     },
                   }}
                 />
@@ -745,13 +745,13 @@ function TabbedContent(props) {
             );
           })}
         </Box>
-
+  
         {/* Result Display for Desktop */}
         <Box sx={{ ml: 'auto' }}>
           {renderResultDisplay()}
         </Box>
       </Card>
-
+  
       {/* Tab Content */}
       <AnimatePresence>
         {activeTabs.map((tabIndex) => (

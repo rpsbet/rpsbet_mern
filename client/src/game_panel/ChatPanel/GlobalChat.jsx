@@ -341,7 +341,7 @@ const ChatMessageItem = React.memo(({
             >
               {isPending ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={16} sx={{ color: '#ff4757' }} />
+                  <CircularProgress size={16} color='error'/>
                   <Typography variant="caption" sx={{ 
                     opacity: 0.7,
                     fontStyle: 'italic',

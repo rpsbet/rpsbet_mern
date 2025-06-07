@@ -201,7 +201,7 @@ function AdvancedSettings(props) {
         )}
 
         {/* Payout Section */}
-        <Box
+        {/* <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -311,7 +311,7 @@ function AdvancedSettings(props) {
               },
             }}
           />
-        )}
+        )} */}
 
         {/* Other Information Section */}
         <Box

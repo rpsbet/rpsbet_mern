@@ -659,12 +659,12 @@ const PreSummaryPanel = React.memo((props) => {
                 }}
               >
                 <Avatar
-                  src={creator_avatar}
+                  src={roomInfo.hosts[0]?.avatar || creator_avatar}
                   user_id={creator_id}
                   username={username}
-                  rank={rank}
+                  rank={roomInfo.hosts[0]?.rank}
                   accessory={accessory}
-                  elite={elite}
+                  elite={roomInfo.hosts[0]?.elite}
                   alt=""
                   darkMode={isDarkMode}
                   sx={{

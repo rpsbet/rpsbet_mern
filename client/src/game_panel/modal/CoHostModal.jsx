@@ -33,7 +33,7 @@ import { debounce } from 'lodash';
 import { ThemeProvider } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createChart } from 'lightweight-charts';
-import Summary from '../CreateGame/Summary';
+import { PublicKey } from '@solana/web3.js';
 import { getCustomTheme } from '../../config/theme';
 import {
   getTransactionCandles,
@@ -59,7 +59,6 @@ function CoHostModal({
   solPrice,
   input_only,
   handleCoHostAmountChange,
-  account
 }) {
   const dispatch = useDispatch();
   const socket = useSelector((state) => state.auth.socket);
@@ -67,7 +66,7 @@ function CoHostModal({
 
   const storeCandles = useSelector((state) => state.logic.candles);
   const transactions = useSelector((state) => state.logic.transactions);
-
+  const account = useSelector(state => state.auth.account);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedTab, setSelectedTab] = useState('PUMP');
@@ -420,6 +419,7 @@ function CoHostModal({
   };
 
   const handleSendCoHostWithDeposit = useCallback(
+
     async () => {
       if (isProcessing || trade_loading) {
         dispatch(errorMsgBar('Trade is already in progress.'));
@@ -434,7 +434,9 @@ function CoHostModal({
 
       setIsProcessing(true);
 
+
       try {
+        console.log('handleSendCoHostWithDeposit called with account:', account);
         // Call sendSolDeposit for non-Custom games
         const depositResult = await sendSolDeposit(
           dispatch,
@@ -853,196 +855,196 @@ function CoHostModal({
               gap: 3,
             }}
           >
-              {/* Trade Type Selection */}
-              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <Button
-                  onClick={() => setSelectedTab('PUMP')}
-                  variant={selectedTab === 'PUMP' ? 'contained' : 'outlined'}
-                  color="success"
-                  sx={{
-                    flex: 1,
-                    height: 56,
-                    borderRadius: '16px',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    border: selectedTab !== 'PUMP' ? '2px solid #4caf50' : 'none',
-                    backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : 'transparent',
-                    color: selectedTab === 'PUMP' ? '#ffffff' : '#4caf50',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: selectedTab === 'PUMP' ? '#45a049' : 'rgba(76, 175, 80, 0.1)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 20px rgba(76, 175, 80, 0.3)',
-                    },
-                  }}
-                >
-                  <TrendingUpOutlined sx={{ mr: 1, fontSize: 20 }} />
-                  Pump
-                </Button>
-                <Button
-                  onClick={() => setSelectedTab('JEET')}
-                  variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
-                  color="error"
-                  sx={{
-                    flex: 1,
-                    height: 56,
-                    borderRadius: '16px',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    border: selectedTab !== 'JEET' ? '2px solid #f44336' : 'none',
-                    backgroundColor: selectedTab === 'JEET' ? '#f44336' : 'transparent',
-                    color: selectedTab === 'JEET' ? '#ffffff' : '#f44336',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: selectedTab === 'JEET' ? '#e53935' : 'rgba(244, 67, 54, 0.1)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 20px rgba(244, 67, 54, 0.3)',
-                    },
-                  }}
-                >
-                  <TrendingDownOutlined sx={{ mr: 1, fontSize: 20 }} />
-                  Jeet
-                </Button>
+            {/* Trade Type Selection */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <Button
+                onClick={() => setSelectedTab('PUMP')}
+                variant={selectedTab === 'PUMP' ? 'contained' : 'outlined'}
+                color="success"
+                sx={{
+                  flex: 1,
+                  height: 56,
+                  borderRadius: '16px',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  border: selectedTab !== 'PUMP' ? '2px solid #4caf50' : 'none',
+                  backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : 'transparent',
+                  color: selectedTab === 'PUMP' ? '#ffffff' : '#4caf50',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: selectedTab === 'PUMP' ? '#45a049' : 'rgba(76, 175, 80, 0.1)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 20px rgba(76, 175, 80, 0.3)',
+                  },
+                }}
+              >
+                <TrendingUpOutlined sx={{ mr: 1, fontSize: 20 }} />
+                Pump
+              </Button>
+              <Button
+                onClick={() => setSelectedTab('JEET')}
+                variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
+                color="error"
+                sx={{
+                  flex: 1,
+                  height: 56,
+                  borderRadius: '16px',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  border: selectedTab !== 'JEET' ? '2px solid #f44336' : 'none',
+                  backgroundColor: selectedTab === 'JEET' ? '#f44336' : 'transparent',
+                  color: selectedTab === 'JEET' ? '#ffffff' : '#f44336',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: selectedTab === 'JEET' ? '#e53935' : 'rgba(244, 67, 54, 0.1)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 20px rgba(244, 67, 54, 0.3)',
+                  },
+                }}
+              >
+                <TrendingDownOutlined sx={{ mr: 1, fontSize: 20 }} />
+                Jeet
+              </Button>
+            </Box>
+
+            {/* Amount Input Section */}
+            <Box>
+              <Typography
+                variant="body1"
+                sx={{
+                  mb: 2,
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  fontSize: '1rem',
+                }}
+              >
+                {selectedTab === 'PUMP' ? 'Amount to invest' : 'Amount to withdraw'}
+              </Typography>
+
+              {/* Quick Amount Buttons */}
+              <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+                {[0.01, 0.1, 1].map((amt) => (
+                  <Button
+                    key={amt}
+                    variant="outlined"
+                    onClick={() => handleButtonClick(amt)}
+                    sx={{
+                      flex: 1,
+                      height: 44,
+                      borderRadius: '12px',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      border: `2px solid ${selectedTab === 'PUMP' ? '#4caf50' : '#f44336'}`,
+                      color: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                      backgroundColor: 'transparent',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: selectedTab === 'PUMP'
+                          ? 'rgba(76, 175, 80, 0.1)'
+                          : 'rgba(244, 67, 54, 0.1)',
+                        transform: 'scale(1.02)',
+                      },
+                    }}
+                  >
+                    {amt}
+                  </Button>
+                ))}
               </Box>
 
-              {/* Amount Input Section */}
-              <Box>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mb: 2,
-                    fontWeight: 600,
-                    color: 'text.primary',
-                    fontSize: '1rem',
-                  }}
-                >
-                  {selectedTab === 'PUMP' ? 'Amount to invest' : 'Amount to withdraw'}
-                </Typography>
-
-                {/* Quick Amount Buttons */}
-                <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
-                  {[0.01, 0.1, 1].map((amt) => (
-                    <Button
-                      key={amt}
-                      variant="outlined"
-                      onClick={() => handleButtonClick(amt)}
-                      sx={{
-                        flex: 1,
-                        height: 44,
-                        borderRadius: '12px',
-                        fontWeight: 700,
-                        fontSize: '0.95rem',
-                        border: `2px solid ${selectedTab === 'PUMP' ? '#4caf50' : '#f44336'}`,
-                        color: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
-                        backgroundColor: 'transparent',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: selectedTab === 'PUMP'
-                            ? 'rgba(76, 175, 80, 0.1)'
-                            : 'rgba(244, 67, 54, 0.1)',
-                          transform: 'scale(1.02)',
-                        },
-                      }}
-                    >
-                      {amt}
-                    </Button>
-                  ))}
-                </Box>
-
-                {/* Amount Input Field */}
-                <TextField
-                  value={localCoHostAmount}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  placeholder="Enter amount"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Box
-                          component="span"
-                          sx={{
-                            color: 'text.secondary',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          SOL
-                        </Box>
-                      </InputAdornment>
-                    ),
-                    sx: {
-                      borderRadius: '16px',
-                      height: 64,
-                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
-                        borderWidth: '2px',
-                      },
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
-                      },
-                    }
-                  }}
-                />
-
-                {/* Action Button */}
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    if (isProcessing || trade_loading) {
-                      dispatch(errorMsgBar("Trade is already in progress."));
-                      return;
-                    }
-                    if (selectedTab === 'PUMP') {
-                      handleSendCoHostWithDeposit();
-                    } else {
-                      handleUnstake(
-                        selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
-                        selectedRow?._id,
-                        coHostAmount
-                      );
-                    }
-                  }}
-                  disabled={isProcessing || trade_loading}
-                  fullWidth
-                  sx={{
-                    mt: 3,
+              {/* Amount Input Field */}
+              <TextField
+                value={localCoHostAmount}
+                onChange={handleInputChange}
+                variant="outlined"
+                type="number"
+                fullWidth
+                placeholder="Enter amount"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Box
+                        component="span"
+                        sx={{
+                          color: 'text.secondary',
+                          fontSize: '1rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        SOL
+                      </Box>
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: '16px',
                     height: 64,
-                    borderRadius: '16px',
-                    fontSize: '1.2rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
-                    boxShadow: `0 8px 20px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.4)' : 'rgba(244, 67, 54, 0.4)'}`,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 12px 25px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)'}`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                      borderWidth: '2px',
                     },
-                    '&:disabled': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.5)',
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
                     },
-                  }}
-                >
-                  {isProcessing || trade_loading ? (
-                    <CircularProgress size={28} color="inherit" />
-                  ) : (
-                    selectedTab === 'PUMP' ? "Pump It" : "Jeet Out"
-                  )}
-                </Button>
-              </Box>
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                    },
+                  }
+                }}
+              />
+
+              {/* Action Button */}
+              <Button
+                variant="contained"
+                onClick={() => {
+                  if (isProcessing || trade_loading) {
+                    dispatch(errorMsgBar("Trade is already in progress."));
+                    return;
+                  }
+                  if (selectedTab === 'PUMP') {
+                    handleSendCoHostWithDeposit();
+                  } else {
+                    handleUnstake(
+                      selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
+                      selectedRow?._id,
+                      coHostAmount
+                    );
+                  }
+                }}
+                disabled={isProcessing || trade_loading}
+                fullWidth
+                sx={{
+                  mt: 3,
+                  height: 64,
+                  borderRadius: '16px',
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
+                  boxShadow: `0 8px 20px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.4)' : 'rgba(244, 67, 54, 0.4)'}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 12px 25px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)'}`,
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                  },
+                }}
+              >
+                {isProcessing || trade_loading ? (
+                  <CircularProgress size={28} color="error" />
+                ) : (
+                  selectedTab === 'PUMP' ? "Pump It" : "Jeet Out"
+                )}
+              </Button>
+            </Box>
 
             {/* Trade Information Table */}
             <Card
@@ -1284,9 +1286,9 @@ function CoHostModal({
 
         {/* Chart Container */}
         {!input_only && (
-          <Box sx={{  }}>
+          <Box sx={{}}>
             <Card
-           
+
             >
               <div
                 ref={chartContainerRef}

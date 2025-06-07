@@ -27,7 +27,6 @@ function PrivyLogin() {
   const onSuccessfulLogin = useCallback(async (privyUser) => {
     // Prevent duplicate calls
     if (authenticationInProgress.current || isLoading) {
-      console.log('Authentication already in progress');
       return;
     }
 
@@ -35,14 +34,11 @@ function PrivyLogin() {
     setIsLoading(true);
     
     try {
-      console.log('Starting authentication for user:', privyUser.id);
-      console.log('User wallet:', privyUser.wallet?.address);
-      
+  
       // Authenticate with backend first
       const authResult = await dispatch(authenticateWithPrivy(privyUser));
       
       if (authResult.status === 'success') {
-        console.log('Authentication successful, loading user data...');
         
         // Load user-related data in parallel
         const dataPromises = [
@@ -53,13 +49,11 @@ function PrivyLogin() {
         
         // Get live wallet balance from Privy if wallet exists
         if (privyUser.wallet?.address) {
-          console.log('Fetching live wallet balance from Privy...');
           dataPromises.push(dispatch(getPrivyWalletBalance(privyUser)));
         }
         
         await Promise.all(dataPromises);
 
-        console.log('User data loaded, navigating...');
         navigate('/');
       } else {
         console.error('Authentication failed:', authResult);
@@ -81,7 +75,6 @@ function PrivyLogin() {
       !isLoading && 
       !authenticationInProgress.current
     ) {
-      console.log('Triggering authentication for authenticated user');
       onSuccessfulLogin(user);
     }
   }, [authenticated, user?.id, onSuccessfulLogin, isLoading]);
@@ -89,7 +82,6 @@ function PrivyLogin() {
   // Reset state when user logs out
   useEffect(() => {
     if (!authenticated) {
-      console.log('User logged out, resetting state');
       authenticationInProgress.current = false;
       setIsLoading(false);
     }
@@ -97,11 +89,9 @@ function PrivyLogin() {
 
   const handleLogin = useCallback(() => {
     if (!ready || isLoading || authenticationInProgress.current) {
-      console.log('Login blocked - not ready or already in progress');
       return;
     }
     
-    console.log('Initiating Privy login...');
     login();
   }, [login, ready, isLoading]);
 

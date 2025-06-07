@@ -50,7 +50,7 @@ import {
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
-import { sendSolDeposit } from '../../util/solana'; 
+import { sendSolDeposit } from '../../util/solana';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 export const getTransactions = (
   page = 1,
@@ -270,9 +270,9 @@ export const setReferralCode = (referralCode) => async (dispatch) => {
 export const getApiKeys = () => async (dispatch) => {
   try {
     dispatch({ type: API_KEYS_LOADING });
-    
+
     const response = await axios.get('/api/api-keys/list');
-    
+
     if (response.data.success) {
       dispatch({
         type: API_KEYS_LOADED,
@@ -301,7 +301,7 @@ export const getApiKeys = () => async (dispatch) => {
 export const generateApiKey = (keyData) => async (dispatch) => {
   try {
     const response = await axios.post('/api/api-keys/generate', keyData);
-    
+
     if (response.data.success) {
       dispatch({
         type: API_KEY_GENERATED,
@@ -325,7 +325,7 @@ export const generateApiKey = (keyData) => async (dispatch) => {
 export const revokeApiKey = (keyId) => async (dispatch) => {
   try {
     const response = await axios.delete(`/api/api-keys/${keyId}`);
-    
+
     if (response.data.success) {
       dispatch({
         type: API_KEY_REVOKED,
@@ -349,7 +349,7 @@ export const revokeApiKey = (keyId) => async (dispatch) => {
 export const updateApiKeyPermissions = (keyId, permissions) => async (dispatch) => {
   try {
     const response = await axios.put(`/api/api-keys/${keyId}`, { permissions });
-    
+
     if (response.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: 'API key permissions updated successfully!' });
       // Refresh the API keys list
@@ -411,7 +411,7 @@ export const purchaseEliteSubscription = (type, transactionSignature) => async (
     if (!transactionSignature) {
       const errorMsg = 'Transaction signature is required for verification.';
       console.error('[purchaseEliteSubscription] Missing signature');
-      
+
       dispatch({
         type: MSG_ERROR,
         payload: errorMsg,
@@ -430,7 +430,7 @@ export const purchaseEliteSubscription = (type, transactionSignature) => async (
 
     if (res.data.success) {
       console.log('[purchaseEliteSubscription] Transaction submitted successfully:', res.data);
-      
+
       // Show pending message
       dispatch({
         type: MSG_SUCCESS,
@@ -440,13 +440,13 @@ export const purchaseEliteSubscription = (type, transactionSignature) => async (
       // Note: Don't update user.elite immediately
       // The cron job will verify the transaction and send real-time updates
       // Your socket listeners should handle the actual user updates
-      
+
       dispatch({ type: TNX_COMPLETE });
       return res.data;
     } else {
       const errorMsg = res.data.message || 'Failed to submit subscription for verification.';
       console.error('[purchaseEliteSubscription] Backend submission failed:', res.data);
-      
+
       dispatch({
         type: MSG_ERROR,
         payload: errorMsg,
@@ -454,18 +454,18 @@ export const purchaseEliteSubscription = (type, transactionSignature) => async (
       dispatch({ type: TNX_COMPLETE });
       return false;
     }
-    
+
   } catch (err) {
     console.error('[purchaseEliteSubscription] Caught error:', err);
-    
+
     let errorMessage = 'An unexpected error occurred while submitting your subscription.';
 
     if (err.isAxiosError) {
       if (err.response) {
         console.error('[purchaseEliteSubscription] Server Response Error:', err.response.data);
-        errorMessage = err.response.data?.message || 
-                      err.response.statusText || 
-                      'Server error during subscription submission.';
+        errorMessage = err.response.data?.message ||
+          err.response.statusText ||
+          'Server error during subscription submission.';
       } else if (err.request) {
         console.error('[purchaseEliteSubscription] Network Error:', err.request);
         errorMessage = 'Cannot connect to the server. Please check your internet connection and try again.';
@@ -484,11 +484,11 @@ export const purchaseEliteSubscription = (type, transactionSignature) => async (
       type: MSG_ERROR,
       payload: errorMessage,
     });
-    
+
   } finally {
     dispatch({ type: TNX_COMPLETE });
   }
-  
+
   return false;
 };
 
@@ -534,7 +534,7 @@ export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) =
 
 export const refreshWalletBalance = (privyUser) => async (dispatch) => {
   dispatch({ type: 'WALLET_BALANCE_LOADING', payload: true });
-  
+
   try {
     const result = await dispatch(getPrivyWalletBalance(privyUser));
     return result;
@@ -553,7 +553,7 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
       email: privyUser.email?.address,
       wallet: privyUser.wallet?.address,
     });
-    
+
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
@@ -564,8 +564,8 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
       setAuthToken(token);
 
       // Store user data WITHOUT wallet balance - we'll fetch it separately
-      dispatch({ 
-        type: LOGIN_SUCCESS, 
+      dispatch({
+        type: LOGIN_SUCCESS,
         payload: {
           ...res.data,
           user: {
@@ -575,8 +575,8 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
           }
         }
       });
-      
-      dispatch({ type: MSG_SUCCESS, payload: res.data.message });
+
+      // dispatch({ type: MSG_SUCCESS, payload: res.data.message });
 
       return { status: 'success', user: res.data.user };
     }
@@ -588,32 +588,32 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
 
 export const getPrivyWalletBalance = (privyUser) => async (dispatch) => {
   try {
-    
     if (!privyUser?.wallet?.address) {
       console.log('No wallet address found');
       return { success: false, error: 'No wallet connected' };
     }
 
-    const getProviderUrl = await axios.get('/stripe/get_provider_url');
-    const providerUrl = getProviderUrl.data.providerUrl;
-    
+    // Build account object with publicKey property
+    const account = { publicKey: new PublicKey(privyUser.wallet.address) };
+
+    // Get provider URL
+    const { data: { providerUrl } } = await axios.get('/stripe/get_provider_url');
     if (!providerUrl) {
       throw new Error('Failed to retrieve RPC provider URL');
     }
 
     const connection = new Connection(providerUrl, 'confirmed');
-    
-    // Convert wallet address to PublicKey
-    const walletPublicKey = new PublicKey(privyUser.wallet.address);
-    
-    const solBalLamports = await connection.getBalance(walletPublicKey);
+
+    const solBalLamports = await connection.getBalance(account.publicKey);
     const solanaBalance = solBalLamports / LAMPORTS_PER_SOL;
-    
+
+    // Store both balance and account (as object with publicKey)
     dispatch({
       type: 'SET_LIVE_WALLET_BALANCE',
       payload: {
         balance: solanaBalance,
         walletAddress: privyUser.wallet.address,
+        account, // always an object: { publicKey: PublicKey }
         timestamp: Date.now()
       }
     });
@@ -621,17 +621,19 @@ export const getPrivyWalletBalance = (privyUser) => async (dispatch) => {
     return { success: true, balance: solanaBalance };
   } catch (error) {
     console.error('Error getting wallet balance:', error);
-    
+
     // Fallback to backend API if direct Solana connection fails
     try {
       const response = await axios.get(`/auth/wallet-balance/${privyUser.wallet.address}`);
-      
+
       if (response.data.success) {
+        const account = { publicKey: new PublicKey(privyUser.wallet.address) };
         dispatch({
           type: 'SET_LIVE_WALLET_BALANCE',
           payload: {
             balance: response.data.balance,
             walletAddress: privyUser.wallet.address,
+            account, // again as object
             timestamp: Date.now()
           }
         });
@@ -640,7 +642,7 @@ export const getPrivyWalletBalance = (privyUser) => async (dispatch) => {
     } catch (fallbackError) {
       console.error('Fallback API also failed:', fallbackError);
     }
-    
+
     dispatch({
       type: 'SET_WALLET_BALANCE_ERROR',
       payload: error.message
@@ -725,28 +727,28 @@ export const deleteAccount = () => async dispatch => {
 export const userSignOut = (clear_token, navigate) => async (dispatch) => {
   try {
     console.log("Starting backend logout process...");
-    
+
     const { data } = await axios.post('/auth/logout');
-    
+
     if (data.success) {
       console.log("Backend logout successful");
-      
+
       // Clear token and auth state AFTER successful backend response
       if (clear_token) {
         localStorage.removeItem('token');
         localStorage.removeItem('isAuthenticated');
         setAuthToken();
       }
-      
+
       // Clear Redux state
       dispatch({ type: 'LOGOUT' });
-      
+
       // Navigate
       navigate('/');
-      
+
       // Show success message
       dispatch({ type: 'MSG_SUCCESS', payload: data.message });
-      
+
       return { success: true };
     } else {
       console.error("Backend logout failed:", data.error);
@@ -755,22 +757,22 @@ export const userSignOut = (clear_token, navigate) => async (dispatch) => {
     }
   } catch (error) {
     console.error('Backend logout error:', error);
-    
+
     // If it's a 401 error, the user is already logged out on backend
     if (error.response?.status === 401) {
-      
+
       if (clear_token) {
         localStorage.removeItem('token');
         localStorage.removeItem('isAuthenticated');
         setAuthToken();
       }
-      
+
       dispatch({ type: 'LOGOUT' });
       navigate('/');
-      
+
       return { success: true };
     }
-    
+
     // For other errors, return failure but don't throw
     dispatch({ type: 'MSG_WARNING', payload: error.message || 'Logout failed' });
     return { success: false, error: error.message };

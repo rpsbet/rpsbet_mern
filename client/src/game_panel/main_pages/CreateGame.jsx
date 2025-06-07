@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
+import { usePrivy } from '@privy-io/react-auth'; // Add this import
 import {
   Button,
   Drawer,
@@ -13,7 +14,7 @@ import {
   Paper,
   CircularProgress,
 } from '@mui/material';
-import { sendSolDeposit } from '../../util/solana';
+import { sendSolDeposit, createAccountFromPrivyUser } from '../../util/solana'; // Add createAccountFromPrivyUser import
 import { ArrowForward, ArrowBack, Info } from '@mui/icons-material';
 import { getRank } from '../../util/getRank';
 import axios from '../../util/Api';
@@ -58,28 +59,30 @@ const GlassContainer = styled(Box)`
 function CreateGame() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user: privyUser } = usePrivy(); // Add Privy hook
 
   // Redux state selectors
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const connectedAccount = useSelector((state) => state.auth.connectedAccount);
-  const balance = useSelector((state) => state.logic.solanaBalance);
+  const connectedAccount = useSelector((state) => state.auth.walletAddress);
+  const balance = useSelector((state) => state.auth.liveWalletBalance || 0);
+  const isLoadingBalance = useSelector((state) => state.logic.isLoadingBalance || false);
   const user = useSelector((state) => state.auth.user);
   const gameTypeList = useSelector((state) => state.logic.gameTypeList);
   const solPrice = useSelector((state) => state.logic.solPrice);
   const strategies = useSelector((state) => state.logic.strategies);
   const isDrawerOpen = useSelector((state) => state.auth.isDrawerOpen);
   const isDarkMode = useSelector((state) => state.auth.isDarkMode);
-  const account = useSelector((state) => state.logic.account);
+  const reduxAccount = useSelector((state) => state.logic.account); // Get Redux account
   const theme = getCustomTheme(isDarkMode);
-
+  
   // Component state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
+  const [isAutopopulating, setIsAutopopulating] = useState(false);
   const [step, setStep] = useState(1);
-  const [gameType, setGameType] = useState(9); // Default to Custom
+  const [gameType, setGameType] = useState(9);
   const [gameMode, setGameModeLocal] = useState('Custom');
   const [selectedGameType, setSelectedGameType] = useState('Custom');
-  const [tax, setTax] = useState(5); // Default tax for custom games
+  const [tax, setTax] = useState(5);
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [xLink, setXLink] = useState('');
@@ -101,14 +104,86 @@ function CreateGame() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [endgameType, setEndgameType] = useState(true);
   const [description, setDescription] = useState('');
-  const [localBalance, setLocalBalance] = useState(balance);
 
-  // Mobile responsiveness
+  // Enhanced account creation function (same logic as in EliteSubscriptionModal)
+  const createAccountWithFallbacks = useCallback(async () => {
+    let account = null;
+    
+    // Method 1: Try creating from Privy user
+    if (privyUser?.wallet?.address) {
+      try {
+        account = createAccountFromPrivyUser(privyUser);
+        console.log('Account created from Privy user:', account);
+      } catch (error) {
+        console.error('Failed to create account from Privy user:', error);
+      }
+    }
+    
+    // Method 2: Try using Redux account
+    if (!account && reduxAccount?.publicKey) {
+      account = reduxAccount;
+      console.log('Using Redux account:', account);
+    }
+    
+    // Method 3: Try getting from connected wallet directly
+    if (!account && window.solana?.publicKey) {
+      try {
+        account = {
+          publicKey: window.solana.publicKey
+        };
+        console.log('Account created from window.solana:', account);
+      } catch (error) {
+        console.error('Failed to create account from window.solana:', error);
+      }
+    }
+    
+    // Method 4: Try connecting wallet if not connected
+    if (!account && window.solana) {
+      try {
+        if (!window.solana.isConnected) {
+          console.log('Wallet not connected, attempting to connect...');
+          await window.solana.connect();
+        }
+        
+        if (window.solana.publicKey) {
+          account = {
+            publicKey: window.solana.publicKey
+          };
+          console.log('Account created after wallet connection:', account);
+        }
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
+      }
+    }
+
+    // Final validation
+    if (!account?.publicKey) {
+      console.error('Failed to create account - no valid source found', {
+        privyUser: !!privyUser?.wallet?.address,
+        reduxAccount: !!reduxAccount?.publicKey,
+        windowSolana: !!window.solana?.publicKey,
+        walletConnected: window.solana?.isConnected
+      });
+      
+      // Show user-friendly error
+      dispatch(errorMsgBar('Wallet not connected. Please connect your Solana wallet and try again.'));
+      return null;
+    }
+
+    console.log('Final account object:', {
+      publicKey: account.publicKey.toString(),
+      source: privyUser?.wallet?.address ? 'privy' : 
+              reduxAccount?.publicKey ? 'redux' : 'wallet'
+    });
+
+    return account;
+  }, [privyUser, reduxAccount, dispatch]);
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -119,13 +194,6 @@ function CreateGame() {
     dispatch(setGameMode('Custom'));
     return () => { };
   }, [dispatch]);
-
-  // Update local balance when Redux balance changes
-  useEffect(() => {
-    if (localBalance !== balance) {
-      setLocalBalance(balance);
-    }
-  }, [balance, localBalance]);
 
   // Handle state changes from child components
   const onChangeState = async (newState) => {
@@ -148,7 +216,6 @@ function CreateGame() {
     if ('winChance' in newState) setWinChance(newState.winChance);
   };
 
-  // Toggle drawer handler
   const toggleDrawerHandler = () => {
     dispatch(toggleDrawer(!isDrawerOpen));
   };
@@ -156,15 +223,6 @@ function CreateGame() {
   // Handle description input
   const handleDescriptionChange = (event) => {
     setDescription(event.target.value);
-  };
-
-  // Navigation handlers
-  const onSkipButtonClicked = () => {
-    if (step === 2) {
-      setIsPrivate(false);
-      setEndgameType(false);
-      setStep(step + 1);
-    }
   };
 
   const onPrevButtonClicked = () => {
@@ -210,7 +268,7 @@ function CreateGame() {
         dispatch(errorMsgBar('ADD AN IMAGE DUMBASS!'));
         return;
       }
-      if (betAmount > localBalance) {
+      if (betAmount > balance) {
         dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
         return;
       }
@@ -237,36 +295,83 @@ function CreateGame() {
     setStep(step + 1);
   };
 
-  // Create room with image upload
+  // Updated create room with deposit function
   const createRoomWithDeposit = async () => {
     setCreatingRoom(true);
 
-    // Step 1: Trigger SOL deposit
-    const depositResult = await sendSolDeposit(
-      dispatch,
-      betAmount,
-      null, // room_id (null since room isn't created yet)
-      name, // room_name
-      'create_game', // type
-      account,
-      localBalance,
-      () => {
-        console.error('Deposit failed');
+    try {
+      // Create account with the enhanced fallback logic
+      const account = await createAccountWithFallbacks();
+      
+      if (!account) {
         setCreatingRoom(false);
+        return;
       }
-    );
 
-    if (!depositResult.success) {
-      console.error('Deposit failed, aborting room creation');
-      return;
+      // Step 1: Trigger SOL deposit with proper account
+      const depositResult = await sendSolDeposit(
+        dispatch,
+        betAmount,
+        null, // room_id (null since room isn't created yet)
+        name, // room_name
+        'create_game', // type
+        account, // Use the properly created account
+        balance,
+        () => {
+          console.log('Deposit successful, proceeding with room creation');
+        },
+        (error) => {
+          console.error('Deposit failed:', error);
+          setCreatingRoom(false);
+        }
+      );
+
+      if (!depositResult.success) {
+        console.error('Deposit failed, aborting room creation');
+        setCreatingRoom(false);
+        return;
+      }
+
+      // Step 2: Proceed with image upload and room creation
+      await createRoomWithImage();
+    } catch (error) {
+      console.error('Error in createRoomWithDeposit:', error);
+      dispatch(errorMsgBar('Failed to create room. Please try again.'));
+      setCreatingRoom(false);
     }
-
-    // Step 2: Proceed with image upload and room creation
-    await createRoomWithImage();
   };
 
   const createRoomWithImage = async () => {
     try {
+      setCreatingRoom(true);
+      
+      let processableImageSrc = image;
+  
+      // Check if the image is from DALL-E (OpenAI blob storage)
+      const isDalleImage = image && image.includes('oaidalleapiprodscus.blob.core.windows.net');
+      
+      if (isDalleImage) {
+        console.log('[Front-end] Converting DALL-E image to processable format...');
+        
+        // Convert DALL-E URL to data URL via server
+        const response = await axios.post('/game/convert-dalle-to-blob', {
+          imageUrl: image
+        });
+  
+        if (response.status !== 200) {
+          throw new Error('Server responded with non-200 status for image conversion.');
+        }
+  
+        const { success, dataUrl, message } = response.data;
+        if (!success || !dataUrl) {
+          throw new Error(message || 'Image conversion failed, no dataUrl received.');
+        }
+  
+        processableImageSrc = dataUrl;
+        console.log('[Front-end] DALL-E image converted successfully');
+      }
+  
+      // Now use the same processing logic for both image types
       const saveImage = (imageSrc) => {
         return new Promise((resolve, reject) => {
           const canvas = document.createElement('canvas');
@@ -274,23 +379,23 @@ function CreateGame() {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = imageSrc;
-
+  
           img.onload = () => {
             const maxWidth = 250;
             let width = img.width;
             let height = img.height;
-
+  
             if (width > maxWidth) {
               height *= maxWidth / width;
               width = maxWidth;
             }
-
+  
             canvas.width = width;
             canvas.height = height;
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
-
+  
             canvas.toBlob((blob) => {
               if (blob) {
                 resolve(blob);
@@ -299,32 +404,37 @@ function CreateGame() {
               }
             }, 'image/png');
           };
-
+  
           img.onerror = (error) => {
             reject('Error processing image: ' + error);
           };
         });
       };
-
-      const resizedBlob = await saveImage(image);
+  
+      // Process the image (works for both DALL-E and manual uploads now)
+      const resizedBlob = await saveImage(processableImageSrc);
       const formData = new FormData();
       formData.append('file', resizedBlob, 'resized-image.png');
-
+  
+      // Use your existing upload route
       const response = await axios.post('/game/upload-to-pinata', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       if (response.status !== 200) {
         throw new Error('Server responded with non-200 status.');
       }
-
+  
       const { success, imageUrl, message } = response.data;
       if (!success || !imageUrl) {
         throw new Error(message || 'Upload failed, no imageUrl received.');
       }
-
+  
+      console.log('[Front-end] Image processed and uploaded successfully:', imageUrl);
+  
+      // Create room with the processed image URL
       const fullState = {
         game_type: gameType,
         game_mode: gameMode,
@@ -351,10 +461,11 @@ function CreateGame() {
         endgame_type: endgameType,
         description,
       };
-
+  
       await dispatch(createRoom(fullState, navigate));
+      
     } catch (error) {
-      console.error('[Front-end] Error uploading/resizing image:', error);
+      console.error('[Front-end] Error processing image:', error);
       dispatch(errorMsgBar('Failed to process image. Please try again.'));
     } finally {
       setCreatingRoom(false);
@@ -379,7 +490,6 @@ function CreateGame() {
           onChangeState={onChangeState}
           user_id={user._id}
           user_credits={user.credits}
-          user_balance={user.balance}
           rank={getRank(user.totalWagered)}
           isDarkMode={isDarkMode}
           onClose={() => { }}
@@ -407,7 +517,7 @@ function CreateGame() {
           onChangeState={onChangeState}
           game_type={gameType}
           defaultBetAmounts={[0.25, 0.5, 1, 2.5, 10]}
-          balance={localBalance}
+          balance={balance}
           isDarkMode={isDarkMode}
         />
       </Box>
@@ -519,7 +629,7 @@ function CreateGame() {
           >
             {creatingRoom ? (
               <>
-                <CircularProgress size={20} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                <CircularProgress size={20} color='error' />
                 Creating...
               </>
             ) : (
@@ -533,7 +643,7 @@ function CreateGame() {
             endIcon={<ArrowForward />}
             onClick={onNextButtonClicked}
             sx={{ borderRadius: '8px', textTransform: 'none' }}
-            disabled={!gameCode} // Disable until game is generated
+            disabled={!gameCode}
           >
             Next
           </Button>
@@ -598,9 +708,6 @@ function CreateGame() {
           >
             {isMobile ? null : 'Go Back'}
           </Button>
-          {/* <Box sx={{ mb: 3 }}>
-            <Summary shortVersion={false} />
-          </Box> */}
           {step === 1 && step1()}
           {step === 2 && step2()}
         </Paper>

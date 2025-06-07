@@ -161,15 +161,37 @@ const CoinInfo = ({
       });
       return;
     }
-
+  
     setIsAutopopulating(true);
+    
     try {
-      await manualAutopopulate(gameCode, onChangeState, dispatch, true);
+      console.log('Starting manual auto-populate...');
+      
+      // Call the updated manualAutopopulate function
+      const result = await manualAutopopulate(gameCode, onChangeState, dispatch, true);
+      
+      if (result) {
+        console.log('Auto-populate successful:', result);
+        
+        // Show success message with details
+        const imageText = result.imageUrl ? ' and generated image' : '';
+        dispatch({
+          type: 'MSG_SUCCESS',
+          payload: `Successfully auto-filled: ${result.name} ($${result.ticker})${imageText}`
+        });
+      } else {
+        console.log('Auto-populate returned no results');
+        dispatch({
+          type: 'MSG_WARNING',
+          payload: 'Could not extract meaningful information from the generated game. Please fill the fields manually.'
+        });
+      }
+      
     } catch (error) {
       console.error('Manual auto-populate failed:', error);
       dispatch({
         type: 'MSG_ERROR',
-        payload: 'Failed to auto-populate room information. Please try again.'
+        payload: 'Failed to auto-populate room information. Please try again or fill manually.'
       });
     } finally {
       setIsAutopopulating(false);

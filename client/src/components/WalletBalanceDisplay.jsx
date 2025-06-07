@@ -18,7 +18,7 @@ const selectUserData = (state) => {
       isAuthenticated: false,
     };
   }
-  
+
   return {
     liveWalletBalance: state.auth.liveWalletBalance ?? 0,
     walletAddress: state.auth.walletAddress,
@@ -36,14 +36,14 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
   const dispatch = useDispatch();
   const { user: privyUser, authenticated, ready } = usePrivy();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const userData = useSelector(selectUserData);
   const solPrice = useSelector(selectSolPrice);
-  
-  const { 
-    liveWalletBalance, 
-    walletAddress, 
-    backendBalance, 
+
+  const {
+    liveWalletBalance,
+    walletAddress,
+    backendBalance,
     isWalletBalanceLoading,
     walletBalanceError,
     user,
@@ -57,7 +57,7 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
   const refreshBalance = useCallback(async (e) => {
     e.stopPropagation();
     if (!privyUser?.wallet?.address || isRefreshing || isWalletBalanceLoading) return;
-    
+
     setIsRefreshing(true);
     try {
       const result = await dispatch(getPrivyWalletBalance(privyUser));
@@ -74,13 +74,13 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
   // Auto-refresh balance every 30 seconds if wallet is connected
   // useEffect(() => {
   //   if (!privyUser?.wallet?.address || !authenticated) return;
-    
+
   //   const interval = setInterval(() => {
   //     if (!isRefreshing && !isWalletBalanceLoading) {
   //       dispatch(getPrivyWalletBalance(privyUser));
   //     }
   //   }, 30000);
-    
+
   //   return () => clearInterval(interval);
   // }, [dispatch, privyUser?.wallet?.address, isRefreshing, isWalletBalanceLoading, authenticated]);
 
@@ -104,14 +104,14 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
   if (!ready || (authenticated && !user)) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Skeleton 
-          variant="rectangular" 
-          width={100} 
-          height={32} 
-          sx={{ 
+        <Skeleton
+          variant="rectangular"
+          width={100}
+          height={32}
+          sx={{
             borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)' 
-          }} 
+            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+          }}
         />
       </Box>
     );
@@ -159,29 +159,27 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
           borderRadius: '12px',
           background: 'transparent',
           backdropFilter: 'blur(15px)',
-          border: `1px solid ${
-            hasError 
-              ? 'rgba(255, 107, 107, 0.3)' 
-              : isWalletBalance 
-                ? 'rgba(0, 255, 0, 0.3)' 
+          border: `1px solid ${hasError
+              ? 'rgba(255, 107, 107, 0.3)'
+              : isWalletBalance
+                ? 'rgba(0, 255, 0, 0.3)'
                 : 'rgba(255, 0, 21, 0.2)'
-          }`,
+            }`,
           transition: 'all 0.2s ease',
           cursor: 'pointer',
           '&:hover': {
             transform: 'scale(1.05)',
-            borderColor: hasError 
+            borderColor: hasError
               ? 'rgba(255, 107, 107, 0.5)'
-              : isWalletBalance 
-                ? 'rgba(0, 255, 0, 0.5)' 
+              : isWalletBalance
+                ? 'rgba(0, 255, 0, 0.5)'
                 : 'rgba(255, 0, 21, 0.4)',
-            boxShadow: `0 4px 20px ${
-              hasError 
+            boxShadow: `0 4px 20px ${hasError
                 ? 'rgba(255, 107, 107, 0.3)'
-                : isWalletBalance 
-                  ? 'rgba(0, 255, 0, 0.3)' 
+                : isWalletBalance
+                  ? 'rgba(0, 255, 0, 0.3)'
                   : 'rgba(255, 0, 21, 0.3)'
-            }`,
+              }`,
           },
         }}
       >
@@ -209,7 +207,7 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
               : displayBalance.toFixed(balanceDisplay)
             }
           </Typography>
-          
+
           {isWalletBalance && (
             <Box
               component="div"
@@ -230,7 +228,7 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
               {(isRefreshing || isWalletBalanceLoading) ? (
                 <CircularProgress
                   size={12}
-                  sx={{ color: '#00ff00' }}
+                  color='error'
                 />
               ) : hasError ? (
                 <Error

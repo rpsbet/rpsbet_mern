@@ -344,7 +344,7 @@ function LoginModal({ modalIsOpen, closeModal }) {
               }}
             >
               {isLoading ? (
-                <CircularProgress size={24} sx={{ color: 'inherit' }} />
+                <CircularProgress size={24} color='error' />
               ) : (
                 <>
                   Sign In
@@ -387,7 +387,7 @@ function LoginModal({ modalIsOpen, closeModal }) {
             }}
           >
             {isLoading ? (
-              <CircularProgress size={24} sx={{ color: 'error' }} />
+              <CircularProgress size={24} color='error' />
             ) : (
               'Connect with Phantom Wallet'
             )}

@@ -9,6 +9,9 @@ import {
   faCheck, faTimes, faPlay, faHistory, faChartLine, faWallet, faShieldAlt,
   faHeart, faSkull, faClock, faBolt,
 } from '@fortawesome/free-solid-svg-icons';
+import { createAccountFromPrivyUser } from '../../util/solana';
+import { usePrivy } from '@privy-io/react-auth';
+
 import {
   Paper, Button, Tooltip, CircularProgress, TextField, useMediaQuery, Typography,
   Box, Slider, Avatar, Chip, Card, Fade, Dialog, DialogContent, DialogContentText,
@@ -84,7 +87,7 @@ const usePhysicsEngine = () => {
       }
 
       console.log('[Custom] Loading Matter.js dynamically');
-      
+
       // Try dynamic import first
       try {
         const matterModule = await import('matter-js');
@@ -96,7 +99,7 @@ const usePhysicsEngine = () => {
         return matterModule;
       } catch (importError) {
         console.log('[Custom] Dynamic import failed, falling back to CDN');
-        
+
         // CDN fallback
         const matterModule = await new Promise((resolve, reject) => {
           const script = document.createElement('script');
@@ -122,11 +125,11 @@ const usePhysicsEngine = () => {
 
   useEffect(() => {
     let mounted = true;
-    
+
     const initPhysics = async () => {
       setIsPhysicsLoading(true);
       setPhysicsError(null);
-      
+
       try {
         const matterModule = await loadPhysics();
         if (mounted) {
@@ -144,7 +147,7 @@ const usePhysicsEngine = () => {
     };
 
     initPhysics();
-    
+
     return () => {
       mounted = false;
     };
@@ -153,33 +156,27 @@ const usePhysicsEngine = () => {
   return { Physics, isPhysicsLoading, physicsError };
 };
 
-const ResponsiveGameContainer = React.memo(({ 
-  GameComponent, 
-  componentError, 
-  proxiedAssets, 
-  logEvent, 
-  Physics, 
+const ResponsiveGameContainer = React.memo(({
+  GameComponent,
+  componentError,
+  proxiedAssets,
+  logEvent,
+  Physics,
   isWalletPopupActive,
   isCreator,
   containerSize,
   isMobile,
-  isTablet 
+  isTablet
 }) => {
-  const getContainerHeight = useMemo(() => {
-    if (isMobile) return '60vh';
-    if (isTablet) return '70vh';
-    return '600px';
-  }, [isMobile, isTablet]);
 
   const containerStyles = useMemo(() => ({
     width: '100%',
-    height: getContainerHeight,
     maxWidth: '100%',
     maxHeight: '100%',
-    overflow: 'scroll',
+    overflow: 'visible',
     position: 'relative',
-   
-  }), [getContainerHeight]);
+
+  }), []);
 
   const renderGameContent = () => {
     if (componentError) {
@@ -215,9 +212,9 @@ const ResponsiveGameContainer = React.memo(({
               ⚠️
             </Typography>
           </Box>
-          <Typography 
-            variant={isMobile ? "h6" : "h5"} 
-            sx={{ 
+          <Typography
+            variant={isMobile ? "h6" : "h5"}
+            sx={{
               mb: 2,
               color: '#f44336',
               fontWeight: 700,
@@ -226,9 +223,9 @@ const ResponsiveGameContainer = React.memo(({
           >
             Game Error
           </Typography>
-          <Typography 
-            variant="body1" 
-            sx={{ 
+          <Typography
+            variant="body1"
+            sx={{
               fontSize: isMobile ? '0.9rem' : '1rem',
               color: 'rgba(255, 255, 255, 0.8)',
               lineHeight: 1.5,
@@ -252,15 +249,15 @@ const ResponsiveGameContainer = React.memo(({
           p: 4,
           textAlign: 'center'
         }}>
-          <CircularProgress 
-            sx={{ 
-              color: '#2196f3', 
+          <CircularProgress
+            color='error'
+            sx={{
               mb: 3,
-            }} 
+            }}
             size={isMobile ? 40 : 48}
           />
-          <Typography 
-            variant="h6" 
+          <Typography
+            variant="h6"
             sx={{
               color: 'rgba(255, 255, 255, 0.9)',
               fontSize: isMobile ? '1rem' : '1.1rem',
@@ -270,8 +267,8 @@ const ResponsiveGameContainer = React.memo(({
           >
             Loading Game...
           </Typography>
-          <Typography 
-            variant="body2" 
+          <Typography
+            variant="body2"
             sx={{
               color: 'rgba(255, 255, 255, 0.6)',
               fontSize: isMobile ? '0.85rem' : '0.9rem',
@@ -287,16 +284,16 @@ const ResponsiveGameContainer = React.memo(({
       <Box sx={{
         width: '100%',
         height: '100%',
-        overflow: 'scroll',
+        overflow: 'visible',
         filter: isWalletPopupActive ? 'blur(8px)' : 'none',
         pointerEvents: isWalletPopupActive ? 'none' : 'auto',
         position: 'relative',
         transition: 'filter 0.3s ease',
         borderRadius: '20px',
       }}>
-        <GameComponent 
-          proxiedAssets={proxiedAssets} 
-          logEvent={logEvent} 
+        <GameComponent
+          proxiedAssets={proxiedAssets}
+          logEvent={logEvent}
           Physics={Physics}
           containerSize={containerSize}
           isMobile={isMobile}
@@ -309,7 +306,7 @@ const ResponsiveGameContainer = React.memo(({
   return (
     <Box sx={containerStyles} tabIndex="0">
       {renderGameContent()}
-      
+
       {/* Enhanced Wallet Popup Overlay */}
       {isWalletPopupActive && (
         <Box sx={{
@@ -340,23 +337,23 @@ const ResponsiveGameContainer = React.memo(({
               mx: 2,
             }}
           >
-            <CircularProgress 
-              sx={{ 
-                color: '#f44336',
+            <CircularProgress
+              color='error'
+              sx={{
                 mb: 3,
               }}
               size={isMobile ? 40 : 48}
             />
-            <Typography sx={{ 
-              color: 'white', 
+            <Typography sx={{
+              color: 'white',
               fontWeight: 700,
               fontSize: isMobile ? '1rem' : '1.1rem',
               mb: 1,
             }}>
               Confirm Transaction
             </Typography>
-            <Typography sx={{ 
-              color: 'rgba(255, 255, 255, 0.8)', 
+            <Typography sx={{
+              color: 'rgba(255, 255, 255, 0.8)',
               fontSize: isMobile ? '0.85rem' : '0.9rem',
               lineHeight: 1.5,
             }}>
@@ -431,10 +428,11 @@ ResponsiveGameContainer.displayName = 'ResponsiveGameContainer';
 // Main Custom Component
 function Custom(props) {
   const dispatch = useDispatch();
-  
+  const { user: privyUser } = usePrivy();
+
   // Separate socket from other state to avoid circular reference issues
   const socket = useSelector((state) => state.auth.socket, (prev, next) => prev === next);
-  
+
   // Memoized selector for non-circular state with safe comparison
   const reduxState = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
@@ -451,7 +449,7 @@ function Custom(props) {
     elite: state.logic.curRoomInfo.elite,
     username: state.logic.curRoomInfo.username,
     isLowGraphics: state.auth.isLowGraphics,
-    connectedAccount: state.auth.connectedAccount,
+    connectedAccount: state.auth.walletAddress,
     account: state.logic.account,
     user_id: state.auth.user._id,
   }), safeDeepEqual);
@@ -520,7 +518,7 @@ function Custom(props) {
   }, [gameState.hasDeposited]);
 
   // Memoized values
-  const isCreator = useMemo(() => 
+  const isCreator = useMemo(() =>
     creator_id && user_id && creator_id.toString() === user_id.toString(),
     [creator_id, user_id]
   );
@@ -529,7 +527,7 @@ function Custom(props) {
   const handleKeyDown = useCallback((event) => {
     const gameKeys = ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '];
     const keyCodes = [32, 37, 38, 39, 40];
-    
+
     if (gameKeys.includes(event.key) || keyCodes.includes(event.keyCode)) {
       if (gameState.isGameActive) {
         event.preventDefault();
@@ -580,6 +578,80 @@ function Custom(props) {
       return true;
     }
 
+    // Enhanced account creation with multiple fallbacks (copied from EliteSubscriptionModal)
+    let account = null;
+
+    // Method 1: Try creating from Privy user
+    if (privyUser?.wallet?.address) {
+      try {
+        account = createAccountFromPrivyUser(privyUser);
+        console.log('[Custom] Account created from Privy user:', account);
+      } catch (error) {
+        console.error('[Custom] Failed to create account from Privy user:', error);
+      }
+    }
+
+    // Method 2: Try using Redux account
+    if (!account && reduxState.account?.publicKey) {
+      account = reduxState.account;
+      console.log('[Custom] Using Redux account:', account);
+    }
+
+    // Method 3: Try getting from connected wallet directly
+    if (!account && window.solana?.publicKey) {
+      try {
+        account = {
+          publicKey: window.solana.publicKey
+        };
+        console.log('[Custom] Account created from window.solana:', account);
+      } catch (error) {
+        console.error('[Custom] Failed to create account from window.solana:', error);
+      }
+    }
+
+    // Method 4: Try connecting wallet if not connected
+    if (!account && window.solana) {
+      try {
+        if (!window.solana.isConnected) {
+          console.log('[Custom] Wallet not connected, attempting to connect...');
+          await window.solana.connect();
+        }
+
+        if (window.solana.publicKey) {
+          account = {
+            publicKey: window.solana.publicKey
+          };
+          console.log('[Custom] Account created after wallet connection:', account);
+        }
+      } catch (error) {
+        console.error('[Custom] Failed to connect wallet:', error);
+      }
+    }
+
+    // Final validation
+    if (!account?.publicKey) {
+      console.error('[Custom] Failed to create account - no valid source found', {
+        privyUser: !!privyUser?.wallet?.address,
+        reduxAccount: !!reduxState.account?.publicKey,
+        windowSolana: !!window.solana?.publicKey,
+        walletConnected: window.solana?.isConnected
+      });
+
+      // Show user-friendly error
+      dispatch({
+        type: 'ERROR_MSG_BAR',
+        payload: 'Wallet not connected. Please connect your Solana wallet and try again.'
+      });
+      onChangeState({ betting: false });
+      return false;
+    }
+
+    console.log('[Custom] Final account object:', {
+      publicKey: account.publicKey.toString(),
+      source: privyUser?.wallet?.address ? 'privy' :
+        reduxState.account?.publicKey ? 'redux' : 'wallet'
+    });
+
     try {
       const depositResult = await sendSolDeposit(
         dispatch,
@@ -587,7 +659,7 @@ function Custom(props) {
         roomInfo._id,
         roomInfo.name,
         'join',
-        reduxState.account,
+        account, // Now using the properly created account
         reduxState.balance,
         () => {
           hasDepositedRef.current = true;
@@ -615,12 +687,12 @@ function Custom(props) {
       onChangeState({ betting: false });
       return false;
     }
-  }, [dispatch, bet_amount, roomInfo._id, reduxState.account, reduxState.balance, onChangeState]);
+  }, [dispatch, bet_amount, roomInfo._id, roomInfo.name, reduxState.account, reduxState.balance, onChangeState, privyUser]);
 
   // Game join logic
   const joinGame = useCallback(async (result, multiplier) => {
     onChangeState({ result: '' });
-    
+
     const resultData = await join({
       bet_amount: parseFloat(bet_amount),
       result: result || null,
@@ -630,7 +702,7 @@ function Custom(props) {
     const amount = resultData.amount || 0;
     const currencyElement = convertToCurrency(Math.abs(amount), reduxState.solPrice);
     const sign = amount >= 0 ? '+' : '-';
-    
+
     let soundToPlay = null;
     if (resultData.betResult === 1) soundToPlay = 'win';
     else if (resultData.betResult === 0) soundToPlay = 'split';
@@ -656,10 +728,10 @@ function Custom(props) {
     onResultChange(formattedResult, false);
     onChangeState({ gameResult: resultData.betResult });
 
-    setGameState(prev => ({ 
-      ...prev, 
+    setGameState(prev => ({
+      ...prev,
       gameStartedCount: prev.gameStartedCount + 1,
-      hasDeposited: false 
+      hasDeposited: false
     }));
   }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange]);
 
@@ -701,7 +773,7 @@ function Custom(props) {
         gameStartedCount: prev.gameStartedCount + 1,
         isGameActive: true
       }));
-      
+
       onResultChange('', true);
 
       openConfirmBetDialog('ARE YOU SURE YOU WANT TO JOIN THIS GAME?', async () => {
@@ -713,10 +785,10 @@ function Custom(props) {
       });
     } else if (eventType === 'gameEnded') {
       setGameState(prev => ({ ...prev, isGameActive: false }));
-      
+
       const { result, multiplier } = data;
       const validResults = ['win', 'loss', 'other'];
-      
+
       if (validResults.includes(result) && gameState.gameStartedCount > 0 && hasDepositedRef.current) {
         console.log('Processing game result:', result, 'Multiplier:', multiplier);
         onBtnBetClick(result, result === 'win' ? multiplier : undefined);
@@ -999,7 +1071,7 @@ function Custom(props) {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '24px',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-            overflow: 'scroll',
+            overflow: 'visible',
             '@supports not (backdrop-filter: blur(20px))': {
               background: 'rgba(0, 0, 0, 0.35)',
             },
@@ -1041,10 +1113,10 @@ function Custom(props) {
               </Typography>
             </Box>
 
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                color: '#f44336', 
+            <Typography
+              variant="h5"
+              sx={{
+                color: '#f44336',
                 mb: 3,
                 fontWeight: 700,
                 fontSize: '1.5rem',
@@ -1057,9 +1129,9 @@ function Custom(props) {
 
             {roomState.poolId ? (
               <Box sx={{ textAlign: 'center' }}>
-                <Typography 
+                <Typography
                   variant="h6"
-                  sx={{ 
+                  sx={{
                     mb: 3,
                     color: '#fff',
                     fontWeight: 600,
@@ -1098,16 +1170,16 @@ function Custom(props) {
               </Box>
             ) : (
               <Box sx={{ textAlign: 'center' }}>
-                <CircularProgress 
-                  sx={{ 
-                    color: '#ff9800', 
+                <CircularProgress
+                  color='error'
+                  sx={{
                     mb: 3,
-                  }} 
+                  }}
                   size={40}
                 />
-                <Typography 
-                  sx={{ 
-                    color: 'rgba(255, 255, 255, 0.8)', 
+                <Typography
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
                     fontSize: '1rem',
                     fontWeight: 500,
                     lineHeight: 1.6,
@@ -1126,22 +1198,22 @@ function Custom(props) {
 
     return (
       <Box className="game-info-panel">
-       
-          <Box ref={containerRef}>
-            <ResponsiveGameContainer
-              GameComponent={componentState.GameComponent}
-              componentError={componentState.componentError}
-              proxiedAssets={componentState.proxiedAssets}
-              logEvent={logEvent}
-              Physics={Physics}
-              isWalletPopupActive={gameState.isWalletPopupActive}
-              isCreator={isCreator}
-              containerSize={containerSize}
-              isMobile={isMobile}
-              isTablet={isTablet}
-            />
-          </Box>
-        
+
+        <Box ref={containerRef}>
+          <ResponsiveGameContainer
+            GameComponent={componentState.GameComponent}
+            componentError={componentState.componentError}
+            proxiedAssets={componentState.proxiedAssets}
+            logEvent={logEvent}
+            Physics={Physics}
+            isWalletPopupActive={gameState.isWalletPopupActive}
+            isCreator={isCreator}
+            containerSize={containerSize}
+            isMobile={isMobile}
+            isTablet={isTablet}
+          />
+        </Box>
+
         {!isCreator && !gameState.isGameActive && (
           <Suspense fallback={
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -1191,7 +1263,7 @@ function Custom(props) {
           }
         }}
       >
-        <DialogTitle 
+        <DialogTitle
           id="confirm-dialog-title"
           sx={{
             fontSize: '1.3rem',
@@ -1227,8 +1299,8 @@ function Custom(props) {
           />
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button 
-            onClick={closeConfirmBetDialog} 
+          <Button
+            onClick={closeConfirmBetDialog}
             variant="outlined"
             sx={{
               borderColor: 'rgba(255, 255, 255, 0.3)',
@@ -1243,8 +1315,8 @@ function Custom(props) {
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirmBet} 
+          <Button
+            onClick={handleConfirmBet}
             variant="contained"
             autoFocus
             sx={{
@@ -1286,6 +1358,6 @@ function Custom(props) {
 
 // Wrap with React.memo for performance optimization
 export default React.memo(Custom, createShallowComparison([
-  'bankroll', 'bet_amount', 'betting', 'result', 'roomInfo.gameCode', 
+  'bankroll', 'bet_amount', 'betting', 'result', 'roomInfo.gameCode',
   'roomInfo.status', 'roomInfo._id', 'creator_id', 'user_id'
 ]));

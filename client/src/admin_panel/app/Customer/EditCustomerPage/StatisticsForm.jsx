@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import './style.css';
 import {
-  Tooltip,
+  Box,
+  Card,
+  CardContent,
+  Typography,
   Table,
   TableBody,
   TableCell,
   TableRow,
-  Typography
+  Tooltip,
+  Grid,
+  useTheme,
+  LinearProgress,
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { convertToCurrency } from '../../../../util/conversion';
 import { formatDistanceToNow } from 'date-fns';
 
-/**
- * Functional component version of StatisticsForm without chart and filters.
- */
 const StatisticsForm = (props) => {
   const {
     creditScore: initialCreditScore = 0,
@@ -31,15 +32,17 @@ const StatisticsForm = (props) => {
     barStyle,
     color,
     solPrice,
-    rank // user rank (if passed as props)
+    rank
   } = props;
 
-  // ----- State -----
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
+  // State
   const [creditScore, setCreditScore] = useState(initialCreditScore);
   const [hexagon, setHexagon] = useState(null);
 
-  // ----- Side Effects -----
-  // Equivalent to componentDidMount & update when `props.creditScore` changes
+  // Effects
   useEffect(() => {
     if (typeof initialCreditScore === 'number') {
       updateHexagon(initialCreditScore);
@@ -52,260 +55,392 @@ const StatisticsForm = (props) => {
     }
   }, [props.creditScore]);
 
-  // ----- Helper Functions -----
-  /**
-   * Returns dash offset for the hexagon stroke based on creditScore range.
-   */
+  // Helper Functions
   const calculateDashOffset = (score) => {
     if (typeof score !== 'number') return NaN;
-    // For creditScore 900..2000 => offset 390..0
     const scalingFactor = 390 / (2000 - 900);
     const invertedScore = 2000 - score;
     return invertedScore * scalingFactor;
   };
 
   const getHexagonColor = (score) => {
-    if (score < 1000) return '#FF0000';
-    if (score === 1000) return 'white';
-    return 'green';
+    if (score < 1000) return '#ff0000';
+    if (score === 1000) return '#fbbf24';
+    return '#10b981';
   };
 
-  /**
-   * Renders a polygon that visually indicates creditScore progress.
-   */
   const renderProgressHexagon = (score) => {
     if (typeof score !== 'number') return null;
     const dashOffset = calculateDashOffset(score);
+    const hexColor = getHexagonColor(score);
+    
     return (
-      <polygon
-        points="60,15 105,40 105,80 60,105 15,80 15,40"
-        className={`progress-hexagon ${getHexagonColor(score)}`}
-        style={{ strokeDashoffset: dashOffset }}
-      />
+      <Box
+        sx={{
+          width: 80,
+          height: 80,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <svg width="80" height="80" viewBox="0 0 120 120">
+          <polygon
+            points="60,15 105,40 105,80 60,105 15,80 15,40"
+            fill="none"
+            stroke={isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}
+            strokeWidth="2"
+          />
+          <polygon
+            points="60,15 105,40 105,80 60,105 15,80 15,40"
+            fill="none"
+            stroke={hexColor}
+            strokeWidth="3"
+            strokeDasharray="390"
+            strokeDashoffset={dashOffset}
+            style={{
+              transition: 'stroke-dashoffset 1s ease',
+              transform: 'rotate(-90deg)',
+              transformOrigin: 'center'
+            }}
+          />
+        </svg>
+      </Box>
     );
   };
 
-  /**
-   * Sets credit score and hexagon in state.
-   */
   const updateHexagon = (score) => {
     setCreditScore(score);
     setHexagon(renderProgressHexagon(score));
   };
 
-  /**
-   * Log-scale rank calculation based on totalWagered.
-   */
+  // Rank calculation with modern progress bar
   const getRank = (amount) => {
-    // 1) Calculate raw rank (0-based)
     const raw = Math.log2(amount + 1) / 1.2;
-    const rankFloor = Math.floor(raw) + 1; // Add +1 to match the pure function
+    const rankFloor = Math.floor(raw) + 1;
     const nextRank = rankFloor + 1;
 
-    // 2) Thresholds for linear progress
-    const thresholdForThisRank =
-      rankFloor > 1 ? Math.pow(2, 1.2 * (rankFloor - 1)) - 1 : 0;
+    const thresholdForThisRank = rankFloor > 1 ? Math.pow(2, 1.2 * (rankFloor - 1)) - 1 : 0;
     const thresholdForNextRank = Math.pow(2, 1.2 * rankFloor) - 1;
 
-    // 3) fraction => portion between [rankFloor .. nextRank]
-    let fraction =
-      (amount - thresholdForThisRank) /
-      (thresholdForNextRank - thresholdForThisRank);
+    let fraction = (amount - thresholdForThisRank) / (thresholdForNextRank - thresholdForThisRank);
     fraction = Math.max(0, Math.min(1, fraction));
-
-    // 4) Convert fraction => percentage
-    const percent = (fraction * 100).toFixed(2);
+    const percent = (fraction * 100).toFixed(1);
 
     return (
-      <div style={{ margin: '10px 0' }}>
-        {/* Progress bar outer container */}
-        <div className="custom-progress-bar-outer">
-          {/* Filled portion */}
-          <div
-            className="custom-progress-bar-filled"
-            style={{ width: `${percent}%` }}
+      <Box sx={{ width: '100%' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: '#ff0000' }}>
+            Rank {rankFloor}
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
+            Rank {nextRank}
+          </Typography>
+        </Box>
+        <Box sx={{ position: 'relative' }}>
+          <LinearProgress
+            variant="determinate"
+            value={parseFloat(percent)}
+            sx={{
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              '& .MuiLinearProgress-bar': {
+                background: 'linear-gradient(90deg, #ff0000 0%, #f59e0b 100%)',
+                borderRadius: 4,
+              }
+            }}
           />
-          {/* Single centered label */}
-          <div className="custom-progress-bar-label">
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: '#fff',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+            }}
+          >
             {percent}%
-          </div>
-        </div>
-
-        {/* Ranks below the bar */}
-        <div className="custom-rank-row">
-          <span className="custom-rank-left">{rankFloor}</span>
-          <span className="custom-rank-right">{nextRank}</span>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     );
-};
+  };
 
-  // ----- Computed Values -----
+  // Computed Values
   const date_joined = new Date(dateJoined);
   const lastSeen = new Date(last_seen);
-  const joinedAgo = formatDistanceToNow(date_joined, { addSuffix: true });
-  const lastSeenAgo = formatDistanceToNow(lastSeen, { addSuffix: true }); 
+  const lastSeenAgo = formatDistanceToNow(lastSeen, { addSuffix: true });
   const roundedCreditScore = Math.ceil(creditScore);
 
-  // ----- Render -----
   return (
-    <ChartDivEl>
-      {/* BREAKDOWN Section */}
-      <div className="rank-badge">
-      <Typography sx={{textAlign: 'center'}}>BREAKDOWN</Typography>
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell>
-                <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
-                  LAST SEEN
-                </b>
-              </TableCell>
-              <TableCell align="right" sx={{ color: '#ff8500' }}>
-                {lastSeenAgo}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              {/* <TableCell>
-                <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
-                  JOINED
-                </b>
-              </TableCell>
-              <TableCell align="right" sx={{ color: '#ff8500' }}>
-                {joinedAgo}
-              </TableCell> */}
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
-                  RANK
-                </b>
-              </TableCell>
-              <TableCell sx={{ display: 'flex', justifyContent: 'end' }}>
-                <div>{getRank(rank)}</div>
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
-                  SPENDING
-                </b>
-              </TableCell>
-              <TableCell>
-                <div className="hexagon">
-                  <div className="hex-content">
-                    <h2 style={{ color }}>{title}</h2>
-                    <div className="payout-bar">
-                      <div className="value" style={barStyle}></div>
-                    </div>
-                    <div className="message">
-                      {message}{' '}
-                      <Tooltip
-                        title="Calculated using your average wager and All-Time-High"
-                        placement="top"
-                      >
-                        <span style={{ padding: '5px', cursor: 'pointer' }}>
-                          <InfoIcon style={{ width: '12px' }} />
-                        </span>
-                      </Tooltip>
-                    </div>
-                  </div>
-                </div>
-              </TableCell>
-            </TableRow>
-            {/* <TableRow>
-              <TableCell>
-                <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
-                  CREDIT SCORE
-                </b>
-              </TableCell>
-              <TableCell>
-                <div className="creditScore">
-                  <svg className="dial" width="120" height="120">
-                    <svg width="120" height="120">{hexagon}</svg>
-                    <text
-                      x="50%"
-                      y="40%"
-                      textAnchor="middle"
-                      alignmentBaseline="middle"
-                      className="creditScoreStatus"
-                      style={{ fill: '#ff8500' }}
-                    >
-                      {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
-                      {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
-                      {roundedCreditScore < 1000 && 'BAD'}
-                    </text>
-                    <text
-                      x="50%"
-                      y="60%"
-                      textAnchor="middle"
-                      alignmentBaseline="middle"
-                      className="creditScoreValue"
-                      style={{ fill: '#ff8500' }}
-                    >
-                      {roundedCreditScore} / 2000
-                    </text>
-                  </svg>
-                </div>
-              </TableCell>
-            </TableRow> */}
-          </TableBody>
-        </Table>
-      </div>
+    <Box sx={{ width: '100%' }}>
+      <Grid container spacing={2.5}>
+        {/* Breakdown Section */}
+        <Grid item xs={12} md={6}>
+          <Card
+            elevation={0}
+            sx={{
+              background: isDarkMode 
+                ? 'linear-gradient(135deg, rgba(45, 45, 45, 0.15) 0%, rgba(50, 50, 50, 0.2) 100%)'
+                : 'linear-gradient(135deg, rgba(248, 250, 252, 0.7) 0%, rgba(255, 255, 255, 0.8) 100%)',
+              border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}`,
+              borderRadius: 2,
+              height: 'fit-content'
+            }}
+          >
+            <CardContent sx={{ p: 2.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box
+                  sx={{
+                    width: 3,
+                    height: 18,
+                    backgroundColor: '#ff0000',
+                    borderRadius: 1.5,
+                    mr: 1.5
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: isDarkMode ? '#fff' : '#111827',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Breakdown
+                </Typography>
+              </Box>
 
-      {/* PERFORMANCE Table (no filters, no chart) */}
-      <div className="statistics-container">
-        <div>
-          <div className="statistics-panel">
-            <Typography sx={{textAlign: 'center'}}>PERFORMANCE</Typography>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="label">Games Played</TableCell>
-                  <TableCell className="value" align="right">
-                    {gamePlayed}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="label">Total Wagered</TableCell>
-                  <TableCell className="value" align="right">
-                    {convertToCurrency(totalWagered, solPrice)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="label">Total Traded</TableCell>
-                  <TableCell className="value" align="right">
-                    {convertToCurrency(totalTraded, solPrice)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="label">Game Profit</TableCell>
-                  <TableCell className="value" align="right">
-                    {convertToCurrency(gameProfit, solPrice)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="label">Trading Profit</TableCell>
-                  <TableCell className="value" align="right">
-                    {convertToCurrency(tradingProfit, solPrice)}
-                  </TableCell>
-                </TableRow>
-                
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
-    </ChartDivEl>
+              <Table size="small">
+                <TableBody>
+                  <TableRow sx={{ '& td': { border: 'none', py: 1 } }}>
+                    <TableCell sx={{ pl: 0 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                          fontSize: '0.8rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        Last Seen
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right" sx={{ pr: 0 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#ff0000', 
+                          fontWeight: 600,
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        {lastSeenAgo}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow sx={{ '& td': { border: 'none', py: 1.5 } }}>
+                    <TableCell sx={{ pl: 0 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                          fontSize: '0.8rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        Rank Progress
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right" sx={{ pr: 0, width: '60%' }}>
+                      {getRank(rank)}
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow sx={{ '& td': { border: 'none', py: 1.5 } }}>
+                    <TableCell sx={{ pl: 0, verticalAlign: 'top', pt: 2 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                          fontSize: '0.8rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        Spending Status
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right" sx={{ pr: 0 }}>
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          background: isDarkMode 
+                            ? 'rgba(0, 0, 0, 0.2)' 
+                            : 'rgba(248, 250, 252, 0.5)',
+                          border: `1px solid ${color}20`,
+                          textAlign: 'center'
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: color,
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            mb: 1
+                          }}
+                        >
+                          {title}
+                        </Typography>
+                        
+                        <Box sx={{ mb: 1.5 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={parseInt(barStyle.width)}
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: barStyle.backgroundColor,
+                                borderRadius: 3,
+                              }
+                            }}
+                          />
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: '0.75rem',
+                              color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                              fontWeight: 500
+                            }}
+                          >
+                            {message}
+                          </Typography>
+                          <Tooltip
+                            title="Calculated using your average wager and All-Time-High"
+                            placement="top"
+                          >
+                            <InfoIcon 
+                              sx={{ 
+                                fontSize: 12, 
+                                color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                                cursor: 'pointer' 
+                              }} 
+                            />
+                          </Tooltip>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Performance Section */}
+        <Grid item xs={12} md={6}>
+          <Card
+            elevation={0}
+            sx={{
+              background: isDarkMode 
+                ? 'linear-gradient(135deg, rgba(45, 45, 45, 0.15) 0%, rgba(50, 50, 50, 0.2) 100%)'
+                : 'linear-gradient(135deg, rgba(248, 250, 252, 0.7) 0%, rgba(255, 255, 255, 0.8) 100%)',
+              border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}`,
+              borderRadius: 2,
+              height: 'fit-content'
+            }}
+          >
+            <CardContent sx={{ p: 2.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box
+                  sx={{
+                    width: 3,
+                    height: 18,
+                    backgroundColor: '#ff0000',
+                    borderRadius: 1.5,
+                    mr: 1.5
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: isDarkMode ? '#fff' : '#111827',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Performance
+                </Typography>
+              </Box>
+
+              <Table size="small">
+                <TableBody>
+                  {[
+                    { label: 'Games Played', value: gamePlayed },
+                    { label: 'Total Wagered', value: convertToCurrency(totalWagered, solPrice) },
+                    { label: 'Total Traded', value: convertToCurrency(totalTraded, solPrice) },
+                    { label: 'Game Profit', value: convertToCurrency(gameProfit, solPrice) },
+                    { label: 'Trading Profit', value: convertToCurrency(tradingProfit, solPrice) }
+                  ].map((row, index) => (
+                    <TableRow key={index} sx={{ '& td': { border: 'none', py: 1 } }}>
+                      <TableCell sx={{ pl: 0 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 600,
+                            color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          {row.label}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right" sx={{ pr: 0 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#ff0000', 
+                            fontWeight: 700,
+                            fontSize: '0.9rem'
+                          }}
+                        >
+                          {row.value}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
 export default StatisticsForm;
-
-/* ---- STYLES ---- */
-const ChartDivEl = styled.div`
-  grid-area: Charts;
-  justify-self: center;
-  width: 100%;
-  align-items: center;
-`;

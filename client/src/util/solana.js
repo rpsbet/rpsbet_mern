@@ -38,7 +38,7 @@ export const sendSolDeposit = async (
   onPopupClose = () => {},
   subscriptionInfo = null
 ) => {
-
+console.log('[sendSolDeposit] Starting SOL deposit process...', account);
   const numAmount = parseFloat(amount);
   if (isNaN(numAmount) || numAmount <= 0) {
     const errorText = 'Please enter a valid SOL amount.';
@@ -79,13 +79,13 @@ export const sendSolDeposit = async (
   }
 
   // Validate wallet from props/state
-  // if (!account?.publicKey) {
-  //   const errorText = 'Wallet not connected or public key not available.';
-  //   console.error('[sendSolDeposit] Account Prop Error:', errorText, { account });
-  //   dispatch(errorMsgBar(errorText));
-  //   onError();
-  //   return { success: false, error: errorText };
-  // }
+  if (!account?.publicKey) {
+    const errorText = 'Wallet not connected or public key not available.';
+    console.error('[sendSolDeposit] Account Prop Error:', errorText, { account });
+    dispatch(errorMsgBar(errorText));
+    onError();
+    return { success: false, error: errorText };
+  }
 
   try {
     // Get RPC URL

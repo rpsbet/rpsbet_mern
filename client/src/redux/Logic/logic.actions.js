@@ -145,133 +145,116 @@ export const proxyAsset = (key, url) => async (dispatch) => {
   }
 };
 
-/**
- * Analyzes generated game code and auto-populates room information
- * @param {string} gameCode - The generated React game component code
- * @param {function} onChangeState - Callback to update component state
- * @param {function} dispatch - Redux dispatch function
- * @returns {Promise<object|null>} - Extracted info or null if failed
- */
 export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) => {
-  try {
-    console.log('[AutoPopulate] Starting room info extraction...');
-    
-    if (!gameCode || typeof gameCode !== 'string') {
-      console.warn('[AutoPopulate] Invalid game code');
-      return null;
-    }
+  if (!gameCode || !gameCode.trim()) {
+    console.log('[AutoPopulate] No game code provided');
+    return null;
+  }
 
-    const response = await axios.post('/game/extract-room-info', {
-      gameCode,
+  try {
+    console.log('[AutoPopulate] Starting extraction process...');
+    
+    // Step 1: Extract room information from game code
+    const extractResponse = await axios.post('/game/extract-room-info', {
+      gameCode: gameCode
     });
 
-    const extractedInfo = response.data;
-    console.log('[AutoPopulate] Extracted info:', extractedInfo);
+    if (!extractResponse.data || extractResponse.status !== 200) {
+      throw new Error('Failed to extract room information');
+    }
 
-    if (extractedInfo && extractedInfo.confidence > 0.6) {
-      // Auto-populate the fields
-      onChangeState({
-        name: extractedInfo.name || '',
-        ticker: extractedInfo.ticker || '',
-        description: extractedInfo.description || '',
-      });
+    const { name, ticker, description, gameTheme, confidence } = extractResponse.data;
+    console.log('[AutoPopulate] Extracted info:', { name, ticker, description, gameTheme, confidence });
 
-      // Generate an image based on the game title
-      await generateGameImage(extractedInfo, onChangeState);
-
-      return extractedInfo;
-    } else {
-      console.warn('[AutoPopulate] Low confidence or missing data, skipping auto-population');
+    // Step 2: Only proceed if we got meaningful data
+    if (name === 'Default Game' || ticker === 'GAME' || confidence < 0.6) {
+      console.log('[AutoPopulate] Low confidence or default values, skipping auto-populate');
       return null;
     }
 
+    // Step 3: Generate image based on extracted info
+    let imageUrl = null;
+    try {
+      console.log('[AutoPopulate] Generating image for:', name);
+      
+      const imagePrompt = `Create a clean, modern logo for a game called "${name}". 
+        Game theme: ${gameTheme}. 
+        Style: Simple, bold, professional logo design with solid background. 
+        Gaming aesthetic, high contrast, perfect for use as a coin/token icon. 
+        Square format, minimal design. No text in the image.`;
+      
+      const imageResponse = await axios.post('/game/generate-image', {
+        prompt: imagePrompt,
+        size: '1024x1024',
+        quality: 'standard'
+      });
+
+      if (imageResponse.data?.imageUrl) {
+        imageUrl = imageResponse.data.imageUrl;
+        console.log('[AutoPopulate] Image generated successfully');
+      }
+    } catch (imageError) {
+      console.warn('[AutoPopulate] Image generation failed:', imageError.message);
+      // Continue without image - user can upload manually
+    }
+
+    // Step 4: Prepare updates object
+    const updates = {};
+    
+    if (name && name !== 'Default Game' && name.length >= 3 && name.length <= 20) {
+      updates.name = name;
+    }
+    
+    if (ticker && ticker !== 'GAME' && ticker.length >= 2 && ticker.length <= 6) {
+      updates.ticker = ticker;
+    }
+    
+    if (description && description.length > 20) {
+      updates.description = description;
+    }
+    
+    if (imageUrl) {
+      updates.image = imageUrl;
+    }
+
+    // Step 5: Apply updates if any
+    if (Object.keys(updates).length > 0) {
+      console.log('[AutoPopulate] Applying updates:', updates);
+      onChangeState(updates);
+      
+      return { 
+        name: updates.name || name, 
+        ticker: updates.ticker || ticker, 
+        description: updates.description || description, 
+        imageUrl,
+        confidence 
+      };
+    }
+
+    return null;
+
   } catch (error) {
-    console.error('[AutoPopulate] Error extracting room info:', error);
+    console.error('[AutoPopulate] Failed:', error);
     return null;
   }
 };
 
-/**
- * Generates an image based on the game theme
- * @param {object} extractedInfo - Info extracted from game analysis
- * @param {function} onChangeState - Callback to update component state
- */
-const generateGameImage = async (extractedInfo, onChangeState) => {
-  try {
-    console.log('[AutoPopulate] Generating image for game:', extractedInfo.name);
-
-    // Try to generate with DALL-E first
-    try {
-      const enhancedPrompt = `Create a clean, modern logo/icon for a gaming platform based on the game titled "${extractedInfo.name}". 
-      Style: Simple, bold, professional logo design. Solid background color. High contrast. 
-      Avoid text or letters in the image. Perfect for use as a coin/token icon.
-      Size: Square format, minimal design, gaming aesthetic.`;
-
-      const response = await axios.post('/game/generate-image', {
-        prompt: enhancedPrompt,
-        size: '1024x1024',
-        quality: 'standard',
-      });
-
-      if (response.data && response.data.imageUrl) {
-        onChangeState({ image: response.data.imageUrl });
-        console.log('[AutoPopulate] DALL-E image generated successfully');
-        return;
-      }
-    } catch (dalleError) {
-      console.log('[AutoPopulate] DALL-E failed, trying placeholder...');
-    }
-
-    // Fallback to placeholder image
-    const placeholderResponse = await axios.post('/game/generate-placeholder-image', {
-      gameTheme: extractedInfo.gameTheme,
-      name: extractedInfo.name,
-    });
-
-    if (placeholderResponse.data && placeholderResponse.data.imageUrl) {
-      onChangeState({ image: placeholderResponse.data.imageUrl });
-      console.log('[AutoPopulate] Placeholder image generated successfully');
-    }
-
-  } catch (error) {
-    console.error('[AutoPopulate] Error generating image:', error);
-    // Silently fail for image generation
-  }
-};
-
-/**
- * Manual trigger for auto-populate (can be called from UI button)
- * @param {string} gameCode - The generated React game component code
- * @param {function} onChangeState - Callback to update component state
- * @param {function} dispatch - Redux dispatch function
- * @param {boolean} overwrite - Whether to overwrite existing values
- */
+// Improved manualAutopopulate function
 export const manualAutopopulate = async (gameCode, onChangeState, dispatch, overwrite = false) => {
   if (!gameCode || !gameCode.trim()) {
     dispatch({
       type: 'MSG_ERROR',
-      payload: 'No game code available to analyze'
+      payload: 'No game code available to analyze. Please generate a game first.'
     });
-    return;
+    return null;
   }
 
   try {
+    console.log('Manual auto-populate triggered');
     const result = await autopopulateRoomInfo(gameCode, onChangeState, dispatch);
-    
-    if (result) {
-      dispatch({
-        type: 'MSG_SUCCESS',
-        payload: `Auto-populated: ${result.name} ($${result.ticker})`
-      });
-    } else {
-      dispatch({
-        type: 'MSG_WARNING',
-        payload: 'Could not extract room information from the game code'
-      });
-    }
-    
     return result;
   } catch (error) {
+    console.error('Manual auto-populate failed:', error);
     dispatch({
       type: 'MSG_ERROR',
       payload: 'Failed to auto-populate room information'
@@ -284,7 +267,6 @@ export const generateReactGameFromPrompt = (
   user_id,
   user_credits,
   gamePrompt,
-  user_balance,
   setGameCode,
   setProxiedAssets,
   onChangeState,
@@ -292,7 +274,7 @@ export const generateReactGameFromPrompt = (
   setGameLoading,
   preProxiedAssets = { images: [], audio: [] },
   model = 'o3-mini',
-  onStreamUpdate = null // Keep for progress updates even without streaming
+  onStreamUpdate = null
 ) => async (dispatch) => {
   if (!gamePrompt.trim()) {
     dispatch({ type: MSG_ERROR, payload: 'Please enter a valid app prompt.' });
@@ -308,7 +290,7 @@ export const generateReactGameFromPrompt = (
   dispatch({ type: START_LOADING });
   setGameLoading(true);
 
-  // Enhanced progress simulation for better UX
+  // Enhanced progress simulation
   let progressInterval = null;
   if (onStreamUpdate && typeof onStreamUpdate === 'function') {
     let progress = 0;
@@ -337,7 +319,7 @@ export const generateReactGameFromPrompt = (
         });
         messageIndex++;
       }
-    }, 2000); // Update every 2 seconds
+    }, 2000);
   }
 
   try {
@@ -347,12 +329,13 @@ export const generateReactGameFromPrompt = (
       model,
     });
 
-    // Clear progress interval
     if (progressInterval) {
       clearInterval(progressInterval);
     }
 
     const { finalApp, proxiedAssets } = response.data;
+    
+    // Set the game code first
     setGameCode(finalApp);
     setProxiedAssets(proxiedAssets);
 
@@ -365,6 +348,7 @@ export const generateReactGameFromPrompt = (
       });
     }
 
+    // Update user prompt
     if (typeof updateUserPrompt === 'function') {
       await updateUserPrompt(user_id, gamePrompt);
     } else {
@@ -372,10 +356,11 @@ export const generateReactGameFromPrompt = (
     }
 
     dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
+    
+    // Return the result with game code for auto-population
     return { payload: { finalApp, proxiedAssets } };
 
   } catch (error) {
-    // Clear progress interval on error
     if (progressInterval) {
       clearInterval(progressInterval);
     }
@@ -409,7 +394,6 @@ export const generateReactGameFromPrompt = (
     setGameCode(errorComponent);
     throw error;
   } finally {
-    // Clean up interval if it exists
     if (progressInterval) {
       clearInterval(progressInterval);
     }
@@ -595,6 +579,7 @@ export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
 // player
 export const bet3 = bet_info => async dispatch => {
   try {
+    console.log('Betting info:', bet_info);
     dispatch({ type: START_BET });
     const res = await axios.post('/game/bet3', bet_info);
     dispatch({ type: END_BET });
@@ -757,7 +742,6 @@ export const updateRoomGameCode = ({ roomId, gameCode, proxiedAssets }) => async
     });
   }
 };
-
 
 
 export const actionRoom = ({ roomId, type }) => async dispatch => {
@@ -1139,9 +1123,9 @@ export const jeetGame = (room_id, stake_amount, callback) => async (dispatch, ge
   dispatch({ type: TRADE_LOADING, payload: true });
   try {
     // Retrieve connectedAccount from the auth state
-    const { auth: { connectedAccount } } = getState();
+    const { auth: { walletAddress } } = getState();
 
-    const res = await axios.post('/game/jeet', { room_id, stake_amount, connectedAccount });
+    const res = await axios.post('/game/jeet', { room_id, stake_amount, walletAddress });
 
     if (res.data.success) {
       dispatch({

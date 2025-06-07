@@ -336,7 +336,7 @@ const GamesContent = React.memo(() => (
             fontSize: { xs: '0.9rem', md: '1rem' }
           }}
         >
-          The robot builds a real game just for you! ✨
+          The AI builds a real game just for you! ✨
         </Typography>
       </Box>
 
@@ -505,7 +505,7 @@ const FeesContent = React.memo(() => (
           fontSize: { xs: '0.9rem', md: '1rem' }
         }}
       >
-        🌟 VIP Members get 50% OFF!
+         <span style={{background: '#000', padding: '4px 8px', borderRadius: '6px'}}>🌟 BLACK Elite</span> Members get 50% OFF!
       </Typography>
       <Typography 
         variant="h5" 
@@ -880,7 +880,7 @@ function HowToPlayModalComponent({ modalIsOpen, closeModal }) {
             }}
           >
             <QuestionMark sx={{ fontSize: '1.5rem', color: '#ffd700' }} />
-            How It Works
+            HELP
           </Typography>
 
           <Button

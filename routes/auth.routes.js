@@ -241,59 +241,106 @@ router.post('/privy', async (req, res) => {
   }
 
   try {
-    // Step 1: Look up user by privyId or wallet/email fallback
-    let user = await User.findOne({
-      $or: [
-        { privyId },
-        wallet ? { accounts: wallet } : null,
-        email ? { email } : null,
-      ].filter(Boolean)
-    });
-
-    if (!user) {
-      // Step 2: Create new user
-      const username = `PRIVY_${privyId.slice(-6)}`;
-
-      user = new User({
-        privyId,
-        username,
-        email: email || '',
-        password: generateRandomPassword(),
-        bio: '',
-        totalWagered: 0,
-        totalTraded: 0,
-        balance: 0, // This is the backend balance, separate from wallet
-        rewards: [],
-        credit_score: 1000,
-        ai_mode: 'Random',
-        status: 'off',
-        avatar: '',
-        referralCode: generateReferralCode(),
-        referralUsername: '',
-        accounts: wallet ? [wallet] : [],
-      });
-
-      await user.save();
-    } else if (wallet && !user.accounts.includes(wallet)) {
-      // Update user with new wallet if not already present
-      user.accounts.push(wallet);
-      await user.save();
+    const redisClient = req.app.get('redisClient');
+    
+    // Step 1: Check Redis cache first
+    const userCacheKey = `user:privy:${privyId}`;
+    let user = null;
+    let fromCache = false;
+    
+    try {
+      const cachedUser = await redisClient.get(userCacheKey);
+      if (cachedUser) {
+        user = JSON.parse(cachedUser);
+        fromCache = true;
+      }
+    } catch (redisErr) {
+      console.error('Redis error during user lookup:', redisErr);
     }
 
-    // Step 3: Generate JWT
+    // Step 2: If not in cache, look up in database
+    if (!user) {
+      user = await User.findOne({
+        $or: [
+          { privyId },
+          wallet ? { accounts: wallet } : null,
+          email ? { email } : null,
+        ].filter(Boolean)
+      });
+
+      if (!user) {
+        // Step 3: Create new user
+        const username = `PRIVY_${privyId.slice(-6)}`;
+
+        user = new User({
+          privyId,
+          username,
+          email: email || '',
+          password: generateRandomPassword(),
+          bio: '',
+          totalWagered: 0,
+          totalTraded: 0,
+          balance: 0,
+          rewards: [],
+          credit_score: 1000,
+          ai_mode: 'Random',
+          status: 'off',
+          avatar: '',
+          referralCode: generateReferralCode(),
+          referralUsername: '',
+          accounts: wallet ? [wallet] : [],
+        });
+
+        await user.save();
+      } else if (wallet && !user.accounts.includes(wallet)) {
+        // Update user with new wallet
+        user.accounts.push(wallet);
+        await user.save();
+      }
+
+      // Cache the user data for 15 minutes
+      try {
+        await redisClient.setEx(
+          userCacheKey, 
+          900, // 15 minutes
+          JSON.stringify(user.toObject())
+        );
+        console.log(`User cached: ${privyId}`);
+      } catch (redisErr) {
+        console.error('Failed to cache user:', redisErr);
+      }
+    }
+
+    // Step 4: Generate JWT
     const token = jwt.sign(
       { id: user._id, is_admin: user.is_admin },
       process.env.SECRET_OR_KEY,
       { expiresIn: '7d' }
     );
 
+    // Step 5: Cache the session
+    const sessionCacheKey = `session:${user._id}`;
+    try {
+      await redisClient.setEx(
+        sessionCacheKey,
+        604800, // 7 days (same as JWT expiry)
+        JSON.stringify({
+          userId: user._id,
+          privyId,
+          wallet: wallet || (user.accounts.length > 0 ? user.accounts[0] : null),
+          createdAt: new Date().toISOString()
+        })
+      );
+    } catch (redisErr) {
+      console.error('Failed to cache session:', redisErr);
+    }
+
     return res.json({
       success: true,
-      message: 'Success :)',
+      message: fromCache ? 'Success (cached) :)' : 'Success :)',
       token,
       user: {
-        ...user.toObject(),
-        // Don't include wallet balance here - frontend will get it from Privy
+        ...user.toObject ? user.toObject() : user,
         primaryWallet: wallet || (user.accounts.length > 0 ? user.accounts[0] : null)
       },
     });
@@ -517,12 +564,12 @@ router.post('/purchase-elite', auth, async (req, res) => {
       });
     }
 
-    console.log('[purchase-elite] Creating pending transaction:', {
-      userId,
-      type,
-      signature,
-      amount: actualAmount
-    });
+    // console.log('[purchase-elite] Creating pending transaction:', {
+    //   userId,
+    //   type,
+    //   signature,
+    //   amount: actualAmount
+    // });
 
     // Create PENDING transaction - let cron job verify and complete it
     const newTransaction = new Transaction({
@@ -538,7 +585,7 @@ router.post('/purchase-elite', auth, async (req, res) => {
 
     await saveDocumentWithRetry(newTransaction);
     
-    console.log('[purchase-elite] Pending transaction created:', newTransaction._id);
+    // console.log('[purchase-elite] Pending transaction created:', newTransaction._id);
 
     // Emit the pending transaction immediately
     socket.newTransaction(newTransaction);
@@ -774,25 +821,23 @@ router.get('/transactions', auth, async (req, res) => {
 // Change Password in EditAccountModal
 router.post('/changePasswordAndAvatar', auth, async (req, res) => {
   try {
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(req.body.new_password, salt, (err, hash) => {
-        if (err) throw err;
-        if (req.body.new_password !== '') {
-          req.user.password = hash;
-        }
-        req.user.avatar = req.body.new_avatar;
-        try {
-          saveDocumentWithRetry(req.user);
-        } catch (error) {
-          console.error("Error saving   req.user:", error);
-        }
-        return res.json({
-          success: true
-        });
-      });
-    });
+    const { new_password, new_avatar } = req.body;
+
+    // If password is provided, hash it
+    if (new_password) {
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(new_password, salt);
+      req.user.password = hash;
+    }
+
+    req.user.avatar = new_avatar;
+
+    await saveDocumentWithRetry(req.user);
+
+    return res.json({ success: true });
   } catch (error) {
-    res.json({ success: false, error });
+    console.error("Error in /changePasswordAndAvatar:", error);
+    return res.json({ success: false, error: error.message || error });
   }
 });
 
@@ -826,15 +871,11 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
 // @access  Private
 router.post('/logout', auth, async (req, res) => {
   try {
-    console.log('Processing logout for user:', req.user._id);
-    
     // Update user status
     req.user.status = 'off';
     
     // Save with proper error handling
     await saveDocumentWithRetry(req.user);
-    
-    console.log('User status updated to offline');
     
     res.json({
       success: true,

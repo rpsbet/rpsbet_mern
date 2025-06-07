@@ -176,7 +176,7 @@ const TipModal = (
                 disabled={isLoading}
                 startIcon={
                   isLoading ? (
-                    <CircularProgress size={20} color="inherit" />
+                    <CircularProgress size={20} color="error" />
                   ) : (
                     <FontAwesomeIcon icon={faMoneyBill} />
                   )

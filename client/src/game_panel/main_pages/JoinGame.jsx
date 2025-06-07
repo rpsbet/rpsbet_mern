@@ -103,7 +103,7 @@ function JoinGame() {
     total_wagered: state.auth.user.totalWagered,
     rank: state.logic.curRoomInfo.rank,
     user: state.auth.user,
-    connectedAccount: state.auth.connectedAccount,
+    connectedAccount: state.auth.walletAddress,
     creator_avatar: state.logic.curRoomInfo.creator_avatar,
     creator_accessory: state.logic.curRoomInfo.accessory,
     username: state.logic.curRoomInfo.username,
@@ -247,6 +247,8 @@ function JoinGame() {
     }
   }, [user_balance, gameState.gameResult, gameState.isMax]);
 
+  
+
   // Update history when it changes
   useEffect(() => {
     if (
@@ -389,7 +391,7 @@ const join = useCallback(
           return { success: false };
         }
       }
-
+console.log('connectedAccount', connectedAccount);
       // Place bet
       betResult = await dispatch(
         bet3({
@@ -703,7 +705,6 @@ const join = useCallback(
                 handleSendCoHost={handleSendCoHost}
                 handleCoHostAmountChange={handleCoHostAmountChange}
                 has_joined={true}
-                account={account}
                 input_only={true}
               />
             </Suspense>

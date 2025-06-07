@@ -195,6 +195,7 @@ export default function (state = initialState, action) {
         liveWalletBalance: action.payload.balance,
         walletAddress: action.payload.walletAddress,
         walletBalanceTimestamp: action.payload.timestamp,
+        account: action.payload.account,
         walletBalanceError: null
       };
 

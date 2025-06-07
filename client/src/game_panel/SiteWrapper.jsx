@@ -133,6 +133,7 @@ const CUSTOM_TEXT_FIELD_STYLES = {
   }
 };
 
+// Create themes once and reuse - significant performance improvement
 const THEMES = {
   main: createTheme({
     palette: { type: 'light' },
@@ -146,7 +147,7 @@ const THEMES = {
 
 const RESTRICTED_COUNTRIES = ['UK'];
 
-// Utility functions
+// Optimized utility function - reduced complexity
 const updateFromNow = (items, timestampField = 'created_at') => {
   if (!items?.length) return [];
 
@@ -185,94 +186,75 @@ const appendCurrencyBracket = (message, amount, solPrice) => {
   }
 };
 
-// Stable selectors with proper memoization
-const selectUserData = (state) => ({
-  isDarkMode: state.auth?.isDarkMode ?? false,
-  user: state.auth?.user,
-  userName: state.auth?.userName,
-  balance: state.auth?.balance ?? 0,
-  socket: state.auth?.socket,
-  transactions: state.auth?.transactions ?? [],
-  isNotificationsAllowed: state.auth?.isNotificationsAllowed ?? false,
-  isMuted: state.auth?.isMuted ?? false,
-  notificationSounds: state.auth?.notificationSounds ?? true,
-  isLowGraphics: state.auth?.isLowGraphics ?? false,
-  showCookieConsent: state.auth?.showCookieConsent ?? false,
-});
-
-const selectLogicData = (state) => ({
-  solPrice: state.logic?.solPrice ?? 0,
-  notifications: state.logic?.notifications ?? [],
-});
-
-const selectLoanData = (state) => ({
-  remainingLoans: state.loanReducer?.remainingLoans ?? 0,
-});
-
-const selectWalletBalance = (state) => {
-  const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
-  const backendBalance = state?.auth?.user?.balance ?? 0;
-  const walletAddress = state?.auth?.walletAddress;
-  console.log('Live wallet balance:', liveWalletBalance, 'Backend balance:', backendBalance, 'Wallet address:', walletAddress);
-  // Use live wallet balance if available, otherwise fall back to backend balance
-  return {
-    balance: walletAddress ? liveWalletBalance : backendBalance,
-    isWalletBalance: Boolean(walletAddress),
-    walletAddress
-  };
-};
-
 function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Stable selectors to prevent unnecessary re-renders
-  const userData = useSelector(selectUserData);
-  const logicData = useSelector(selectLogicData);
-  const loanData = useSelector(selectLoanData);
-  const walletData = useSelector(selectWalletBalance);
+  // FIXED: Add Privy authentication hooks first
+  const { 
+    ready: privyReady, 
+    authenticated: privyAuthenticated, 
+    user: privyUser,
+    logout: privyLogout 
+  } = usePrivy();
 
-  const { logout } = usePrivy();
+  // Direct selectors for better performance - avoid complex selector objects
+  const isDarkMode = useSelector(state => state.auth?.isDarkMode ?? false);
+  const user = useSelector(state => state.auth?.user);
+  const userName = useSelector(state => state.auth?.userName);
+  const balance = useSelector(state => state.auth?.balance ?? 0);
+  const socket = useSelector(state => state.auth?.socket);
+  const transactions = useSelector(state => state.auth?.transactions ?? []);
+  const isNotificationsAllowed = useSelector(state => state.auth?.isNotificationsAllowed ?? false);
+  const isMuted = useSelector(state => state.auth?.isMuted ?? false);
+  const notificationSounds = useSelector(state => state.auth?.notificationSounds ?? true);
+  const isLowGraphics = useSelector(state => state.auth?.isLowGraphics ?? false);
+  const showCookieConsent = useSelector(state => state.auth?.showCookieConsent ?? false);
+  const solPrice = useSelector(state => state.logic?.solPrice ?? 0);
+  const notifications = useSelector(state => state.logic?.notifications ?? []);
+  const remainingLoans = useSelector(state => state.loanReducer?.remainingLoans ?? 0);
 
-  // Destructure with defaults
-  const {
-    isDarkMode, user, userName, balance, socket, transactions,
-    isNotificationsAllowed, isMuted, notificationSounds, isLowGraphics,
-    showCookieConsent
-  } = userData;
-
-  const { solPrice, notifications } = logicData;
-  const { remainingLoans } = loanData;
-
-  // Local state with stable initial values
-  const [state, setState] = useState({
-    // Modal states
-    showAccountModal: false,
-    showPlayerModal: false,
-    showHowToPlayModal: false,
-    showBankModal: false,
-    showLeaderboardsModal: false,
-    showLoginModal: false,
-    showNegativeBalanceDialog: false,
-    walletConflictOpen: false,
-    tokenModalOpen: true,
-    eliteModalOpen: false,
-    showAllGameLogs: false,
-
-    // Anchor states
-    anchorElProfile: null,
-    anchorElNotifications: null,
-    anchorElGameLog: null,
-
-    // Other states
-    selectedCreator: null,
-    isRestrictedCountry: false,
-    isHovered: false,
-    websiteLoading: true,
-    isInitialized: false,
+  // Wallet balance selector - kept as is for wallet functionality
+  const walletData = useSelector(state => {
+    const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
+    const backendBalance = state?.auth?.user?.balance ?? 0;
+    const walletAddress = state?.auth?.walletAddress;
+    return {
+      balance: walletAddress ? liveWalletBalance : backendBalance,
+      isWalletBalance: Boolean(walletAddress),
+      walletAddress
+    };
   });
+
+  // FIXED: Add authentication state management
+  const [authState, setAuthState] = useState({
+    isReady: false,
+    isAuthenticated: false,
+    isLoading: true,
+    hasCheckedAuth: false
+  });
+
+  // Simple state management - individual useState calls for better performance
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
+  const [walletConflictOpen, setWalletConflictOpen] = useState(false);
+  const [tokenModalOpen, setTokenModalOpen] = useState(true);
+  const [eliteModalOpen, setEliteModalOpen] = useState(false);
+  const [showAllGameLogs, setShowAllGameLogs] = useState(false);
+  const [anchorElProfile, setAnchorElProfile] = useState(null);
+  const [anchorElNotifications, setAnchorElNotifications] = useState(null);
+  const [anchorElGameLog, setAnchorElGameLog] = useState(null);
+  const [selectedCreator, setSelectedCreator] = useState(null);
+  const [isRestrictedCountry, setIsRestrictedCountry] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [websiteLoading, setWebsiteLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Refs
   const notificationSoundRef = useRef(null);
@@ -282,7 +264,7 @@ function SiteWrapper({ children }) {
   const socketRef = useRef(null);
   const initializationRef = useRef(false);
 
-  // Stable endpoint
+  // Stable endpoint - only calculate once
   const endpoint = useMemo(() =>
     process.env.NODE_ENV === 'production'
       ? 'https://catsino.fun'
@@ -290,13 +272,13 @@ function SiteWrapper({ children }) {
     []
   );
 
-  // Memoized theme
+  // Memoized theme - only recalculate when isDarkMode changes
   const theme = useMemo(() =>
     isDarkMode ? THEMES.dark : THEMES.main,
     [isDarkMode]
   );
 
-  // Memoized processed data with stability checks
+  // Only memoize complex calculations that benefit from it
   const processedNotifications = useMemo(() => {
     if (!notifications?.length) return [];
     return updateFromNow(notifications);
@@ -312,25 +294,62 @@ function SiteWrapper({ children }) {
     [processedNotifications]
   );
 
-  const balanceDisplay = useMemo(() => {
-    if (!balance) return 0;
-    const balanceString = balance.toString();
-    const decimalIndex = balanceString.indexOf('.');
-    return decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
-  }, [balance]);
+  // FIXED: Handle Privy authentication state changes
+  useEffect(() => {
+    console.log('🔐 Auth state check:', { privyReady, privyAuthenticated, privyUser: privyUser?.id, reduxUser: user?._id });
 
-  // Helper for calculating decimal places
-  const numDecimals = useMemo(() => {
-    if (!balance) return 0;
-    const balanceString = balance.toString();
-    const decimalIndex = balanceString.indexOf('.');
-    return decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
-  }, [balance]);
+    if (!privyReady) {
+      // Privy is still initializing
+      setAuthState(prev => ({ ...prev, isLoading: true, isReady: false }));
+      return;
+    }
 
-  // Stable update function
-  const updateState = useCallback((updates) => {
-    setState(prev => ({ ...prev, ...updates }));
-  }, []);
+    // Privy is ready, now determine authentication state
+    if (privyAuthenticated && privyUser) {
+      // User is authenticated with Privy
+      if (!user?._id) {
+        // Redux doesn't have user data yet, fetch it
+        console.log('✅ Privy authenticated, fetching user data...');
+        dispatch(getUser())
+          .then(() => {
+            console.log('✅ User data fetched successfully');
+            setAuthState({
+              isReady: true,
+              isAuthenticated: true,
+              isLoading: false,
+              hasCheckedAuth: true
+            });
+          })
+          .catch((error) => {
+            console.error('❌ Failed to fetch user data:', error);
+            setAuthState({
+              isReady: true,
+              isAuthenticated: false,
+              isLoading: false,
+              hasCheckedAuth: true
+            });
+          });
+      } else {
+        // Both Privy and Redux have user data
+        console.log('✅ Full authentication confirmed');
+        setAuthState({
+          isReady: true,
+          isAuthenticated: true,
+          isLoading: false,
+          hasCheckedAuth: true
+        });
+      }
+    } else {
+      // User is not authenticated
+      console.log('❌ User not authenticated');
+      setAuthState({
+        isReady: true,
+        isAuthenticated: false,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
+    }
+  }, [privyReady, privyAuthenticated, privyUser, user?._id, dispatch]);
 
   // Audio initialization with error handling
   const initializeAudio = useCallback(async () => {
@@ -360,7 +379,7 @@ function SiteWrapper({ children }) {
     }
   }, []);
 
-  // Stable socket handlers with fewer dependencies
+  // Simplified socket handlers with better error handling
   const createSocketHandlers = useCallback(() => {
     return {
       handleSendChat: (data) => {
@@ -487,23 +506,22 @@ function SiteWrapper({ children }) {
       },
     };
   }, [
-    dispatch, user?._id, isMuted, notificationSounds, isNotificationsAllowed,
-    location.pathname
+    dispatch, user?._id, isMuted, notificationSounds, isNotificationsAllowed
   ]);
 
-  // Event handlers
+  // Event handlers - simplified
   const handleClickOutside = useCallback(() => {
-    if (state.anchorElProfile) {
-      updateState({ anchorElProfile: null });
+    if (anchorElProfile) {
+      setAnchorElProfile(null);
     }
-  }, [state.anchorElProfile, updateState]);
+  }, [anchorElProfile]);
 
+  // FIXED: Update logout function to work with Privy properly
   const handleLogout = useCallback(async (clearToken) => {
-    console.log('Starting logout process...');
+    console.log('🚪 Starting logout process...');
 
-    // Prevent multiple logout attempts
     if (handleLogout.isLoggingOut) {
-      console.log('Logout already in progress, skipping...');
+      console.log('⏳ Logout already in progress, skipping...');
       return;
     }
 
@@ -511,52 +529,60 @@ function SiteWrapper({ children }) {
 
     try {
       // Step 1: Close UI elements first
-      updateState({ anchorElProfile: null });
+      setAnchorElProfile(null);
 
-      // Step 2: Backend logout with proper error handling
-      console.log('Calling backend logout...');
-      try {
-        const logoutResult = await dispatch(userSignOut(clearToken, navigate));
-        console.log('Backend logout result:', logoutResult);
-      } catch (backendError) {
-        console.warn('Backend logout failed:', backendError);
-        // Continue with cleanup even if backend fails
-      }
-
-      // Step 3: Disconnect socket
-      console.log('Disconnecting socket...');
+      // Step 2: Disconnect socket
+      console.log('🔌 Disconnecting socket...');
       if (socket) {
         socket.disconnect();
       }
 
-      // Step 4: Privy logout with error handling
-      console.log('Calling Privy logout...');
+      // Step 3: Backend logout with proper error handling
+      console.log('🔙 Calling backend logout...');
       try {
-        await logout();
-        console.log('Privy logout successful');
+        await dispatch(userSignOut(clearToken, navigate));
+        console.log('✅ Backend logout successful');
+      } catch (backendError) {
+        console.warn('⚠️ Backend logout failed, continuing...', backendError);
+      }
+
+      // Step 4: Privy logout with error handling
+      console.log('🔐 Calling Privy logout...');
+      try {
+        await privyLogout();
+        console.log('✅ Privy logout successful');
       } catch (privyError) {
-        console.error('Privy logout failed:', privyError);
-        // This is expected if already logged out, continue with cleanup
+        console.error('❌ Privy logout failed:', privyError);
       }
 
       // Step 5: Force cleanup to ensure consistent state
-      console.log('Performing final cleanup...');
+      console.log('🧹 Performing final cleanup...');
       if (clearToken) {
         localStorage.removeItem('token');
         localStorage.removeItem('isAuthenticated');
         setAuthToken();
       }
 
+      // Reset auth state
+      setAuthState({
+        isReady: true,
+        isAuthenticated: false,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
+
       // Clear Redux state
       dispatch({ type: 'LOGOUT' });
 
-      // Navigate to home
-      navigate('/');
+      // Navigate to home (but don't force redirect)
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+      }
 
-      console.log('Logout process completed successfully');
+      console.log('✅ Logout process completed successfully');
 
     } catch (error) {
-      console.error('Logout error, forcing cleanup:', error);
+      console.error('❌ Logout error, forcing cleanup:', error);
 
       // Force cleanup even if there's an error
       if (socket) socket.disconnect();
@@ -567,77 +593,92 @@ function SiteWrapper({ children }) {
         setAuthToken();
       }
 
+      setAuthState({
+        isReady: true,
+        isAuthenticated: false,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
+
       dispatch({ type: 'LOGOUT' });
-      navigate('/');
+      
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+      }
     } finally {
       handleLogout.isLoggingOut = false;
     }
-  }, [dispatch, navigate, socket, logout, updateState]);
+  }, [dispatch, navigate, socket, privyLogout, location.pathname]);
 
   const handlePortfolio = useCallback(() => {
     navigate('/portfolio');
     dispatch(selectMainTab(1));
   }, [navigate, dispatch]);
 
-  // Handler functions
-  const handleOpenHowToPlayModal = () => updateState({ showHowToPlayModal: true });
-  const handleOpenProfileMenu = (e) => updateState({ anchorElProfile: e.currentTarget });
-  const handleCloseProfileMenu = () => updateState({ anchorElProfile: null });
-  const handleOpenEliteSubscriptionModal = () => updateState({ eliteModalOpen: true });
+  // Handler functions - simplified
+  const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
+  const handleOpenProfileMenu = (e) => setAnchorElProfile(e.currentTarget);
+  const handleCloseProfileMenu = () => setAnchorElProfile(null);
+  const handleOpenEliteSubscriptionModal = () => setEliteModalOpen(true);
   const handleOpenAccountManagementModal = () => {
-    updateState({ showAccountModal: true, anchorElProfile: null });
+    setShowAccountModal(true);
+    setAnchorElProfile(null);
   };
 
   // Balance click handler
   const handleBalanceClick = (e) => {
     e.preventDefault();
-    updateState({ anchorElGameLog: e.currentTarget });
+    setAnchorElGameLog(e.currentTarget);
   };
 
   // Notifications click handler
   const handleNotificationsClick = (e) => {
     e.preventDefault();
-    updateState({ anchorElNotifications: e.currentTarget });
+    setAnchorElNotifications(e.currentTarget);
   };
 
-  // Initialize app only once
+  // FIXED: Initialize app only after authentication is determined
   useEffect(() => {
-    if (state.isInitialized) return;
+    if (!authState.hasCheckedAuth || isInitialized) return;
 
     let mounted = true;
     isUnmountedRef.current = false;
 
     const initializeApp = async () => {
       try {
-        updateState({ websiteLoading: true });
+        console.log('🚀 Initializing app with auth state:', authState);
+        
+        // Show UI immediately
+        setIsInitialized(true);
+        setWebsiteLoading(false);
+        
+        // Always initialize basic functionality
         document.addEventListener('mousedown', handleClickOutside);
+        await initializeAudio();
 
-        // Initialize audio first (non-blocking)
-        initializeAudio();
-
-        // Fetch initial data in parallel
-        await Promise.allSettled([
+        // Initialize global data (no auth required)
+        const globalDataPromises = [
           dispatch(getGlobalChatLogs()),
           dispatch(getHistory()),
-          dispatch(getUser()),
-          dispatch(getNotifications()),
-        ]);
+        ];
 
-        if (mounted) {
-          if (location.pathname.startsWith('/play')) {
-            updateState({ tokenModalOpen: false });
-          }
-
-          updateState({
-            websiteLoading: false,
-            isInitialized: true
-          });
+        // Only load user-specific data if authenticated
+        if (authState.isAuthenticated && user?._id) {
+          globalDataPromises.push(dispatch(getNotifications()));
         }
+
+        await Promise.allSettled(globalDataPromises);
+
+        if (mounted && location.pathname.startsWith('/play')) {
+          setTokenModalOpen(false);
+        }
+
+        console.log('✅ App initialization complete');
       } catch (error) {
-        console.error('App initialization error:', error);
-        if (mounted) {
-          updateState({ websiteLoading: false });
-        }
+        console.error('❌ App initialization error:', error);
+        // Don't block the UI even if initialization fails
+        setIsInitialized(true);
+        setWebsiteLoading(false);
       }
     };
 
@@ -651,16 +692,16 @@ function SiteWrapper({ children }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [state.isInitialized, dispatch, handleClickOutside, initializeAudio, location.pathname, updateState]);
+  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id, dispatch, handleClickOutside, initializeAudio, location.pathname]);
 
-  // Handle balance changes
+  // Handle balance changes - simple effect
   useEffect(() => {
-    updateState({ showNegativeBalanceDialog: balance < 0 });
-  }, [balance, updateState]);
+    setShowNegativeBalanceDialog(balance < 0);
+  }, [balance]);
 
   // Socket connection management - only connect once
   useEffect(() => {
-    if (!state.isInitialized || socketRef.current) return;
+    if (!isInitialized || socketRef.current) return;
 
     let isMounted = true;
 
@@ -680,22 +721,22 @@ function SiteWrapper({ children }) {
 
         newSocket.on('connect', () => {
           if (isMounted) {
-            console.log('Socket connected');
+            console.log('🔌 Socket connected');
             dispatch(setSocket(newSocket));
           }
         });
 
         newSocket.on('disconnect', () => {
-          console.log('Socket disconnected');
+          console.log('🔌 Socket disconnected');
         });
 
         newSocket.on('connect_error', (error) => {
-          console.error('Socket connection error:', error);
+          console.error('❌ Socket connection error:', error);
         });
 
         return newSocket;
       } catch (error) {
-        console.error('Socket connection failed:', error);
+        console.error('❌ Socket connection failed:', error);
         return null;
       }
     };
@@ -709,7 +750,7 @@ function SiteWrapper({ children }) {
         socketRef.current = null;
       }
     };
-  }, [state.isInitialized, endpoint, dispatch]);
+  }, [isInitialized, endpoint, dispatch]);
 
   // Global socket events - separate from user events
   useEffect(() => {
@@ -777,7 +818,7 @@ function SiteWrapper({ children }) {
   // Render functions for complex UI parts
   const renderRestrictedCountryDialog = () => (
     <Dialog
-      open={state.isRestrictedCountry}
+      open={isRestrictedCountry}
       disableEscapeKeyDown
       fullScreen
       BackdropProps={{
@@ -883,7 +924,7 @@ function SiteWrapper({ children }) {
 
   const renderNegativeBalanceDialog = () => (
     <Dialog
-      open={state.showNegativeBalanceDialog}
+      open={showNegativeBalanceDialog}
       disableEscapeKeyDown
       BackdropProps={{
         style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
@@ -933,8 +974,8 @@ function SiteWrapper({ children }) {
   // Compact Profile Menu with Red Theme - No Animations
   const renderProfileMenu = () => (
     <Menu
-      anchorEl={state.anchorElProfile}
-      open={Boolean(state.anchorElProfile)}
+      anchorEl={anchorElProfile}
+      open={Boolean(anchorElProfile)}
       onClose={handleCloseProfileMenu}
       transitionDuration={0}
       anchorOrigin={{
@@ -950,7 +991,6 @@ function SiteWrapper({ children }) {
           background: '#1a1a1a',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
-          // border: '1px solid #ff0000',
           borderRadius: '6px',
           minWidth: '160px',
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)',
@@ -1032,7 +1072,7 @@ function SiteWrapper({ children }) {
         <ListItemIcon>
           <Help />
         </ListItemIcon>
-        <ListItemText primary="HOW IT WORKS" />
+        <ListItemText primary="HELP" />
       </MenuItem>
 
       {/* Elite Subscription - Special Styling */}
@@ -1063,9 +1103,9 @@ function SiteWrapper({ children }) {
 
   const renderGameLogPopover = () => (
     <Popover
-      open={Boolean(state.anchorElGameLog)}
-      anchorEl={state.anchorElGameLog}
-      onClose={() => updateState({ anchorElGameLog: null })}
+      open={Boolean(anchorElGameLog)}
+      anchorEl={anchorElGameLog}
+      onClose={() => setAnchorElGameLog(null)}
       transitionDuration={0}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       transformOrigin={{ vertical: 'top', horizontal: 'center' }}
@@ -1075,7 +1115,6 @@ function SiteWrapper({ children }) {
             background: '#1a1a1a',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
-            // border: '1px solid #ff0000',
             borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             color: isDarkMode ? '#fff' : '#333',
@@ -1224,7 +1263,7 @@ function SiteWrapper({ children }) {
         <Button
           color="error"
           variant="contained"
-          onClick={() => updateState({ showAllGameLogs: true })}
+          onClick={() => setShowAllGameLogs(true)}
           fullWidth
           sx={{
             borderRadius: '6px',
@@ -1246,11 +1285,11 @@ function SiteWrapper({ children }) {
   // Compact Notifications Popover with Red Theme
   const renderNotificationsPopover = () => (
     <Popover
-      open={Boolean(state.anchorElNotifications)}
-      anchorEl={state.anchorElNotifications}
+      open={Boolean(anchorElNotifications)}
+      anchorEl={anchorElNotifications}
       onClose={() => {
         dispatch(readNotifications());
-        updateState({ anchorElNotifications: null });
+        setAnchorElNotifications(null);
       }}
       transitionDuration={0}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
@@ -1261,7 +1300,6 @@ function SiteWrapper({ children }) {
             background: '#1a1a1a',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
-            // border: '1px solid #ff0000',
             borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             color: isDarkMode ? '#fff' : '#333',
@@ -1366,10 +1404,8 @@ function SiteWrapper({ children }) {
                   {/* Avatar */}
                   <ButtonBase
                     onClick={() => {
-                      updateState({
-                        selectedCreator: notification._id,
-                        showPlayerModal: true
-                      });
+                      setSelectedCreator(notification._id);
+                      setShowPlayerModal(true);
                     }}
                     sx={{ borderRadius: '6px' }}
                   >
@@ -1486,36 +1522,36 @@ function SiteWrapper({ children }) {
           user={user}
           walletBalance={walletData.balance}
           isWalletBalance={walletData.isWalletBalance}
-          open={state.eliteModalOpen}
-          onClose={() => updateState({ eliteModalOpen: false })}
+          open={eliteModalOpen}
+          onClose={() => setEliteModalOpen(false)}
           isLowGraphics={isLowGraphics}
         />
       </Suspense>
 
-      {state.showAccountModal && (
+      {showAccountModal && (
         <Suspense fallback={<div>Loading Account Management...</div>}>
           <AccountManagementModal
-            modalIsOpen={state.showAccountModal}
-            closeModal={() => updateState({ showAccountModal: false })}
+            modalIsOpen={showAccountModal}
+            closeModal={() => setShowAccountModal(false)}
           />
         </Suspense>
       )}
 
-      {state.showPlayerModal && (
+      {showPlayerModal && (
         <Suspense fallback={<div>Loading Player...</div>}>
           <PlayerModal
-            selectedCreator={state.selectedCreator}
-            modalIsOpen={state.showPlayerModal}
-            closeModal={() => updateState({ showPlayerModal: false })}
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={() => setShowPlayerModal(false)}
           />
         </Suspense>
       )}
 
-      {state.showLeaderboardsModal && (
+      {showLeaderboardsModal && (
         <Suspense fallback={<div>Loading Leaderboards...</div>}>
           <LeaderboardsModal
-            modalIsOpen={state.showLeaderboardsModal}
-            closeModal={() => updateState({ showLeaderboardsModal: false })}
+            modalIsOpen={showLeaderboardsModal}
+            closeModal={() => setShowLeaderboardsModal(false)}
             player_name={userName}
             balance={balance}
             isDarkMode={isDarkMode}
@@ -1523,11 +1559,11 @@ function SiteWrapper({ children }) {
         </Suspense>
       )}
 
-      {state.showHowToPlayModal && (
+      {showHowToPlayModal && (
         <Suspense fallback={<div>Loading How To Play...</div>}>
           <HowToPlayModal
-            modalIsOpen={state.showHowToPlayModal}
-            closeModal={() => updateState({ showHowToPlayModal: false })}
+            modalIsOpen={showHowToPlayModal}
+            closeModal={() => setShowHowToPlayModal(false)}
             player_name={userName}
             balance={balance}
             isDarkMode={isDarkMode}
@@ -1535,21 +1571,21 @@ function SiteWrapper({ children }) {
         </Suspense>
       )}
 
-      {state.showLoginModal && (
+      {showLoginModal && (
         <Suspense fallback={<div>Loading Login...</div>}>
           <LoginModal
-            modalIsOpen={state.showLoginModal}
-            closeModal={() => updateState({ showLoginModal: false })}
+            modalIsOpen={showLoginModal}
+            closeModal={() => setShowLoginModal(false)}
           />
         </Suspense>
       )}
 
-      {state.showAllGameLogs && (
+      {showAllGameLogs && (
         <Suspense fallback={<div>Loading Transactions...</div>}>
           <AllTransactionsModal
-            modalIsOpen={state.showAllGameLogs}
+            modalIsOpen={showAllGameLogs}
             isDarkMode={isDarkMode}
-            close={() => updateState({ showAllGameLogs: false })}
+            close={() => setShowAllGameLogs(false)}
             user={user?._id}
             solPrice={solPrice}
             transactions={transactions}
@@ -1562,22 +1598,33 @@ function SiteWrapper({ children }) {
       </Suspense>
 
       <ConflictDialog
-        open={state.walletConflictOpen}
-        onClose={() => updateState({ walletConflictOpen: false })}
+        open={walletConflictOpen}
+        onClose={() => setWalletConflictOpen(false)}
       />
     </>
   );
 
-  // Don't render anything if still loading
-  if (!state.isInitialized) {
+  // FIXED: Show loading state properly for authentication
+  const shouldShowAuthenticatedContent = authState.isAuthenticated && user?._id;
+
+  // Show loading until both Privy and app are ready
+  if (!privyReady || authState.isLoading || !authState.hasCheckedAuth || !isInitialized) {
     return (
       <ThemeProvider theme={theme}>
         <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
           <div className="game_header">
             <div className="main_header">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Skeleton variant="rectangular" width={150} height={30} />
-                <Skeleton variant="text" width={100} />
+              <Box>
+                <a className="game_logo" href="/">
+                  <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
+                  <span className="title desktop-only">CATSINO</span>
+                </a>
+                <a href="#" onClick={(e) => {
+                  e.preventDefault();
+                  setShowHowToPlayModal(true);
+                }}>
+                  [ HELP ]
+                </a>
               </Box>
               <Skeleton variant="rectangular" width={200} height={40} />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1587,11 +1634,7 @@ function SiteWrapper({ children }) {
             </div>
           </div>
           <div className="game_wrapper">
-            <div className="contents_wrapper">
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <Typography></Typography>
-              </Box>
-            </div>
+            <div className="contents_wrapper">{children}</div>
           </div>
         </div>
       </ThemeProvider>
@@ -1629,19 +1672,19 @@ function SiteWrapper({ children }) {
                 }}
                 onClick={(e) => {
                   e.preventDefault();
-                  updateState({ showHowToPlayModal: true });
+                  setShowHowToPlayModal(true);
                 }}
               >
-                [ how it works ]
+                [ HELP ]
               </a>
             </Box>
 
-            <Suspense fallback={<Typography>Loading History...</Typography>}>
-              <HistoryTable userId={user?._id} />
+            <Suspense fallback={<Skeleton variant="rectangular" width={200} height={40} />}>
+              <HistoryTable userId={shouldShowAuthenticatedContent ? user._id : null} />
             </Suspense>
 
             <div className="header_action_panel">
-              {user && (
+              {shouldShowAuthenticatedContent && (
                 <>
                   <Box
                     component="a"
@@ -1649,7 +1692,7 @@ function SiteWrapper({ children }) {
                     className="desktop-only action-icon"
                     onClick={(e) => {
                       e.preventDefault();
-                      updateState({ showLeaderboardsModal: true });
+                      setShowLeaderboardsModal(true);
                     }}
                     id="btn_leaderboards"
                     sx={{
@@ -1671,7 +1714,7 @@ function SiteWrapper({ children }) {
                     className="desktop-only action-icon"
                     onClick={(e) => {
                       e.preventDefault();
-                      updateState({ anchorElNotifications: e.currentTarget });
+                      setAnchorElNotifications(e.currentTarget);
                     }}
                     id="btn_notifications"
                     sx={{
@@ -1702,21 +1745,19 @@ function SiteWrapper({ children }) {
                 </>
               )}
 
-              {state.websiteLoading ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Skeleton variant="text" sx={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  <Skeleton variant="circular" width={40} height={40} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-                </Box>
-              ) : user?._id ? (
+              {shouldShowAuthenticatedContent ? (
                 <>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {/* Use WalletBalanceDisplay instead of the old balance button */}
-                    <WalletBalanceDisplay
-                      onBalanceClick={handleBalanceClick}
-                      isHovered={isHovered}
-                      setIsHovered={setIsHovered}
-                    />
+                    {/* Use WalletBalanceDisplay with fallback */}
+                    <Suspense fallback={
+                      <Skeleton variant="rectangular" width={80} height={30} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                    }>
+                      <WalletBalanceDisplay
+                        onBalanceClick={handleBalanceClick}
+                        isHovered={isHovered}
+                        setIsHovered={setIsHovered}
+                      />
+                    </Suspense>
                   </Box>
 
                   <Box
@@ -1768,25 +1809,33 @@ function SiteWrapper({ children }) {
                       }
                     }}
                   >
-                    <Avatar
-                      src={user.avatar}
-                      user_id={user._id}
-                      rank={user.totalWagered}
-                      accessory={user.accessory}
-                      elite={user.elite}
-                      alt=""
-                      username={user.username}
-                      className="avatar"
-                      darkMode={isDarkMode}
-                      sx={{ width: 38, height: 38 }}
-                    />
+                    {user ? (
+                      <Avatar
+                        src={user.avatar}
+                        user_id={user._id}
+                        rank={user.totalWagered}
+                        accessory={user.accessory}
+                        elite={user.elite}
+                        alt=""
+                        username={user.username}
+                        className="avatar"
+                        darkMode={isDarkMode}
+                        sx={{ width: 38, height: 38 }}
+                      />
+                    ) : (
+                      <Skeleton variant="circular" width={38} height={38} />
+                    )}
                     <ArrowDropDown sx={{ color: '#ffffff' }} />
                   </Button>
 
                   {renderProfileMenu()}
                 </>
               ) : (
-                <PrivyLogin />
+                <Suspense fallback={
+                  <Skeleton variant="rectangular" width={80} height={36} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                }>
+                  <PrivyLogin />
+                </Suspense>
               )}
             </div>
           </div>

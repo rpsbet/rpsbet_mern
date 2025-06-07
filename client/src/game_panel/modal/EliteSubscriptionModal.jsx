@@ -370,7 +370,7 @@ function EliteSubscriptionModal({
                       sx={planButtonBaseSx(themeColors.redPlan.main, themeColors.redPlan.lightHover, themeColors.redPlan.contrastText)}
                     >
                       {loading.red ? (
-                        <CircularProgress size={18} color="inherit" />
+                        <CircularProgress size={18} color="error" />
                       ) : !sufficientBalance.red ? (
                         'Not Enough Balance'
                       ) : (
@@ -449,7 +449,7 @@ function EliteSubscriptionModal({
                       sx={planButtonBaseSx(themeColors.blackPlan.main, themeColors.blackPlan.lightHover, themeColors.blackPlan.contrastText)}
                     >
                       {loading.black ? (
-                        <CircularProgress size={18} color="inherit"/>
+                        <CircularProgress size={18} color="error"/>
                       ) : !sufficientBalance.black ? (
                         'Not Enough Balance'
                       ) : (

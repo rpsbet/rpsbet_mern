@@ -52,6 +52,7 @@ const { createMarket } = require('../helper/util/createMarket');
 const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const { revokeMintAndFreezeAuthorities } = require('../helper/util/authority');
 const { distributeTokens } = require('../helper/util/distributeTokens');
+const { connect } = require('mongoose');
 
 // Environment variables
 const PINATA_JWT = process.env.PINATA_JWT;
@@ -118,6 +119,49 @@ router.get('/recently-closed', async (req, res) => {
     res.status(500).json({
       success: false,
       error: err.message,
+    });
+  }
+});
+
+router.post('/convert-dalle-to-blob', auth, async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        error: 'Missing imageUrl',
+        message: 'Image URL is required'
+      });
+    }
+
+    console.log('[DALL-E Converter] Converting DALL-E image to blob:', imageUrl);
+
+    // Download the image from DALL-E
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+    }
+
+    const imageBuffer = await imageResponse.arrayBuffer();
+    
+    // Convert to base64 so it can be sent to client
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const mimeType = imageResponse.headers.get('content-type') || 'image/png';
+    const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
+    console.log('[DALL-E Converter] Successfully converted to data URL');
+
+    res.json({
+      success: true,
+      dataUrl: dataUrl,
+      mimeType: mimeType
+    });
+
+  } catch (error) {
+    console.error('[DALL-E Converter] Error:', error);
+    res.status(500).json({
+      error: 'Conversion failed',
+      message: error.message || 'Failed to convert DALL-E image'
     });
   }
 });
@@ -307,62 +351,257 @@ router.post('/extract-room-info', auth, async (req, res) => {
       });
     }
 
-    // Extract title using regex for <Typography id="game-title">
-    const titleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>(.*?)<\/Typography>/i);
-    let name = titleMatch ? titleMatch[1].trim() : '';
-    if (!name || name.length < 3 || name.length > 20) {
-      name = 'Default Game'; // Fallback
-    }
+    console.log('[Extract] Processing game code...');
 
-    // Generate ticker from title
-    const ticker = name
-      .split(/\s+/)
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .substring(0, 6) || 'GAME';
+    // Enhanced title extraction with more specific patterns
+    let name = '';
+    let confidence = 0;
 
-    // Extract rules from <Box id="game-rules">
-    const rulesMatch = gameCode.match(/<Box[^>]*id="game-rules"[^>]*>([\s\S]*?)<\/Box>/i);
-    let rulesText = '';
-    if (rulesMatch && rulesMatch[1]) {
-      // Extract text content from Typography or other elements
-      const textMatches = rulesMatch[1].match(/<Typography[^>]*>(.*?)<\/Typography>/gi) || [];
-      rulesText = textMatches
-        .map(match => match.match(/<Typography[^>]*>(.*?)<\/Typography>/i)[1])
-        .join(' ')
+    // Look for Typography with id="game-title" specifically (highest priority)
+    const gameTitleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>([^<]{3,50})<\/Typography>/i);
+    
+    if (gameTitleMatch && gameTitleMatch[1]) {
+      let extractedTitle = gameTitleMatch[1].trim();
+      
+      // Clean up JSX syntax and template literals
+      extractedTitle = extractedTitle
+        .replace(/[{}$`]/g, '')
+        .replace(/\$\{[^}]+\}/g, '')
+        .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"[^"]*"/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+      
+      // Validate title quality - exclude common non-title words
+      if (extractedTitle.length >= 3 && 
+          extractedTitle.length <= 30 && 
+          !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
+          !extractedTitle.includes('undefined') &&
+          !extractedTitle.includes('null') &&
+          !extractedTitle.includes('result') &&
+          !extractedTitle.includes('===') &&
+          !extractedTitle.startsWith('{') &&
+          !/^[a-z]/.test(extractedTitle)) { // Should start with capital
+        
+        name = extractedTitle;
+        confidence = 0.95;
+      }
     }
-    if (!rulesText) {
-      rulesText = 'Play the game to achieve high multipliers.'; // Fallback
+
+    // Fallback patterns if game-title id is not found or invalid
+    if (!name) {
+      const titlePatterns = [
+        // Look for Typography with variant h1-h4 that's not "Game Rules"
+        /<Typography[^>]*variant="h[1-4]"[^>]*>([^<]{3,30})<\/Typography>/gi,
+        // Look for regular h1-h3 tags
+        /<h[1-3][^>]*>([^<]{3,30})<\/h[1-3]>/gi,
+        // Look for Typography with game-related content
+        /<Typography[^>]*>([A-Z][A-Za-z\s]{2,29}(?:Game|Simulator|Master|Challenge|Quest|Arena|Zone))<\/Typography>/gi
+      ];
+
+      for (let i = 0; i < titlePatterns.length; i++) {
+        const pattern = titlePatterns[i];
+        const matches = Array.from(gameCode.matchAll(pattern));
+        
+        for (const match of matches) {
+          if (match && match[1]) {
+            let extractedTitle = match[1].trim();
+            
+            // Clean up JSX syntax
+            extractedTitle = extractedTitle
+              .replace(/[{}$`]/g, '')
+              .replace(/\$\{[^}]+\}/g, '')
+              .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"[^"]*"/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+            
+            // Validate title quality - exclude rules and generic text
+            if (extractedTitle.length >= 3 && 
+                extractedTitle.length <= 30 && 
+                !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
+                !extractedTitle.includes('undefined') &&
+                !extractedTitle.includes('null') &&
+                !extractedTitle.includes('result') &&
+                !extractedTitle.includes('===') &&
+                !extractedTitle.startsWith('{') &&
+                !/^[a-z]/.test(extractedTitle)) {
+              
+              name = extractedTitle;
+              confidence = i === 0 ? 0.8 : (0.7 - i * 0.1);
+              break;
+            }
+          }
+        }
+        if (name) break;
+      }
     }
 
-    // Generate description from rules (max 200 characters)
-    const description = rulesText.length > 200 
-      ? rulesText.substring(0, 197) + '...' 
-      : rulesText;
+    // Generate ticker from name
+    let ticker = '';
+    if (name) {
+      // Split by spaces and take first letter of each word
+      const words = name.split(/\s+/);
+      ticker = words
+        .map(word => word.charAt(0).toUpperCase())
+        .join('')
+        .substring(0, 6);
+      
+      // If ticker is too short, use first few chars of name
+      if (ticker.length < 2) {
+        ticker = name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '');
+      }
+      
+      // Ensure ticker is 2-6 characters
+      if (ticker.length < 2) ticker = 'GAME';
+      if (ticker.length > 6) ticker = ticker.substring(0, 6);
+    }
 
-    // Determine game theme based on title and rules
-    const themeWords = (name + ' ' + rulesText).toLowerCase();
-    let gameTheme = 'generic game';
-    if (themeWords.includes('dice')) gameTheme = 'dice game';
-    else if (themeWords.includes('card')) gameTheme = 'card game';
-    else if (themeWords.includes('race') || themeWords.includes('speed')) gameTheme = 'racing game';
-    else if (themeWords.includes('puzzle')) gameTheme = 'puzzle game';
+    // Extract description from game rules section
+    let description = '';
+    
+    // Look for game rules content within the rules modal/section
+    const rulesPatterns = [
+      // Look for content within game-rules id element
+      /<Box[^>]*id="game-rules"[^>]*>[\s\S]*?<\/Box>/i,
+      // Look for rules modal content
+      /Game Rules[\s\S]*?<\/Typography>([\s\S]*?)(?:<Button|<\/Box>)/i,
+      // Look for numbered rules pattern
+      /((?:<Typography[^>]*>[^<]*\d+\.[^<]*<\/Typography>\s*){2,})/gi,
+      // Look for step-by-step instructions
+      /((?:Choose|Select|Click|Buy|Sell|Start|Play)[^<]*(?:<\/Typography>)?(?:\s*<Typography[^>]*>[^<]*(?:prices|time|profit|multiplier|seconds)[^<]*<\/Typography>)?){2,}/gi
+    ];
 
-    const extractedInfo = {
-      name,
-      ticker,
-      description,
-      gameTheme,
-      confidence: titleMatch && rulesMatch ? 0.95 : 0.7
+    for (const pattern of rulesPatterns) {
+      const match = gameCode.match(pattern);
+      if (match) {
+        let rulesContent = match[1] || match[0];
+        
+        // Extract text content from Typography elements
+        const textMatches = Array.from(rulesContent.matchAll(/<Typography[^>]*>([^<]+)<\/Typography>/gi));
+        
+        if (textMatches.length >= 2) {
+          const ruleTexts = textMatches
+            .map(m => m[1])
+            .filter(text => {
+              // Filter out non-rule content
+              const cleanText = text.trim();
+              return cleanText.length > 10 && 
+                     !cleanText.includes('Game Rules') &&
+                     !cleanText.includes('Close') &&
+                     !cleanText.includes('undefined') &&
+                     !cleanText.includes('null') &&
+                     !cleanText.startsWith('{') &&
+                     (cleanText.includes('.') || cleanText.match(/\d+\s*\./));
+            })
+            .slice(0, 5); // Take first 5 rules
+          
+          if (ruleTexts.length >= 2) {
+            description = ruleTexts.join(' ').replace(/\s+/g, ' ').trim();
+            
+            // Limit description length
+            if (description.length > 300) {
+              description = description.substring(0, 300) + '...';
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // Fallback: look for any instructional content
+    if (!description) {
+      const instructionPatterns = [
+        // Look for Typography with instructional keywords
+        /<Typography[^>]*>([^<]{20,200}(?:choose|select|click|buy|sell|trade|play|win|lose|time|seconds|multiplier)[^<]{0,100})<\/Typography>/gi,
+        // Look for any longer descriptive content
+        /<Typography[^>]*>([^<]{30,200})<\/Typography>/gi
+      ];
+
+      for (const pattern of instructionPatterns) {
+        const matches = Array.from(gameCode.matchAll(pattern));
+        const validDescriptions = matches
+          .map(m => m[1])
+          .filter(text => {
+            const cleanText = text.trim();
+            return cleanText.length >= 20 && 
+                   !cleanText.includes('Game Rules') &&
+                   !cleanText.includes('Close') &&
+                   !cleanText.includes('undefined') &&
+                   !cleanText.includes('null') &&
+                   !cleanText.startsWith('{') &&
+                   !cleanText.includes('===') &&
+                   !cleanText.includes('result');
+          });
+        
+        if (validDescriptions.length > 0) {
+          description = validDescriptions[0]
+            .replace(/<[^>]*>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          if (description.length >= 20) break;
+        }
+      }
+    }
+
+    // Determine game theme based on content analysis
+    const codeText = (name + ' ' + description + ' ' + gameCode).toLowerCase();
+    let gameTheme = 'interactive game';
+    
+    const themeMapping = {
+      'stock trading game': ['stock', 'trading', 'simulator', 'market', 'price', 'buy', 'sell', 'profit'],
+      'puzzle game': ['puzzle', 'solve', 'brain', 'logic', 'match', 'sudoku'],
+      'racing game': ['race', 'speed', 'car', 'track', 'lap', 'finish', 'driving'],
+      'card game': ['card', 'deck', 'poker', 'blackjack', 'hand', 'shuffle'],
+      'dice game': ['dice', 'roll', 'random', 'luck', 'chance'],
+      'shooter game': ['shoot', 'gun', 'bullet', 'target', 'aim', 'fire'],
+      'platform game': ['jump', 'platform', 'mario', 'side-scroller', 'climb'],
+      'strategy game': ['strategy', 'chess', 'tactical', 'plan', 'turn'],
+      'arcade game': ['arcade', 'score', 'high score', 'classic', 'retro'],
+      'battle game': ['battle', 'fight', 'combat', 'warrior', 'attack'],
+      'mining game': ['mine', 'dig', 'treasure', 'gem', 'gold', 'collect'],
+      'casino game': ['casino', 'bet', 'gamble', 'slot', 'roulette', 'chips'],
+      'crash game': ['crash', 'rocket', 'multiplier', 'cashout'],
+      'memory game': ['memory', 'remember', 'sequence', 'pattern'],
+      'action game': ['action', 'fast', 'quick', 'reaction', 'reflex']
     };
 
+    for (const [theme, keywords] of Object.entries(themeMapping)) {
+      if (keywords.some(keyword => codeText.includes(keyword))) {
+        gameTheme = theme;
+        break;
+      }
+    }
+
+    // Generate fallback description if none found
+    if (!description) {
+      if (name && name !== 'Default Game') {
+        description = `An exciting ${gameTheme.replace(' game', '')} experience featuring ${name.toLowerCase()}. Test your skills and achieve high multipliers!`;
+      } else {
+        description = `An engaging ${gameTheme} with exciting gameplay mechanics and multiplier rewards.`;
+      }
+    }
+
+    // Final validation and adjustments
+    if (!name || name === 'Default Game') {
+      const themeWord = gameTheme.split(' ')[0];
+      name = themeWord.charAt(0).toUpperCase() + themeWord.slice(1) + ' Master';
+      ticker = name.substring(0, 4).toUpperCase();
+      confidence = 0.5;
+    }
+
+    const extractedInfo = {
+      name: name || 'Game Master',
+      ticker: ticker || 'GAME',
+      description: description || 'A fun and engaging game experience.',
+      gameTheme,
+      confidence: Math.max(confidence, 0.5)
+    };
+
+    console.log('[Extract] Result:', extractedInfo);
     res.json(extractedInfo);
 
   } catch (error) {
-    console.error('Error extracting room info:', error);
+    console.error('[Extract] Error:', error);
     res.status(500).json({
       error: 'Extraction failed',
       message: error.message || 'Failed to extract room information'
@@ -463,7 +702,7 @@ Output Requirements:
 
 Required Imports:
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Typography, Button, Modal } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 
 CRITICAL: NO FINANCIAL LOGIC
 - DO NOT include any bet amount, balance, wallet, or money-related state
@@ -472,71 +711,243 @@ CRITICAL: NO FINANCIAL LOGIC
 - Focus purely on game mechanics and user interaction
 - Financial logic will be handled by external systems
 
-CRITICAL RESPONSIVE REQUIREMENTS:
-- Main game container MUST use: width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%"
-- Use viewport units carefully: prefer % over vw/vh
-- All game elements must fit within parent container
-- Use responsive units (%, em, rem) instead of fixed px values for sizing
-- Implement mobile-first design with useMediaQuery
-- Canvas elements must have: maxWidth: "100%", height: "auto"
-- Use CSS transforms for scaling instead of changing dimensions
-- Game should work from 320px mobile to 1920px desktop
+CRITICAL: **Never declare a local function or variable named logEvent. Always call the logEvent prop as provided. If you redefine logEvent, your code will break in production.**
+- The component receives logEvent as a prop - use it directly: logEvent("gameStarted", { ... })
+- Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
+- Always use the prop: props.logEvent or destructured logEvent from props
+
+CRITICAL LAYOUT REQUIREMENTS:
+- Main game container MUST use: width: "100%", height: "100%", minHeight: "600px", maxWidth: "100%", padding: 2, gap: 1
+- PRIORITIZE COMPACT DESIGN: Use efficient spacing, minimal padding, dense layouts
+- Avoid excessive whitespace - pack UI elements efficiently
+- Game areas should be concentrated, not spread across full viewport
+- Use compact button sizes and tight grid layouts where appropriate
+- Desktop/tablet versions should still use full width but with compact vertical spacing
 
 Container Structure:
 <Box sx={{
   width: "100%",
   height: "100%",
+  minHeight: "100%",
   maxWidth: "100%",
-  maxHeight: "100%",  
   overflow: "hidden",
   position: "relative",
   display: "flex",
-  flexDirection: "column"
+  flexDirection: "column",
+  padding: 1, // Compact padding
+  gap: 1 // Tight spacing between elements
 }}>
+
+COMPACT DESIGN PATTERNS:
+- Use dense prop on MUI components where available
+- Reduce default spacing: gap: 1, padding: 1-2, margin: 0.5-1
+- Smaller button sizes: size="small" for non-critical buttons
+- Tighter typography: Reduce line height and spacing
+- Group related elements closely together
+- Use flex layouts with minimal gaps
+
+CUSTOM MODAL/EXPANDABLE REQUIREMENTS:
+- Center modal within the main game container
+- NO viewport units anywhere
+
+RESPONSIVE DESIGN RULES:
+- Use const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+- Add window resize listener: useEffect(() => { const handleResize = () => setIsMobile(window.innerWidth <= 768); window.addEventListener('resize', handleResize); return () => window.removeEventListener('resize', handleResize); }, []);
+- Desktop/Tablet (≥768px): Full width, no responsive scaling, fixed layouts
+- Mobile (<768px): Apply responsive adjustments only
+- Font sizes: Use fixed sizes for desktop, scale down only on mobile
+- Button sizes: Full size on desktop, compact on mobile only
+- Game elements: Maintain full width, adjust spacing/padding for mobile only
+
+Mobile-Only Responsive Patterns:
+- Conditional styling: sx={{ fontSize: isMobile ? '1rem' : '1.5rem' }}
+- Mobile-specific layouts: flexDirection: isMobile ? 'column' : 'row'
+- Touch targets: Ensure minimum 44px on mobile only
+- Spacing: Reduce padding/margins on mobile only
 
 Game Title Requirement:
 - Include a game title displayed prominently at the top
 - Use a <Typography> component with id="game-title"
-- Example: <Typography id="game-title" variant="h4">Game Name</Typography>
+- Example: <Typography id="game-title" variant={isMobile ? "h5" : "h4"}>Game Name</Typography>
 - The title should be 3-20 characters, catchy, and relevant to the game theme
 
-Rules Modal Requirement:
-- Include a rules modal with a <Typography> or <Box> component with id="game-rules"
-- The rules should clearly explain gameplay mechanics (no financial terms)
-- Example:
-  <Modal open={showRules} onClose={() => setShowRules(false)}>
-    <Box id="game-rules" sx={{ p: 2 }}>
-      <Typography>Rule 1: Click to score points...</Typography>
-      <Typography>Rule 2: Avoid obstacles...</Typography>
-    </Box>
-  </Modal>
-- Rules should be concise but complete, suitable for extraction as a description
+GAME STATE MANAGEMENT:
+- Track game state: gameStarted (boolean), gameEnded (boolean), multiplier (number, initially 1.0), result (string: "win"/"loss"/"other"), totalOptions (number), safeOptions (number), totalMines (number), actionsTaken (number)
+- On game start: logEvent("gameStarted", { timestamp: new Date().toISOString() }), set gameStarted to true
+- On game end: determine result, set gameEnded to true, call logEvent("gameEnded", { timestamp: new Date().toISOString(), result, multiplier })
+
+DYNAMIC CHART/GRAPH SYSTEM (for crash games):
+- If prompt implies "crash" game, include line chart with canvas:
+  - Use canvas via useRef: <canvas ref={chartRef} width={500} height={200} />
+  - Plot hardcoded exponential curve from 1.0 to 10x over 100 points
+  - Formula: displayMultiplier = 1 * Math.exp(0.05 * (x / 100) * 100)
+  - Animate with requestAnimationFrame over fixed 10-second duration
+  - Style with neon gradient and glow effects
+  - Chart progression is cosmetic only, independent of actual game logic
+
+GAME EVENTS AND RESULTS:
+- Initialize: const [gameHistory, setGameHistory] = useState([]);
+- On game end: setGameHistory(prev => [...prev, { id: Date.now(), result, multiplier, timestamp: new Date().toISOString() }]);
+- Display history table at bottom, limit to 10-20 recent games
+- Color positive values #48ff00, negative values #ff0000
+
+DYNAMIC MULTIPLIER CALCULATION WITH HOUSE EDGE:
+- **CRITICAL: All games must maintain a house edge of 3-8% to ensure profitability**
+- **Casino-style games (mines, crash, slots, dice, roulette, etc.)**:
+  
+  // For mines/choice games with built-in house edge:
+  - Base multiplier formula: multiplier = (totalOptions - totalMines - 1) / totalMines * Math.pow(0.97, actionsTaken)
+  - House edge factor: 0.97 (3% house edge) applied per action
+  - Maximum multiplier cap: 50x regardless of calculation
+  - Example: 25 tiles, 5 mines, 3 actions = (25-5-1)/5 * 0.97^3 = 3.46x (instead of generous 3.78x)
+  
+  // For crash games with controlled crash points:
+  - Crash point generation: multiplier = 1 / (1 - Math.pow(Math.random(), 1.2) * 0.92)
+  - Reduced exponent (1.2 instead of 1.5) creates more frequent low crashes
+  - Reduced coefficient (0.92 instead of 0.95) increases house edge
+  - Real-time progression: multiplier = 1 * Math.exp(0.025 * timeElapsed) (slower growth)
+  - Expected crash point: ~2.5x (down from ~3.5x)
+  
+  // For slots/wheel games:
+  - Win probability: 45-47% (house edge 3-5%)
+  - Multiplier ranges: 1.5x-2.0x (common wins), 5x-10x (rare wins), 25x+ (jackpot <1%)
+  - Use weighted probability arrays for fair distribution
+  
+  // For dice/card games:
+  - Apply house edge to payout ratios: theoretical_payout * 0.95
+  - Example: 50/50 game pays 1.9x instead of 2.0x
+
+- **Skill-based games (puzzle, platformer, racing, arcade, etc.)**:
+  - Convert scores with house edge: calculateMultiplierFromScore(score * 0.92)
+  - Logarithmic scaling with cap: Math.min(1 + Math.log10(1 + (score * 0.92)/150), 4.0)
+  - Maximum multiplier: 4.0x (down from 5.0x)
+  - Higher score requirements for same multiplier output
+
+HOUSE EDGE VALIDATION:
+- All multiplier calculations must include house edge factors
+- No multiplier should exceed 50x under normal gameplay
+- Expected return to player (RTP) should be 92-97%
+- Include RTP calculation comment in generated code:
+  // Theoretical RTP: ~95% (5% house edge)
+
+// Add this section to your systemPrompt after the HOUSE EDGE section:
+
+CASINO PSYCHOLOGY TACTICS (Apply selectively based on game type):
+
+GAME TYPE DETECTION FOR TACTICS:
+- **High-tactics games**: slots, crash, mines, dice, roulette, lottery, scratch cards
+- **Medium-tactics games**: blackjack, poker variants, wheel games
+- **Low-tactics games**: skill-based puzzles, platformers, racing (minimal casino elements)
+- **No-tactics games**: pure skill games like Tetris, memory games
+
+VISUAL ENGAGEMENT (High-tactics games):
+- Implement celebration animations for wins (even small ones):
+
+- Add pulsing/glowing effects on interactive elements:
+
+NEAR-MISS PSYCHOLOGY (Crash, Mines, Slots):
+- Implement "almost won" scenarios:
+
+- Show "you were X away from winning" messages
+- Highlight missed opportunities visually
+
+PROGRESSIVE TENSION BUILDING (Crash, Mines):
+- Implement escalating visual cues:
+  
+FALSE PATTERN RECOGNITION (All casino games):
+- Display recent results that suggest patterns:
+  
+LOSS DISGUISED AS WIN (Slots, Scratch cards):
+- Show celebrations for "wins" less than the stake:
+
+URGENCY & SCARCITY (Bonus rounds, special events):
+- Add limited-time multiplier bonuses
+
+IMPLEMENTATION RULES:
+- Apply 2-3 tactics maximum per game to avoid overwhelming
+- Skill-based games should use minimal tactics (only celebrations)
+- High-frequency games (crash, mines) should emphasize tension building
+- Slot-style games should focus on near-misses and false wins
+- Always maintain the house edge regardless of psychological elements
+
+ETHICAL BOUNDARIES:
+- No tactics for games clearly marked as "skill-based"
+- Avoid overly aggressive psychological manipulation
+- Include subtle responsible gaming hints in settings panels
+- Don't implement tactics that could harm vulnerable players
+
+MULTIPLIER DISPLAY REQUIREMENTS:
+- Show current multiplier during gameplay
+- Display maximum possible multiplier for transparency
+- Include subtle house edge indicator: "House Edge: 5%" in settings/info panel
+
+GAME BALANCE ENFORCEMENT:
+- Implement multiplier caps in all calculation functions
+- Add randomness reduction for high-value outcomes
+- Ensure losing conditions are more frequent than winning
+- Balance risk vs reward to favor house slightly
+
+// Example implementation for mines game:
+const calculateMinesMultiplier = (totalOptions, totalMines, actionsTaken) => {
+  const baseMultiplier = (totalOptions - totalMines - 1) / totalMines;
+  const houseEdgeFactor = Math.pow(0.97, actionsTaken); // 3% house edge per action
+  const finalMultiplier = baseMultiplier * houseEdgeFactor;
+  return Math.min(finalMultiplier, 50).toFixed(2); // Cap at 50x
+};
+
+// Example implementation for crash game:
+const generateCrashPoint = () => {
+  // House-favored crash point generation
+  const random = Math.random();
+  const crashPoint = 1 / (1 - Math.pow(random, 1.2) * 0.92);
+  return Math.max(crashPoint, 1.01); // Minimum 1.01x crash
+};
+
+PROGRESSIVE DIFFICULTY:
+- Increase house edge slightly with higher multipliers
+- Implement "near miss" psychology for engagement
+- Balance excitement with profitability
+
+MULTIPLIER SYSTEM DETECTION:
+- Casino-style indicators: "mines", "crash", "rocket", "slots", "dice", "roulette", "blackjack", "poker", "lottery", "scratch", "spin"
+- Skill-based indicators: "puzzle", "platformer", "racing", "arcade", "shooting", "jumping", "collecting", "avoiding", "speed", "accuracy"
+- Default to casino-style if unclear
+
+VISIBLE MULTIPLIER DISPLAY:
+- Display multiplier prominently during gameplay:
+  - Format as "Multiplier: 1.56×" or "🚀 1.56×"
+
+OPTIONAL GAME SETTINGS (if relevant):
+- Implement as Box panel with rgba background and border radius
+- 1-3 options: TextField for numbers, basic input controls
+- Examples: "Number of Hazards", "Speed Limit", "Time Limit"
+- Include "Apply" button with gradient styling
+- Toggle visibility with "Settings" button
+
+PHYSICS-BASED GAMES (if applicable):
+- Initialize Matter.js in useEffect
+- Use canvas with useRef for rendering
+- Update multiplier based on velocity/proximity for skill games, or fixed outcomes for casino games
+- Clean up on unmount
+
+SCORE-TO-MULTIPLIER CONVERSION (SKILL GAMES ONLY):
+- Only for skill-based games (puzzle, platformer, racing, etc.), convert scores to multipliers:
+const calculateMultiplierFromScore = (score) => {
+  let multiplier = 1 + Math.log10(1 + score/100);
+  return Math.min(multiplier, 5).toFixed(2);
+}
+- Casino games: Use direct multiplier values based on game outcome (no score conversion)
+- Event logging: 
+  - Skill games: logEvent("gameEnded", { multiplier: calculateMultiplierFromScore(playerScore), result })
+  - Casino games: logEvent("gameEnded", { multiplier: gameMultiplier, result })
 
 Game Requirements:
 - Interactive game with clear mechanics (no financial elements)
 - Glassmorphic dark theme design (#080808 background)
-- Game state: gameStarted, gameEnded, multiplier, result (NO balance/bet states)
 - Include startGame, endGame, resetGame functions
-- Log events: logEvent("gameStarted", {...}) and logEvent("gameEnded", {result, multiplier})
-- Multiplier display component (for game mechanics only, not financial)
-- Main container must be scrollable
-- Game history tracking with an appropriate minimum height on main container
-
-Allowed Game Elements:
-- Score tracking (points, not money)
-- Level progression
-- Achievement systems
-- Multiplier mechanics (for scoring/points)
-- Timer/countdown elements
-- Player statistics (games played, high scores)
-- Game difficulty settings
-
-Responsive Design Patterns:
-- Use Grid/Flexbox for layouts
-- Implement breakpoint-specific styling
-- Scale font sizes responsively (clamp() function)
-- Use aspect-ratio for consistent proportions
-- Ensure touch targets are minimum 44px on mobile`;
+- Full viewport height usage
+- Restart button with reset functionality
+- Custom modals/overlays instead of MUI Modal components`;
 
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -547,7 +958,7 @@ Responsive Design Patterns:
           role: 'user',
           content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}. 
           
-          IMPORTANT: Include a <Typography id="game-title"> for the game title and a rules modal with <Box id="game-rules"> containing the gameplay rules. Do not include any betting, balance, or financial logic. Focus on pure game mechanics and user experience.`,
+          IMPORTANT: Include a <Typography id="game-title"> for the game title and custom rules overlay with <Box id="game-rules"> containing the gameplay rules. Ensure it's aligned in the center when opened. Do not use MUI Modal components - create custom overlays. Do not include any betting, balance, or financial logic. Focus on pure game mechanics, multiplier systems, game history, and user experience.`,
         },
       ],
       stream: true,
@@ -644,56 +1055,72 @@ router.post('/update-react', auth, async (req, res) => {
       .replace(/export\s+[\w\s]*?\s*;?/g, '')
       .trim();
 
-    const systemPrompt = `You are an expert React developer specializing in game modification and enhancement. You will be given an existing React game component and a user request for modifications.
+      const systemPrompt = `You are an expert React developer specializing in game modification and enhancement. You will be given an existing React game component and a user request for modifications.
 
-CRITICAL: NO FINANCIAL LOGIC
-- DO NOT add any bet amount, balance, wallet, or money-related state
-- DO NOT implement betting mechanics, currency displays, or financial calculations
-- DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
-- Focus purely on game mechanics and user interaction
-- Financial logic will be handled by external systems
-
-SCORE-BASED MULTIPLIER SYSTEM (maintain if exists):
-- Keep existing conservative score-to-multiplier conversion
-- Maintain multiplier range: 1.0x to 2.5x (maximum 3x for exceptional skill)
-- Preserve existing multiplier formulas and thresholds
-- If adding new scoring, use conservative scaling
-
-MODIFICATION REQUIREMENTS:
-1. **Preserve Core Structure**: Maintain the original game's architecture and state management
-2. **Keep Existing Features**: Preserve all working functionality unless specifically requested to change
-3. **Enhance, Don't Replace**: Add new features while keeping existing ones intact
-4. **Maintain Props**: Component must accept 'proxiedAssets' and 'logEvent' props
-5. **Responsive Design**: Ensure any new elements are responsive and fit the container
-6. **Glassmorphic Theme**: Match the existing dark glassmorphic design (#080808 background)
-
-REQUIRED IMPORTS (add these at the start):
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Typography, Button, Modal } from '@mui/material';
-
-OUTPUT REQUIREMENTS:
-- Return ONLY the complete updated component code
-- Start with "const App = ..." or "function App"
-- End with "export default App;"
-- Include all necessary state, effects, and handlers
-- Maintain the container structure with proper responsive design
-- No markdown formatting or explanations
-
-CONTAINER REQUIREMENTS:
-- Main container MUST use: width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%"
-- Preserve responsive design patterns
-- Maintain glassmorphic styling consistency
-
-CHANGE ANALYSIS:
-Before making modifications, analyze what the user is requesting:
-- UI changes (colors, layout, visual elements)
-- Game logic changes (rules, mechanics, scoring)
-- New features (modes, levels, characters)
-- Performance improvements
-- Bug fixes
-
-Make targeted changes that fulfill the request while preserving the game's core functionality.`;
-
+      CRITICAL: NO FINANCIAL LOGIC
+      - DO NOT add any bet amount, balance, wallet, or money-related state
+      - DO NOT implement betting mechanics, currency displays, or financial calculations
+      - DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
+      - Focus purely on game mechanics and user interaction
+      - Financial logic will be handled by external systems
+      
+      CRITICAL: **Never declare a local function or variable named logEvent. Always call the logEvent prop as provided. If you redefine logEvent, your code will break in production.**
+      - The component receives logEvent as a prop - use it directly: logEvent("gameStarted", { ... })
+      - Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
+      - Always use the prop: props.logEvent or destructured logEvent from props
+      
+      CUSTOM MODAL/EXPANDABLE REQUIREMENTS:
+      - Center modal within the main game container
+      - NO viewport units anywhere
+      
+      SCORE-BASED MULTIPLIER SYSTEM (maintain if exists):
+      - **For skill-based games only**: Keep existing conservative score-to-multiplier conversion
+      - **For casino-style games**: Use direct multiplier values based on game outcomes
+      - Maintain multiplier range: 1.0x to 2.5x (maximum 3x for exceptional skill in skill games)
+      - Preserve existing multiplier formulas and thresholds
+      - If adding new scoring to skill games, use conservative scaling:
+      const calculateMultiplierFromScore = (score) => {
+        let multiplier = 1 + Math.log10(1 + score/100);
+        return Math.min(multiplier, 5).toFixed(2);
+      }
+      
+      MODIFICATION REQUIREMENTS:
+      1. **Preserve Core Structure**: Maintain the original game's architecture and state management
+      2. **Keep Existing Features**: Preserve all working functionality unless specifically requested to change
+      3. **Enhance, Don't Replace**: Add new features while keeping existing ones intact
+      4. **Maintain Props**: Component must accept 'proxiedAssets' and 'logEvent' props
+      5. **Responsive Design**: Ensure any new elements are responsive and fit the container
+      6. **Glassmorphic Theme**: Match the existing dark glassmorphic design (#080808 background)
+      7. **Game History**: Maintain existing game history functionality
+      8. **Multiplier Display**: Preserve existing multiplier display and calculation logic
+      
+      REQUIRED IMPORTS (add these at the start):
+      import React, { useState, useEffect, useRef, useCallback } from 'react';
+      import { Box, Typography, Button } from '@mui/material';
+      
+      OUTPUT REQUIREMENTS:
+      - Return ONLY the complete updated component code
+      - Start with "const App = ..." or "function App"
+      - End with "export default App;"
+      - Include all necessary state, effects, and handlers
+      - Maintain the container structure with proper responsive design
+      - No markdown formatting or explanations
+      - Do not use MUI Modal components
+      
+      CONTAINER REQUIREMENTS:
+      - Main container MUST use: width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%"
+      - Preserve responsive design patterns
+      - Maintain glassmorphic styling consistency
+      
+      CHANGE ANALYSIS:
+      Before making modifications, analyze what the user is requesting:
+      - UI changes (colors, layout, visual elements)
+      - Game logic changes (rules, mechanics, scoring)
+      - New features (modes, levels, characters)
+      - Performance improvements
+      - Bug fixes
+      
+      Make targeted changes that fulfill the request while preserving the game's core functionality, including multiplier systems, game history, and custom modal implementations.`;
     // Use Claude with streaming for faster response
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -712,9 +1139,9 @@ User's modification request: "${prompt}"
 
 Available proxied assets: ${JSON.stringify(updatedProxiedAssets)}
 
-Please update the component according to the user's request. Maintain all existing functionality and ensure the component works properly with the provided assets.
+Please update the component according to the user's request. Maintain all existing functionality including custom modals, multiplier systems, game history, and ensure the component works properly with the provided assets.
 
-IMPORTANT: Do not include any betting, balance, or financial logic. Focus on pure game mechanics and user experience improvements.`,
+IMPORTANT: Do not use MUI Modal components - maintain custom overlay modals. Do not include any betting, balance, or financial logic. Focus on pure game mechanics and user experience improvements while preserving existing multiplier calculations and game state management.`,
         },
       ],
       stream: true,
@@ -1223,74 +1650,146 @@ router.get('/topWithdrawals', async (req, res) => {
   }
 });
 
-const getHistory = async (pageSize, my_id, game_type) => {
+// ============================================
+// BACKEND: Enhanced Game History with Redis Caching
+// ============================================
+
+const getHistory = async (pageSize, my_id, game_type, redisClient = null) => {
   try {
-    const id_condition = {};
-    const game_type_condition = {};
+    
+    // Create cache key based on parameters
+    const cacheKey = `history:${pageSize}:${my_id || 'all'}:${game_type}`;
+    
+    let result = null;
+    let fromCache = false;
 
-    if (my_id) {
-      id_condition['$or'] = [{ creator: my_id }, { joined_user: my_id }];
+    // Step 1: Try Redis cache first
+    if (redisClient) {
+      try {
+        const cachedHistory = await redisClient.get(cacheKey);
+        if (cachedHistory) {
+          result = JSON.parse(cachedHistory);
+          fromCache = true;
+        }
+      } catch (redisErr) {
+        console.error('Redis error during history fetch:', redisErr);
+      }
     }
 
-    if (game_type !== 'All') {
-      const gameType = await GameType.findOne({ short_name: game_type });
-      game_type_condition.game_type = gameType._id;
+    // Step 2: If not in cache, fetch from database
+    if (!result) {
+      const id_condition = {};
+      const game_type_condition = {};
+
+      if (my_id) {
+        id_condition['$or'] = [{ creator: my_id }, { joined_user: my_id }];
+      }
+
+      if (game_type !== 'All') {
+        const gameType = await GameType.findOne({ short_name: game_type });
+        if (gameType) {
+          game_type_condition.game_type = gameType._id;
+        }
+      }
+
+      const search_condition = { $and: [id_condition, game_type_condition] };
+
+      const gameLogQuery = GameLog.find(search_condition)
+        .sort({ created_at: 'desc' })
+        .limit(pageSize)
+        .populate({
+          path: 'room',
+          model: Room,
+          select:
+            '_id winnings ticker image commission creator status ai_mode hosts room_number game_type bet_amount user_bet host_pr created_at',
+        })
+        .populate({
+          path: 'game_type',
+          model: GameType,
+          select: 'short_name game_type_name',
+        })
+        .populate({
+          path: 'creator',
+          model: User,
+          select: '_id avatar accessory totalWagered',
+        })
+        .populate({
+          path: 'joined_user',
+          model: User,
+          select: '_id avatar accessory totalWagered',
+        });
+
+      const countQuery = GameLog.countDocuments(search_condition);
+
+      const [gameLogList, count] = await Promise.all([gameLogQuery, countQuery]);
+
+      const historyData = await convertGameLogToHistoryStyle(gameLogList);
+
+      result = {
+        history: historyData,
+        count,
+        pageSize,
+      };
+
+      // Step 3: Cache the result
+      if (redisClient) {
+        try {
+          // Different cache durations based on query type
+          let cacheDuration = 300; // 5 minutes default
+          
+          if (my_id) {
+            // Personal history - cache longer (user-specific, changes less)
+            cacheDuration = 600; // 10 minutes
+          } else {
+            // Global history - cache shorter (changes more frequently)
+            cacheDuration = 180; // 3 minutes
+          }
+
+          await redisClient.setEx(cacheKey, cacheDuration, JSON.stringify(result));
+          // console.log(`History cached: ${cacheKey} for ${cacheDuration}s`);
+        } catch (redisErr) {
+          console.error('Failed to cache history:', redisErr);
+        }
+      }
     }
-
-    const search_condition = { $and: [id_condition, game_type_condition] };
-
-    const gameLogQuery = GameLog.find(search_condition)
-      .sort({ created_at: 'desc' })
-      .limit(pageSize)
-      .populate({
-        path: 'room',
-        model: Room,
-        select:
-          '_id winnings ticker image commission creator status ai_mode hosts room_number game_type bet_amount user_bet host_pr created_at',
-      })
-      .populate({
-        path: 'game_type',
-        model: GameType,
-        select: 'short_name game_type_name',
-      })
-      .populate({
-        path: 'creator',
-        model: User,
-        select: '_id avatar accessory totalWagered',
-      })
-      .populate({
-        path: 'joined_user',
-        model: User,
-        select: '_id avatar accessory totalWagered',
-      });
-    const countQuery = GameLog.countDocuments(search_condition);
-
-    const [gameLogList, count] = await Promise.all([gameLogQuery, countQuery]);
-
-    const result = await convertGameLogToHistoryStyle(gameLogList);
 
     return {
-      history: result,
-      count,
-      pageSize,
+      ...result,
+      cached: fromCache
     };
   } catch (err) {
+    console.error('Error in getHistory:', err);
     return false;
   }
 };
 
+// Enhanced history route with Redis support
 router.get('/history', async (req, res) => {
   try {
-    const { pageSize = 1, game_type = 'All' } = req.query;
+    const { pageSize = 1, game_type = 'All', my_id = null } = req.query;
+    
+    // Get Redis client and pass it to getHistory
+    const redisClient = req.app.get('redisClient');
+    
+    const history = await getHistory(parseInt(pageSize), my_id, game_type, redisClient);
+    
+    if (!history) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch history'
+      });
+    }
 
-    const history = await getHistory(parseInt(pageSize), null, game_type);
     res.json({
       success: true,
       pageSize: parseInt(pageSize),
       history: history.history,
+      count: history.count,
+      cached: history.cached || false
     });
   } catch (err) {
-    res.json({
+    console.error('Error in /history route:', err);
+    res.status(500).json({
       success: false,
       err: err.toString(),
     });
@@ -1537,11 +2036,22 @@ router.post('/rooms', auth, async (req, res) => {
       username,
       dailyWithdrawals,
       isWithdrawing,
-      balance,
     } = req.user;
 
     // Consolidate validations
     const user_bet = parseFloat(bet_amount);
+    
+    // Check balance on blockchain for the connected account
+    let balance;
+    try {
+      balance = await checkWalletBalance(connectedAccount);
+    } catch (balanceError) {
+      console.error('Balance check failed:', balanceError);
+      return res.json({
+        success: false,
+        message: 'UNABLE TO VERIFY WALLET BALANCE. PLEASE TRY AGAIN!',
+      });
+    }
 
     // Existing validation checks
     if (isWithdrawing) {
@@ -1594,6 +2104,7 @@ router.post('/rooms', auth, async (req, res) => {
     }
 
     if (user_bet > balance) {
+      console.log('Insufficient funds:', { user_bet, balance });
       return res.json({
         success: false,
         message: 'NOT ENUFF FUNDS AT THIS MEOWMENT',
@@ -1683,14 +2194,6 @@ router.post('/rooms', auth, async (req, res) => {
       game_result: -3000,
     });
 
-    // const newTransaction = new GameTransanction({
-    //   user: req.user,
-    //   amount: -amountAfterFee,
-    //   description: 'Created ' + (name || `${gameTypeDoc.short_name}-${room_number}`),
-    //   room: newRoom._id,
-    //   status: 'pending'
-    // });
-
     // Update user
     const updatedUser = {
       balance: balance - amountAfterFee,
@@ -1770,6 +2273,31 @@ router.post('/rooms', auth, async (req, res) => {
     });
   }
 });
+
+// Helper function for checking wallet balance
+async function checkWalletBalance(walletAddress) {
+  const { Connection, PublicKey, LAMPORTS_PER_SOL } = require('@solana/web3.js');
+
+  try {
+    console.log('🔗 Connecting to Solana to check balance...');
+    const connection = new Connection(process.env.PROVIDER_URL, 'confirmed');
+    const publicKey = new PublicKey(walletAddress);
+
+    const balance = await connection.getBalance(publicKey);
+    const solBalance = balance / LAMPORTS_PER_SOL;
+
+    console.log('Wallet balance check:', {
+      address: walletAddress,
+      lamports: balance,
+      sol: solBalance
+    });
+
+    return solBalance;
+  } catch (error) {
+    console.error('Error checking wallet balance:', error);
+    throw new Error(`Failed to check wallet balance: ${error.message}`);
+  }
+}
 
 router.get('/my_games', auth, async (req, res) => {
   try {
@@ -2617,9 +3145,9 @@ router.post('/jeet', auth, async (req, res) => {
   try {
     // 1) Basic checks + anti-abuse
     if (
-      !req.body.connectedAccount ||
+      !req.body.walletAddress ||
       !req.user.accounts ||
-      !req.user.accounts.includes(req.body.connectedAccount)
+      !req.user.accounts.includes(req.body.walletAddress)
     ) {
       return res.json({
         success: false,
@@ -2779,7 +3307,7 @@ router.post('/jeet', auth, async (req, res) => {
       username: host.username,
       avatar: host.avatar,
       rank: host.rank,
-      walletAddress: host.walletAddress || req.body.connectedAccount,
+      walletAddress: host.walletAddress || req.body.walletAddress,
     }));
 
     // 12) Update room liquidity, the total share supply, and host_pr (if applicable)
@@ -2794,7 +3322,7 @@ router.post('/jeet', auth, async (req, res) => {
     req.user.tradingProfit += amountAfterFee;
 
 
-    if (amountAfterFee > 0 && req.body.connectedAccount) {
+    if (amountAfterFee > 0 && req.body.walletAddress) {
       // Validate deposit transaction (check both pending and completed)
       const depositTransaction = await GameTransanction.findOne({
         user: req.user._id,
@@ -2817,7 +3345,7 @@ router.post('/jeet', auth, async (req, res) => {
 
       // Validate connectedAccount as a Solana address
       try {
-        const address = req.body.connectedAccount.trim(); // Remove whitespace
+        const address = req.body.walletAddress.trim(); // Remove whitespace
         new PublicKey(address);
       } catch (error) {
         console.error("PublicKey error:", error.message);
@@ -2832,7 +3360,7 @@ router.post('/jeet', auth, async (req, res) => {
         room: roomId,
         room_name: roomInfo.name,
         status: 'pending',
-        connectedAccount: req.body.connectedAccount,
+        connectedAccount: req.body.walletAddress,
       });
       await saveDocumentWithRetry(newGameTransaction);
     }
@@ -3228,58 +3756,90 @@ const getTimeBucket = (timeRange) => {
       return 1;
   }
 };
-
 router.post('/getGlobalChatLogs', async (req, res) => {
   try {
-    const results = await Chat.find({})
-      .sort({ created_at: -1 }) // Change to ascending to avoid extra sort later
-      .limit(15)
-      .select('sender message messageType messageContent created_at replyTo')
-      .populate({
-        path: 'sender',
-        select: 'username avatar accessory elite totalWagered _id',
-        options: { lean: true }
-      })
-      .populate({
-        path: 'replyTo',
-        select: 'sender message messageType created_at',
-        populate: {
+    const redisClient = req.app.get('redisClient');
+    const cacheKey = 'global:chat:logs';
+    
+    let chatLogs = null;
+    let fromCache = false;
+
+    // Step 1: Try to get from Redis cache first
+    try {
+      const cachedLogs = await redisClient.get(cacheKey);
+      if (cachedLogs) {
+        chatLogs = JSON.parse(cachedLogs);
+        fromCache = true;
+      }
+    } catch (redisErr) {
+      console.error('Redis error during chat fetch:', redisErr);
+    }
+
+    // Step 2: If not in cache, fetch from database
+    if (!chatLogs) {
+      const results = await Chat.find({})
+        .sort({ created_at: -1 })
+        .limit(15)
+        .select('sender message messageType messageContent created_at replyTo')
+        .populate({
           path: 'sender',
           select: 'username avatar accessory elite totalWagered _id',
           options: { lean: true }
-        },
-        options: { lean: true }
-      })
-      .lean()
+        })
+        .populate({
+          path: 'replyTo',
+          select: 'sender message messageType created_at',
+          populate: {
+            path: 'sender',
+            select: 'username avatar accessory elite totalWagered _id',
+            options: { lean: true }
+          },
+          options: { lean: true }
+        })
+        .lean();
 
+      chatLogs = results.map(chat => ({
+        sender: chat.sender?.username || '',
+        senderId: chat.sender?._id || '',
+        message: chat.message,
+        messageType: chat.messageType,
+        messageContent: chat.messageContent,
+        avatar: chat.sender?.avatar || '',
+        accessory: chat.sender?.accessory || '',
+        elite: chat.sender?.elite || false,
+        rank: chat.sender?.totalWagered || '',
+        time: moment(chat.created_at).format('hh:mm'),
+        replyTo: chat.replyTo?.[0] ? {
+          username: chat.replyTo[0].sender?.username || '',
+          senderId: chat.replyTo[0].sender?._id || '',
+          avatar: chat.replyTo[0].sender?.avatar || '',
+          rank: chat.replyTo[0].sender?.totalWagered || '',
+          accessory: chat.replyTo[0].sender?.accessory || '',
+          elite: chat.replyTo[0].sender?.elite || false,
+          message: chat.replyTo[0].message,
+          messageType: chat.replyTo[0].messageType,
+          time: moment(chat.replyTo[0].created_at).format('hh:mm')
+        } : null
+      })).reverse();
 
-    const chatLogs = results.map(chat => ({
-      sender: chat.sender?.username || '',
-      senderId: chat.sender?._id || '',
-      message: chat.message,
-      messageType: chat.messageType,
-      messageContent: chat.messageContent,
-      avatar: chat.sender?.avatar || '',
-      accessory: chat.sender?.accessory || '',
-      elite: chat.sender?.elite || false,
-      rank: chat.sender?.totalWagered || '',
-      time: moment(chat.created_at).format('hh:mm'),
-      replyTo: chat.replyTo?.[0] ? {
-        username: chat.replyTo[0].sender?.username || '',
-        senderId: chat.replyTo[0].sender?._id || '',
-        avatar: chat.replyTo[0].sender?.avatar || '',
-        rank: chat.replyTo[0].sender?.totalWagered || '',
-        accessory: chat.replyTo[0].sender?.accessory || '',
-        elite: chat.replyTo[0].sender?.elite || false,
-        message: chat.replyTo[0].message,
-        messageType: chat.replyTo[0].messageType,
-        time: moment(chat.replyTo[0].created_at).format('hh:mm')
-      } : null
-    }));
+      // Step 3: Cache the processed chat logs for 2 minutes
+      try {
+        await redisClient.setEx(
+          cacheKey,
+          120, // 2 minutes (chat changes frequently but not every second)
+          JSON.stringify(chatLogs)
+        );
+      } catch (redisErr) {
+        console.error('Failed to cache global chat:', redisErr);
+      }
+    }
+
     return res.json({
       success: true,
-      chatLogs: chatLogs.reverse() // Simply add .reverse() here
+      chatLogs,
+      cached: fromCache
     });
+
   } catch (error) {
     console.error('Error fetching global chat:', error);
     return res.status(500).json({

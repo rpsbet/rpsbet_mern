@@ -1,5 +1,11 @@
 require('dotenv').config();
 
+console.log('🔥 =================================');
+console.log('🔥 CATSINO SERVER STARTING UP');
+console.log('🔥 Environment:', process.env.NODE_ENV || 'development');
+console.log('🔥 Port:', process.env.PORT || 5001);
+console.log('🔥 =================================');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');

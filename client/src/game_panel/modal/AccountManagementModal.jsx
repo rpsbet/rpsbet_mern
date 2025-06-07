@@ -39,7 +39,8 @@ import {
   FileCopy as FileCopyIcon,
   Link as LinkIcon,
   Delete as DeleteIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 import axios from '../../util/Api';
 
@@ -91,7 +92,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const tabs = [
     { label: 'Profile', icon: '👤', value: 0 },
     { label: 'Settings', icon: '⚙️', value: 1 },
-    { label: 'Security', icon: '🔒', value: 2 },
+    { label: 'Accounts', icon: '🔒', value: 2 },
     { label: 'Developer', icon: '💻', value: 3 }
   ];
 
@@ -602,7 +603,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         variant="contained"
                         color="error"
                         sx={{ mt: 3 }}
-                        startIcon={isLoading ? <CircularProgress size={20} /> : <span>💾</span>}
+                        startIcon={isLoading ? <CircularProgress color='error' size={20} /> : <span>💾</span>}
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </Button>
@@ -732,15 +733,15 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 </Grid>
               )}
 
-              {/* Security Tab */}
+              {/* Accounts Tab */}
               {activeTab === 2 && (
                 <Box>
                   <Alert severity="info" sx={{ mb: 3 }}>
-                    Keep your account secure by managing your password and reviewing your security settings regularly.
+                    Here's your connected web3 addresses.
                   </Alert>
 
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                    {/* <Grid item xs={12} md={6}>
                       <Paper
                         elevation={1}
                         sx={{
@@ -774,7 +775,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           Last password change: {formatDate(new Date())}
                         </Typography>
                       </Paper>
-                    </Grid>
+                    </Grid> */}
 
                     <Grid item xs={12}>
                       <Paper
@@ -855,10 +856,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 <Box>
                   <Alert severity="info" sx={{ mb: 3 }}>
                     <Typography variant="body1">
-                      <strong>🔧 Developer API Access</strong>
+                      <strong>🚀 Streamlined API v1.0.0</strong>
                     </Typography>
-                    Create and manage API keys to integrate with external applications. 
-                    The API has been streamlined - React generation is now integrated into the create-room endpoint.
+                    Create complete game experiences with a single endpoint! React generation, image creation, 
+                    and blockchain deposits are now unified. All games require SOL deposits and private keys for automated transactions.
                   </Alert>
 
                   <Paper
@@ -885,9 +886,18 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                       </Button>
                     </Box>
 
+                    {!user?.elite && (
+                      <Alert severity="error" sx={{ mb: 3 }}>
+                        <Typography variant="body1">
+                          <strong>Elite Membership Required</strong>
+                        </Typography>
+                        You need Elite membership to access the Game Creation API. Visit the store to upgrade your account.
+                      </Alert>
+                    )}
+
                     {loadingApiKeys ? (
                       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                        <CircularProgress />
+                        <CircularProgress color='error'/>
                       </Box>
                     ) : apiKeys.length === 0 ? (
                       <Box sx={{ textAlign: 'center', p: 3 }}>
@@ -895,7 +905,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           No API keys generated yet
                         </Typography>
                         <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                          Click "Generate New Key" to create your first API key
+                          Click "Generate New Key" to create your first API key for the streamlined API
                         </Typography>
                       </Box>
                     ) : (
@@ -973,14 +983,15 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                   </Typography>
                                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                     {key.permissions.map((permission) => {
-                                      // Map permission labels for display
                                       const permissionLabels = {
-                                        'create_room': 'Create Rooms & Generate React',
-                                        'generate_image': 'Generate AI Images',
-                                        // Legacy permissions (in case they still exist)
-                                        'generate_react': 'Generate React (Legacy)',
-                                        'extract_room_info': 'Extract Room Info (Legacy)'
+                                        'create_room': 'Create Rooms (includes React & Deposits)',
+                                        // Legacy permissions still shown for existing keys
+                                        'generate_react': 'Generate React (Legacy - use create_room)',
+                                        'extract_room_info': 'Extract Info (Legacy - now automatic)',
+                                        'generate_image': 'Generate Images (Legacy - now optional in create_room)'
                                       };
+                                      
+                                      const isLegacy = ['generate_react', 'extract_room_info', 'generate_image'].includes(permission);
                                       
                                       return (
                                         <Chip
@@ -989,13 +1000,21 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                           size="small"
                                           variant="outlined"
                                           sx={{ 
-                                            borderColor: '#ff0000',
-                                            color: isDarkMode ? '#fff' : '#333'
+                                            borderColor: isLegacy ? '#ff9800' : '#ff0000',
+                                            color: isLegacy ? '#ff9800' : (isDarkMode ? '#fff' : '#333'),
+                                            backgroundColor: isLegacy ? 'rgba(255, 152, 0, 0.1)' : 'transparent'
                                           }}
                                         />
                                       );
                                     })}
                                   </Box>
+                                  {key.permissions.some(p => ['generate_react', 'extract_room_info', 'generate_image'].includes(p)) && (
+                                    <Alert severity="warning" sx={{ mt: 1, fontSize: '0.75rem' }}>
+                                      <Typography variant="caption">
+                                        This key has legacy permissions. Consider regenerating with create_room permission for the new unified API.
+                                      </Typography>
+                                    </Alert>
+                                  )}
                                 </Grid>
                                 <Grid item xs={12}>
                                   <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
@@ -1043,10 +1062,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           📖 Documentation
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          Get started with our streamlined API in minutes
+                          Complete API documentation for the streamlined workflow
                         </Typography>
                         <Alert severity="success" sx={{ mb: 2, fontSize: '0.85rem' }}>
-                          <strong>New:</strong> React generation is now integrated into the create-room endpoint!
+                          <strong>New:</strong> Single endpoint for complete game creation with mandatory blockchain deposits!
                         </Alert>
                         <Button 
                           variant="outlined" 
@@ -1068,6 +1087,9 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         >
                           View Documentation
                         </Button>
+                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 1, color: isDarkMode ? '#aaa' : '#777' }}>
+                          Includes migration guide from legacy endpoints
+                        </Typography>
                       </Paper>
                     </Grid>
 
@@ -1105,13 +1127,13 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         </Box>
                         <Box>
                           <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                            API Endpoints
+                            Games Created
                           </Typography>
                           <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#3b82f6' }}>
-                            2
+                            {apiKeys.reduce((sum, key) => sum + (key.roomsCreated || 0), 0)}
                           </Typography>
                           <Typography variant="caption" sx={{ color: isDarkMode ? '#aaa' : '#777' }}>
-                            Streamlined from 5 endpoints
+                            All with blockchain verification
                           </Typography>
                         </Box>
                       </Paper>
@@ -1128,50 +1150,128 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         }}
                       >
                         <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          🚀 Available Endpoints
+                          🚀 Streamlined API Endpoints
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 3, color: isDarkMode ? '#ccc' : '#666' }}>
+                          We've unified 5 separate endpoints into 2 powerful ones. Everything you need in fewer calls!
                         </Typography>
                         <Grid container spacing={2}>
-                          <Grid item xs={12} md={6}>
+                          <Grid item xs={12}>
                             <Box
                               sx={{
-                                p: 2,
+                                p: 3,
                                 borderRadius: 1,
-                                border: '1px solid #ff3030',
+                                border: '2px solid #ff3030',
                                 backgroundColor: isDarkMode ? 'rgba(255, 48, 48, 0.1)' : 'rgba(255, 48, 48, 0.05)',
                               }}
                             >
-                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#ff3030', mb: 1 }}>
-                                POST /create-room
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box>
+                                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#ff3030', mb: 1 }}>
+                                    POST /api/public-api/create-room
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 2 }}>
+                                    Create complete game experiences with mandatory blockchain deposits
+                                  </Typography>
+                                </Box>
+                                <Chip label="Primary" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
+                              </Box>
+                              
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
+                                ✅ What's Included:
                               </Typography>
-                              <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
-                                Create game rooms with optional React generation and blockchain deposits
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                                <Chip label="🎮 React Game Generation" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
+                                <Chip label="🎨 Optional AI Images" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
+                                <Chip label="💰 Mandatory SOL Deposits" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
+                                <Chip label="🔐 Private Key Signing" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
+                                <Chip label="📊 Auto Info Extraction" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
+                              </Box>
+                              
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
+                                🔧 Required Fields:
                               </Typography>
-                              <Chip label="create_room" size="small" color="error" />
+                              <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', fontFamily: 'monospace' }}>
+                                bet_amount, name, connectedAccount, privateKey, reactPrompt
+                              </Typography>
                             </Box>
                           </Grid>
+                          
                           <Grid item xs={12} md={6}>
                             <Box
                               sx={{
                                 p: 2,
                                 borderRadius: 1,
-                                border: '1px solid #10b981',
-                                backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+                                border: '1px solid #666',
+                                backgroundColor: isDarkMode ? 'rgba(102, 102, 102, 0.1)' : 'rgba(102, 102, 102, 0.05)',
                               }}
                             >
-                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#10b981', mb: 1 }}>
-                                POST /generate-image
+                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#666', mb: 1 }}>
+                                GET /api/public-api/info
                               </Typography>
                               <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
-                                Generate AI images using DALL-E 3 for game assets
+                                API information and status
                               </Typography>
-                              <Chip label="generate_image" size="small" sx={{ backgroundColor: '#10b981', color: '#fff' }} />
+                              <Chip label="Info Only" size="small" sx={{ backgroundColor: '#666', color: '#fff' }} />
                             </Box>
                           </Grid>
                         </Grid>
-                        <Alert severity="info" sx={{ mt: 2 }}>
+                        
+                        <Alert severity="info" sx={{ mt: 3 }}>
                           <Typography variant="body2">
-                            <strong>Migration Note:</strong> If you have existing API keys with legacy permissions 
-                            (generate_react, extract_room_info), they will automatically be converted to create_room permission.
+                            <strong>Migration Complete:</strong> Legacy endpoints (generate-react, extract-room-info, etc.) have been 
+                            consolidated into create-room. Existing API keys with old permissions will continue to work but we recommend 
+                            generating new keys with create_room permission.
+                          </Typography>
+                        </Alert>
+                      </Paper>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          p: 3,
+                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
+                          borderRadius: 2,
+                          color: isDarkMode ? '#fff' : '#333',
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
+                          ⚡ Quick Start Example
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
+                          Create your first game with a single API call
+                        </Typography>
+                        <Box
+                          sx={{
+                            backgroundColor: isDarkMode ? '#0a0a0a' : '#f8f9fa',
+                            color: isDarkMode ? '#e6e6e6' : '#2d3748',
+                            border: `1px solid ${isDarkMode ? '#444' : '#e2e8f0'}`,
+                            borderRadius: 1,
+                            p: 2,
+                            fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
+                            fontSize: '12px',
+                            overflow: 'auto',
+                          }}
+                        >
+                          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: isDarkMode ? '#e6e6e6' : '#2d3748' }}>
+{`curl -X POST "https://catsino.fun/api/public-api/create-room" \\
+  -H "X-API-Key: your_api_key_here" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "bet_amount": 0.1,
+    "name": "Dice Master",
+    "connectedAccount": "your_wallet_address",
+    "privateKey": "your_base58_private_key",
+    "reactPrompt": "Create a dice rolling game with multipliers"
+  }'`}
+                          </pre>
+                        </Box>
+                        <Alert severity="warning" sx={{ mt: 2 }}>
+                          <Typography variant="body2">
+                            <strong>Security:</strong> Never expose private keys in client-side code. 
+                            Use this API only from secure server environments.
                           </Typography>
                         </Alert>
                       </Paper>
@@ -1299,7 +1399,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                   disabled={isLoading || !passwordData.newPassword.trim() || !passwordData.confirmPassword.trim()}
                   variant="contained"
                   color="error"
-                  startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                  startIcon={isLoading ? <CircularProgress color='error' size={20} /> : <SaveIcon />}
                 >
                   {isLoading ? 'Updating...' : 'Update Password'}
                 </Button>
@@ -1318,7 +1418,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: '500px' },
+              width: { xs: '90%', sm: '600px' },
               bgcolor: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
               borderRadius: 2,
               boxShadow: 24,
@@ -1346,12 +1446,22 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               </IconButton>
             </Box>
             <Box sx={{ p: 3 }}>
+              {!user?.elite && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  <Typography variant="body1">
+                    <strong>Elite Membership Required</strong>
+                  </Typography>
+                  You need Elite membership to access the Game Creation API. Visit the store to upgrade your account.
+                </Alert>
+              )}
+              
               <TextField
                 fullWidth
                 label="Key Name"
                 value={newKeyData.name}
                 onChange={(e) => setNewKeyData({...newKeyData, name: e.target.value})}
                 placeholder="e.g., Production API, Development Key"
+                disabled={!user?.elite}
                 sx={{ 
                   mb: 3,
                   '& .MuiOutlinedInput-root': {
@@ -1377,70 +1487,75 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               />
               
               <Typography variant="body1" sx={{ mb: 2, color: isDarkMode ? '#fff' : '#333' }}>
-                Permissions
+                API Permissions
               </Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>
+            
+              
+              <Grid container spacing={1} sx={{ mb: 3 }}>
+                <Grid item xs={12}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      border: newKeyData.permissions.includes('create_room') 
+                        ? '2px solid #ff0000' 
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: 1,
+                      backgroundColor: newKeyData.permissions.includes('create_room')
+                        ? isDarkMode ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 0, 0, 0.05)'
+                        : isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+                      cursor: user?.elite ? 'pointer' : 'not-allowed',
+                      opacity: user?.elite ? 1 : 0.6,
+                      transition: 'all 0.2s ease',
+                      '&:hover': user?.elite ? {
+                        backgroundColor: isDarkMode ? 'rgba(255, 0, 0, 0.15)' : 'rgba(255, 0, 0, 0.08)',
+                      } : {},
+                    }}
+                    onClick={() => user?.elite && togglePermission('create_room')}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={newKeyData.permissions.includes('create_room')}
+                          onChange={() => user?.elite && togglePermission('create_room')}
+                          color="error"
+                          disabled={!user?.elite}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: '#ff3030', mb: 1 }}>
+                            🎮 Complete Game Creation
+                          </Typography>
+                          <Typography variant="body1" sx={{ fontWeight: 500, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
+                            Create Rooms with Full Features
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 2 }}>
+                            Everything you need to create complete game experiences with a single API call
+                          </Typography>
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                            <Chip label="⚛️ React Generation" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
+                            <Chip label="🎨 AI Images" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
+                            <Chip label="💰 SOL Deposits" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
+                            <Chip label="📊 Auto Extraction" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
+                            <Chip label="🔐 Blockchain Signing" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
+                          </Box>
+                        </Box>
+                      }
+                      sx={{ width: '100%', margin: 0, alignItems: 'flex-start' }}
+                    />
+                  </Paper>
+                </Grid>
+              </Grid>
+
+
+              <Alert severity="warning" sx={{ mb: 3 }}>
                 <Typography variant="body2">
-                  The API has been streamlined! React generation is now part of the create-room permission.
+                  <strong>Important:</strong> API keys are sensitive. Keep them secure and never expose them in client-side code.
+                  Use server-side environments to interact with the API.
                 </Typography>
               </Alert>
-              <Grid container spacing={1} sx={{ mb: 3 }}>
-                {[
-                  { 
-                    id: 'create_room', 
-                    label: 'Create Rooms & Generate React',
-                    description: 'Create game rooms with optional React code generation and blockchain deposits'
-                  },
-                  { 
-                    id: 'generate_image', 
-                    label: 'Generate AI Images',
-                    description: 'Generate images using DALL-E 3 for game assets and promotional content'
-                  }
-                ].map(permission => (
-                  <Grid item xs={12} key={permission.id}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        border: newKeyData.permissions.includes(permission.id) 
-                          ? '2px solid #ff0000' 
-                          : '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: 1,
-                        backgroundColor: newKeyData.permissions.includes(permission.id)
-                          ? isDarkMode ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 0, 0, 0.05)'
-                          : isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 0, 0, 0.15)' : 'rgba(255, 0, 0, 0.08)',
-                        }
-                      }}
-                      onClick={() => togglePermission(permission.id)}
-                    >
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={newKeyData.permissions.includes(permission.id)}
-                            onChange={() => togglePermission(permission.id)}
-                            color="error"
-                          />
-                        }
-                        label={
-                          <Box>
-                            <Typography variant="body1" sx={{ fontWeight: 500, color: isDarkMode ? '#fff' : '#333' }}>
-                              {permission.label}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                              {permission.description}
-                            </Typography>
-                          </Box>
-                        }
-                        sx={{ width: '100%', margin: 0 }}
-                      />
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
 
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                 <Button
@@ -1459,10 +1574,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 </Button>
                 <Button
                   onClick={handleGenerateApiKey}
-                  disabled={isLoading || !newKeyData.name.trim() || newKeyData.permissions.length === 0}
+                  disabled={isLoading || !newKeyData.name.trim() || newKeyData.permissions.length === 0 || !user?.elite}
                   variant="contained"
                   color="error"
-                  startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                  startIcon={isLoading ? <CircularProgress color='error' size={20} /> : null}
                 >
                   {isLoading ? 'Generating...' : 'Generate Key'}
                 </Button>

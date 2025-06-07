@@ -76,7 +76,7 @@ function DefaultBetAmountPanel({
   isDarkMode,
 }) {
   const theme = useTheme();
-
+console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
   const handleBetAmountChange = (e) => {
     const value = e.target.value;
     if (value === '' || (!isNaN(value) && Number(value) >= 0)) {

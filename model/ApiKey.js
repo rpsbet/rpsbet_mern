@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const apiKeySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     required: true,
     index: true
   },
