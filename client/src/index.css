@@ -298,8 +298,7 @@ a:hover {
 
 .create-room-btn-panel {
   display: flex;
-  justify-content: end;
-  align-items: start;
+  justify-content: center;
   margin-top: 2.5px;
   width: 100%;
 }
@@ -311,7 +310,7 @@ a:hover {
 }
 
 .create-room-btn-panel .btn-create-room {
-  margin: 15px auto;
+  margin: 15px 30px;
   overflow: hidden;
   font-size: 1.4em;
   font-weight: 600;
@@ -2340,8 +2339,8 @@ circle {
 
 @media (max-width: 1023px) {
   .player .avatar, .avatar img  {
-    max-width: 40px;
-    max-height: 40px;
+    width: 40px;
+    height: 40px;
   }
 
   #quickShoot_lottie div {

@@ -625,11 +625,11 @@ function OpenGamesTable(props) {
                               right: '-3px',
                               bottom: '-3px',
                               borderRadius: '23px',
-                              background: 'linear-gradient(45deg, #ff0000, #ff7300, rgb(255, 0, 93), #ff7300, #ff0000)',
+                              background: '#ff0000',
                               backgroundSize: '300% 300%',
                               zIndex: 0,
                               animation: 'gradientBorder 3s ease-in-out infinite',
-                              boxShadow: '0 0 20px rgba(255, 115, 0, 0.4)',
+                              boxShadow: '0 0 20px rgba(255, 0, 0, 0.4)',
                             },
                             '@keyframes gradientBorder': {
                               '0%, 100%': { backgroundPosition: '0% 0%' },

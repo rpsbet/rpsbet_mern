@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import verified from '../game_panel/LottieAnimations/verified.json';
+// import verified from '../game_panel/LottieAnimations/verified.json'; // No longer needed
 import { Box, Avatar as MUIAvatar, Badge } from '@mui/material';
-import Lottie from 'react-lottie';
+// import Lottie from 'react-lottie'; // No longer needed
+import VerifiedIcon from '@mui/icons-material/Verified'; // Import the MUI icon
 import { getRank } from '../util/getRank';
 
 function Avatar(props) {
@@ -14,7 +15,7 @@ function Avatar(props) {
     username: initialUsername,
     rank: initialRank,
     darkMode: initialDarkMode,
-    isLowGraphics,
+    isLowGraphics, // Still passed, but won't directly affect the static icon
     isDarkMode,
     onlineUserList = [],
     user_id, // ID to check if user is online
@@ -103,8 +104,9 @@ function Avatar(props) {
             borderRadius: '4px',
             fontSize: '0.5rem',
             fontWeight: 'bold',
-            maxWidth: '0.4rem',
-            maxheight: '0.4rem',
+            minWidth: '1rem', // Adjust minWidth and minHeight for proper badge size
+            minHeight: '1rem',
+            padding: '0 4px', // Add some padding
           },
         },
       }}
@@ -143,28 +145,20 @@ function Avatar(props) {
             }}
           />
 
-          {/* Verified Badge (top-right) */}
+          {/* Verified Badge (top-right) using MUI CheckCircleIcon */}
           {(isRed || isBlack) && (
-            <Box
+            <VerifiedIcon
               sx={{
-                width: '32px',
-                height: '32px',
                 position: 'absolute',
                 top: 0,
                 right: 0,
-                transform: 'translate(13px, -15px) scale(0.6)',
-                filter: isBlack ? 'grayscale(1)' : 'hue-rotate(132deg)',
+                transform: 'translate(25%, -25%)', // Adjust position
+                fontSize: '1.2rem', // Adjust size
+                color: isBlack ? '#000' : '#ff0000', // Example: gray for black elite, green for red elite
+                backgroundColor: 'white', // Give it a background to stand out
+                borderRadius: '50%', // Make it circular
               }}
-            >
-              <Lottie
-                options={{
-                  loop: !isLowGraphics,
-                  autoplay: !isLowGraphics,
-                  animationData: verified,
-                }}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </Box>
+            />
           )}
         </Box>
       </Badge>

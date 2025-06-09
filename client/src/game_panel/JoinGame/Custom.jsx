@@ -289,7 +289,6 @@ const ResponsiveGameContainer = React.memo(({
         pointerEvents: isWalletPopupActive ? 'none' : 'auto',
         position: 'relative',
         transition: 'filter 0.3s ease',
-        borderRadius: '20px',
       }}>
         <GameComponent
           proxiedAssets={proxiedAssets}
@@ -1069,7 +1068,6 @@ function Custom(props) {
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '24px',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
             overflow: 'visible',
             '@supports not (backdrop-filter: blur(20px))': {

@@ -410,7 +410,7 @@ function TabbedContent(props) {
             <Card
               sx={{
                 ...glassmorphismStyle,
-                borderRadius: '24px',
+                borderRadius: '0',
                 overflow: 'hidden',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 mb: 2,
@@ -598,7 +598,6 @@ function TabbedContent(props) {
         <Card
           sx={{
             ...glassmorphismStyle,
-            borderRadius: '20px 20px 0 0',
             overflow: 'hidden',
             mb: 0,
           }}
@@ -675,7 +674,6 @@ function TabbedContent(props) {
       <Card
         sx={{
           ...glassmorphismStyle,
-          borderRadius: '18px',
           p: 2.5,
           mb: 2.5,
           display: 'flex',

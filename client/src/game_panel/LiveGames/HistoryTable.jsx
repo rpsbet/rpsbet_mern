@@ -95,71 +95,6 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
     };
   }, [socket, handleNewLog]);
 
-  // Render avatar with click handler
-  const renderAvatar = useCallback((userObj) => {
-    if (!userObj?._id) return null;
-
-    return (
-      <Box
-        component="span"
-        onClick={() => {
-          setShowPlayerModal(true);
-          setSelectedCreator(userObj._id);
-        }}
-        sx={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
-      >
-        <Avatar
-          user_id={userObj._id}
-          src={userObj.avatar}
-          username={userObj.username}
-          rank={userObj.totalWagered}
-          accessory={userObj.accessory}
-          elite={userObj.elite}
-          alt={userObj.username || ''}
-          style={{
-            display: 'inline-block',
-            marginRight: 8,
-            verticalAlign: 'middle',
-          }}
-        />
-      </Box>
-    );
-  }, []);
-
-  // Render room info with link
-  const renderRoomInfo = useCallback((roomObj) => {
-    if (!roomObj?._id) return null;
-
-    return (
-      <Box
-        component="a"
-        href={`/join/${roomObj._id}`}
-        sx={{
-          cursor: 'pointer',
-          display: 'inline-flex',
-          alignItems: 'center',
-          textDecoration: 'none',
-          '&:hover': { textDecoration: 'underline' }
-        }}
-      >
-        <img
-          src={roomObj.image}
-          alt={roomObj.ticker || 'room'}
-          loading="lazy"
-          style={{
-            display: 'inline-block',
-            marginLeft: 6,
-            marginRight: 4,
-            width: 16,
-            height: 16
-          }}
-        />
-        <Typography variant="body2" sx={{ mr: 0.5, color: '#fff' }}>
-          ({roomObj.ticker})
-        </Typography>
-      </Box>
-    );
-  }, []);
 
   // Build compact message content
   const buildMessage = useCallback((logItem) => {
@@ -185,14 +120,14 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
     };
 
     const AmountText = ({ children, action }) => (
-      <Typography component="span" sx={{ color: getAmountColor(action), fontWeight: 600, fontSize: '0.7rem' }}>
+      <Typography component="span" sx={{ color: getAmountColor(action), fontWeight: 700, fontSize: '0.75rem' }}>
         {children}
       </Typography>
     );
 
     const messageStyles = {
-      fontSize: '0.7rem',
-      fontWeight: 400,
+      fontSize: '0.75rem',
+      fontWeight: 500,
       display: 'flex',
       alignItems: 'center',
       gap: 0.5,
@@ -225,8 +160,8 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
               display: 'inline-block',
               marginRight: 4,
               verticalAlign: 'middle',
-              width: 16,
-              height: 16
+              width: 18,
+              height: 18
             }}
           />
         </Box>
@@ -243,9 +178,10 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
           sx={{
             cursor: 'pointer',
             textDecoration: 'none',
-            color: alpha('#fff', 0.8),
-            fontSize: '0.7rem',
-            '&:hover': { textDecoration: 'underline' }
+            color: '#fff',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            '&:hover': { textDecoration: 'underline', color: '#d81719' }
           }}
         >
           {roomObj.ticker}
@@ -330,17 +266,18 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
     return (
       <Box
         sx={{
-          padding: '6px 8px',
-          background: alpha(theme.palette.error.main, 0.08),
-          backdropFilter: 'blur(10px)',
-          borderRadius: '6px',
-          border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+          padding: '8px 12px',
+          background: 'rgba(216, 23, 25, 0.25)',
+          backdropFilter: 'blur(12px)',
+          borderRadius: '8px',
+          border: '2px solid rgba(216, 23, 25, 0.4)',
           display: 'flex',
           alignItems: 'center',
-          minHeight: '32px'
+          minHeight: '36px',
+          boxShadow: '0 4px 12px rgba(216, 23, 25, 0.2)'
         }}
       >
-        <Typography variant="caption" sx={{ color: alpha('#fff', 0.5), fontSize: '0.7rem' }}>
+        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
           No activity
         </Typography>
       </Box>
@@ -353,27 +290,29 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
     <Box>
       <Box
         sx={{
-          padding: '6px 8px',
-          background: alpha(theme.palette.error.main, 0.08),
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          borderRadius: '6px',
-          border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+          padding: '8px 12px',
+          background: 'rgba(216, 23, 25, 0.25)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: '8px',
+          border: '2px solid rgba(216, 23, 25, 0.4)',
           transition: 'all 0.2s ease',
-          boxShadow: `0 1px 4px ${alpha(theme.palette.error.main, 0.1)}`,
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: alpha(theme.palette.error.main, 0.15)
+          boxShadow: '0 4px 12px rgba(216, 23, 25, 0.2)',
+          '@supports not (backdrop-filter: blur(12px))': {
+            background: 'rgba(216, 23, 25, 0.35)'
           },
           '&:hover': {
-            background: alpha(theme.palette.error.main, 0.12),
-            boxShadow: `0 2px 6px ${alpha(theme.palette.error.main, 0.2)}`,
+            background: 'rgba(216, 23, 25, 0.35)',
+            boxShadow: '0 6px 20px rgba(216, 23, 25, 0.3)',
+            borderColor: 'rgba(216, 23, 25, 0.6)',
+            transform: 'translateY(-1px)'
           },
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          opacity: isUserInvolved ? 1 : 0.9,
+          opacity: isUserInvolved ? 1 : 0.95,
           animation: 'slideIn 0.3s ease-out',
-          minHeight: '32px',
+          minHeight: '36px',
           maxWidth: '100%',
         }}
       >
@@ -384,8 +323,9 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
         <Typography 
           variant="caption" 
           sx={{ 
-            color: alpha('#fff', 0.4),
-            fontSize: '0.6rem',
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '0.65rem',
+            fontWeight: 500,
             whiteSpace: 'nowrap',
             marginLeft: 1,
             flexShrink: 0

@@ -10,7 +10,9 @@ import {
   InputAdornment,
   Typography,
   useMediaQuery,
+  IconButton,
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ThemeProvider } from '@mui/material/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faStore, faHome } from '@fortawesome/free-solid-svg-icons';
@@ -59,7 +61,7 @@ const selectWalletBalance = (state) => {
   const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
   const backendBalance = state?.auth?.user?.balance ?? 0;
   const walletAddress = state?.auth?.walletAddress;
-  
+
   // Use live wallet balance if available, otherwise fall back to backend balance
   return {
     balance: walletAddress ? liveWalletBalance : backendBalance,
@@ -104,7 +106,6 @@ const CreateRoomPanel = ({
 
   return (
     <Box className="create-room-btn-panel">
-
       <Box
         className="btn-create-room"
         sx={{
@@ -166,17 +167,18 @@ const CreateRoomPanel = ({
           sx={{
             display: 'flex',
             alignItems: 'center',
-            background: 'rgba(216, 23, 25, 0.1)',
+            background: 'rgba(216, 23, 25, 0.4)', // Increased even more
             backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(216, 23, 25, 0.2)',
+            border: '2px solid rgba(216, 23, 25, 0.7)', // Increased border opacity
             borderRadius: 2,
             p: 1,
             mb: 1.5,
             transition: 'all 0.3s ease',
+            boxShadow: '0 6px 16px rgba(216, 23, 25, 0.3)', // Stronger shadow
             '&:hover': {
-              background: 'rgba(216, 23, 25, 0.15)',
+              background: 'rgba(216, 23, 25, 0.3)', // Much stronger
               transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(216, 23, 25, 0.1)',
+              borderColor: '#ff0000', // Almost solid border
             },
           }}
         >
@@ -195,8 +197,12 @@ const CreateRoomPanel = ({
                 '&.Mui-focused fieldset': { border: 'none' },
               },
               '& .MuiInputBase-input': {
-                color: '#d81719',
+                color: '#fff',
                 fontWeight: 'bold',
+                '&::placeholder': {
+                  color: 'rgba(216, 23, 25, 0.7)', // More visible placeholder
+                  opacity: 1,
+                },
               },
             }}
             InputProps={{
@@ -209,10 +215,10 @@ const CreateRoomPanel = ({
                     sx={{
                       minWidth: 'auto',
                       p: 0.75,
-                      background: 'rgba(216, 23, 25, 0.2)',
-                      color: '#d81719',
+                      background: '#ff0000', // Solid color, 0 opacity/transparency
+                      color: '#fff',
                       '&:hover': {
-                        background: 'rgba(216, 23, 25, 0.4)',
+                        background: '#b8141a', // Slightly darker solid red on hover
                       },
                     }}
                   >
@@ -239,29 +245,30 @@ const CreateRoomPanel = ({
               label={prompt}
               onClick={() => handleSuggestedPromptClick(prompt)}
               sx={{
-                background: 'rgba(216, 23, 25, 0.08)',
-                border: '1px solid rgba(216, 23, 25, 0.15)',
-                color: '#d81719',
-                fontWeight: 500,
+                background: 'rgba(216, 23, 25, 0.2)', // Increased opacity
+                border: '2px solid rgba(216, 23, 25, 0.4)', // Stronger border
+                color: '#ff0000',
+                fontWeight: 700, // Even bolder
                 fontSize: '0.75rem',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 maxWidth: 180,
+                boxShadow: '0 3px 8px rgba(216, 23, 25, 0.2)', // Stronger shadow
                 '& .MuiChip-label': {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                 },
                 '&:hover': {
-                  background: 'rgba(216, 23, 25, 0.2)',
+                  background: 'rgba(216, 23, 25, 0.4)', // Much stronger
                   transform: 'translateY(-1px)',
+                  boxShadow: '0 6px 16px rgba(216, 23, 25, 0.3)', // Much stronger shadow
+                  borderColor: 'rgba(216, 23, 25, 0.7)', // Stronger border
                 },
               }}
             />
           ))}
         </Box>
-
-
       </Box>
     </Box>
   );
@@ -416,24 +423,63 @@ function MainPage() {
             variant="persistent"
             anchor="left"
             open={isSmallScreen && isDrawerOpen}
+            PaperProps={{
+              sx: {
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+              }
+            }}
           >
-            {isSmallScreen && (
-              <Suspense fallback={<Typography>Loading Chat...</Typography>}>
-                <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
-              </Suspense>
-            )}
+            {/* Chat Header with Back Button */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              p: 2,
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              backgroundColor: '#1a1a1a',
+              minHeight: '64px', // Match header height
+            }}>
+              <IconButton
+                onClick={() => setSelectedMobileTab(MOBILE_TABS.LIVE_GAMES)}
+                sx={{
+                  color: '#fff',
+                  mr: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+
+              <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600 }}>
+                Chat
+              </Typography>
+
+            </Box>
+
+            {/* Chat Content */}
+            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+              {isSmallScreen && (
+                <Suspense fallback={<Typography>Loading Chat...</Typography>}>
+                  <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
+                </Suspense>
+              )}
+            </Box>
           </Drawer>
         )}
 
         {/* Elite Subscription Modal */}
         <Suspense fallback={null}>
-            <EliteSubscriptionModal 
+          <EliteSubscriptionModal
             walletBalance={walletData.balance}
             isWalletBalance={walletData.isWalletBalance}
-            user={user} 
-            isLowGraphics={isLowGraphics} 
-            open={openModal} 
-            onClose={() => setOpenModal(false)} 
+            user={user}
+            isLowGraphics={isLowGraphics}
+            open={openModal}
+            onClose={() => setOpenModal(false)}
           />
         </Suspense>
 
