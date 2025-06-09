@@ -1,3 +1,4 @@
+// models/Room.js
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -15,12 +16,9 @@ const RoomSchema = new Schema({
   telegram_link: { type: String, default: '' },
   creator: { type: Schema.Types.ObjectId, ref: 'rps_users' },
   joiners: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
-  game_type: { type: Schema.Types.ObjectId, ref: 'rps_game_types' },
-  selectedStrategy: { type: String, default: 'o3Mini' },
+  // --- MODIFICATION HERE ---
+  game_type: [{ type: String, default: [] }],
   last_updated_strat: { type: Date },
-  qs_game_type: { type: Number, default: 2 },
-  qs_nation: { type: Number, default: 0 },
-  rps_game_type: { type: Number, default: 0 },
   bet_amount: { type: Number, default: 0.0 },
   user_bet: { type: Number, default: 0.0 },
   pr: { type: Number, default: 0.0 },
@@ -32,10 +30,10 @@ const RoomSchema = new Schema({
   description: { type: String, default: '' },
   pool_id: { type: String, default: '' },
   proxiedAssets: {
-    images: [{ type: String, default: '' }], // Array of strings for image URLs
-    audio: [{ type: String, default: '' }],  // Array of strings for audio URLs
-    theme: { type: Schema.Types.Mixed, default: {} }, // Object for theme data
-    background: { type: Schema.Types.Mixed, default: {} } // Object for background data
+    images: [{ type: String, default: '' }],
+    audio: [{ type: String, default: '' }],
+    theme: { type: Schema.Types.Mixed, default: {} },
+    background: { type: Schema.Types.Mixed, default: {} }
   },
   gameCode: { type: String, default: '' },
   battles: { type: Number, default: 0 },
@@ -54,11 +52,11 @@ const RoomSchema = new Schema({
   }],
 });
 
-// Add indexes
-RoomSchema.index({ status: 1, updated_at: -1 }); // Primary query and sort
-RoomSchema.index({ game_type: 1, status: 1 });   // Filter by game_type and status
-RoomSchema.index({ creator: 1 });                 // Population of creator
-RoomSchema.index({ joiners: 1 });                // Population of joiners (multi-key index)
-RoomSchema.index({ created_at: -1 });            // Alternative sorting option
+// Add indexes (existing ones are fine, no need to remove game_type index as it was an ObjectId)
+RoomSchema.index({ status: 1, updated_at: -1 });
+RoomSchema.index({ game_type: 1, status: 1 }); // This index will now work on the String field
+RoomSchema.index({ creator: 1 });
+RoomSchema.index({ joiners: 1 });
+RoomSchema.index({ created_at: -1 });
 
 module.exports = mongoose.model('rps_rooms', RoomSchema);

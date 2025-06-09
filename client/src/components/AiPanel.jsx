@@ -22,8 +22,6 @@ const AiPanel = ({
   ai_mode, 
   user_balance: propUserBalance, 
   user_id: propUserId, 
-  updateUserStrategy, 
-  updateUserPrompt, 
   strategies, 
   game_type, 
   onChangeState, 
@@ -82,8 +80,6 @@ const AiPanel = ({
           predictedBetAmount={predictedBetAmount}
           creator_id={creator_id}
           room_id={roomId}
-          updateUserStrategy={updateUserStrategy}
-          updateUserPrompt={updateUserPrompt}
           user_balance={user_balance}
           handleSwitchChange={handleSwitchChange}
           game_type={game_type}

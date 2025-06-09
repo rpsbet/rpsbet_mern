@@ -55,14 +55,12 @@ import { Info, Close, Settings, Refresh, Tune, MonetizationOn } from '@mui/icons
 
 import {
   getMyGames,
-  updateRoomStrategy,
   editPayout,
   setGameMode,
   addNewTransaction,
   getRoomList,
   endGame,
   pumpGame,
-  updateUserPrompt,
 } from '../../redux/Logic/logic.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { getRank } from '../../util/getRank';
@@ -450,8 +448,6 @@ function MyGamesTable() {
         settings_panel_opened={settingsPanelOpened}
         setSelectedStrategy={setSelectedStrategy}
         selectedStrategy={selectedStrategy}
-        updateUserStrategy={updateRoomStrategy}
-        updateUserPrompt={updateUserPrompt}
         gameCode={gameCode}
         proxiedAssets={proxiedAssets}
         rowName={selectedRow.name}
@@ -470,8 +466,6 @@ function MyGamesTable() {
     setGameCode,
     setProxiedAssets,
     setSelectedStrategy,
-    updateRoomStrategy,
-    updateUserPrompt,
     gameCode,
     proxiedAssets,
     balance,

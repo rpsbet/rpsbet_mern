@@ -2,7 +2,7 @@ import {
   UPDATE_CREATOR_PROMPT,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
-  RECENTLY_CLOSED_LOADED,
+  TOP_GAME_TYPES_LOADED,
   TOP_WITHDRAWALS_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
@@ -270,7 +270,6 @@ export const generateReactGameFromPrompt = (
   setGameCode,
   setProxiedAssets,
   onChangeState,
-  updateUserPrompt,
   setGameLoading,
   preProxiedAssets = { images: [], audio: [] },
   model = 'o3-mini',
@@ -346,13 +345,6 @@ export const generateReactGameFromPrompt = (
         message: 'Game generated successfully!',
         progress: 100
       });
-    }
-
-    // Update user prompt
-    if (typeof updateUserPrompt === 'function') {
-      await updateUserPrompt(user_id, gamePrompt);
-    } else {
-      onChangeState({ prompt: gamePrompt });
     }
 
     dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
@@ -928,6 +920,7 @@ export const equipItem = data => async dispatch => {
 
 // logic.actions.js
 export const getRoomList = (params) => async (dispatch) => {
+  console.log('Fetching room list with params:', params);
   dispatch({ type: START_LOADING });
   try {
     const res = await axios.get('/game/rooms', { params });
@@ -992,62 +985,31 @@ export const editPayout = (amount, rowId) => async dispatch => {
   }
 };
 
-export const getRecentlyClosed = () => async dispatch => {
+export const getTopGameTypes = () => async dispatch => {
   try {
-    const res = await axios.get('/game/recently-closed');
+    const res = await axios.get('/game/game_types/top'); // Call the new endpoint
     if (res.data.success) {
-      dispatch({ type: RECENTLY_CLOSED_LOADED, payload: res.data.rooms });
+      // Dispatch a new action type or repurpose an existing one carefully
+      // Let's use a new one for clarity: TOP_GAME_TYPES_LOADED
+      dispatch({ type: 'TOP_GAME_TYPES_LOADED', payload: res.data.gameTypes });
     }
   } catch (err) {
+    console.error('Error fetching top game types:', err);
+    // You might want to dispatch an error action here
   }
 };
 
-export const updateUserStrategy = (user_id, strategy) => async dispatch => {
-  try {
-    const res = await axios.patch(`/game/strategies/${user_id}`, { strategy });
-    if (res.data.success) {
-
-      dispatch({ type: MSG_SUCCESS, payload: "AI PLAY STRATEGY UPDATED" });
-    }
-  } catch (err) {
-    // Handle errors
-  }
-};
-export const updateUserPrompt = (user_id, prompt) => async dispatch => {
-  try {
-    const res = await axios.patch(`/game/prompt/${user_id}`, { prompt });
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "AI PLAY PROMPT UPDATED" });
-
-    }
-  } catch (err) {
-    // Handle errors
-  }
-};
-
-export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
-  try {
-    const res = await axios.patch(`/game/room/strategies/${room_id}`, { strategy });
-    if (res.data.success) {
-
-      dispatch({ type: MSG_SUCCESS, payload: "ROOM MODEL UPDATED" });
-    }
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO UPDATE ROOM MODEL' });
-
-  }
-};
-
+// Keep getGameTypeList if it's used elsewhere (e.g., in CreateGame for all known game types)
 export const getGameTypeList = () => async dispatch => {
   try {
     const res = await axios.get('/game/game_types');
     if (res.data.success) {
-      dispatch({ type: GAMETYPE_LOADED, payload: res.data });
+      dispatch({ type: 'GAMETYPE_LOADED', payload: res.data.gameTypeList }); // Payload is now an array of full GameType docs
     } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      dispatch({ type: 'MSG_GAMETYPE_LOAD_FAILED' });
     }
   } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+    dispatch({ type: 'MSG_GAMETYPE_LOAD_FAILED', payload: err });
   }
 };
 

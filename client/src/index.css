@@ -374,16 +374,12 @@ h4.game_header {
 }
 
 .dark_mode div.main-page-nav-button-group {
-	background: #111315;
+	background: #161819;
 }
-
-
-
 
 .dark_mode .modal-footer {
 	color: #f9f9f9;
 }
-
 
 .dark_mode .modal-body .table table td,
 .dark_mode .modal-body .table table th {
@@ -2564,14 +2560,10 @@ circle {
     font-weight: 600;
   }
 
-  .game_header {
-    /* height: 60px; */
-  }
-
   .game_header .main_header {
     padding: 8px 16px;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
   }
 
   div.table div.table-row div.table-cell button {

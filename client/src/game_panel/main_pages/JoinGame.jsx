@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { formatDistanceToNow } from 'date-fns';
-import { useParams } from 'react-router-dom'; 
+import { useParams } from 'react-router-dom';
 import { Button, Drawer, Box } from '@mui/material';
 import { sendSolDeposit } from '../../util/solana';
 import {
@@ -29,7 +29,6 @@ const PlayerModal = lazy(() => import('../modal/PlayerModal'));
 import {
   bet3,
   getRoomInfo,
-  updateUserPrompt,
   addNewTransaction,
   pumpGame,
   getRoomList,
@@ -70,7 +69,7 @@ function updateFromNow(history) {
 function JoinGame() {
   const dispatch = useDispatch();
   const { id } = useParams();
-  
+
   // Redux state selectors - memoize with useSelector for performance
   const {
     auth,
@@ -125,11 +124,11 @@ function JoinGame() {
   // Local state - group related state to reduce re-renders
   const [is_mobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
-  
+
   // Modal states
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
-  
+
   // Game states
   const [gameState, setGameState] = useState({
     actionList: null,
@@ -155,7 +154,7 @@ function JoinGame() {
 
   // Use refs for values that don't need to trigger re-renders
   const isMountedRef = useRef(true);
-  
+
   // Audio setup - memoized to prevent recreating on each render
   const soundsRef = useRef({
     win: new Audio('/sounds/win-sound.mp3'),
@@ -196,12 +195,12 @@ function JoinGame() {
   // Setup effects
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     // Resize handler
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('unload', handleUnload);
 
@@ -214,7 +213,7 @@ function JoinGame() {
         console.error('Error in init useEffect:', error);
       }
     };
-    
+
     init();
 
     // Cleanup
@@ -230,7 +229,7 @@ function JoinGame() {
 
   useEffect(() => {
     if (!roomInfo || !isMountedRef.current) return;
-    
+
     setGameState(prev => ({
       ...prev,
       localRoomInfo: roomInfo,
@@ -247,25 +246,25 @@ function JoinGame() {
     }
   }, [user_balance, gameState.gameResult, gameState.isMax]);
 
-  
+
 
   // Update history when it changes
   useEffect(() => {
     if (
-      !propsHistory || 
-      !Array.isArray(propsHistory) || 
+      !propsHistory ||
+      !Array.isArray(propsHistory) ||
       propsHistory.length === 0 ||
       !gameState.componentHistory ||
       gameState.componentHistory.length === 0 ||
-      (propsHistory[0] && gameState.componentHistory[0] && 
-       propsHistory[0].created_at !== gameState.componentHistory[0].created_at)
+      (propsHistory[0] && gameState.componentHistory[0] &&
+        propsHistory[0].created_at !== gameState.componentHistory[0].created_at)
     ) {
       setGameState(prev => ({
         ...prev,
         componentHistory: updateFromNow(propsHistory)
       }));
     }
-    
+
     if (gameState.localRoomInfo._id !== roomInfo._id) {
       setGameState(prev => ({
         ...prev,
@@ -293,15 +292,15 @@ function JoinGame() {
             audio.removeEventListener('canplaythrough', handleLoad);
             resolve();
           };
-          
+
           audio.addEventListener('canplaythrough', handleLoad);
           audio.load();
-          
+
           // Add timeout to prevent hanging if sound doesn't load
           setTimeout(resolve, 2000);
         });
       });
-      
+
       await Promise.all(soundPromises);
     } catch (error) {
       console.error('Error loading sounds:', error);
@@ -360,15 +359,14 @@ function JoinGame() {
     dispatch(toggleDrawer(!isDrawerOpen));
   }, [dispatch, isDrawerOpen]);
 
-const join = useCallback(
-  async (betInfo) => {
-    // Set betting state to true
-    setGameState(prev => ({ ...prev, betting: true }));
+  const join = useCallback(
+    async (betInfo) => {
+      // Set betting state to true
+      setGameState(prev => ({ ...prev, betting: true }));
 
-    try {
-      let betResult;
+      try {
+        let betResult;
 
-      if (roomInfo.game_type !== 'Custom') {
         // Process Solana deposit for non-Custom game types
         const depositResult = await sendSolDeposit(
           dispatch,
@@ -390,35 +388,34 @@ const join = useCallback(
           setGameState(prev => ({ ...prev, betting: false }));
           return { success: false };
         }
-      }
-console.log('connectedAccount', connectedAccount);
-      // Place bet
-      betResult = await dispatch(
-        bet3({
-          _id: roomInfo._id,
-          connectedAccount,
-          user: user_id,
-          game_type: roomInfo.game_type,
-          ...betInfo,
-        })
-      );
-      setGameState(prev => ({ ...prev, betting: false }));
+        console.log('connectedAccount', connectedAccount);
+        // Place bet
+        betResult = await dispatch(
+          bet3({
+            _id: roomInfo._id,
+            connectedAccount,
+            user: user_id,
+            game_type: roomInfo.game_type,
+            ...betInfo,
+          })
+        );
+        setGameState(prev => ({ ...prev, betting: false }));
 
-      if (betResult.status === 'success') {
-        return betResult;
-      } else {
-        dispatch(errorMsgBar(betResult.message || 'Failed to place bet.'));
-        return betResult;
+        if (betResult.status === 'success') {
+          return betResult;
+        } else {
+          dispatch(errorMsgBar(betResult.message || 'Failed to place bet.'));
+          return betResult;
+        }
+      } catch (error) {
+        console.error('Error in join:', error);
+        dispatch(errorMsgBar('Error processing bet.'));
+        setGameState(prev => ({ ...prev, betting: false }));
+        return { success: false };
       }
-    } catch (error) {
-      console.error('Error in join:', error);
-      dispatch(errorMsgBar('Error processing bet.'));
-      setGameState(prev => ({ ...prev, betting: false }));
-      return { success: false };
-    }
-  },
-  [dispatch, roomInfo, user_id, connectedAccount, account, user_balance]
-);
+    },
+    [dispatch, roomInfo, user_id, connectedAccount, account, user_balance]
+  );
 
   // Handle background color change
   const changeBgColor = useCallback(async (resultVal) => {
@@ -426,7 +423,7 @@ console.log('connectedAccount', connectedAccount);
       ...prev,
       betResult: resultVal
     }));
-    
+
     const flickerCount = 3;
     const delay = 50;
 
@@ -437,7 +434,7 @@ console.log('connectedAccount', connectedAccount);
       }));
       await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
+
     setGameState(prev => ({
       ...prev,
       bgColorChanged: false,
@@ -449,7 +446,7 @@ console.log('connectedAccount', connectedAccount);
   const handleSwitchChange = useCallback(() => {
     if (!validateIsAuthenticated(auth, isDarkMode)) return;
     if (!validateCreatorId(roomInfo.creator_id, user_id, isDarkMode)) return;
-    
+
     // Additional implementation as needed
   }, [auth, isDarkMode, roomInfo.creator_id, user_id]);
 
@@ -474,12 +471,12 @@ console.log('connectedAccount', connectedAccount);
   // Handle sending co-host
   const handleSendCoHost = useCallback(async () => {
     const { coHostAmount } = gameState;
-    
+
     if (coHostAmount <= 0) {
       dispatch(errorMsgBar('Amount must be more than 0!'));
       return;
     }
-    
+
     if (coHostAmount > user_balance) {
       dispatch(errorMsgBar('Insufficient funds'));
       return;
@@ -489,7 +486,7 @@ console.log('connectedAccount', connectedAccount);
       const result = await dispatch(
         pumpGame(coHostAmount, roomInfo._id, connectedAccount),
       );
-      
+
       if (result.success) {
         await dispatch(getRoomList({ game_type: roomInfo.game_type }));
       } else {
@@ -505,13 +502,13 @@ console.log('connectedAccount', connectedAccount);
   const onChangeState = useCallback((newState) => {
     setGameState(prev => {
       const updatedState = { ...prev };
-      
+
       if ('bankroll' in newState) updatedState.bankroll = newState.bankroll;
       if ('hosts' in newState && Array.isArray(newState.hosts)) updatedState.hosts = newState.hosts;
       if ('result' in newState) updatedState.result = newState.result;
       if ('bet_amount' in newState) updatedState.bet_amount = newState.bet_amount;
       if ('battles' in newState) updatedState.battles = prev.battles + newState.battles;
-      
+
       return updatedState;
     });
   }, []);
@@ -530,7 +527,7 @@ console.log('connectedAccount', connectedAccount);
       const maxBetAmount = user_balance;
       const multipliedBetAmount = prev.bet_amount * 2;
       const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
-      
+
       return {
         ...prev,
         bet_amount: limitedBetAmount,
@@ -542,7 +539,7 @@ console.log('connectedAccount', connectedAccount);
   const handleMaxButtonClick = useCallback(() => {
     setGameState(prev => {
       const maxBetAmount = Math.min(user_balance, prev.bankroll);
-      
+
       return {
         ...prev,
         bet_amount: maxBetAmount,
@@ -557,195 +554,189 @@ console.log('connectedAccount', connectedAccount);
   // Render
   return (
     <>
-    <Box
-      className="main-game join"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: is_mobile ? '100%' : 'calc(100% - 360px) 350px',
-        gap: '8px',
-        width: '100%',
-        boxSizing: 'border-box',
-      }}
-    >
-      {is_mobile && selectedMobileTab === 'chat' && (
-        <Drawer
-          className="mat-chat"
-          style={{ display: isDrawerOpen ? 'flex' : 'none' }}
-          variant="persistent"
-          anchor="left"
-          open={isDrawerOpen}
-        >
-          <Suspense fallback={<LoadingFallback />}>
-            <ChatPanel />
-          </Suspense>
-        </Drawer>
-      )}
-
-      {showPlayerModal && (
-        <Suspense fallback={<LoadingFallback />}>
-          <PlayerModal
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-            selectedCreator={selectedCreator}
-          />
-        </Suspense>
-      )}
-
-      {/* MAIN PANEL */}
-      <Box className="main-panel" sx={{ margin: '8px' }}>
-        <Suspense fallback={<LoadingFallback />}>
-          <PreSummaryPanel
-            status={roomInfo.status}
-            bankroll={gameState.bankroll}
-            isDarkMode={isDarkMode}
-            solPrice={solPrice}
-            payoutPercentage={payoutPercentage}
-            roomInfo={roomInfo}
-            handleOpenPlayerModal={handleOpenPlayerModal}
-            creator_id={roomInfo.creator_id}
-            creator_avatar={creator_avatar}
-            username={username}
-            rank={roomRank}
-            battles={gameState.battles}
-            accessory={creator_accessory}
-            pr={roomInfo.pr}
-            isLowBankroll={isLowBankroll}
-            isHighCommission={isHighCommission}
-            isLowProfit={isLowProfit}
-            hostProfit={hostProfit}
-            totalStakes={totalStakes}
-            bet_amount={gameState.bet_amount}
-          />
-        </Suspense>
-
-        <Suspense fallback={<LoadingFallback />}>
-          <TabbedContent
-            changeBgColor={changeBgColor}
-            bgColorChanged={gameState.bgColorChanged}
-            betting={gameState.betting}
-            connectedAccount={connectedAccount}
-            result={gameState.result}
-            solPrice={solPrice}
-            handle2xButtonClick={handle2xButtonClick}
-            handleHalfXButtonClick={handleHalfXButtonClick}
-            handleMaxButtonClick={handleMaxButtonClick}
-            ai_mode={ai_mode}
-            onChangeState={onChangeState}
-            bet_amount={gameState.bet_amount}
-            is_mobile={is_mobile}
-            gameResult={gameState.gameResult}
-            run={gameState.run}
-            playSound={playSound}
-            join={join}
-            handleSwitchChange={handleSwitchChange}
-            betResult={gameState.betResult}
-            roomInfo={roomInfo}
-            user_id={user_id}
-            rank={getRank(total_wagered)}
-            handleOpenPlayerModal={handleOpenPlayerModal}
-            handleClosePlayerModal={handleClosePlayerModal}
-            selectedCreator={selectedCreator}
-            showPlayerModal={showPlayerModal}
-            creator_id={roomInfo.creator_id}
-            pr={roomInfo.pr}
-            updateUserPrompt={updateUserPrompt}
-            bankroll={gameState.bankroll}
-            predictedBetAmount={gameState.predictedBetAmount}
-            is_private={roomInfo.is_private}
-            isDarkMode={isDarkMode}
-            actionList={gameState.actionList}
-            getRoomData={() => {}}
-            user={user}
-            coHostAmount={gameState.coHostAmount}
-            getRoomInfo={getRoomInfo}
-            balance={user_balance}
-            isLowGraphics={isLowGraphics}
-            handleCoHostAmountChange={handleCoHostAmountChange}
-            handleSendCoHost={handleSendCoHost}
-            has_joined={true}
-            borderColor={gameState.borderColor}
-            account={account}
-          />
-        </Suspense>
-
-        <div>
-          {!is_mobile && selectedMainTabIndex === 1 && (
+      <Box
+        className="main-game join"
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: is_mobile ? '100%' : 'calc(100% - 360px) 350px',
+          gap: '8px',
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
+        {is_mobile && selectedMobileTab === 'chat' && (
+          <Drawer
+            className="mat-chat"
+            style={{ display: isDrawerOpen ? 'flex' : 'none' }}
+            variant="persistent"
+            anchor="left"
+            open={isDrawerOpen}
+          >
             <Suspense fallback={<LoadingFallback />}>
-              <MyGamesTable gameTypeList={gameTypeList} />
+              <ChatPanel />
             </Suspense>
-          )}
-        </div>
-      </Box>
-
-      {/* SUB PANEL */}
-      <Box className="sub-panel">
-        {!is_mobile && selectedMainTabIndex === 0 && (
-          <Box>
-             <Suspense fallback={<LoadingFallback />}>
-              <RoomTokenDetails
-                solPrice={solPrice}
-                hosts={gameState.hosts}
-                progressPercentage={progressPercentage}
-                handleOpenPlayerModal={handleOpenPlayerModal}
-                roomInfo={roomInfo}
-              />
-            </Suspense>
-            <Suspense fallback={<LoadingFallback />}>
-              <CoHostModal
-                isDarkMode={isDarkMode}
-                coHostAmount={gameState.coHostAmount}
-                selectedRow={roomInfo}
-                hosts={gameState.hosts}
-                connectedAccount={connectedAccount}
-                balance={user_balance}
-                solPrice={solPrice}
-                user={user}
-                togglePopup={() => {}}
-                handleClose={() => {}}
-                handleSendCoHost={handleSendCoHost}
-                handleCoHostAmountChange={handleCoHostAmountChange}
-                has_joined={true}
-                input_only={true}
-              />
-            </Suspense>
-
-           
-          </Box>
+          </Drawer>
         )}
 
-        <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
+        {showPlayerModal && (
+          <Suspense fallback={<LoadingFallback />}>
+            <PlayerModal
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+              selectedCreator={selectedCreator}
+            />
+          </Suspense>
+        )}
+
+        {/* MAIN PANEL */}
+        <Box className="main-panel" sx={{ margin: '8px' }}>
+          <Suspense fallback={<LoadingFallback />}>
+            <PreSummaryPanel
+              status={roomInfo.status}
+              bankroll={gameState.bankroll}
+              isDarkMode={isDarkMode}
+              solPrice={solPrice}
+              payoutPercentage={payoutPercentage}
+              roomInfo={roomInfo}
+              handleOpenPlayerModal={handleOpenPlayerModal}
+              creator_id={roomInfo.creator_id}
+              creator_avatar={creator_avatar}
+              username={username}
+              rank={roomRank}
+              battles={gameState.battles}
+              accessory={creator_accessory}
+              pr={roomInfo.pr}
+              isLowBankroll={isLowBankroll}
+              isHighCommission={isHighCommission}
+              isLowProfit={isLowProfit}
+              hostProfit={hostProfit}
+              totalStakes={totalStakes}
+              bet_amount={gameState.bet_amount}
+            />
+          </Suspense>
+
+          <Suspense fallback={<LoadingFallback />}>
+            <TabbedContent
+              changeBgColor={changeBgColor}
+              bgColorChanged={gameState.bgColorChanged}
+              betting={gameState.betting}
+              connectedAccount={connectedAccount}
+              result={gameState.result}
+              solPrice={solPrice}
+              handle2xButtonClick={handle2xButtonClick}
+              handleHalfXButtonClick={handleHalfXButtonClick}
+              handleMaxButtonClick={handleMaxButtonClick}
+              ai_mode={ai_mode}
+              onChangeState={onChangeState}
+              bet_amount={gameState.bet_amount}
+              is_mobile={is_mobile}
+              gameResult={gameState.gameResult}
+              run={gameState.run}
+              playSound={playSound}
+              join={join}
+              handleSwitchChange={handleSwitchChange}
+              betResult={gameState.betResult}
+              roomInfo={roomInfo}
+              user_id={user_id}
+              rank={getRank(total_wagered)}
+              handleOpenPlayerModal={handleOpenPlayerModal}
+              handleClosePlayerModal={handleClosePlayerModal}
+              selectedCreator={selectedCreator}
+              showPlayerModal={showPlayerModal}
+              creator_id={roomInfo.creator_id}
+              pr={roomInfo.pr}
+              bankroll={gameState.bankroll}
+              predictedBetAmount={gameState.predictedBetAmount}
+              is_private={roomInfo.is_private}
+              isDarkMode={isDarkMode}
+              actionList={gameState.actionList}
+              getRoomData={() => { }}
+              user={user}
+              coHostAmount={gameState.coHostAmount}
+              getRoomInfo={getRoomInfo}
+              balance={user_balance}
+              isLowGraphics={isLowGraphics}
+              handleCoHostAmountChange={handleCoHostAmountChange}
+              handleSendCoHost={handleSendCoHost}
+              has_joined={true}
+              borderColor={gameState.borderColor}
+              account={account}
+            />
+          </Suspense>
+
+          <div>
+            {!is_mobile && selectedMainTabIndex === 1 && (
+              <Suspense fallback={<LoadingFallback />}>
+                <MyGamesTable gameTypeList={gameTypeList} />
+              </Suspense>
+            )}
+          </div>
+        </Box>
+
+        {/* SUB PANEL */}
+        <Box className="sub-panel">
+          {!is_mobile && selectedMainTabIndex === 0 && (
+            <Box>
+              <Suspense fallback={<LoadingFallback />}>
+                <RoomTokenDetails
+                  solPrice={solPrice}
+                  hosts={gameState.hosts}
+                  progressPercentage={progressPercentage}
+                  handleOpenPlayerModal={handleOpenPlayerModal}
+                  roomInfo={roomInfo}
+                />
+              </Suspense>
+              <Suspense fallback={<LoadingFallback />}>
+                <CoHostModal
+                  isDarkMode={isDarkMode}
+                  coHostAmount={gameState.coHostAmount}
+                  selectedRow={roomInfo}
+                  hosts={gameState.hosts}
+                  connectedAccount={connectedAccount}
+                  balance={user_balance}
+                  solPrice={solPrice}
+                  user={user}
+                  togglePopup={() => { }}
+                  handleClose={() => { }}
+                  handleSendCoHost={handleSendCoHost}
+                  handleCoHostAmountChange={handleCoHostAmountChange}
+                  has_joined={true}
+                  input_only={true}
+                />
+              </Suspense>
+
+
+            </Box>
+          )}
+
+          <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
+        </Box>
+
+        {!is_mobile && (
+          <div className="mobile-only main-page-nav-button-group">
+            <Button
+              className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''}`}
+              onClick={() => setSelectedMobileTab('live_games')}
+            >
+              BEAT THE HOUSE
+            </Button>
+            <Button
+              className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''}`}
+              onClick={() => setSelectedMobileTab('my_games')}
+            >
+              YOUR GAMES
+            </Button>
+           
+            <Button
+              className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}
+              onClick={() => setSelectedMobileTab('chat')}
+            >
+              CHAT
+            </Button>
+          </div>
+        )}
+
       </Box>
-
-      {!is_mobile && (
-        <div className="mobile-only main-page-nav-button-group">
-          <Button
-            className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''}`}
-            onClick={() => setSelectedMobileTab('live_games')}
-          >
-            BEAT THE HOUSE
-          </Button>
-          <Button
-            className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''}`}
-            onClick={() => setSelectedMobileTab('my_games')}
-          >
-            YOUR GAMES
-          </Button>
-          <Button
-            className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''}`}
-            onClick={() => setSelectedMobileTab('marketplace')}
-          >
-            MARKETPLACE
-          </Button>
-          <Button
-            className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setSelectedMobileTab('chat')}
-          >
-            CHAT
-          </Button>
-        </div>
-      )}
-
-    </Box>
       <Footer className="footer" open={isDrawerOpen} />
     </>
 

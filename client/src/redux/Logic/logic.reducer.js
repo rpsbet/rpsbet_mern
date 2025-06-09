@@ -2,7 +2,7 @@ import {
   ACTION_ROOM,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
-  RECENTLY_CLOSED_LOADED,
+  TOP_GAME_TYPES_LOADED,
   TOP_WITHDRAWALS_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
@@ -82,11 +82,7 @@ const initialState = {
   pageNumber: 1,
   historyTotalPage: 0,
   historyPageNumber: 1,
-  gameTypeList: [
-    { game_type_id: 1, game_type_name: 'RPS', short_name: 'RPS', _id: '62a25d2a723b9f15709d1ae7', created_at: '2018-06-09T20:50:50.217Z' },
-    { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z', },
-    { game_type_id: 9, game_type_name: 'Custom', short_name: 'Custom', _id: '656cd55bb2c2d9dfb59a4bfa', created_at: '2034-03-08T14:40:50.217+00:00', },
-  ],
+  gameTypeList: [],
   curRoomInfo: {
     _id: 0,
     name: '',
@@ -111,14 +107,12 @@ const initialState = {
     endgame_amount: 0.54,
     bet_amount: 0,
     user_bet: 0,
-    selectedStrategy: '',
     room_history: [],
     posted: false,
     is_private: false,
     rps_game_type: 0,
     qs_game_type: 2,
     description: '',
-    qs_nation: 0,
     likes: 0,
     dislikes: 0,
     views: 0,
@@ -391,26 +385,22 @@ export default function (state = initialState, action) {
         ...state,
         strategies: payload
       };
-    case RECENTLY_CLOSED_LOADED:
+    case TOP_GAME_TYPES_LOADED:
       return {
         ...state,
-        recentlyClosed: payload
+        topGameTypes: action.payload || [],
+      };
+    case GAMETYPE_LOADED:
+      return {
+        ...state,
+        gameTypeList: action.payload,
+        loading: false,
       };
 
     case SET_CHAT_ROOM_INFO:
       return {
         ...state,
         chatRoomInfo: payload
-      };
-    case GAMETYPE_LOADED:
-      let firstGameType = '';
-      if (payload.gameTypeList && payload.gameTypeList.length > 0) {
-        firstGameType = payload.gameTypeList[0].game_type_name;
-      }
-      return {
-        ...state,
-        game_mode: '',
-        ...payload
       };
     case ROOMINFO_LOADED:
       return {

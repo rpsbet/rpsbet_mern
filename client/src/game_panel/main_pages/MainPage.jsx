@@ -126,8 +126,8 @@ const CreateRoomPanel = ({
             gap: 1,
           }}
         >
-          <FontAwesomeIcon icon={faHome} />
-          Be The House👇😼
+          {/* <FontAwesomeIcon icon={faHome} /> */}
+          Create Your Own 😼
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
             <Box

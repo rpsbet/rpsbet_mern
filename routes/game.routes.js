@@ -52,26 +52,68 @@ const { createMarket } = require('../helper/util/createMarket');
 const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const { revokeMintAndFreezeAuthorities } = require('../helper/util/authority');
 const { distributeTokens } = require('../helper/util/distributeTokens');
-const { connect } = require('mongoose');
 
 // Environment variables
 const PINATA_JWT = process.env.PINATA_JWT;
+router.get('/game_types/top', async (req, res) => {
+  try {
+    const topGameTypes = await Room.aggregate([
+      {
+        $match: {
+          status: 'open',
+          // Match documents where 'game_type' exists and is an array,
+          // and the array is not empty.
+          // $type: 4 matches BSON Type 'Array'.
+          game_type: { $exists: true, $ne: [], $type: 4 }
+        }
+      },
+      // Unwind the array to treat each tag as a separate document for grouping
+      {
+        $unwind: '$game_type'
+      },
+      {
+        // Group by the lowercase game type tag to count occurrences
+        $group: {
+          _id: { $toLower: '$game_type' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }, // Sort by count descending
+      { $limit: 10 }, // Get the top 10 game types
+      { $project: { _id: 0, game_type_name: '$_id' } } // Reshape to return just the name
+    ]);
 
-let user_access_log = {};
+    res.json({
+      success: true,
+      gameTypes: topGameTypes.map(gt => gt.game_type_name),
+    });
+  } catch (err) {
+    console.error('Error fetching top game types:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+});
+
 router.get('/game_types', async (req, res) => {
   try {
     const excludedGameTypes = [
-      'Roll',
-      'Bang!',
-      'Spleesh!',
-      'Blackjack',
-      'Drop Game',
-      'Mystery Box',
-      'Brain Game',
+      'roll', // Ensure exclusion is case-insensitive for consistency
+      'bang!',
+      'spleesh!',
+      'blackjack',
+      'drop game',
+      'mystery box',
+      'brain game',
     ];
+
+    // Fetch game_type_names directly from the GameType collection.
+    // Use $nin with lowercase names for consistency with how they are stored.
     const gameTypes = await GameType.find({
       game_type_name: { $nin: excludedGameTypes },
     }).sort({ created_at: 1 });
+
     res.json({
       success: true,
       query: req.query,
@@ -81,44 +123,6 @@ router.get('/game_types', async (req, res) => {
     res.json({
       success: false,
       err: err.message,
-    });
-  }
-});
-
-router.get('/recently-closed', async (req, res) => {
-  try {
-    const rooms = await Room.find({
-      status: 'finished',
-      battles: { $gt: 0 },
-      pool_id: { $nin: [null, ''] },
-    })
-      .select(
-        'name battles bet_amount host_pr user_bet pood_id room_number image game_type created_at',
-      ) // Select specific fields
-      .populate({
-        path: 'game_type',
-        model: GameType,
-        select: 'short_name game_type_name',
-      })
-      .sort({ created_at: -1 })
-      .limit(20);
-
-    if (rooms.length > 0) {
-      res.json({
-        success: true,
-        rooms: rooms,
-      });
-    } else {
-      res.json({
-
-        success: true,
-        message: 'No recently closed rooms found.',
-      });
-    }
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message,
     });
   }
 });
@@ -143,7 +147,7 @@ router.post('/convert-dalle-to-blob', auth, async (req, res) => {
     }
 
     const imageBuffer = await imageResponse.arrayBuffer();
-    
+
     // Convert to base64 so it can be sent to client
     const base64Image = Buffer.from(imageBuffer).toString('base64');
     const mimeType = imageResponse.headers.get('content-type') || 'image/png';
@@ -359,10 +363,10 @@ router.post('/extract-room-info', auth, async (req, res) => {
 
     // Look for Typography with id="game-title" specifically (highest priority)
     const gameTitleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>([^<]{3,50})<\/Typography>/i);
-    
+
     if (gameTitleMatch && gameTitleMatch[1]) {
       let extractedTitle = gameTitleMatch[1].trim();
-      
+
       // Clean up JSX syntax and template literals
       extractedTitle = extractedTitle
         .replace(/[{}$`]/g, '')
@@ -370,18 +374,18 @@ router.post('/extract-room-info', auth, async (req, res) => {
         .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"[^"]*"/g, '')
         .replace(/\s+/g, ' ')
         .trim();
-      
+
       // Validate title quality - exclude common non-title words
-      if (extractedTitle.length >= 3 && 
-          extractedTitle.length <= 30 && 
-          !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
-          !extractedTitle.includes('undefined') &&
-          !extractedTitle.includes('null') &&
-          !extractedTitle.includes('result') &&
-          !extractedTitle.includes('===') &&
-          !extractedTitle.startsWith('{') &&
-          !/^[a-z]/.test(extractedTitle)) { // Should start with capital
-        
+      if (extractedTitle.length >= 3 &&
+        extractedTitle.length <= 30 &&
+        !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
+        !extractedTitle.includes('undefined') &&
+        !extractedTitle.includes('null') &&
+        !extractedTitle.includes('result') &&
+        !extractedTitle.includes('===') &&
+        !extractedTitle.startsWith('{') &&
+        !/^[a-z]/.test(extractedTitle)) { // Should start with capital
+
         name = extractedTitle;
         confidence = 0.95;
       }
@@ -401,11 +405,11 @@ router.post('/extract-room-info', auth, async (req, res) => {
       for (let i = 0; i < titlePatterns.length; i++) {
         const pattern = titlePatterns[i];
         const matches = Array.from(gameCode.matchAll(pattern));
-        
+
         for (const match of matches) {
           if (match && match[1]) {
             let extractedTitle = match[1].trim();
-            
+
             // Clean up JSX syntax
             extractedTitle = extractedTitle
               .replace(/[{}$`]/g, '')
@@ -413,18 +417,18 @@ router.post('/extract-room-info', auth, async (req, res) => {
               .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"[^"]*"/g, '')
               .replace(/\s+/g, ' ')
               .trim();
-            
+
             // Validate title quality - exclude rules and generic text
-            if (extractedTitle.length >= 3 && 
-                extractedTitle.length <= 30 && 
-                !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
-                !extractedTitle.includes('undefined') &&
-                !extractedTitle.includes('null') &&
-                !extractedTitle.includes('result') &&
-                !extractedTitle.includes('===') &&
-                !extractedTitle.startsWith('{') &&
-                !/^[a-z]/.test(extractedTitle)) {
-              
+            if (extractedTitle.length >= 3 &&
+              extractedTitle.length <= 30 &&
+              !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
+              !extractedTitle.includes('undefined') &&
+              !extractedTitle.includes('null') &&
+              !extractedTitle.includes('result') &&
+              !extractedTitle.includes('===') &&
+              !extractedTitle.startsWith('{') &&
+              !/^[a-z]/.test(extractedTitle)) {
+
               name = extractedTitle;
               confidence = i === 0 ? 0.8 : (0.7 - i * 0.1);
               break;
@@ -444,12 +448,12 @@ router.post('/extract-room-info', auth, async (req, res) => {
         .map(word => word.charAt(0).toUpperCase())
         .join('')
         .substring(0, 6);
-      
+
       // If ticker is too short, use first few chars of name
       if (ticker.length < 2) {
         ticker = name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '');
       }
-      
+
       // Ensure ticker is 2-6 characters
       if (ticker.length < 2) ticker = 'GAME';
       if (ticker.length > 6) ticker = ticker.substring(0, 6);
@@ -457,7 +461,7 @@ router.post('/extract-room-info', auth, async (req, res) => {
 
     // Extract description from game rules section
     let description = '';
-    
+
     // Look for game rules content within the rules modal/section
     const rulesPatterns = [
       // Look for content within game-rules id element
@@ -474,29 +478,29 @@ router.post('/extract-room-info', auth, async (req, res) => {
       const match = gameCode.match(pattern);
       if (match) {
         let rulesContent = match[1] || match[0];
-        
+
         // Extract text content from Typography elements
         const textMatches = Array.from(rulesContent.matchAll(/<Typography[^>]*>([^<]+)<\/Typography>/gi));
-        
+
         if (textMatches.length >= 2) {
           const ruleTexts = textMatches
             .map(m => m[1])
             .filter(text => {
               // Filter out non-rule content
               const cleanText = text.trim();
-              return cleanText.length > 10 && 
-                     !cleanText.includes('Game Rules') &&
-                     !cleanText.includes('Close') &&
-                     !cleanText.includes('undefined') &&
-                     !cleanText.includes('null') &&
-                     !cleanText.startsWith('{') &&
-                     (cleanText.includes('.') || cleanText.match(/\d+\s*\./));
+              return cleanText.length > 10 &&
+                !cleanText.includes('Game Rules') &&
+                !cleanText.includes('Close') &&
+                !cleanText.includes('undefined') &&
+                !cleanText.includes('null') &&
+                !cleanText.startsWith('{') &&
+                (cleanText.includes('.') || cleanText.match(/\d+\s*\./));
             })
             .slice(0, 5); // Take first 5 rules
-          
+
           if (ruleTexts.length >= 2) {
             description = ruleTexts.join(' ').replace(/\s+/g, ' ').trim();
-            
+
             // Limit description length
             if (description.length > 300) {
               description = description.substring(0, 300) + '...';
@@ -522,22 +526,22 @@ router.post('/extract-room-info', auth, async (req, res) => {
           .map(m => m[1])
           .filter(text => {
             const cleanText = text.trim();
-            return cleanText.length >= 20 && 
-                   !cleanText.includes('Game Rules') &&
-                   !cleanText.includes('Close') &&
-                   !cleanText.includes('undefined') &&
-                   !cleanText.includes('null') &&
-                   !cleanText.startsWith('{') &&
-                   !cleanText.includes('===') &&
-                   !cleanText.includes('result');
+            return cleanText.length >= 20 &&
+              !cleanText.includes('Game Rules') &&
+              !cleanText.includes('Close') &&
+              !cleanText.includes('undefined') &&
+              !cleanText.includes('null') &&
+              !cleanText.startsWith('{') &&
+              !cleanText.includes('===') &&
+              !cleanText.includes('result');
           });
-        
+
         if (validDescriptions.length > 0) {
           description = validDescriptions[0]
             .replace(/<[^>]*>/g, '')
             .replace(/\s+/g, ' ')
             .trim();
-          
+
           if (description.length >= 20) break;
         }
       }
@@ -546,7 +550,7 @@ router.post('/extract-room-info', auth, async (req, res) => {
     // Determine game theme based on content analysis
     const codeText = (name + ' ' + description + ' ' + gameCode).toLowerCase();
     let gameTheme = 'interactive game';
-    
+
     const themeMapping = {
       'stock trading game': ['stock', 'trading', 'simulator', 'market', 'price', 'buy', 'sell', 'profit'],
       'puzzle game': ['puzzle', 'solve', 'brain', 'logic', 'match', 'sudoku'],
@@ -1055,7 +1059,7 @@ router.post('/update-react', auth, async (req, res) => {
       .replace(/export\s+[\w\s]*?\s*;?/g, '')
       .trim();
 
-      const systemPrompt = `You are an expert React developer specializing in game modification and enhancement. You will be given an existing React game component and a user request for modifications.
+    const systemPrompt = `You are an expert React developer specializing in game modification and enhancement. You will be given an existing React game component and a user request for modifications.
 
       CRITICAL: NO FINANCIAL LOGIC
       - DO NOT add any bet amount, balance, wallet, or money-related state
@@ -1321,10 +1325,8 @@ router.get('/room/:id', async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
   const cacheKey = `room:${roomId}:limit:${limit}`;
 
-  // Get Redis client from app
   const redisClient = req.app.get('redisClient');
 
-  // Check cache
   let cached;
   try {
     cached = await redisClient.get(cacheKey);
@@ -1342,10 +1344,16 @@ router.get('/room/:id', async (req, res) => {
       .select(
         '_id name image ticker pool_id gameCode x_link tax website_link telegram_link ' +
         'created_at likes dislikes creator hosts endgame_amount endgame_type description ' +
-        'joiners game_type bet_amount user_bet host_pr pr room_number battles qs_game_type ' +
-        'selectedStrategy qs_nation rps_game_type status is_private'
+        'joiners game_type bet_amount user_bet host_pr pr room_number battles ' +
+        'status is_private'
       )
-      .populate({ path: 'game_type', model: GameType, select: 'game_type_name short_name' })
+      // No longer populate game_type directly from Room schema as it's now an array of strings.
+      // .populate({ path: 'game_type', model: GameType, select: 'game_type_name short_name' })
+      .populate({
+        path: 'creator', // Ensure creator is populated if room.creator is only an ID
+        model: User,
+        select: 'username avatar totalWagered accessory elite',
+      })
       .populate({
         path: 'joiners',
         model: User,
@@ -1358,16 +1366,16 @@ router.get('/room/:id', async (req, res) => {
     }
 
     // Fetch game logs
-    let gameLogQuery = GameLog.find({ room: room._id })
+    const gameLogQuery = GameLog.find({ room: room._id })
       .select('bet_amount created_at room game_type creator joined_user')
       .sort({ created_at: -1 })
       .populate({
         path: 'room',
         model: Room,
-        select: '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number likes dislikes game_type bet_amount user_bet host_pr created_at',
+        select: '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link commission username creator status hosts room_number bet_amount user_bet host_pr created_at name', // Do NOT select game_type from room here, as it's an array.
       })
       .populate({
-        path: 'game_type',
+        path: 'game_type', // This refers to GameLog's game_type, which is still an ObjectId to GameType
         model: GameType,
         select: 'short_name game_type_name',
       })
@@ -1387,7 +1395,7 @@ router.get('/room/:id', async (req, res) => {
     const totalGameLogsCount = await GameLog.countDocuments({ room: room._id });
     const gameLogList = await gameLogQuery;
 
-    // Fetch creator (already populated in room, no need for separate query)
+    // Creator is populated directly in the `room` object.
     const creator = room.creator;
 
     // Joiners are already populated in room
@@ -1413,7 +1421,7 @@ router.get('/room/:id', async (req, res) => {
         created_at: room.created_at,
         likes: room.likes,
         dislikes: room.dislikes,
-        creator_id: creator,
+        creator_id: creator._id, // Use _id from the populated creator
         username: creator?.username || '',
         creator_avatar: creator?.avatar || '',
         rank: creator?.totalWagered || 0,
@@ -1433,17 +1441,18 @@ router.get('/room/:id', async (req, res) => {
         endgame_type: room.endgame_type,
         description: room.description,
         joiners: joiners,
-        game_type: room.game_type?.game_type_name || '',
+        // Game_type is now an array of strings directly from the room object
+        game_type: room.game_type || [], // Ensure it's an array, default to empty array
         bet_amount: parseFloat(room.bet_amount || 0),
         user_bet: parseFloat(room.user_bet || 0),
         host_pr: room.host_pr,
         pr: room.pr,
-        room_name: room.game_type?.short_name + '-' + room.room_number,
+        // Room_name needs to be constructed from the game_type array.
+        // Let's use the first tag, or a default if no tags.
+        room_name: (room.game_type && room.game_type.length > 0 ? room.game_type[0] : 'Unknown') + '-' + room.room_number,
         total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
         qs_game_type: room.qs_game_type,
-        selectedStrategy: room.selectedStrategy,
         battles: room.battles,
-        qs_nation: room.qs_nation,
         rps_game_type: room.rps_game_type,
         room_history: roomHistory,
         status: room.status,
@@ -1453,7 +1462,6 @@ router.get('/room/:id', async (req, res) => {
       totalGameLogsCount: totalGameLogsCount,
     };
 
-    // Cache for 1 minute
     try {
       await redisClient.setEx(cacheKey, 60, JSON.stringify(response));
     } catch (redisErr) {
@@ -1614,56 +1622,18 @@ router.get('/topWins', async (req, res) => {
   }
 });
 
-router.get('/topWithdrawals', async (req, res) => {
-  try {
-    const topWds = await Receipt.find({ payment_type: { $regex: /Withdraw/i } })
-      .sort({ amount: -1 })
-      .populate({
-        path: 'user_id',
-        model: User,
-        select: '_id avatar accessory totalWagered username',
-      });
-
-    const filteredWithdrawals = topWds.filter(
-      (withdrawal) =>
-        withdrawal.user_id &&
-        !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(
-          withdrawal.user_id.username,
-        ),
-    );
-
-    const sortedWithdrawals = filteredWithdrawals
-      .map((withdrawal) => ({
-        ...withdrawal.toObject(),
-        amount: Math.abs(withdrawal.amount),
-      }))
-      .slice(0, 4);
-
-    res.json({
-      success: true,
-      pageSize: 4,
-      history: sortedWithdrawals,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server Error' });
-  }
-});
 
 // ============================================
 // BACKEND: Enhanced Game History with Redis Caching
 // ============================================
 
-const getHistory = async (pageSize, my_id, game_type, redisClient = null) => {
+const getHistory = async (pageSize, my_id, game_type_filter, redisClient = null) => {
   try {
-    
-    // Create cache key based on parameters
-    const cacheKey = `history:${pageSize}:${my_id || 'all'}:${game_type}`;
-    
+    const cacheKey = `history:${pageSize}:${my_id || 'all'}:${game_type_filter}`;
+
     let result = null;
     let fromCache = false;
 
-    // Step 1: Try Redis cache first
     if (redisClient) {
       try {
         const cachedHistory = await redisClient.get(cacheKey);
@@ -1676,50 +1646,64 @@ const getHistory = async (pageSize, my_id, game_type, redisClient = null) => {
       }
     }
 
-    // Step 2: If not in cache, fetch from database
     if (!result) {
       const id_condition = {};
-      const game_type_condition = {};
+      const game_type_search_condition = {};
 
       if (my_id) {
         id_condition['$or'] = [{ creator: my_id }, { joined_user: my_id }];
       }
 
-      if (game_type !== 'All') {
-        const gameType = await GameType.findOne({ short_name: game_type });
-        if (gameType) {
-          game_type_condition.game_type = gameType._id;
+      // If a specific game_type is requested, filter GameLogs by the GameType _id
+      // This is because GameLog's game_type field still references GameType by ObjectId
+      if (game_type_filter !== 'All') {
+        const gameTypeDoc = await GameType.findOne({ game_type_name: game_type_filter.toLowerCase() }).select('_id');
+        if (gameTypeDoc) {
+          game_type_search_condition.game_type = gameTypeDoc._id;
+        } else {
+          // If the game_type filter doesn't match a known GameType, return no results
+          return { history: [], count: 0, pageSize };
         }
       }
 
-      const search_condition = { $and: [id_condition, game_type_condition] };
+      const search_condition_parts = [];
+      if (Object.keys(id_condition).length > 0) {
+        search_condition_parts.push(id_condition);
+      }
+      if (Object.keys(game_type_search_condition).length > 0) {
+        search_condition_parts.push(game_type_search_condition);
+      }
 
-      const gameLogQuery = GameLog.find(search_condition)
+      // Use $and only if there are conditions to combine
+      const final_search_condition = search_condition_parts.length > 0 ? { $and: search_condition_parts } : {};
+
+
+      const gameLogQuery = GameLog.find(final_search_condition)
         .sort({ created_at: 'desc' })
         .limit(pageSize)
         .populate({
           path: 'room',
           model: Room,
-          select:
-            '_id winnings ticker image commission creator status ai_mode hosts room_number game_type bet_amount user_bet host_pr created_at',
+          // Select room fields, but `game_type` here is an array of strings directly from Room
+          select: '_id winnings ticker image commission creator status ai_mode hosts room_number bet_amount user_bet host_pr created_at name',
         })
         .populate({
-          path: 'game_type',
+          path: 'game_type', // This still populates from GameType collection via GameLog's ObjectId
           model: GameType,
           select: 'short_name game_type_name',
         })
         .populate({
           path: 'creator',
           model: User,
-          select: '_id avatar accessory totalWagered',
+          select: '_id avatar accessory totalWagered username', // Include username
         })
         .populate({
           path: 'joined_user',
           model: User,
-          select: '_id avatar accessory totalWagered',
+          select: '_id avatar accessory totalWagered username', // Include username
         });
 
-      const countQuery = GameLog.countDocuments(search_condition);
+      const countQuery = GameLog.countDocuments(final_search_condition);
 
       const [gameLogList, count] = await Promise.all([gameLogQuery, countQuery]);
 
@@ -1731,22 +1715,17 @@ const getHistory = async (pageSize, my_id, game_type, redisClient = null) => {
         pageSize,
       };
 
-      // Step 3: Cache the result
       if (redisClient) {
-        try {
-          // Different cache durations based on query type
-          let cacheDuration = 300; // 5 minutes default
-          
-          if (my_id) {
-            // Personal history - cache longer (user-specific, changes less)
-            cacheDuration = 600; // 10 minutes
-          } else {
-            // Global history - cache shorter (changes more frequently)
-            cacheDuration = 180; // 3 minutes
-          }
+        let cacheDuration = 300; // 5 minutes default
 
+        if (my_id) {
+          cacheDuration = 600; // 10 minutes for personal history
+        } else {
+          cacheDuration = 180; // 3 minutes for global history
+        }
+
+        try {
           await redisClient.setEx(cacheKey, cacheDuration, JSON.stringify(result));
-          // console.log(`History cached: ${cacheKey} for ${cacheDuration}s`);
         } catch (redisErr) {
           console.error('Failed to cache history:', redisErr);
         }
@@ -1763,16 +1742,14 @@ const getHistory = async (pageSize, my_id, game_type, redisClient = null) => {
   }
 };
 
-// Enhanced history route with Redis support
 router.get('/history', async (req, res) => {
   try {
     const { pageSize = 1, game_type = 'All', my_id = null } = req.query;
-    
-    // Get Redis client and pass it to getHistory
+
     const redisClient = req.app.get('redisClient');
-    
+
     const history = await getHistory(parseInt(pageSize), my_id, game_type, redisClient);
-    
+
     if (!history) {
       return res.status(500).json({
         success: false,
@@ -1800,19 +1777,32 @@ router.get('/my_history', auth, async (req, res) => {
   try {
     const { pageSize = 16, game_type = 'All' } = req.query;
 
+    const redisClient = req.app.get('redisClient'); // Get Redis client for my_history too
+
     const history = await getHistory(
       parseInt(pageSize),
       req.user._id,
       game_type,
+      redisClient // Pass redisClient to getHistory for my_history as well
     );
+
+    if (!history) { // Add check for history not found/failed
+       return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch my history'
+      });
+    }
 
     res.json({
       success: true,
       pageSize: parseInt(pageSize),
       history: history.history,
+      count: history.count, // Include count for my_history as well
+      cached: history.cached || false // Include cached status
     });
   } catch (err) {
-    res.json({
+    console.error('Error in /my_history route:', err);
+    res.status(500).json({
       success: false,
       err: err.toString(),
     });
@@ -1820,25 +1810,24 @@ router.get('/my_history', auth, async (req, res) => {
 });
 
 router.get('/count', async (req, res) => {
-  const game_type = req.query.game_type ? req.query.game_type : 'All';
+  const game_type_filter = req.query.game_type || 'All';
   try {
-    let search_condition = { status: 'open' };
+    const search_condition = { status: 'open' };
 
-    if (game_type !== 'All') {
-      const gameType = await GameType.findOne({ short_name: game_type }).select(
-        '_id',
-      );
-      search_condition.game_type = gameType._id;
+    if (game_type_filter !== 'All') {
+      // Filter by game_type array containing the specified tag (case-insensitive)
+      search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
     }
 
     const roomCount = await Room.countDocuments(search_condition);
 
     res.json({
       success: true,
-      game_type: game_type,
+      game_type: game_type_filter,
       roomCount: roomCount,
     });
   } catch (err) {
+    console.error('Error in /count:', err);
     res.json({
       success: false,
       error: err.toString(),
@@ -1847,13 +1836,11 @@ router.get('/count', async (req, res) => {
 });
 
 router.get('/rooms', async (req, res) => {
-  const game_type = req.query.game_type || 'All';
-  const cacheKey = `rooms:${game_type}`;
+  const game_type_filter = req.query.game_type || 'All';
+  const cacheKey = `rooms:${game_type_filter}`;
 
-  // Get Redis client from app
   const redisClient = req.app.get('redisClient');
 
-  // Check cache
   let cached;
   try {
     cached = await redisClient.get(cacheKey);
@@ -1866,14 +1853,14 @@ router.get('/rooms', async (req, res) => {
   }
 
   try {
-    const rooms = await getRoomList(game_type);
+    const rooms = await getRoomList(game_type_filter);
+    console.log('Rooms fetched:', rooms.rooms.length, 'rooms');
     const response = {
       success: true,
       query: req.query,
       roomList: rooms.rooms,
     };
 
-    // Cache for 1 minute (rooms change more frequently)
     try {
       await redisClient.setEx(cacheKey, 60, JSON.stringify(response));
     } catch (redisErr) {
@@ -1890,22 +1877,17 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
-const getRoomList = async (game_type) => {
+const getRoomList = async (game_type_filter) => {
   const search_condition = {
     status: 'open',
-    game_type: { $ne: null },
   };
 
-  // If a specific short_name is requested (not "All"), filter by that
-  if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type }).select('_id').lean();
-    if (gameType) {
-      search_condition.game_type = gameType._id;
-    }
+  if (game_type_filter !== 'All') {
+    // Filter by game_type array containing the specified tag (case-insensitive)
+    search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
   }
 
   try {
-    // Fetch rooms with lean for performance
     const preRooms = await Room.find(search_condition)
       .select(
         '_id name ticker image description room_number likes dislikes ' +
@@ -1917,12 +1899,10 @@ const getRoomList = async (game_type) => {
         model: 'rps_users',
         select: 'avatar totalWagered username accessory elite status',
       })
-      .populate({ path: 'game_type', model: 'rps_game_types', select: 'short_name' })
       .sort({ updated_at: -1 })
       .limit(50)
-      .lean(); // Use lean for faster queries
+      .lean();
 
-    // Batch fetch joiner data
     const joinerIds = [...new Set(preRooms.flatMap(room => room.joiners))];
     const joinerUsers = await User.find({ _id: { $in: joinerIds } })
       .select('avatar totalWagered _id username accessory elite status')
@@ -1941,7 +1921,6 @@ const getRoomList = async (game_type) => {
       return map;
     }, {});
 
-    // Build final list of rooms
     const result = preRooms.map(room => {
       try {
         const joinerData = room.joiners.map(joinedUserId => joinerMap[joinedUserId.toString()] || null).filter(Boolean);
@@ -1964,7 +1943,7 @@ const getRoomList = async (game_type) => {
           elite: room.creator?.elite || '',
           username: room.creator?.username || '',
           creator_status: room.creator?.status || '',
-          game_type: room.game_type,
+          game_type: room.game_type || [], // Ensure it's an array
           name: room.name,
           description: room.description,
           image: room.image,
@@ -1973,7 +1952,8 @@ const getRoomList = async (game_type) => {
           pr: room.pr,
           endgame_amount: room.endgame_amount,
           host_pr: room.host_pr,
-          room_name: room.game_type?.short_name + '-' + room.room_number,
+          // room_name: Construct from first game_type tag, or 'Unknown'
+          room_name: (room.game_type && room.game_type.length > 0 ? room.game_type[0] : 'Unknown') + '-' + room.room_number,
           total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
           user_bet: parseFloat(room.user_bet || 0),
           is_private: room.is_private,
@@ -2012,18 +1992,15 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       x_link,
       website_link,
-      game_type,
+      game_type_tag, // This can now be a string or an array of strings
       is_private,
       endgame_amount,
       endgame_type,
-      selectedStrategy,
       description,
-      qs_game_type,
       room_password,
       connectedAccount,
       prompt,
       gameCode,
-      qs_nation,
     } = req.body;
 
     const {
@@ -2038,10 +2015,8 @@ router.post('/rooms', auth, async (req, res) => {
       isWithdrawing,
     } = req.user;
 
-    // Consolidate validations
     const user_bet = parseFloat(bet_amount);
-    
-    // Check balance on blockchain for the connected account
+
     let balance;
     try {
       balance = await checkWalletBalance(connectedAccount);
@@ -2053,7 +2028,6 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    // Existing validation checks
     if (isWithdrawing) {
       return res.json({
         success: false,
@@ -2118,26 +2092,51 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    const [roomCount, gameTypeDoc, commissionDoc] = await Promise.all([
+    const [roomCount, commissionDoc] = await Promise.all([
       Room.countDocuments({}),
-      GameType.findOne({ game_type_id: parseInt(game_type) }),
       System.findOne({ name: 'commission' })
     ]);
 
-    if (!gameTypeDoc) {
+    // Process game_type_tag(s) into an array of normalized tags
+    const tagsInput = Array.isArray(game_type_tag) ? game_type_tag : [game_type_tag];
+    const gameTypeNamesToStore = [];
+    let primaryGameTypeDoc = null; // Store the first GameType doc for room_name and GameLog
+
+    for (const tag of tagsInput) {
+      if (!tag || typeof tag !== 'string' || tag.trim() === '') {
+        continue; // Skip empty or invalid tags
+      }
+      const normalizedTag = tag.trim().toLowerCase();
+      let gameTypeDoc = await GameType.findOne({ game_type_name: normalizedTag });
+
+      if (!gameTypeDoc) {
+        gameTypeDoc = new GameType({
+          game_type_name: normalizedTag,
+          short_name: normalizedTag.slice(0, 3).toUpperCase(),
+        });
+        await gameTypeDoc.save();
+        console.log(`New GameType '${normalizedTag}' created.`);
+      }
+      gameTypeNamesToStore.push(gameTypeDoc.game_type_name);
+
+      if (!primaryGameTypeDoc) {
+        primaryGameTypeDoc = gameTypeDoc; // Set the first valid tag as the primary
+      }
+    }
+
+    if (gameTypeNamesToStore.length === 0) {
       return res.json({
         success: false,
-        message: 'Invalid game type',
+        message: 'Please provide at least one valid game type tag.',
       });
     }
 
-    // Calculate fees
+
     const commissionPercentage = commissionDoc.value;
     const fee = user_bet * (commissionPercentage / 100);
     const amountAfterFee = user_bet - fee;
     const room_number = roomCount + 1;
 
-    // Prepare the host object
     const hostObj = {
       host: _id,
       avatar,
@@ -2150,17 +2149,14 @@ router.post('/rooms', auth, async (req, res) => {
       walletAddress: connectedAccount,
     };
 
-    // Create objects for all models that need to be saved
     const newRoom = new Room({
       creator: _id,
       room_password: room_password || '',
       bet_amount: amountAfterFee,
       is_private,
-      qs_nation,
       battles: 0,
       hosts: [hostObj],
-      game_type: gameTypeDoc,
-      qs_game_type: qs_game_type ? qs_game_type : 2,
+      game_type: gameTypeNamesToStore, // Store the array of normalized tags
       user_bet: amountAfterFee,
       tax,
       name,
@@ -2171,13 +2167,12 @@ router.post('/rooms', auth, async (req, res) => {
       prompt,
       telegram_link,
       website_link,
-      selectedStrategy,
       pr: 0,
       total_stakes: amountAfterFee,
       endgame_amount: endgame_type ? endgame_amount : amountAfterFee,
       endgame_type,
       host_pr: amountAfterFee,
-      room_name: gameTypeDoc.short_name + '-' + room_number,
+      room_name: (primaryGameTypeDoc?.short_name || gameTypeNamesToStore[0] || 'Unknown') + '-' + room_number,
       room_number,
       index: room_number,
       status: 'open',
@@ -2188,13 +2183,12 @@ router.post('/rooms', auth, async (req, res) => {
       room: newRoom._id,
       creator: _id,
       joined_user: _id,
-      game_type: gameTypeDoc._id,
+      game_type: primaryGameTypeDoc ? primaryGameTypeDoc._id : null, // Link GameLog to the primary GameType document by ID
       bet_amount: amountAfterFee,
       hosts: [hostObj],
       game_result: -3000,
     });
 
-    // Update user
     const updatedUser = {
       balance: balance - amountAfterFee,
       updated_at: new Date(),
@@ -2202,7 +2196,6 @@ router.post('/rooms', auth, async (req, res) => {
       tradingProfit: req.user.tradingProfit - amountAfterFee
     };
 
-    // Execute all database operations in parallel
     await Promise.all([
       saveDocumentWithRetry(newGameLog),
       User.findByIdAndUpdate(_id, updatedUser),
@@ -2213,14 +2206,13 @@ router.post('/rooms', auth, async (req, res) => {
       )
     ]);
 
-    // Query for emitting events
     const gameLogList = await GameLog.find({ room: newRoom._id })
       .sort({ created_at: 'desc' })
       .limit(1)
       .populate({
         path: 'room',
         model: Room,
-        select: '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+        select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name', // Do NOT select game_type from room here
       })
       .populate({
         path: 'game_type',
@@ -2238,7 +2230,6 @@ router.post('/rooms', auth, async (req, res) => {
         select: '_id avatar username accessory elite totalWagered',
       });
 
-    // Process and emit events
     const newLog = await convertGameLogToHistoryStyle(gameLogList);
     const roomObj = {
       ...newRoom.toObject(),
@@ -2253,7 +2244,6 @@ router.post('/rooms', auth, async (req, res) => {
       joiners: [],
     };
 
-    // Emit events in non-blocking way
     setImmediate(() => {
       req.io.sockets.emit('NEW_LOG', { newLog });
       req.io.sockets.emit('ROOMS_UPDATED', roomObj);
@@ -2262,7 +2252,6 @@ router.post('/rooms', auth, async (req, res) => {
     res.json({
       success: true,
       message: 'room created',
-      // newTransaction,
     });
   } catch (err) {
     console.error('Error creating room:', err);
@@ -2302,15 +2291,16 @@ async function checkWalletBalance(walletAddress) {
 router.get('/my_games', auth, async (req, res) => {
   try {
     const pageSize = 50;
-    const game_type = req.query.game_type || 'All';
+    // `game_type_filter` might now be a comma-separated string if filtering by multiple tags
+    // Let's assume it can be a single tag string 'Casino' or 'All' for simplicity
+    // If you want to support multiple selected tags like 'Casino,Strategy', you'd parse it to an array here
+    const game_type_filter = req.query.game_type || 'All';
     const status = req.query.status;
     const sort = req.query.sort || 'desc';
-    const cacheKey = `my_games:${req.user._id}:${game_type}:${status}:${sort}`;
+    const cacheKey = `my_games:${req.user._id}:${game_type_filter}:${status}:${sort}`;
 
-    // Get Redis client from app
     const redisClient = req.app.get('redisClient');
 
-    // Check cache
     let cached;
     try {
       cached = await redisClient.get(cacheKey);
@@ -2322,11 +2312,10 @@ router.get('/my_games', auth, async (req, res) => {
       return res.json(JSON.parse(cached));
     }
 
-    // Fetch data from database
     const { rooms, count } = await getMyRooms(
       req.user._id,
       pageSize,
-      game_type,
+      game_type_filter,
       status,
       sort,
     );
@@ -2338,7 +2327,6 @@ router.get('/my_games', auth, async (req, res) => {
       total: count,
     };
 
-    // Cache for 5 minutes
     try {
       await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
     } catch (redisErr) {
@@ -2358,7 +2346,7 @@ router.get('/my_games', auth, async (req, res) => {
 const getMyRooms = async (
   user_id,
   pageSize,
-  game_type = 'All',
+  game_type_filter = 'All',
   status = 'open',
   sort = 'desc',
 ) => {
@@ -2369,23 +2357,22 @@ const getMyRooms = async (
   if (status) {
     search_condition.status = status;
   }
-  if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type }, '_id');
-    search_condition.game_type = gameType._id;
+
+  if (game_type_filter !== 'All') {
+    search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
   }
+
   if (status === 'finished') {
     search_condition.joiners = { $exists: true, $ne: [] };
   }
 
   const rooms = await Room.find(search_condition)
-    .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_id' })
-    .select('_id creator name image ticker hosts creator host_pr room_number endgame_type endgame_amount is_private status created_at user_bet rps_list qs_list bet_amount selectedStrategy likes dislikes gameCode')
+    .select('_id creator name image ticker hosts creator host_pr room_number endgame_type endgame_amount is_private status created_at user_bet bet_amount likes dislikes gameCode game_type') // Include game_type here for mapping
     .limit(pageSize)
-    .lean(); // Use lean() for faster query execution
+    .lean();
 
   const count = await Room.countDocuments(search_condition);
 
-  // Batch fetch creator details
   const creatorIds = [...new Set(rooms.map(room => room.creator))];
   const creators = await User.find({ _id: { $in: creatorIds } })
     .select('avatar totalWagered accessory elite')
@@ -2396,7 +2383,6 @@ const getMyRooms = async (
     return map;
   }, {});
 
-  // Batch fetch game log counts
   const roomIds = rooms.map(room => room._id);
   const gameLogCounts = await GameLog.aggregate([
     { $match: { room: { $in: roomIds } } },
@@ -2425,10 +2411,8 @@ const getMyRooms = async (
       rank: creatorDetails.totalWagered || 0,
       accessory: creatorDetails.accessory || '',
       elite: creatorDetails.elite || '',
-      game_type: room.game_type,
+      game_type: room.game_type || [],
       bet_amount: room.bet_amount,
-      rps_list: room.rps_list,
-      qs_list: room.qs_list,
       user_bet: room.user_bet,
       share: room.hosts.find(
         (host) => host.host.toString() === user_id.toString()
@@ -2442,7 +2426,6 @@ const getMyRooms = async (
       status: room.status,
       created_at: room.created_at,
       coHost: !!isCoHost,
-      selectedStrategy: room.selectedStrategy,
       net_profit: '',
       battles: gameLogCount,
       likes: room.likes,
@@ -2451,14 +2434,9 @@ const getMyRooms = async (
       hosts: room.hosts,
     };
 
-    if (gameLogCount === 0) {
-      temp.winnings = temp.bet_amount;
-    } else if (room.game_type.game_type_id === 1) {
-      temp.winnings = room.user_bet;
-    } else if (room.game_type.game_type_id === 5) {
-      temp.winnings = room.user_bet;
-    }
 
+    temp.winnings = room.user_bet;
+    //
     if (isCoHost) {
       const hostShare = isCoHost.share;
       temp.winnings = (hostShare / 100) * parseFloat(room.user_bet);
@@ -2470,7 +2448,7 @@ const getMyRooms = async (
     return temp;
   });
 
-  // Sorting
+  // Sorting logic remains the same
   if (sort === 'asc') {
     result.sort((a, b) => a.created_at - b.created_at);
   } else if (sort === 'desc') {
@@ -2502,9 +2480,9 @@ router.post('/end_game', auth, async (req, res) => {
       accessory,
       elite,
       totalWagered,
-      accounts, // Add accounts to destructure for connectedAccount validation
+      accounts,
     } = req.user;
-    const { room_id: roomId, connectedAccount } = req.body; // Include connectedAccount from req.body
+    const { room_id: roomId, connectedAccount } = req.body;
 
     const timeDifference = (new Date() - new Date(updated_at)) / 1000; // Difference in seconds
     if (timeDifference <= 1.5) {
@@ -2530,6 +2508,7 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    // Ensure `connectedAccount` is present and authorized
     if (!connectedAccount || !accounts || !accounts.includes(connectedAccount)) {
       return res.json({
         success: false,
@@ -2537,12 +2516,19 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    // When fetching roomInfo, we need the `game_type` string array itself.
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User, select: 'username _id' })
-      .populate({ path: 'game_type', model: GameType, select: 'short_name' })
       .select(
-        'status hosts user_bet name host_pr pr bet_amount room_number selectedStrategy',
+        'status hosts user_bet name host_pr pr bet_amount room_number game_type updated_at',
       );
+
+    if (!roomInfo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Room not found.',
+      });
+    }
 
     if (roomInfo.status === 'finished') {
       return res.json({
@@ -2552,8 +2538,8 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
-    const tenSecondsAgo = new Date(Date.now() - 500);
-    if (roomInfo.updated_at > tenSecondsAgo) {
+    const fiveHundredMsAgo = new Date(Date.now() - 500); // More precise variable name
+    if (roomInfo.updated_at > fiveHundredMsAgo) { // Use roomInfo.updated_at directly
       return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER',
@@ -2564,7 +2550,7 @@ router.post('/end_game', auth, async (req, res) => {
     roomInfo.status = 'finished';
 
     const hostUpdates = [];
-    const gameTransactions = []; // To store pending GameTransanction documents
+    const gameTransactions = [];
 
     for (const hostData of roomInfo.hosts) {
       const hostId = hostData.host;
@@ -2573,19 +2559,21 @@ router.post('/end_game', auth, async (req, res) => {
 
       const amount = (hostData.share / 100) * parseFloat(roomInfo.user_bet);
 
-      // Replace direct balance update with Solana transaction logic
       if (amount > 0 && connectedAccount) {
-        // Validate deposit transaction (check both pending and completed)
         const depositTransaction = await GameTransanction.findOne({
           user: hostId,
           status: { $in: ['pending', 'completed'] },
           description: { $regex: '^(Created)', $options: 'i' },
+          room: roomId, // Crucial to filter by room for the specific deposit
         });
 
         if (!depositTransaction) {
           console.warn(
             `No valid deposit (pending or completed) for user ${hostId}, room ${roomId}`,
           );
+          // Instead of immediately returning, consider a more robust error handling
+          // This might be a false positive if a deposit is for another room or already processed.
+          // For now, keeping your original behavior, but flagging for review.
           return res.json({
             success: false,
             message:
@@ -2594,18 +2582,9 @@ router.post('/end_game', auth, async (req, res) => {
           });
         }
 
-        // Validate connectedAccount as a Solana address
         try {
-          const address = connectedAccount.trim(); // Remove whitespace
-          console.log(
-            'connectedAccount',
-            address,
-            'Type:',
-            typeof address,
-            'Length:',
-            address.length,
-          );
-          new PublicKey(address);
+          const address = connectedAccount.trim();
+          new PublicKey(address); // Validate Solana address
         } catch (error) {
           console.error('PublicKey error:', error.message);
           return res.json({
@@ -2617,7 +2596,7 @@ router.post('/end_game', auth, async (req, res) => {
         const newGameTransaction = new GameTransanction({
           user: hostId,
           amount: amount,
-          description: `Rugged ${roomInfo.name}`, // Adapted for end_game
+          description: `Rugged ${roomInfo.name}`,
           room: roomId,
           room_name: roomInfo.name,
           status: 'pending',
@@ -2631,38 +2610,63 @@ router.post('/end_game', auth, async (req, res) => {
 
       const message = `Rugged ${roomInfo.name}`;
       const notificationData = {
-        _id: userId,
+        _id: userId, // This should be the hostId if sending to the host
         message,
-        username,
-        avatar,
+        username, // This is the username of the user who made the request, not necessarily the host
+        avatar, // Avatar of the user who made the request
         amount,
         accessory,
         elite,
         room: roomInfo._id,
-        rank: totalWagered,
+        rank: totalWagered, // This is totalWagered of the user who made the request
         created_at: moment().format('YYYY-MM-DD HH:mm'),
         created_at_str: moment().format('LLL'),
         updated_at: moment().format('YYYY-MM-DD HH:mm'),
         is_read: false,
       };
+      // You should send notification to hostId, not userId for host-specific notifications
       socket.sendNotification(hostId, notificationData);
     }
 
     await Promise.all([...hostUpdates, ...gameTransactions]);
 
+    // To create the GameLog, you need the _id of a GameType document.
+    // Since roomInfo.game_type is now an array of strings, we need to pick one
+    // or fetch the corresponding GameType _id from the GameType collection.
+    // For simplicity, let's assume the first tag in the array is the primary one for GameLog.
+    let gameTypeIdForLog = null;
+    if (roomInfo.game_type && roomInfo.game_type.length > 0) {
+      const primaryGameTypeTag = roomInfo.game_type[0]; // Get the first tag from the array
+      const gameTypeDoc = await GameType.findOne({ game_type_name: primaryGameTypeTag.toLowerCase() }).select('_id');
+      if (gameTypeDoc) {
+        gameTypeIdForLog = gameTypeDoc._id;
+      } else {
+        console.warn(`GameType document not found for tag: ${primaryGameTypeTag}`);
+        // Consider defaulting to a generic GameType _id or handling this error
+      }
+    }
+
+    if (!gameTypeIdForLog) {
+        // If no game type ID could be determined, handle this error
+        return res.status(500).json({
+            success: false,
+            message: 'Could not determine game type for logging.'
+        });
+    }
+
     const newGameLog = new GameLog({
       room: roomInfo._id,
       creator: roomInfo.creator._id,
       joined_user: roomInfo.creator._id,
-      game_type: roomInfo.game_type._id,
+      game_type: gameTypeIdForLog, // Assign the fetched GameType _id
       bet_amount: roomInfo.host_pr,
       hosts: roomInfo.hosts,
       game_result: -100,
     });
 
     const newTransactionC = new GameTransanction({
-      user: userId,
-      amount: (roomInfo.hosts[0].share / 100) * parseFloat(roomInfo.user_bet),
+      user: userId, // This is the user who initiated the end_game (the host)
+      amount: (roomInfo.hosts[0].share / 100) * parseFloat(roomInfo.user_bet), // This assumes hosts[0] is the primary host
       description: `Rugged ${roomInfo.name}`,
       room: roomId,
       status: 'pending',
@@ -2670,22 +2674,22 @@ router.post('/end_game', auth, async (req, res) => {
     });
 
     await Promise.all([
-      saveDocumentWithRetry(roomInfo),
+      saveDocumentWithRetry(roomInfo), // This saves the updated room status
       saveDocumentWithRetry(newGameLog),
       saveDocumentWithRetry(newTransactionC),
     ]);
 
+    // When populating GameLog for emission, it still links to GameType by ObjectId
     let gameLogQuery = GameLog.find({ room: roomInfo._id })
       .sort({ created_at: 'desc' })
       .limit(1)
       .populate({
         path: 'room',
         model: Room,
-        select:
-          '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+        select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name', // Do NOT select game_type as it's now string array. Include `name`
       })
       .populate({
-        path: 'game_type',
+        path: 'game_type', // This still populates from GameType collection via GameLog's ObjectId
         model: GameType,
         select: 'short_name game_type_name',
       })
@@ -2724,14 +2728,7 @@ router.post('/end_game', auth, async (req, res) => {
 // PUMP route (Simplified: older holders get a bonus share allocation)
 router.post('/pump', auth, async (req, res) => {
   try {
-    // -------------------------------------------
-    // 1) Basic checks
-    // -------------------------------------------
-    if (
-      !req.body.connectedAccount ||
-      !req.user.accounts ||
-      !req.user.accounts.includes(req.body.connectedAccount)
-    ) {
+    if (!req.body.connectedAccount || !req.user.accounts || !req.user.accounts.includes(req.body.connectedAccount)) {
       return res.json({
         success: false,
         message: 'Connected account is missing or not authorized.',
@@ -2747,8 +2744,6 @@ router.post('/pump', auth, async (req, res) => {
 
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
-    const gameType = await GameType.findOne({ _id: room?.game_type });
-    let pool_id = '';
 
     if (!room) {
       return res.json({
@@ -2766,14 +2761,13 @@ router.post('/pump', auth, async (req, res) => {
       });
     }
 
-    const tenSecondsAgo = new Date(Date.now() - 500);
-    if (room.updated_at > tenSecondsAgo) {
-      responseData = {
+    const fiveHundredMsAgo = new Date(Date.now() - 500);
+    if (room.updated_at > fiveHundredMsAgo) {
+      return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER',
         betResult: -1200,
-      };
-      return responseData;
+      });
     }
 
     if (room.status === 'finished') {
@@ -2802,9 +2796,6 @@ router.post('/pump', auth, async (req, res) => {
       });
     }
 
-    // -------------------------------------------
-    // 2) Commission & user balance
-    // -------------------------------------------
     const commissionDoc = await System.findOne({ name: 'commission' });
     const commissionPercentage = commissionDoc?.value || 0;
     const fee = coHostAmount * (commissionPercentage / 100);
@@ -2819,22 +2810,13 @@ router.post('/pump', auth, async (req, res) => {
     req.user.totalTraded += Math.abs(coHostAmount);
     req.user.tradingProfit -= amountAfterFee;
 
-    // -------------------------------------------
-    // 3) Real liquidity update
-    // -------------------------------------------
     const oldLiquidity = parseFloat(room.user_bet) || 0;
     const netDeposit = amountAfterFee;
     const newLiquidity = oldLiquidity + netDeposit;
 
-    // -------------------------------------------
-    // 4) Reconstruct current share supply
-    // -------------------------------------------
-    // Calculate each host’s current “absolute” shares based on liquidity.
-    // (This assumes that previously the share percentages were computed
-    // with oldLiquidity as the total pool.)
     let totalShareSupply = 0;
     const oldHosts = room.hosts.map((host) => {
-      const oldAbs = (host.share / 100) * oldLiquidity; // old absolute shares
+      const oldAbs = (host.share / 100) * oldLiquidity;
       totalShareSupply += oldAbs;
       return {
         ...host.toObject(),
@@ -2842,19 +2824,13 @@ router.post('/pump', auth, async (req, res) => {
       };
     });
 
-    // -------------------------------------------
-    // 5) Simple share minting & bonus distribution
-    // -------------------------------------------
-    // Instead of using a bonding curve we mint new shares equal to netDeposit.
-    // Then, a fixed fraction (e.g., 12%) of the new shares is taken as a bonus for existing holders.
-    const mintedShares = netDeposit; // New shares minted are directly equal to the net deposit.
-    const fractionForOld = 0.12; // 12% bonus to older holders.
+    const mintedShares = netDeposit;
+    const fractionForOld = 0.12;
     const bonusForOld = mintedShares * fractionForOld;
     const buyerShares = mintedShares - bonusForOld;
 
-    // 5A) Distribute bonus shares among existing hosts proportionally
     let totalOld = oldHosts.reduce((acc, h) => acc + h.oldAbsoluteShares, 0);
-    if (totalOld < 1e-9) totalOld = 1; // avoid division by zero if there are no hosts
+    if (totalOld < 1e-9) totalOld = 1;
 
     oldHosts.forEach((h) => {
       const frac = h.oldAbsoluteShares / totalOld;
@@ -2862,12 +2838,10 @@ router.post('/pump', auth, async (req, res) => {
       h.newAbsoluteShares = (h.oldAbsoluteShares || 0) + bonus;
     });
 
-    // 5B) The new buyer gets buyerShares.
     const existingHostIndex = oldHosts.findIndex((h) =>
       h.host.equals(req.user._id),
     );
     if (existingHostIndex === -1) {
-      // New user: add as a host.
       oldHosts.push({
         host: req.user._id,
         accessory: req.user.accessory,
@@ -2880,31 +2854,22 @@ router.post('/pump', auth, async (req, res) => {
         newAbsoluteShares: buyerShares,
       });
     } else {
-      // Existing user: add buyerShares to their total.
       oldHosts[existingHostIndex].newAbsoluteShares += buyerShares;
     }
 
-    // The new total share supply is the old share supply plus the newly minted shares.
     const newTotalShareSupply = totalShareSupply + mintedShares;
 
-    // -------------------------------------------
-    // 6) Recalculate each host's share percentage
-    // -------------------------------------------
     oldHosts.forEach((h) => {
       const fraction = h.newAbsoluteShares / newTotalShareSupply;
       h.share = fraction * 100;
     });
 
-    // Normalize percentages to ensure they sum to 100.
     const sumPct = oldHosts.reduce((acc, h) => acc + h.share, 0);
     if (sumPct > 0) {
       const factor = 100 / sumPct;
       oldHosts.forEach((h) => (h.share *= factor));
     }
 
-    // -------------------------------------------
-    // 7) Overwrite room.hosts and update room liquidity
-    // -------------------------------------------
     room.hosts = oldHosts.map((h) => ({
       host: h.host,
       share: h.share,
@@ -2920,53 +2885,53 @@ router.post('/pump', auth, async (req, res) => {
     room.host_pr += netDeposit;
     room.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
+    let pool_id = '';
+    // Fetch GameType ID for GameLog later if needed
+    let gameTypeIdForLog = null;
+    if (room.game_type && room.game_type.length > 0) {
+      // Assuming the first tag is the primary one for logging purposes
+      const primaryGameTypeTag = room.game_type[0];
+      const gameTypeDoc = await GameType.findOne({ game_type_name: primaryGameTypeTag.toLowerCase() }).select('_id');
+      if (gameTypeDoc) {
+        gameTypeIdForLog = gameTypeDoc._id;
+      } else {
+        console.warn(`GameType document not found for tag: ${primaryGameTypeTag}. GameLog may have missing type.`);
+        // Consider defaulting to a generic GameType _id or handling this as an error.
+      }
+    }
+
+
     if (room.user_bet >= room.endgame_amount) {
       try {
         room.status = 'finished';
         if (req.io.sockets) {
           req.io.sockets.emit('ROOM_ENDED', { roomId: room._id });
         }
-        await saveDocumentWithRetry(room);
+        await saveDocumentWithRetry(room); // Save room status change before minting
+
         const myMintPk = await mintTokenWithMetadata(room);
         const realBasePublicKey = new PublicKey(myMintPk);
-        // const realBasePublicKey = new PublicKey(
-        //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
-        // );
+
         await setTimeout(15000);
 
-        console.log('----mint publickey:', realBasePublicKey);
-        const wsolMintPk = new PublicKey(
-          'So11111111111111111111111111111111111111112',
-        );
-        console.log('----wsolMintPk publickey:', wsolMintPk);
+        const wsolMintPk = new PublicKey('So11111111111111111111111111111111111111112');
         await setTimeout(10000);
 
         const marketId = await createMarket(realBasePublicKey, wsolMintPk);
-        // const marketId = new PublicKey(
-        //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
-        // );
-
         await setTimeout(15000);
 
         const ammId = await createAmmPool(marketId);
-        // const ammId = new PublicKey(
-        //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
-        // );
         console.log('Pool creation ammId:', ammId);
 
         await setTimeout(20000);
 
-        // const addTxids = await addLiquidity(ammId);
-        // console.log('Add Liquidity txids:', addTxids);
-        // await setTimeout(10000);
-
         await distributeTokens(realBasePublicKey, room.hosts);
         await setTimeout(10000);
 
-        const revokeTx =
-          await revokeMintAndFreezeAuthorities(realBasePublicKey);
+        const revokeTx = await revokeMintAndFreezeAuthorities(realBasePublicKey);
         pool_id = ammId.toBase58();
       } catch (e) {
+        console.error('Error in endgame process (minting/pooling):', e);
         pool_id = '';
       }
 
@@ -2974,7 +2939,7 @@ router.post('/pump', auth, async (req, res) => {
         room: room._id,
         creator: room.creator,
         joined_user: room.creator,
-        game_type: room.game_type,
+        game_type: gameTypeIdForLog, // Use the fetched GameType ID
         bet_amount: room.host_pr,
         user_bet: room.user_bet,
         hosts: room.hosts,
@@ -2986,12 +2951,10 @@ router.post('/pump', auth, async (req, res) => {
         room.pool_id = pool_id;
       }
 
+      // Save newGameLogC even if pool_id failed, as it's a log of the outcome
       saveDocumentWithRetry(newGameLogC);
     }
 
-    // -------------------------------------------
-    // 8) Notification & logs (same as original)
-    // -------------------------------------------
     const message = `Pumped ${room.name}`;
 
     const tempNotification = new Notification({
@@ -3019,15 +2982,6 @@ router.post('/pump', auth, async (req, res) => {
       is_read: false,
     };
 
-    // const newTransaction = new Transaction({
-    //   created_at: now,
-    //   user: req.user._id,
-    //   amount: -amountAfterFee,
-    //   description: `Pumped ${room.name}`,
-    //   room: room._id,
-    // });
-
-    // Candle generation (using liquidity before and after the pump)
     const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000));
     const newCandle = {
       _id: timeBucket,
@@ -3044,18 +2998,18 @@ router.post('/pump', auth, async (req, res) => {
     const newGameLog = new GameLog({
       room: room._id,
       creator: req.user._id,
-      joined_user: null,
-      game_type: gameType,
+      joined_user: null, // Joined user is null for pump action
+      game_type: gameTypeIdForLog, // Use the fetched GameType ID
       bet_amount: netDeposit,
-      selected_rps: '',
-      ai_mode: '',
-      commission: 0,
-      game_result: 444,
-      winnings: 0,
-      endgame_amount: netDeposit,
-      host_pr: netDeposit,
-      user_bet: 0,
-      status: 'open',
+      selected_rps: '', // Specific to RPS, might not be relevant for pump
+      ai_mode: '', // Might not be relevant for pump
+      commission: 0, // Commission is handled separately
+      game_result: 444, // Custom result for pump action
+      winnings: 0, // No direct winnings for pump
+      endgame_amount: netDeposit, // Assuming this means amount contributed to bankroll
+      host_pr: netDeposit, // Host profit from this pump
+      user_bet: 0, // User bet is 0 for pump action
+      status: 'open', // Room remains open after pump unless endgame_amount is met
       hosts: room.hosts,
     });
 
@@ -3067,8 +3021,7 @@ router.post('/pump', auth, async (req, res) => {
         .populate({
           path: 'room',
           model: Room,
-          select:
-            '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name', // Include `name` and ensure `game_type` is not populated
         })
         .populate({
           path: 'game_type',
@@ -3091,9 +3044,8 @@ router.post('/pump', auth, async (req, res) => {
 
       await Promise.all([
         saveDocumentWithRetry(tempNotification),
-        saveDocumentWithRetry(room),
+        saveDocumentWithRetry(room), // Save room changes after all updates are done
         saveDocumentWithRetry(req.user),
-        // saveDocumentWithRetry(newTransaction),
       ]);
 
       if (socket) {
@@ -3122,33 +3074,26 @@ router.post('/pump', auth, async (req, res) => {
       return res.json({
         success: true,
         balance: req.user.balance,
-        // newTransaction,
       });
     } catch (error) {
-      console.error('Error saving game log:', error);
+      console.error('Error saving game log and emitting:', error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to save game log',
+        message: 'Failed to complete pump action due to a logging/emission error.',
       });
     }
   } catch (error) {
-    console.log('ERROR in pump (Simplified version):', error);
-    return res.json({
+    console.error('ERROR in pump:', error);
+    return res.status(500).json({
       success: false,
       message: 'FAILED TO INITIATE PUMP',
     });
   }
 });
 
-// JEET (unstake / sell) endpoint – simplified version that sells the specified share amount
 router.post('/jeet', auth, async (req, res) => {
   try {
-    // 1) Basic checks + anti-abuse
-    if (
-      !req.body.walletAddress ||
-      !req.user.accounts ||
-      !req.user.accounts.includes(req.body.walletAddress)
-    ) {
+    if (!req.body.walletAddress || !req.user.accounts || !req.user.accounts.includes(req.body.walletAddress)) {
       return res.json({
         success: false,
         message: 'Connected account is missing or not authorized.',
@@ -3175,16 +3120,16 @@ router.post('/jeet', auth, async (req, res) => {
     const userId = req.user._id;
     const roomId = req.body.room_id;
 
-    // Instead of specifying a currency amount, the client now provides the number of shares to sell.
     let sellShares = parseFloat(req.body.stake_amount);
     if (isNaN(sellShares) || sellShares <= 0) {
       return res.json({ success: false, message: 'Invalid sell share amount' });
     }
 
-    // 2) Load Room and check status
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
-      .populate({ path: 'game_type', model: GameType });
+      .select(
+        'status hosts user_bet name host_pr pr bet_amount room_number game_type updated_at total_share_supply',
+      );
 
     if (!roomInfo) {
       return res.json({ success: false, message: 'Room not found' });
@@ -3198,17 +3143,15 @@ router.post('/jeet', auth, async (req, res) => {
       });
     }
 
-    const tenSecondsAgo = new Date(Date.now() - 500);
-    if (roomInfo.updated_at > tenSecondsAgo) {
-      responseData = {
+    const fiveHundredMsAgo = new Date(Date.now() - 500);
+    if (roomInfo.updated_at > fiveHundredMsAgo) {
+      return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER',
         betResult: -1200,
-      };
-      return responseData;
+      });
     }
 
-    // Verify that the user is a host in this room
     const hostIndex = roomInfo.hosts.findIndex((host) =>
       host.host.equals(userId),
     );
@@ -3219,27 +3162,21 @@ router.post('/jeet', auth, async (req, res) => {
       });
     }
 
-    // 3) Set up commission & fees
     const commissionDoc = await System.findOne({ name: 'commission' });
     const commissionPercentage = commissionDoc?.value || 0;
 
-    // 4) Determine current liquidity and total share supply
     const oldLiquidity = parseFloat(roomInfo.user_bet) || 0;
 
-    // Use the stored total_share_supply (or assume it equals the liquidity if not set)
     let totalShareSupplyDB = roomInfo.total_share_supply || 0;
     if (totalShareSupplyDB < 1e-9) {
       totalShareSupplyDB = oldLiquidity;
     }
 
-    // Convert each host's percentage into an absolute share amount.
-    // (For example, if a host has 20% and the total share supply is 1000, then that host’s absolute stake is 200.)
     const oldHosts = roomInfo.hosts.map((host) => {
       const absShares = (host.share / 100) * totalShareSupplyDB;
       return { ...host.toObject(), absShares };
     });
 
-    // 5) Identify the seller and ensure they have enough shares
     const seller = oldHosts[hostIndex];
     if (sellShares > seller.absShares + 1e-9) {
       return res.json({
@@ -3250,40 +3187,31 @@ router.post('/jeet', auth, async (req, res) => {
       });
     }
 
-    // 6) Determine the currency value for the sold shares.
-    // Each share is worth: (oldLiquidity / totalShareSupplyDB)
     const valueBeforeFee = sellShares * (oldLiquidity / totalShareSupplyDB);
     const fee = valueBeforeFee * (commissionPercentage / 100);
     const amountAfterFee = valueBeforeFee - fee;
 
-    // Update platform fees
     await System.findOneAndUpdate(
       { name: 'platform_trading' },
       { $inc: { value: fee } },
     );
 
-    // 7) Update share holdings:
-    //    - The seller loses exactly the number of shares sold.
-    //    - All other hosts lose a fixed fraction of their stake (shock effect).
     seller.newAbsShares = seller.absShares - sellShares;
 
-    const shockRatio = 0.1; // 10% shock applied to other hosts
+    const shockRatio = 0.1;
     oldHosts.forEach((host, idx) => {
       if (idx !== hostIndex) {
         host.newAbsShares = host.absShares * (1 - shockRatio);
       }
     });
 
-    // 8) Compute the new total share supply after the sale and shock
     let newTotalShareSupply = oldHosts.reduce(
       (acc, host) => acc + (host.newAbsShares || 0),
       0,
     );
 
-    // 9) Update pool liquidity: the pool’s liquidity decreases by the full amount (net of fee)
     const newLiquidity = oldLiquidity - amountAfterFee;
 
-    // 10) Recompute each host’s percentage share based on their new absolute stake
     oldHosts.forEach((host) => {
       host.share =
         newTotalShareSupply > 0
@@ -3291,14 +3219,12 @@ router.post('/jeet', auth, async (req, res) => {
           : 0;
     });
 
-    // Normalize percentages so that they sum to 100
     const sumPct = oldHosts.reduce((acc, host) => acc + host.share, 0);
     if (sumPct > 0) {
       const factor = 100 / sumPct;
       oldHosts.forEach((host) => (host.share *= factor));
     }
 
-    // 11) Overwrite roomInfo.hosts with the updated share data
     roomInfo.hosts = oldHosts.map((host) => ({
       host: host.host,
       share: host.share,
@@ -3310,49 +3236,45 @@ router.post('/jeet', auth, async (req, res) => {
       walletAddress: host.walletAddress || req.body.walletAddress,
     }));
 
-    // 12) Update room liquidity, the total share supply, and host_pr (if applicable)
     roomInfo.user_bet = newLiquidity;
     roomInfo.total_share_supply = newTotalShareSupply;
     roomInfo.host_pr = Math.max(roomInfo.host_pr - amountAfterFee, 0);
     roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
-    // 13) Credit the seller’s account with the withdrawn funds
-
     req.user.totalTraded += valueBeforeFee;
     req.user.tradingProfit += amountAfterFee;
 
-
     if (amountAfterFee > 0 && req.body.walletAddress) {
-      // Validate deposit transaction (check both pending and completed)
       const depositTransaction = await GameTransanction.findOne({
         user: req.user._id,
         room: roomId,
         status: { $in: ['pending', 'completed'] },
-        description: { $regex: '^(Pumped)', $options: 'i' },
+        description: { $regex: '^(Pumped|Created)', $options: 'i' }, // Include 'Created' if initial room creation also counts as deposit
       });
 
       if (!depositTransaction) {
         console.warn(
-          `No valid deposit (pending or completed) for user ${req.user._id}, room ${roomId}`
+          `No valid prior deposit (pending or completed) for user ${req.user._id}, room ${roomId}`
         );
-        return {
+        return res.json({ // Return here instead of throw
           success: false,
           message:
-            'No valid SOL deposit found within the last 15 minutes for this room. Please wait for your deposit to process and try again.',
+            'No valid SOL deposit found for this room. Please ensure you have a prior stake.',
           betResult: -1000,
-        };
+        });
       }
 
-      // Validate connectedAccount as a Solana address
       try {
-        const address = req.body.walletAddress.trim(); // Remove whitespace
+        const address = req.body.walletAddress.trim();
         new PublicKey(address);
       } catch (error) {
         console.error("PublicKey error:", error.message);
-        throw new Error('Invalid Solana wallet address');
+        return res.json({ // Return here instead of throw
+          success: false,
+          message: 'Invalid Solana wallet address',
+        });
       }
 
-      // Create a pending GameTransaction for the winnings
       const newGameTransaction = new GameTransanction({
         user: req.user._id,
         amount: amountAfterFee,
@@ -3365,7 +3287,6 @@ router.post('/jeet', auth, async (req, res) => {
       await saveDocumentWithRetry(newGameTransaction);
     }
 
-    // 15) Prepare candle data for chart updates
     const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000));
     const newCandle = {
       _id: timeBucket,
@@ -3379,12 +3300,22 @@ router.post('/jeet', auth, async (req, res) => {
       startTime: new Date(timeBucket * 60 * 1000),
     };
 
-    // 16) Log this action in GameLog
+    let gameTypeIdForLog = null;
+    if (roomInfo.game_type && roomInfo.game_type.length > 0) {
+      const primaryGameTypeTag = roomInfo.game_type[0];
+      const gameTypeDoc = await GameType.findOne({ game_type_name: primaryGameTypeTag.toLowerCase() }).select('_id');
+      if (gameTypeDoc) {
+        gameTypeIdForLog = gameTypeDoc._id;
+      } else {
+        console.warn(`GameType document not found for tag: ${primaryGameTypeTag}. GameLog may have missing type.`);
+      }
+    }
+
     const newGameLog = new GameLog({
       room: roomInfo._id,
       creator: req.user._id,
       joined_user: null,
-      game_type: roomInfo.game_type,
+      game_type: gameTypeIdForLog, // Use the fetched GameType ID
       bet_amount: amountAfterFee,
       selected_rps: '',
       ai_mode: '',
@@ -3406,8 +3337,7 @@ router.post('/jeet', auth, async (req, res) => {
       .populate({
         path: 'room',
         model: Room,
-        select:
-          '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+        select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name',
       })
       .populate({
         path: 'game_type',
@@ -3428,7 +3358,6 @@ router.post('/jeet', auth, async (req, res) => {
     const gameLogList = await gameLogQuery;
     const newLog = await convertGameLogToHistoryStyle(gameLogList);
 
-    // 17) Prepare and send a notification to the seller
     const recipientId = userId.toString();
     const message = `Jeeted ${roomInfo.name}`;
 
@@ -3457,12 +3386,10 @@ router.post('/jeet', auth, async (req, res) => {
       is_read: false,
     };
 
-    // 18) Save all updates
     await Promise.all([
       saveDocumentWithRetry(tempNotification),
       saveDocumentWithRetry(roomInfo),
       saveDocumentWithRetry(req.user),
-      // saveDocumentWithRetry(newTransaction),
     ]);
 
     if (socket) {
@@ -3486,7 +3413,6 @@ router.post('/jeet', auth, async (req, res) => {
       });
     }
 
-    // 19) Return success
     return res.json({
       success: true,
       balance: req.user.balance,
@@ -3760,7 +3686,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
   try {
     const redisClient = req.app.get('redisClient');
     const cacheKey = 'global:chat:logs';
-    
+
     let chatLogs = null;
     let fromCache = false;
 

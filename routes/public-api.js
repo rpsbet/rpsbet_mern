@@ -84,10 +84,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       is_private = false,
       endgame_amount,
       endgame_type,
-      selectedStrategy,
       description = '',
       room_password = '',
-      qs_nation = '',
 
       // Image generation options
       generateImage = true, // Generate image from prompt if no imageUrls provided
@@ -379,11 +377,9 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       room_password,
       bet_amount: amountAfterFee,
       is_private,
-      qs_nation,
       battles: 0,
       hosts: [hostObj],
       game_type: gameTypeDoc,
-      qs_game_type: 2,
       user_bet: amountAfterFee,
       tax,
       name,
@@ -394,7 +390,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       prompt: reactPrompt,
       telegram_link,
       website_link,
-      selectedStrategy,
       pr: 0,
       total_stakes: amountAfterFee,
       endgame_amount: endgame_type ? endgame_amount : amountAfterFee,

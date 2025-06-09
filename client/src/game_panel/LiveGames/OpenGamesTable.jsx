@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   getRoomList,
   actionRoom,
-  setRoomList,
-  getRecentlyClosed,
+  setRoomList, // <--- Consider if this is truly needed for local manipulation
+  getTopGameTypes,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
 import {
   TrendingUpOutlined,
   TrendingDownOutlined,
   LockOutlined,
-  Add,
-  Remove,
 } from '@mui/icons-material';
 import {
   AvatarGroup,
@@ -22,14 +20,15 @@ import {
   Typography,
   Skeleton,
   Box,
-  Button,
+  TextField,
   Card,
   Chip,
-  Link,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import SchoolIcon from '@mui/icons-material/School';
-
+import CategoryIcon from '@mui/icons-material/Category';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   faHeart,
   faHeartBroken,
@@ -54,7 +53,6 @@ import { LikeDislikeView } from '../../components/LikeDislikeView';
 
 function OpenGamesTable(props) {
   const {
-    selectedGameType,
     loading: propLoading,
     isDarkMode: propIsDarkMode,
     showPlayerModal,
@@ -69,80 +67,114 @@ function OpenGamesTable(props) {
 
   const dispatch = useDispatch();
 
-  const recentlyClosed = useSelector(state => state.logic.recentlyClosed, isEqual);
+  const topGameTypes = useSelector(state => state.logic.topGameTypes || [], isEqual);
   const user = useSelector(state => state.auth.user, isEqual);
   const highlightedRooms = useSelector(state => state.logic.highlightedRooms, isEqual);
   const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
   const solPrice = useSelector(state => state.logic.solPrice);
-  const roomList = useSelector(state => state.logic.roomList, isEqual);
-  const connectedAccount = useSelector(state => state.auth.connectedAccount);
+  const roomList = useSelector(state => state.logic.roomList || [], isEqual);
+  const isDarkMode = useSelector(state => state.auth.isDarkMode)
 
   const effectiveLoading = propLoading !== undefined ? propLoading : loading;
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
   const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
 
-  const [localRoomList, setLocalRoomList] = useState(roomList);
-  const [filter, setFilter] = useState('BEAT THE HOUSE');
+  // No longer directly storing roomList in local state for primary display
+  // const [localRoomList, setLocalRoomList] = useState(roomList); // REMOVE THIS STATE
+
+  const [selectedGameType, setSelectedGameType] = useState('All');
   const [page, setPage] = useState(1);
-  const [loadingRecent, setLoadingRecent] = useState(true);
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [gameTypeSearch, setGameTypeSearch] = useState('');
 
   const theme = getCustomTheme(effectiveIsDarkMode);
 
   const pageSize = 30;
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const displayedRooms = roomList.slice(startIndex, endIndex);
-  const prevRoomListRef = useRef(roomList);
 
-  useEffect(() => {
-    dispatch(getRoomList());
-  }, [dispatch]);
+  // `processedRoomList` will be the source of truth for display, derived from Redux `roomList`
+  const processedRoomList = useMemo(() => {
+    let currentRooms = [...roomList]; // Start with a copy of Redux roomList
 
-  useEffect(() => {
-    if (!isEqual(prevRoomListRef.current, roomList)) {
-      prevRoomListRef.current = roomList;
-    }
-    const mergedRooms = [
-      ...roomList,
-      ...localRoomList.filter(
-        (room) => !roomList.some((newRoom) => newRoom._id === room._id),
-      ),
-    ];
-
-    const extraRoomsInState = localRoomList.some(
-      (stateRoom) =>
-        !roomList.some((propRoom) => propRoom._id === stateRoom._id),
-    );
-    if (extraRoomsInState) {
-      setLocalRoomList([...roomList]);
-      return;
-    }
-
+    // Apply highlighting logic
     const highlightId = Array.from(highlightedRooms)[0];
     if (highlightId) {
-      const index = mergedRooms.findIndex((r) => r._id === highlightId);
+      const index = currentRooms.findIndex((r) => r._id === highlightId);
       if (index !== -1 && index !== 0) {
-        const [highlighted] = mergedRooms.splice(index, 1);
-        mergedRooms.unshift(highlighted);
-        dispatch(setRoomList(mergedRooms));
+        const [highlighted] = currentRooms.splice(index, 1);
+        currentRooms.unshift(highlighted);
       }
     }
-    setLocalRoomList(mergedRooms);
-  }, [roomList, highlightedRooms, dispatch]);
+    return currentRooms;
+  }, [roomList, highlightedRooms]);
 
-  const handleChangePage = (event, newPage) => {
+
+  // Use useMemo for displayedRooms to apply game type filtering
+  const displayedRooms = useMemo(() => {
+    let filtered = processedRoomList; // Start with the processed list (potentially highlighted)
+
+    if (selectedGameType !== 'All') {
+      filtered = filtered.filter(room =>
+        Array.isArray(room.game_type)
+          ? room.game_type.some(type => type.toLowerCase() === selectedGameType.toLowerCase())
+          : room.game_type && room.game_type.toLowerCase() === selectedGameType.toLowerCase()
+      );
+    }
+    // Apply search filter if gameTypeSearch is not empty
+    if (gameTypeSearch) {
+        const lowerCaseSearch = gameTypeSearch.toLowerCase();
+        filtered = filtered.filter(room => {
+            const roomGameTypes = Array.isArray(room.game_type) ? room.game_type : [room.game_type];
+            return roomGameTypes.some(type => type.toLowerCase().includes(lowerCaseSearch)) ||
+                   room.name.toLowerCase().includes(lowerCaseSearch) ||
+                   room.description.toLowerCase().includes(lowerCaseSearch);
+        });
+    }
+
+    return filtered;
+  }, [processedRoomList, selectedGameType, gameTypeSearch]); // Depend on processedRoomList and filters
+
+  const paginatedRooms = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return displayedRooms.slice(startIndex, endIndex);
+  }, [displayedRooms, page, pageSize]);
+
+  // Removed prevRoomListRef as localRoomList is no longer the primary state
+
+  useEffect(() => {
+    // Initial fetch of all rooms
+    dispatch(getRoomList({ game_type: 'All' }));
+    // Fetch top game types on component mount
+    dispatch(getTopGameTypes());
+  }, [dispatch]);
+
+  // Removed the problematic useEffect that was updating localRoomList and roomList in a loop
+  // The highlighting logic is now within processedRoomList useMemo.
+
+  const handleChangePage = useCallback((event, newPage) => {
     setPage(newPage);
-  };
+  }, []);
 
-  const customFromNow = (date) => {
+  const handleGameTypeChange = useCallback((gameType) => {
+    setSelectedGameType(gameType);
+    setPage(1); // Reset pagination when changing filter
+    setGameTypeSearch(''); // Clear search when changing main game type filter
+
+    // Fetch rooms for the selected game type if it's not 'All'
+    // If 'All' is selected, your initial `getRoomList({ game_type: 'All' })` should cover it.
+    // However, if you want to explicitly re-fetch, you can.
+    // For now, `roomList` (from Redux) will update and trigger `processedRoomList` & `displayedRooms` recalculation.
+    // This dispatch might be redundant if the initial fetch gets all, and subsequent filters are client-side.
+    // If your backend endpoint truly filters by game_type, then keep this.
+    dispatch(getRoomList({ game_type: gameType }));
+  }, [dispatch]);
+
+  const customFromNow = useCallback((date) => {
     const now = new Date();
     const dateObj = new Date(date);
     const style = { fontSize: 'xx-small' };
-  
+
     if (!isValid(dateObj)) return 'Invalid Date';
-  
+
     const seconds = differenceInSeconds(now, dateObj);
     if (seconds < 60) {
       return (
@@ -152,7 +184,7 @@ function OpenGamesTable(props) {
         </>
       );
     }
-  
+
     const minutes = differenceInMinutes(now, dateObj);
     if (minutes < 60) {
       return (
@@ -162,7 +194,7 @@ function OpenGamesTable(props) {
         </>
       );
     }
-  
+
     const hours = differenceInHours(now, dateObj);
     if (hours < 24) {
       return (
@@ -172,7 +204,7 @@ function OpenGamesTable(props) {
         </>
       );
     }
-  
+
     const days = differenceInDays(now, dateObj);
     return (
       <>
@@ -180,27 +212,21 @@ function OpenGamesTable(props) {
         <span style={style}>d</span>
       </>
     );
-  };
-  
-  const updateFromNow = (historyArr) => {
-    const result = JSON.parse(JSON.stringify(historyArr));
-    for (let i = 0; i < result.length; i++) {
-      result[i]['from_now'] = customFromNow(result[i]['updated_at']);
-    }
-    return result;
-  };
+  }, []);
 
-  const handleFilterChange = useCallback(
-    async (option) => {
-      setFilter(option);
-      if (option === 'RECENTLY MINTED') {
-        setLoadingRecent(true);
-        await dispatch(getRecentlyClosed());
-        setLoadingRecent(false);
-      }
-    },
-    [dispatch],
-  );
+  const handleGameTypeSearchChange = useCallback((event) => {
+    const value = event.target.value;
+    setGameTypeSearch(value);
+    setPage(1); // Reset pagination on search change
+    // Filtering based on search happens in `displayedRooms` useMemo
+  }, []);
+
+  const handleGameTypeChipClick = useCallback((tag) => {
+    setSelectedGameType(tag); // Set the selected game type for the main filter
+    setGameTypeSearch(''); // Clear the search input if a chip is clicked
+    setPage(1); // Reset pagination on chip click
+    dispatch(getRoomList({ game_type: tag })); // Fetch rooms for the selected game type
+  }, [dispatch]);
 
   const joinRoom = useCallback(
     (roomDetails) => {
@@ -214,291 +240,126 @@ function OpenGamesTable(props) {
     [dispatch],
   );
 
-  const getColorClass = (value) => {
-    if (value > 0) return { bg: 'rgba(211, 47, 47, 0.15)', border: 'rgba(211, 47, 47, 0.4)', text: '#FF0000' }; // Red for deposit
-    if (value === 0) return { bg: 'rgba(128, 128, 128, 0.15)', border: 'rgba(128, 128, 128, 0.4)', text: '#808080' }; // Grey for zero
-    return { bg: 'rgba(3, 255, 59, 0.15)', border: 'rgba(3, 255, 59, 0.4)', text: '#03ff3b' }; // Green for withdrawal
-  };
+  const getColorClass = useCallback((value) => {
+    if (value > 0) return { color: '#FF0000' }; // Red for deposit
+    if (value === 0) return { color: '#808080' }; // Grey for zero
+    return { color: '#03ff3b' }; // Green for withdrawal
+  }, []);
 
-  const isLiveGames = filter === 'BEAT THE HOUSE';
-  const recent = recentlyClosed ? updateFromNow(recentlyClosed) : [];
 
   return (
-
     <ThemeProvider theme={theme}>
-      {showPlayerModal && (
-        <PlayerModal
-          selectedCreator={selectedCreator}
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-        />
-      )}
-
-      <Box
-        sx={{
-          ml: 3,
-          mr: 3,
-          display: 'flex',
-          justifyContent: 'flex-start',
-          marginBottom: '24px',
-          gap: '12px',
-          // Enable horizontal scrolling on mobile
-          overflowX: { xs: 'auto', sm: 'visible' },
-          flexWrap: { xs: 'nowrap', sm: 'wrap' },
-          whiteSpace: { xs: 'nowrap', sm: 'normal' },
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: { xs: 'thin', sm: 'none' },
-          '&::-webkit-scrollbar': {
-            height: { xs: '6px', sm: '0px' },
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: { xs: 'rgba(0, 0, 0, 0.15)', sm: 'transparent' },
-            borderRadius: '3px',
-          },
-        }}
-      >
-        <Chip
-          icon={<TrendingUpIcon sx={{ p: 0.5 }} />}
-          label="BEAT THE HOUSE"
-          onClick={() => handleFilterChange('BEAT THE HOUSE')}
-          color={filter === 'BEAT THE HOUSE' ? 'error' : 'default'}
-          variant={filter === 'BEAT THE HOUSE' ? 'filled' : 'outlined'}
-          clickable
+      <>
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        )}
+        <Box
           sx={{
-            fontWeight: 600,
-            letterSpacing: '0.5px',
-            '&:hover': {
-              transform: 'translateY(-1px)',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+            ml: 3,
+            mr: 3,
+            display: 'flex',
+            justifyContent: 'flex-start',
+            marginBottom: '24px',
+            gap: '12px',
+            overflowX: { xs: 'auto', sm: 'visible' },
+            flexWrap: { xs: 'nowrap', sm: 'wrap' },
+            whiteSpace: { xs: 'nowrap', sm: 'normal' },
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: { xs: 'thin', sm: 'none' },
+            '&::-webkit-scrollbar': {
+              height: { xs: '6px', sm: '0px' },
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: { xs: 'rgba(0, 0, 0, 0.15)', sm: 'transparent' },
+              borderRadius: '3px',
             },
           }}
-        />
-        <Chip
-          icon={<SchoolIcon sx={{ p: 0.5 }} />}
-          label="RECENTLY MINTED"
-          onClick={() => handleFilterChange('RECENTLY MINTED')}
-          color={filter === 'RECENTLY MINTED' ? 'error' : 'default'}
-          variant={filter === 'RECENTLY MINTED' ? 'filled' : 'outlined'}
-          clickable
-          sx={{
-            fontWeight: 600,
-            letterSpacing: '0.5px',
-            '&:hover': {
-              transform: 'translateY(-1px)',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
-            },
-          }}
-        />
-      </Box>
+        >
+          {/* All Games chip */}
+          <Chip
+            label="All Games"
+            onClick={() => handleGameTypeChange('All')}
+            color={selectedGameType === 'All' ? 'error' : 'default'}
+            variant={selectedGameType === 'All' ? 'filled' : 'outlined'}
+            clickable
+            sx={{
+              fontWeight: 600,
+              letterSpacing: '0.5px',
+              '&:hover': {
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+              },
+            }}
+          />
 
-      {filter === 'RECENTLY WD / DP' ? (
-        <Box sx={{ px: 3 }}>
-          <Grid container spacing={3}>
-            {loadingTransactions ? (
-              Array.from({ length: 8 }).map((_, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={index}>
-                  <Card
-                    sx={{
-                      p: 3,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                      borderRadius: '16px',
-                      border: effectiveIsDarkMode 
-                        ? '1px solid rgba(255, 255, 255, 0.08)' 
-                        : '1px solid rgba(0, 0, 0, 0.06)',
-                      boxShadow: effectiveIsDarkMode
-                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-                        : '0 4px 20px rgba(0, 0, 0, 0.08)',
-                      height: '220px',
-                    }}
-                  >
-                    <Skeleton
-                      variant="circular"
-                      width={56}
-                      height={56}
-                      sx={{
-                        mb: 2,
-                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      width="85%"
-                      height={24}
-                      sx={{
-                        mb: 1,
-                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      width="50%"
-                      height={16}
-                      sx={{
-                        mb: 3,
-                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                    <Skeleton
-                      variant="rounded"
-                      width="90%"
-                      height={40}
-                      sx={{
+          {/* Top game type chips */}
+          {topGameTypes.map((gameType) => (
+            <Chip
+              key={gameType}
+              label={gameType.toUpperCase()}
+              onClick={() => handleGameTypeChipClick(gameType)} // Use handleGameTypeChipClick
+              color={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'error' : 'default'}
+              variant={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'filled' : 'outlined'}
+              clickable
+              sx={{
+                fontWeight: 600,
+                letterSpacing: '0.5px',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+                },
+              }}
+            />
+          ))}
+
+            {/* Search Input */}
+            <TextField
+                value={gameTypeSearch}
+                onChange={handleGameTypeSearchChange}
+                placeholder="Search rooms..."
+                variant="outlined"
+                size="small"
+                sx={{
+                    ml: { xs: 0, sm: 2 },
+                    minWidth: { xs: '150px', sm: '200px' },
+                    flexShrink: 0,
+                    '& .MuiOutlinedInput-root': {
                         borderRadius: '12px',
-                        backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                  </Card>
-                </Grid>
-              ))
-            ) : recentTransactions.length === 0 ? (
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    textAlign: 'center',
-                    py: 8,
-                    px: 3,
-                  }}
-                >
-                  <Typography 
-                    variant="h6" 
-                    color="text.secondary"
-                    sx={{ 
-                      fontWeight: 500,
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    NO RECENT TRANSACTIONS
-                  </Typography>
-                </Box>
-              </Grid>
-            ) : (
-              recentTransactions.map((transaction) => (
-                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={transaction._id}>
-                  <Card
-                    sx={{
-                      p: 3,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                      borderRadius: '16px',
-                      border: effectiveIsDarkMode 
-                        ? '1px solid rgba(255, 255, 255, 0.08)' 
-                        : '1px solid rgba(0, 0, 0, 0.06)',
-                      boxShadow: effectiveIsDarkMode
-                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-                        : '0 4px 20px rgba(0, 0, 0, 0.08)',
-                      height: '220px',
-                      transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        boxShadow: effectiveIsDarkMode
-                          ? '0 8px 32px rgba(0, 0, 0, 0.4)'
-                          : '0 8px 32px rgba(0, 0, 0, 0.12)',
-                        borderColor: getColorClass(transaction.amount).border,
-                      },
-                    }}
-                  >
-                    <Box
-                      sx={{ cursor: 'pointer' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenPlayerModal(transaction.user?._id);
-                      }}
-                    >
-                      <Avatar
-                        alt={transaction.user?.username}
-                        username={transaction.user?.username}
-                        elite={transaction.user?.elite}
-                        src={transaction.user?.avatar}
-                        sx={{
-                          width: 56,
-                          height: 56,
-                          mb: 2,
-                          border: `2px solid ${getColorClass(transaction.amount).border}`,
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                            boxShadow: `0 0 20px ${getColorClass(transaction.amount).border}`,
-                          },
-                        }}
-                      />
-                    </Box>
-
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: '1.1rem',
-                        color: getColorClass(transaction.amount).text,
-                        textAlign: 'center',
-                        mb: 1,
-                        letterSpacing: '0.3px',
-                      }}
-                    >
-                      {transaction.amount > 0
-                        ? `DEPOSITED ${convertToCurrency(transaction.amount, effectiveSolPrice)}`
-                        : `WITHDREW ${convertToCurrency(Math.abs(transaction.amount), effectiveSolPrice)}`}
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        fontSize: '0.85rem',
-                        mb: 3,
-                        opacity: 0.8,
-                      }}
-                    >
-                      {customFromNow(transaction.created_at)}
-                    </Typography>
-
-                    <Link
-                      href={`https://solscan.io/tx/${transaction.hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        textDecoration: 'none',
-                        width: '100%',
-                        mt: 'auto',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '100%',
-                          py: 1.5,
-                          px: 2,
-                          borderRadius: '12px',
-                          backgroundColor: getColorClass(transaction.amount).bg,
-                          border: `1px solid ${getColorClass(transaction.amount).border}`,
-                          color: '#ffffff',
-                          textAlign: 'center',
-                          fontWeight: 600,
-                          fontSize: '0.9rem',
-                          letterSpacing: '0.3px',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            backgroundColor: getColorClass(transaction.amount).text,
-                            transform: 'scale(1.02)',
-                            boxShadow: `0 4px 16px ${getColorClass(transaction.amount).border}`,
-                          },
-                        }}
-                      >
-                        View on Solscan
-                      </Box>
-                    </Link>
-                  </Card>
-                </Grid>
-              ))
-            )}
-          </Grid>
+                        backgroundColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                        '& fieldset': {
+                            borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: theme.palette.error.main,
+                        },
+                    },
+                    '& .MuiInputBase-input': {
+                        color: effectiveIsDarkMode ? '#fff' : '#000',
+                    },
+                    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+                        color: effectiveIsDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+                    },
+                }}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <SearchIcon />
+                        </InputAdornment>
+                    ),
+                }}
+            />
         </Box>
-      ) : isLiveGames ? (
+
+        {/* Games Display */}
         <div className="table main-game-table open-games">
-          {displayedRooms.length === 0 || effectiveLoading ? (
+          {effectiveLoading ? (
             <Box sx={{ px: 3 }}>
               <Grid container spacing={3}>
                 {Array.from({ length: 9 }).map((_, index) => (
@@ -516,15 +377,15 @@ function OpenGamesTable(props) {
                         p: 3,
                         borderRadius: '20px',
                         backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                        border: effectiveIsDarkMode 
-                          ? '1px solid rgba(255, 255, 255, 0.08)' 
+                        border: effectiveIsDarkMode
+                          ? '1px solid rgba(255, 255, 255, 0.08)'
                           : '1px solid rgba(0, 0, 0, 0.06)',
                         boxShadow: effectiveIsDarkMode
                           ? '0 4px 20px rgba(0, 0, 0, 0.3)'
                           : '0 4px 20px rgba(0, 0, 0, 0.08)',
                       }}
                     >
-                      {/* Header section */}
+                      {/* Skeleton structure */}
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                         <Skeleton variant="rounded" width={52} height={52} sx={{ borderRadius: '12px', mr: 2 }} />
                         <Box sx={{ flexGrow: 1 }}>
@@ -533,11 +394,9 @@ function OpenGamesTable(props) {
                         </Box>
                         <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: '12px' }} />
                       </Box>
-
-                      {/* Battle section */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                         <Box sx={{ display: 'flex' }}>
-                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
+                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px'} } />
                           <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', ml: -1 }} />
                         </Box>
                         <Skeleton variant="circular" width={44} height={44} />
@@ -546,15 +405,11 @@ function OpenGamesTable(props) {
                           <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
                         </Box>
                       </Box>
-
-                      {/* Stats section */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
                         <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
                         <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
                         <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
                       </Box>
-
-                      {/* Health bar section */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ width: '60%' }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -582,26 +437,32 @@ function OpenGamesTable(props) {
                 px: 3,
               }}
             >
-              <Typography 
-                variant="h5" 
+              <Typography
+                variant="h5"
                 color="text.secondary"
-                sx={{ 
+                sx={{
                   fontWeight: 600,
                   letterSpacing: '0.5px',
                 }}
               >
-                NO LIVE GAMES, GO TO 'BE THE HOUSE' TO CREATE ONE
+                NO LIVE GAMES FOUND FOR THIS TYPE. GO TO 'BE THE HOUSE' TO CREATE ONE!
               </Typography>
             </Box>
           ) : (
             <Box sx={{ px: 3 }}>
               <Grid container spacing={3}>
-                {displayedRooms.map((row, index) => {
+                {paginatedRooms.map((row, index) => {
                   const progressPercentage = row.endgame_amount
                     ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
                     : 0;
 
-                  const isFirstItem = index === 0;
+                  // Apply highlighting only if it's explicitly set by Redux
+                  // This is handled by processedRoomList now, so no need for `isFirstItem` here for styling
+                  // unless you want a visual highlight that's independent of the Redux reordering.
+                  // For the sake of matching your original output and assuming `highlightedRooms` is for a visual cue,
+                  // I'll keep the `isFirstItem` logic.
+                  const isFirstItem = index === 0 && Array.from(highlightedRooms).includes(row._id);
+
 
                   return (
                     <Grid
@@ -625,7 +486,7 @@ function OpenGamesTable(props) {
                               right: '-3px',
                               bottom: '-3px',
                               borderRadius: '23px',
-                              background: '#ff0000',
+                              background: ' #ff0000',
                               backgroundSize: '300% 300%',
                               zIndex: 0,
                               animation: 'gradientBorder 3s ease-in-out infinite',
@@ -651,8 +512,8 @@ function OpenGamesTable(props) {
                             p: 3,
                             borderRadius: '20px',
                             backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                            border: effectiveIsDarkMode 
-                              ? '1px solid rgba(255, 255, 255, 0.08)' 
+                            border: effectiveIsDarkMode
+                              ? '1px solid rgba(255, 255, 255, 0.08)'
                               : '1px solid rgba(0, 0, 0, 0.06)',
                             boxShadow: effectiveIsDarkMode
                               ? '0 4px 20px rgba(0, 0, 0, 0.3)'
@@ -663,6 +524,7 @@ function OpenGamesTable(props) {
                             zIndex: 1,
                             display: 'flex',
                             flexDirection: 'column',
+                            height: '100%',
                             '&:hover': {
                               boxShadow: effectiveIsDarkMode
                                 ? '0 8px 32px rgba(0, 0, 0, 0.4)'
@@ -677,16 +539,16 @@ function OpenGamesTable(props) {
                                 borderRadius: '12px',
                                 overflow: 'hidden',
                                 mr: 2,
-                                border: effectiveIsDarkMode 
-                                  ? '1px solid rgba(255,255,255,0.1)' 
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255,255,255,0.1)'
                                   : '1px solid rgba(0,0,0,0.08)',
                                 width: 52,
                                 height: 52,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: effectiveIsDarkMode 
-                                  ? 'rgba(255,255,255,0.05)' 
+                                backgroundColor: effectiveIsDarkMode
+                                  ? 'rgba(255,255,255,0.05)'
                                   : 'rgba(0,0,0,0.02)',
                               }}
                             >
@@ -740,21 +602,21 @@ function OpenGamesTable(props) {
                             <Box
                               sx={{
                                 ml: 2,
-                                p: 1.5,
-                                borderRadius: '12px',
-                                backgroundColor: effectiveIsDarkMode 
-                                  ? 'rgba(255,255,255,0.05)' 
+                                p: '4px 8px',
+                                borderRadius: '8px',
+                                backgroundColor: effectiveIsDarkMode
+                                  ? 'rgba(255,255,255,0.05)'
                                   : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode 
-                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255,255,255,0.08)'
                                   : '1px solid rgba(0,0,0,0.05)',
                               }}
                             >
-                              <img
-                                src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
-                                alt={row.game_type?.short_name}
-                                style={{ width: 20, height: 20 }}
-                              />
+                              <Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: '0.5px' }}>
+                                {Array.isArray(row.game_type)
+                                    ? row.game_type.map(type => type.toUpperCase()).join(', ')
+                                    : (row.game_type ? row.game_type.toUpperCase() : 'N/A')}
+                              </Typography>
                             </Box>
                           </Box>
 
@@ -763,7 +625,7 @@ function OpenGamesTable(props) {
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
+                              justifyContent: 'space-around',
                               mb: 3,
                               position: 'relative',
                             }}
@@ -810,18 +672,18 @@ function OpenGamesTable(props) {
 
                             <Box
                               sx={{
-                                mx: 4,
+                                mx: 2,
                                 width: 44,
                                 height: 44,
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: effectiveIsDarkMode 
-                                  ? 'rgba(255,255,255,0.08)' 
+                                backgroundColor: effectiveIsDarkMode
+                                  ? 'rgba(255,255,255,0.08)'
                                   : 'rgba(0,0,0,0.06)',
-                                border: effectiveIsDarkMode 
-                                  ? '1px solid rgba(255,255,255,0.1)' 
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255,255,255,0.1)'
                                   : '1px solid rgba(0,0,0,0.08)',
                               }}
                             >
@@ -877,11 +739,11 @@ function OpenGamesTable(props) {
                                 textAlign: 'center',
                                 p: 2,
                                 borderRadius: '16px',
-                                backgroundColor: effectiveIsDarkMode 
-                                  ? 'rgba(255,255,255,0.05)' 
+                                backgroundColor: effectiveIsDarkMode
+                                  ? 'rgba(255,255,255,0.05)'
                                   : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode 
-                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255,255,255,0.08)'
                                   : '1px solid rgba(0,0,0,0.05)',
                               }}
                             >
@@ -902,7 +764,7 @@ function OpenGamesTable(props) {
                               <Typography
                                 variant="body1"
                                 sx={{
-                                  color: getColorClass(row.user_bet - row.bet_amount),
+                                  ...getColorClass(row.user_bet - row.bet_amount),
                                   fontWeight: 700,
                                   fontSize: '0.95rem',
                                   lineHeight: 1.2,
@@ -937,11 +799,11 @@ function OpenGamesTable(props) {
                                 textAlign: 'center',
                                 p: 2,
                                 borderRadius: '16px',
-                                backgroundColor: effectiveIsDarkMode 
-                                  ? 'rgba(255,255,255,0.05)' 
+                                backgroundColor: effectiveIsDarkMode
+                                  ? 'rgba(255,255,255,0.05)'
                                   : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode 
-                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255,255,255,0.08)'
                                   : '1px solid rgba(0,0,0,0.05)',
                               }}
                             >
@@ -976,11 +838,11 @@ function OpenGamesTable(props) {
                                 textAlign: 'center',
                                 p: 2,
                                 borderRadius: '16px',
-                                backgroundColor: effectiveIsDarkMode 
-                                  ? 'rgba(255,255,255,0.05)' 
+                                backgroundColor: effectiveIsDarkMode
+                                  ? 'rgba(255,255,255,0.05)'
                                   : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode 
-                                  ? '1px solid rgba(255,255,255,0.08)' 
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255,255,255,0.08)'
                                   : '1px solid rgba(0,0,0,0.05)',
                               }}
                             >
@@ -1048,8 +910,8 @@ function OpenGamesTable(props) {
                                 sx={{
                                   width: '100%',
                                   height: '10px',
-                                  backgroundColor: effectiveIsDarkMode 
-                                    ? 'rgba(255, 255, 255, 0.1)' 
+                                  backgroundColor: effectiveIsDarkMode
+                                    ? 'rgba(255, 255, 255, 0.1)'
                                     : 'rgba(0, 0, 0, 0.08)',
                                   borderRadius: '20px',
                                   overflow: 'hidden',
@@ -1094,12 +956,12 @@ function OpenGamesTable(props) {
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  backgroundColor: effectiveIsDarkMode 
-                                    ? 'rgba(0, 0, 0, 0.3)' 
+                                  backgroundColor: effectiveIsDarkMode
+                                    ? 'rgba(0, 0, 0, 0.3)'
                                     : 'rgba(255, 255, 255, 0.9)',
                                   backdropFilter: 'blur(8px)',
-                                  border: effectiveIsDarkMode 
-                                    ? '1px solid rgba(255, 255, 255, 0.1)' 
+                                  border: effectiveIsDarkMode
+                                    ? '1px solid rgba(255, 255, 255, 0.1)'
                                     : '1px solid rgba(0, 0, 0, 0.08)',
                                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                 }}
@@ -1129,214 +991,23 @@ function OpenGamesTable(props) {
                 '& .MuiPaginationItem-root': {
                   borderRadius: '12px',
                   fontWeight: 600,
-                  border: effectiveIsDarkMode 
-                    ? '1px solid rgba(255, 255, 255, 0.1)' 
+                  border: effectiveIsDarkMode
+                    ? '1px solid rgba(255, 255, 255, 0.1)'
                     : '1px solid rgba(0, 0, 0, 0.1)',
                   '&:hover': {
-                    backgroundColor: effectiveIsDarkMode 
-                      ? 'rgba(255, 255, 255, 0.05)' 
+                    backgroundColor: effectiveIsDarkMode
+                      ? 'rgba(255, 255, 255, 0.05)'
                       : 'rgba(0, 0, 0, 0.04)',
                   },
                 },
               }}
-              count={Math.ceil(roomList.length / pageSize)}
+              count={Math.ceil(displayedRooms.length / pageSize)}
               page={page}
               onChange={handleChangePage}
             />
           </Box>
         </div>
-      ) : (
-        <Box sx={{ px: 3 }}>
-          <Grid container spacing={3}>
-            {loadingRecent ? (
-              Array.from({ length: 8 }).map((_, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={index}>
-                  <Card
-                    sx={{
-                      p: 3,
-                      borderRadius: '20px',
-                      backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                      border: effectiveIsDarkMode 
-                        ? '1px solid rgba(255, 255, 255, 0.08)' 
-                        : '1px solid rgba(0, 0, 0, 0.06)',
-                      boxShadow: effectiveIsDarkMode
-                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-                        : '0 4px 20px rgba(0, 0, 0, 0.08)',
-                      height: '200px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    {/* Header skeleton */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Skeleton variant="rounded" width={36} height={36} sx={{ mr: 2, borderRadius: '8px' }} />
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Skeleton variant="text" width="80%" height={20} sx={{ mb: 0.5 }} />
-                        <Skeleton variant="text" width="60%" height={14} />
-                      </Box>
-                    </Box>
-
-                    {/* Icons row skeleton */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <Skeleton variant="circular" width={16} height={16} />
-                      <Skeleton variant="text" width={40} height={16} />
-                      <Skeleton variant="circular" width={16} height={16} />
-                    </Box>
-
-                    {/* Amount skeleton */}
-                    <Box sx={{ mt: 'auto', textAlign: 'center' }}>
-                      <Skeleton variant="text" width="70%" height={24} sx={{ mx: 'auto' }} />
-                    </Box>
-                  </Card>
-                </Grid>
-              ))
-            ) : recent.length === 0 ? (
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    textAlign: 'center',
-                    py: 12,
-                    px: 3,
-                  }}
-                >
-                  <Typography 
-                    variant="h5" 
-                    color="text.secondary"
-                    sx={{ 
-                      fontWeight: 600,
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    NO RECENT GRADS
-                  </Typography>
-                </Box>
-              </Grid>
-            ) : (
-              recent.map((row) => {
-                const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
-                return (
-                  <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={row._id}>
-                    <Card
-                      onClick={() => (window.location.href = `/join/${row._id}`)}
-                      sx={{
-                        p: 3,
-                        borderRadius: '20px',
-                        backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                        border: effectiveIsDarkMode 
-                          ? '1px solid rgba(255, 255, 255, 0.08)' 
-                          : '1px solid rgba(0, 0, 0, 0.06)',
-                        boxShadow: effectiveIsDarkMode
-                          ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-                          : '0 4px 20px rgba(0, 0, 0, 0.08)',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                        height: '200px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        '&:hover': {
-                          boxShadow: effectiveIsDarkMode
-                            ? '0 8px 32px rgba(0, 0, 0, 0.4)'
-                            : '0 8px 32px rgba(0, 0, 0, 0.12)',
-                        },
-                      }}
-                    >
-                      {/* Header */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        {row.image && (
-                          <Box
-                            sx={{
-                              mr: 2,
-                              borderRadius: '8px',
-                              overflow: 'hidden',
-                              border: effectiveIsDarkMode 
-                                ? '1px solid rgba(255,255,255,0.1)' 
-                                : '1px solid rgba(0,0,0,0.08)',
-                              width: 36,
-                              height: 36,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: effectiveIsDarkMode 
-                                ? 'rgba(255,255,255,0.05)' 
-                                : 'rgba(0,0,0,0.02)',
-                            }}
-                          >
-                            <img
-                              src={row.image}
-                              alt=""
-                              style={{ width: 32, height: 32, objectFit: 'cover' }}
-                            />
-                          </Box>
-                        )}
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '1rem',
-                              mb: 0.25,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {row.name}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              fontSize: '0.8rem',
-                              opacity: 0.8,
-                            }}
-                          >
-                            {`${row.game_type.short_name}-${row.room_number}`}
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      {/* Meta info */}
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.5,
-                          mb: 3,
-                          color: 'text.secondary',
-                          fontSize: '0.85rem',
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <FontAwesomeIcon icon={faStopwatch} style={{ fontSize: '14px' }} />
-                          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                            {customFromNow(row.created_at)}
-                          </Typography>
-                        </Box>
-                        <FontAwesomeIcon icon={faHeartBroken} style={{ fontSize: '14px' }} />
-                      </Box>
-
-                      {/* Amount */}
-                      <Box sx={{ mt: 'auto', textAlign: 'center' }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 700,
-                            fontSize: '1.1rem',
-                            color: getColorClass(hostPrizeMinusBetAmount),
-                            letterSpacing: '0.3px',
-                          }}
-                        >
-                          {convertToCurrency(hostPrizeMinusBetAmount, effectiveSolPrice)}
-                        </Typography>
-                      </Box>
-                    </Card>
-                  </Grid>
-                );
-              })
-            )}
-          </Grid>
-        </Box>
-      )}
+      </>
     </ThemeProvider>
   );
 }

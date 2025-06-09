@@ -79,9 +79,9 @@ function CreateGame() {
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
   const [isAutopopulating, setIsAutopopulating] = useState(false);
   const [step, setStep] = useState(1);
-  const [gameType, setGameType] = useState(9);
-  const [gameMode, setGameModeLocal] = useState('Custom');
-  const [selectedGameType, setSelectedGameType] = useState('Custom');
+  const [gameType, setGameType] = useState('strategy');
+  const [gameMode, setGameModeLocal] = useState('strategy');
+  const [selectedGameType, setSelectedGameType] = useState('strategy');
   const [tax, setTax] = useState(5);
   const [name, setName] = useState('');
   const [image, setImage] = useState('');

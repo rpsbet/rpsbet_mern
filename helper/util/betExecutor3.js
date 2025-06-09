@@ -535,7 +535,7 @@ const addToQueue = async (req, bot = false) => {
       // Get room information with populated relations
       roomInfo = await Room.findOne({ _id: req.body._id })
         .select(
-          'name image tax ticker prompt room_number updated_at battles selectedStrategy game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
+          'name image tax ticker prompt room_number updated_at battles game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
         )
         .populate({
           path: 'creator',

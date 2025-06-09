@@ -81,8 +81,6 @@ function TabbedContent(props) {
     handleClosePlayerModal,
     join,
     handleSwitchChange,
-    updateUserStrategy,
-    updateUserPrompt,
     actionList,
     getRoomData,
     bet_amount,
@@ -442,8 +440,6 @@ function TabbedContent(props) {
                   join={join}
                   result={result}
                   gameResult={gameResult}
-                  updateUserStrategy={updateUserStrategy}
-                  updateUserPrompt={updateUserPrompt}
                   borderColor={borderColor}
                   bgColorChanged={bgColorChanged}
                   user_id={user_id}
