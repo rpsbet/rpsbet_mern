@@ -54,7 +54,6 @@ function PrivyLogin() {
         
         await Promise.all(dataPromises);
 
-        navigate('/');
       } else {
         console.error('Authentication failed:', authResult);
       }

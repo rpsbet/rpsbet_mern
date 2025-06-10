@@ -744,7 +744,7 @@ export const userSignOut = (clear_token, navigate) => async (dispatch) => {
       dispatch({ type: 'LOGOUT' });
 
       // Navigate
-      navigate('/');
+      // navigate('/');
 
       // Show success message
       dispatch({ type: 'MSG_SUCCESS', payload: data.message });

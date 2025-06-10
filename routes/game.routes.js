@@ -1322,183 +1322,119 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 
 router.get('/room/:id', async (req, res) => {
   const roomId = req.params.id;
-  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+  const limit  = Number.parseInt(req.query.limit, 10) || 10;
   const cacheKey = `room:${roomId}:limit:${limit}`;
-
   const redisClient = req.app.get('redisClient');
 
-  let cached;
+  // 1️⃣ Try the cache first
   try {
-    cached = await redisClient.get(cacheKey);
-  } catch (redisErr) {
-    console.error('Redis error, bypassing cache:', redisErr);
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+  } catch (err) {
+    console.error('Redis GET failed, bypassing cache:', err);
   }
 
-  if (cached) {
-    return res.json(JSON.parse(cached));
-  }
-
   try {
-    // Fetch room data
-    const room = await Room.findOne({ _id: roomId })
-      .select(
-        '_id name image ticker pool_id gameCode x_link tax website_link telegram_link ' +
-        'created_at likes dislikes creator hosts endgame_amount endgame_type description ' +
-        'joiners game_type bet_amount user_bet host_pr pr room_number battles ' +
-        'status is_private'
-      )
-      // No longer populate game_type directly from Room schema as it's now an array of strings.
-      // .populate({ path: 'game_type', model: GameType, select: 'game_type_name short_name' })
-      .populate({
-        path: 'creator', // Ensure creator is populated if room.creator is only an ID
-        model: User,
-        select: 'username avatar totalWagered accessory elite',
-      })
-      .populate({
-        path: 'joiners',
-        model: User,
-        select: '_id avatar username accessory elite totalWagered status'
-      })
+    // 2️⃣ Fetch the room
+    const roomPromise = Room.findById(roomId)
+      .select([
+        '_id','name','image','ticker','pool_id','gameCode',
+        'x_link','tax','website_link','telegram_link',
+        'created_at','likes','dislikes','creator','hosts',
+        'endgame_amount','endgame_type','description',
+        'joiners','game_type','bet_amount','user_bet',
+        'host_pr','pr','room_number','battles',
+        'status','is_private'
+      ].join(' '))
+      .populate('creator', 'username avatar totalWagered accessory elite')
+      .populate('joiners', '_id avatar username accessory elite totalWagered status')
       .lean();
+
+    // 3️⃣ Fetch logs + count in parallel
+    const logsPromise = GameLog.find({ room: roomId })
+      .select('bet_amount created_at game_type creator joined_user')
+      .sort({ created_at: -1 })
+      .limit(limit)
+      .populate('game_type', 'short_name game_type_name')
+      .populate('creator',   '_id avatar username accessory elite totalWagered')
+      .populate('joined_user','_id avatar username accessory elite totalWagered')
+      .lean();
+
+    const countPromise = GameLog.countDocuments({ room: roomId });
+
+    const [ room, gameLogList, totalGameLogsCount ] = await Promise.all([
+      roomPromise, logsPromise, countPromise
+    ]);
 
     if (!room) {
       return res.status(404).json({ success: false, err: 'Room not found' });
     }
 
-    // Fetch game logs
-    const gameLogQuery = GameLog.find({ room: room._id })
-      .select('bet_amount created_at room game_type creator joined_user')
-      .sort({ created_at: -1 })
-      .populate({
-        path: 'room',
-        model: Room,
-        select: '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link commission username creator status hosts room_number bet_amount user_bet host_pr created_at name', // Do NOT select game_type from room here, as it's an array.
-      })
-      .populate({
-        path: 'game_type', // This refers to GameLog's game_type, which is still an ObjectId to GameType
-        model: GameType,
-        select: 'short_name game_type_name',
-      })
-      .populate({
-        path: 'creator',
-        model: User,
-        select: '_id avatar username accessory elite totalWagered',
-      })
-      .populate({
-        path: 'joined_user',
-        model: User,
-        select: '_id avatar username accessory elite totalWagered',
-      })
-      .limit(limit)
-      .lean();
-
-    const totalGameLogsCount = await GameLog.countDocuments({ room: room._id });
-    const gameLogList = await gameLogQuery;
-
-    // Creator is populated directly in the `room` object.
-    const creator = room.creator;
-
-    // Joiners are already populated in room
-    const joiners = room.joiners;
-
-    // Convert game logs to history style
+    // 4️⃣ Convert logs to your history style
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
+    // 5️⃣ Compute total stakes from hosts.share
+    const totalStakes = room.hosts.reduce((sum, h) => sum + (h.share || 0), 0);
+
+    // 6️⃣ Build response
     const response = {
       success: true,
-      query: req.query,
+      query:   req.query,
       roomInfo: {
-        _id: room._id,
-        name: room.name,
-        image: room.image,
-        ticker: room.ticker,
-        pool_id: room.pool_id,
-        gameCode: room.gameCode,
-        x_link: room.x_link,
-        tax: room.tax,
-        website_link: room.website_link,
-        telegram_link: room.telegram_link,
-        created_at: room.created_at,
-        likes: room.likes,
-        dislikes: room.dislikes,
-        creator_id: creator._id, // Use _id from the populated creator
-        username: creator?.username || '',
-        creator_avatar: creator?.avatar || '',
-        rank: creator?.totalWagered || 0,
-        accessory: creator?.accessory || '',
-        elite: creator?.elite || '',
-        hosts: room.hosts.map((host) => ({
-          host: host.host,
-          username: host.username,
-          avatar: host.avatar,
-          rank: host.rank,
-          accessory: host.accessory,
-          elite: host.elite,
-          share: host.share,
-          walletAddress: host.walletAddress,
-        })),
-        endgame_amount: room.endgame_amount,
-        endgame_type: room.endgame_type,
-        description: room.description,
-        joiners: joiners,
-        // Game_type is now an array of strings directly from the room object
-        game_type: room.game_type || [], // Ensure it's an array, default to empty array
-        bet_amount: parseFloat(room.bet_amount || 0),
-        user_bet: parseFloat(room.user_bet || 0),
-        host_pr: room.host_pr,
-        pr: room.pr,
-        // Room_name needs to be constructed from the game_type array.
-        // Let's use the first tag, or a default if no tags.
-        room_name: (room.game_type && room.game_type.length > 0 ? room.game_type[0] : 'Unknown') + '-' + room.room_number,
-        total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
-        qs_game_type: room.qs_game_type,
-        battles: room.battles,
-        rps_game_type: room.rps_game_type,
-        room_history: roomHistory,
-        status: room.status,
-        is_private: room.is_private,
-        game_log_list: gameLogList.map(({ bet_amount }) => bet_amount),
+        _id:             room._id,
+        name:            room.name,
+        image:           room.image,
+        ticker:          room.ticker,
+        pool_id:         room.pool_id,
+        gameCode:        room.gameCode,
+        x_link:          room.x_link,
+        tax:             room.tax,
+        website_link:    room.website_link,
+        telegram_link:   room.telegram_link,
+        created_at:      room.created_at,
+        likes:           room.likes.length,
+        dislikes:        room.dislikes.length,
+        creator_id:      room.creator._id,
+        username:        room.creator.username,
+        creator_avatar:  room.creator.avatar,
+        rank:            room.creator.totalWagered,
+        accessory:       room.creator.accessory,
+        elite:           room.creator.elite,
+        hosts:           room.hosts,
+        endgame_amount:  room.endgame_amount,
+        endgame_type:    room.endgame_type,
+        description:     room.description,
+        joiners:         room.joiners,
+        game_type:       room.game_type,
+        bet_amount:      Number(room.bet_amount),
+        user_bet:        Number(room.user_bet),
+        host_pr:         room.host_pr,
+        pr:              room.pr,
+        room_name:       `${room.game_type[0]||'Unknown'}-${room.room_number}`,
+        total_stakes:    totalStakes,
+        battles:         room.battles,
+        status:          room.status,
+        is_private:      room.is_private,
+        room_history:    roomHistory,
+        game_logs:       gameLogList,
       },
-      totalGameLogsCount: totalGameLogsCount,
+      totalGameLogsCount,
     };
 
+    // 7️⃣ Cache & return
     try {
       await redisClient.setEx(cacheKey, 60, JSON.stringify(response));
-    } catch (redisErr) {
-      console.error('Failed to cache:', redisErr);
+    } catch (err) {
+      console.error('Redis SETEX failed:', err);
     }
 
-    res.json(response);
+    return res.json(response);
+
   } catch (err) {
-    console.error('Error in /room/:id:', err);
-    res.json({ success: false, err: err.toString() });
-  }
-});
-
-router.post('/classify-game-types', auth, async (req, res) => {
-  try {
-    const { name, gameCode, prompt, description } = req.body;
-
-    if (!name && !gameCode && !prompt) {
-      return res.status(400).json({
-        error: 'Missing required data',
-        message: 'At least one of name, gameCode, or prompt is required for classification'
-      });
-    }
-
-    const gameTypes = await classifyGameTypes(name, gameCode, prompt, description);
-    
-    res.json({
-      success: true,
-      gameTypes: gameTypes
-    });
-
-  } catch (error) {
-    console.error('Error classifying game types:', error);
-    res.status(500).json({
-      error: 'Classification failed',
-      message: error.message || 'Failed to classify game types'
-    });
+    console.error('Error in GET /room/:id:', err);
+    return res.status(500).json({ success: false, err: err.toString() });
   }
 });
 
@@ -1794,18 +1730,23 @@ router.get('/topWins', async (req, res) => {
 // BACKEND: Enhanced Game History with Redis Caching
 // ============================================
 
-const getHistory = async (pageSize, my_id, game_type_filter, redisClient = null) => {
+const getHistory = async (
+  pageSize,
+  my_id,
+  game_type_filter,
+  redisClient = null
+) => {
   try {
     const cacheKey = `history:${pageSize}:${my_id || 'all'}:${game_type_filter}`;
+    let result = null,
+        fromCache = false;
 
-    let result = null;
-    let fromCache = false;
-
+    // ——————— Try cache ———————
     if (redisClient) {
       try {
-        const cachedHistory = await redisClient.get(cacheKey);
-        if (cachedHistory) {
-          result = JSON.parse(cachedHistory);
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+          result = JSON.parse(cached);
           fromCache = true;
         }
       } catch (redisErr) {
@@ -1814,95 +1755,84 @@ const getHistory = async (pageSize, my_id, game_type_filter, redisClient = null)
     }
 
     if (!result) {
-      const id_condition = {};
-      const game_type_search_condition = {};
+      const filters = [];
 
+      // ——————— Filter by user if requested ———————
       if (my_id) {
-        id_condition['$or'] = [{ creator: my_id }, { joined_user: my_id }];
+        const userId = ObjectId.isValid(my_id) ? ObjectId(my_id) : my_id;
+        filters.push({ $or: [{ creator: userId }, { joined_user: userId }] });
       }
 
-      // If a specific game_type is requested, filter GameLogs by the GameType _id
-      // This is because GameLog's game_type field still references GameType by ObjectId
-      if (game_type_filter !== 'All') {
-        const gameTypeDoc = await GameType.findOne({ game_type_name: game_type_filter.toLowerCase() }).select('_id');
-        if (gameTypeDoc) {
-          game_type_search_condition.game_type = gameTypeDoc._id;
+      // ——————— Filter by game type if requested ———————
+      if (game_type_filter && game_type_filter !== 'All') {
+        let gameTypeId = null;
+
+        // If they passed in an ObjectId string, use it directly
+        if (ObjectId.isValid(game_type_filter)) {
+          gameTypeId = ObjectId(game_type_filter);
         } else {
-          // If the game_type filter doesn't match a known GameType, return no results
-          return { history: [], count: 0, pageSize };
+          // Otherwise look up by name (case-insensitive)
+          const gameTypeDoc = await GameType
+            .findOne({ game_type_name: game_type_filter })
+            .collation({ locale: 'en', strength: 2 })  // case-insensitive
+            .select('_id');
+
+          if (gameTypeDoc) {
+            gameTypeId = gameTypeDoc._id;
+          } else {
+            // No such game type → empty result
+            result = { history: [], count: 0, pageSize };
+          }
+        }
+
+        if (gameTypeId) {
+          filters.push({ game_type: gameTypeId });
         }
       }
 
-      const search_condition_parts = [];
-      if (Object.keys(id_condition).length > 0) {
-        search_condition_parts.push(id_condition);
+      // Build the final Mongo filter
+      const finalCondition =
+        filters.length > 0 ? { $and: filters } : {};
+
+      // Only query if we haven’t already set `result` to empty
+      if (!result) {
+        const [ gameLogList, count ] = await Promise.all([
+          GameLog.find(finalCondition)
+            .sort({ created_at: -1 })
+            .limit(pageSize)
+            .populate({
+              path: 'room',
+              model: Room,
+              select: [
+                '_id','winnings','ticker','image','commission',
+                'creator','status','ai_mode','hosts',
+                'room_number','bet_amount','user_bet',
+                'host_pr','created_at','name'
+              ].join(' ')
+            })
+            .populate('game_type', 'short_name game_type_name')
+            .populate('creator',   '_id avatar accessory totalWagered username')
+            .populate('joined_user','_id avatar accessory totalWagered username')
+            .lean(),
+          GameLog.countDocuments(finalCondition)
+        ]);
+
+        const historyData = await convertGameLogToHistoryStyle(gameLogList);
+        result = { history: historyData, count, pageSize };
       }
-      if (Object.keys(game_type_search_condition).length > 0) {
-        search_condition_parts.push(game_type_search_condition);
-      }
 
-      // Use $and only if there are conditions to combine
-      const final_search_condition = search_condition_parts.length > 0 ? { $and: search_condition_parts } : {};
-
-
-      const gameLogQuery = GameLog.find(final_search_condition)
-        .sort({ created_at: 'desc' })
-        .limit(pageSize)
-        .populate({
-          path: 'room',
-          model: Room,
-          // Select room fields, but `game_type` here is an array of strings directly from Room
-          select: '_id winnings ticker image commission creator status ai_mode hosts room_number bet_amount user_bet host_pr created_at name',
-        })
-        .populate({
-          path: 'game_type', // This still populates from GameType collection via GameLog's ObjectId
-          model: GameType,
-          select: 'short_name game_type_name',
-        })
-        .populate({
-          path: 'creator',
-          model: User,
-          select: '_id avatar accessory totalWagered username', // Include username
-        })
-        .populate({
-          path: 'joined_user',
-          model: User,
-          select: '_id avatar accessory totalWagered username', // Include username
-        });
-
-      const countQuery = GameLog.countDocuments(final_search_condition);
-
-      const [gameLogList, count] = await Promise.all([gameLogQuery, countQuery]);
-
-      const historyData = await convertGameLogToHistoryStyle(gameLogList);
-
-      result = {
-        history: historyData,
-        count,
-        pageSize,
-      };
-
+      // ——————— Cache it ———————
       if (redisClient) {
-        let cacheDuration = 300; // 5 minutes default
-
-        if (my_id) {
-          cacheDuration = 600; // 10 minutes for personal history
-        } else {
-          cacheDuration = 180; // 3 minutes for global history
-        }
-
+        const ttl = my_id ? 600 : 180;  // personal: 10m, global: 3m
         try {
-          await redisClient.setEx(cacheKey, cacheDuration, JSON.stringify(result));
+          await redisClient.setEx(cacheKey, ttl, JSON.stringify(result));
         } catch (redisErr) {
           console.error('Failed to cache history:', redisErr);
         }
       }
     }
 
-    return {
-      ...result,
-      cached: fromCache
-    };
+    return { ...result, cached: fromCache };
   } catch (err) {
     console.error('Error in getHistory:', err);
     return false;
@@ -2292,28 +2222,27 @@ router.post('/rooms', auth, async (req, res) => {
       }
     }
 
-    // Ensure we have at least one game type
-    if (gameTypeNamesToStore.length === 0) {
-      gameTypeNamesToStore = ['casual'];
-    }
-
+    if (!gameTypeNamesToStore.length) gameTypeNamesToStore = ['casual'];
     // Create/find GameType documents for each tag (if you still need the GameType collection)
     let primaryGameTypeDoc = null;
-    for (const gameTypeName of gameTypeNamesToStore) {
-      let gameTypeDoc = await GameType.findOne({ game_type_name: gameTypeName });
-
-      if (!gameTypeDoc) {
-        gameTypeDoc = new GameType({
-          game_type_name: gameTypeName,
-          short_name: gameTypeName.slice(0, 3).toUpperCase(),
-        });
-        await gameTypeDoc.save();
-        console.log(`New GameType '${gameTypeName}' created.`);
-      }
-
-      if (!primaryGameTypeDoc) {
-        primaryGameTypeDoc = gameTypeDoc; // Set the first valid tag as the primary
-      }
+    for (const gtName of gameTypeNamesToStore) {
+      const doc = await GameType.findOneAndUpdate(
+        { game_type_name: gtName },
+        { // only set short_name on insert
+          $setOnInsert: {
+            short_name: gtName.slice(0, 3).toUpperCase(),
+            created_at: Date.now(),
+            updated_at: Date.now()
+          }
+        },
+        {
+          new: true,            // return the doc after update/insert
+          upsert: true,         // create if missing
+          setDefaultsOnInsert: true,
+          collation: { locale: 'en', strength: 2 }
+        }
+      );
+      if (!primaryGameTypeDoc) primaryGameTypeDoc = doc;
     }
 
     const commissionPercentage = commissionDoc.value;
