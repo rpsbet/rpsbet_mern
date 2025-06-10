@@ -187,8 +187,8 @@ Create a new game room with mandatory React generation and blockchain deposit.
 \`\`\`
 
 ## Rate Limits
-- 100 requests per hour (default)
-- 1000 requests per day (default)
+- 10 requests per hour (default)
+- 100 requests per day (default)
 - Customizable for Elite users
 
 ## Error Codes

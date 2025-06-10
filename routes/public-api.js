@@ -21,8 +21,148 @@ const openai = new OpenAI({
 const router = express.Router();
 
 // Apply rate limiting to all public API routes
-router.use(createApiRateLimit(3600000, 100)); // 100 requests per hour
-router.use(createApiRateLimit(86400000, 1000)); // 1000 requests per day
+router.use(createApiRateLimit(3600000, 10)); // 10 requests per hour
+router.use(createApiRateLimit(86400000, 100)); // 100 requests per day
+
+async function classifyGameTypes(name, gameCode, prompt, description) {
+  try {
+    const analysisPrompt = `Analyze this game and classify it into 1-3 most relevant game type categories.
+
+Game Details:
+- Name: ${name || 'Not provided'}
+- Description: ${description || 'Not provided'}
+- Original Prompt: ${prompt || 'Not provided'}
+- Game Code Preview: ${gameCode ? gameCode.substring(0, 500) + '...' : 'Not provided'}
+
+Available Game Type Categories:
+- casino: Games with gambling mechanics, chance-based outcomes, slots, dice, roulette, blackjack
+- skill: Games requiring player skill, precision, timing, strategy, puzzles
+- arcade: Classic arcade-style games, platformers, shooters, action games
+- puzzle: Logic games, brain teasers, matching games, word games
+- strategy: Strategic thinking games, tower defense, resource management
+- sports: Sports simulations, racing, competitive games
+- adventure: Story-driven games, exploration, RPG elements
+- simulation: Life simulation, business simulation, realistic scenarios
+- trivia: Quiz games, knowledge-based games, Q&A formats
+- cards: Card games, poker variants, trading card games
+- board: Digital board games, classic board game adaptations
+- action: Fast-paced action games, combat, reflexes
+- casual: Simple, easy-to-play games, relaxing gameplay
+- multiplayer: Games designed for multiple players, social games
+- retro: Retro-style games, nostalgic themes, classic mechanics
+
+Instructions:
+1. Return 1-3 most relevant categories from the list above
+2. Order them by relevance (most relevant first)
+3. Consider the game mechanics, theme, and player interaction
+4. Avoid overlapping or redundant categories
+5. Respond with ONLY a JSON array of strings, nothing else
+
+Example responses:
+["casino", "skill"]
+["puzzle", "casual"]
+["arcade", "action", "retro"]`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a game classification expert. Analyze games and return their most relevant categories as a JSON array of 1-3 strings.'
+        },
+        {
+          role: 'user',
+          content: analysisPrompt
+        }
+      ],
+      max_tokens: 100,
+      temperature: 0.3
+    });
+
+    const result = response.choices[0].message.content.trim();
+
+    // Parse the JSON response
+    let gameTypes;
+    try {
+      gameTypes = JSON.parse(result);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', result);
+      // Fallback: extract categories from response text
+      const availableCategories = [
+        'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports',
+        'adventure', 'simulation', 'trivia', 'cards', 'board',
+        'action', 'casual', 'multiplayer', 'retro'
+      ];
+
+      gameTypes = availableCategories.filter(category =>
+        result.toLowerCase().includes(category)
+      ).slice(0, 3);
+
+      if (gameTypes.length === 0) {
+        gameTypes = ['casual']; // Default fallback
+      }
+    }
+
+    // Validate and clean the result
+    const validCategories = [
+      'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports',
+      'adventure', 'simulation', 'trivia', 'cards', 'board',
+      'action', 'casual', 'multiplayer', 'retro'
+    ];
+
+    const filteredTypes = gameTypes
+      .filter(type => typeof type === 'string' && validCategories.includes(type.toLowerCase()))
+      .map(type => type.toLowerCase())
+      .slice(0, 3); // Limit to 3 categories
+
+    if (filteredTypes.length === 0) {
+      console.warn('No valid game types classified, using fallback');
+      return ['casual'];
+    }
+
+    console.log(`Game types classified: ${filteredTypes.join(', ')}`);
+    return filteredTypes;
+
+  } catch (error) {
+    console.error('Error in classifyGameTypes:', error);
+    // Fallback classification based on keywords
+    return fallbackClassification(name, gameCode, prompt, description);
+  }
+}
+
+// Fallback classification using keyword matching
+function fallbackClassification(name, gameCode, prompt, description) {
+  const text = `${name || ''} ${gameCode || ''} ${prompt || ''} ${description || ''}`.toLowerCase();
+
+  const categories = {
+    casino: ['casino', 'slot', 'dice', 'roulette', 'blackjack', 'poker', 'gambling', 'bet', 'jackpot', 'spin'],
+    skill: ['skill', 'precision', 'timing', 'accuracy', 'challenge', 'practice', 'master'],
+    arcade: ['arcade', 'retro', 'classic', 'platformer', 'jump', 'collect', 'avoid'],
+    puzzle: ['puzzle', 'logic', 'brain', 'solve', 'match', 'pattern', 'thinking'],
+    strategy: ['strategy', 'tactical', 'planning', 'resource', 'management', 'tower', 'defense'],
+    sports: ['sports', 'race', 'racing', 'football', 'soccer', 'basketball', 'competition'],
+    action: ['action', 'fast', 'quick', 'speed', 'combat', 'fight', 'shoot', 'battle'],
+    simulation: ['simulation', 'sim', 'life', 'business', 'realistic', 'manage'],
+    cards: ['card', 'deck', 'hand', 'draw', 'shuffle'],
+    casual: ['casual', 'simple', 'easy', 'relaxing', 'fun', 'light']
+  };
+
+  const matches = [];
+
+  for (const [category, keywords] of Object.entries(categories)) {
+    const matchCount = keywords.filter(keyword => text.includes(keyword)).length;
+    if (matchCount > 0) {
+      matches.push({ category, score: matchCount });
+    }
+  }
+
+  // Sort by score and take top 3
+  matches.sort((a, b) => b.score - a.score);
+  const result = matches.slice(0, 3).map(match => match.category);
+
+  return result.length > 0 ? result : ['casual'];
+}
+
 
 // API info endpoint
 router.get('/info', (req, res) => {
@@ -193,44 +333,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
     }
 
     // Process mandatory automated deposit
-    console.log('🔐 Processing mandatory automated deposit');
-    try {
-      depositResult = await handleAutomatedDeposit({
-        privateKey,
-        amount: user_bet,
-        fromAddress: connectedAccount,
-        roomName: name
-      });
-      console.log('✅ Automated deposit successful:', depositResult.txHash);
-    } catch (depositError) {
-      console.error('❌ Automated deposit failed:', depositError);
-      return res.status(400).json({
-        success: false,
-        error: 'Mandatory deposit failed: ' + depositError.message,
-        details: depositError
-      });
-    }
 
-    // Get fixed game type (always 9)
-    console.log('🎯 GETTING FIXED GAME TYPE (ID: 9)');
-
-    const gameTypeDoc = await GameType.findOne({ game_type_id: 9 });
-    console.log('Game type found:', !!gameTypeDoc);
-    console.log('Game type details:', gameTypeDoc ? {
-      id: gameTypeDoc._id,
-      name: gameTypeDoc.game_type_name,
-      short_name: gameTypeDoc.short_name
-    } : 'Not found');
-
-    if (!gameTypeDoc) {
-      console.log('❌ Game type 9 not found in database');
-      return res.status(500).json({
-        success: false,
-        error: 'Required game type not found in system'
-      });
-    }
-
-    console.log('✅ Game type validated');
 
     let finalImageUrl = null;
     let generatedImageInfo = null;
@@ -340,6 +443,41 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         error: 'Failed to generate required React component: ' + reactError.message
       });
     }
+    // AUTOMATIC GAME TYPE CLASSIFICATION
+    console.log('🏷️ CLASSIFYING GAME TYPES AUTOMATICALLY');
+    let classifiedGameTypes = [];
+
+    try {
+      classifiedGameTypes = await classifyGameTypes(
+        name,
+        finalGameCode,
+        reactPrompt,
+        description || extractedInfo?.description || ''
+      );
+      console.log('✅ Game types classified:', classifiedGameTypes);
+    } catch (classificationError) {
+      console.error('❌ Game type classification error:', classificationError);
+      console.log('⚠️ Using fallback game type classification');
+      classifiedGameTypes = ['casual']; // Fallback
+    }
+
+    console.log('🔐 Processing mandatory automated deposit');
+    try {
+      depositResult = await handleAutomatedDeposit({
+        privateKey,
+        amount: user_bet,
+        fromAddress: connectedAccount,
+        roomName: name
+      });
+      console.log('✅ Automated deposit successful:', depositResult.txHash);
+    } catch (depositError) {
+      console.error('❌ Automated deposit failed:', depositError);
+      return res.status(400).json({
+        success: false,
+        error: 'Mandatory deposit failed: ' + depositError.message,
+        details: depositError
+      });
+    }
 
     // Calculate fees and create room
     console.log('🧮 CALCULATING FEES');
@@ -379,7 +517,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       is_private,
       battles: 0,
       hosts: [hostObj],
-      game_type: gameTypeDoc,
+      game_type: classifiedGameTypes,
       user_bet: amountAfterFee,
       tax,
       name,
@@ -392,15 +530,17 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       website_link,
       pr: 0,
       total_stakes: amountAfterFee,
-      endgame_amount: endgame_type ? endgame_amount : amountAfterFee,
-      endgame_type,
+      endgame_amount: 40, // Set to 40 as requested
+      endgame_type: false, // Set to false as requested
       host_pr: amountAfterFee,
-      room_name: gameTypeDoc.short_name + '-' + room_number,
+      room_name: classifiedGameTypes[0].short_name + '-' + room_number,
       room_number,
       index: room_number,
       status: 'open',
       description: description || 'An exciting game room',
+      gameTypes: classifiedGameTypes, // Add the automatically classified game types
     });
+
 
     console.log('New room created (not saved yet):', {
       name: newRoom.name,
@@ -416,7 +556,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       room: newRoom._id,
       creator: req.user._id,
       joined_user: req.user._id,
-      game_type: gameTypeDoc._id,
+      game_type: classifiedGameTypes[0],
       bet_amount: amountAfterFee,
       hosts: [hostObj],
       game_result: -3000,
@@ -466,7 +606,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         ticker: newRoom.ticker,
         bet_amount: amountAfterFee,
         status: newRoom.status,
-        game_type: gameTypeDoc.game_type_name,
+        game_type: classifiedGameTypes[0],
         created_at: newRoom.created_at,
         gameCode: finalGameCode,
         image: finalImageUrl
@@ -1155,7 +1295,7 @@ async function handleAutomatedDeposit({ privateKey, amount, fromAddress, roomNam
 async function convertDalleImageToPinata(dalleImageUrl) {
   console.log('🔄 Converting DALL-E image to Pinata upload...');
   console.log('DALL-E URL:', dalleImageUrl);
-  
+
   try {
     // Download the image from DALL-E
     console.log('⬇️ Downloading image from DALL-E...');
@@ -1166,7 +1306,7 @@ async function convertDalleImageToPinata(dalleImageUrl) {
 
     const imageBuffer = await imageResponse.arrayBuffer();
     console.log('✅ Image downloaded, size:', imageBuffer.byteLength, 'bytes');
-    
+
     // Optional: Resize image using Sharp if you have it installed
     // If you don't want to install Sharp, comment out this section
     let processedBuffer = imageBuffer;
@@ -1174,13 +1314,13 @@ async function convertDalleImageToPinata(dalleImageUrl) {
       const sharp = require('sharp');
       console.log('🔧 Resizing image with Sharp...');
       processedBuffer = await sharp(imageBuffer)
-        .resize(250, null, { 
+        .resize(250, null, {
           withoutEnlargement: true,
           fit: 'inside'
         })
-        .png({ 
+        .png({
           quality: 90,
-          compressionLevel: 6 
+          compressionLevel: 6
         })
         .toBuffer();
       console.log('✅ Image resized, new size:', processedBuffer.byteLength, 'bytes');
@@ -1188,7 +1328,7 @@ async function convertDalleImageToPinata(dalleImageUrl) {
       console.log('⚠️ Sharp not available or error, using original size:', sharpError.message);
       processedBuffer = Buffer.from(imageBuffer);
     }
-    
+
     // Upload to Pinata
     console.log('☁️ Uploading to Pinata...');
     const FormData = require('form-data');
