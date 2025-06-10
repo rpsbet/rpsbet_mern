@@ -216,7 +216,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
 
       // Optional fields
       imageUrls = [],
-      ticker,
+      ticker: originalTicker,
+      description: originalDescription = '',
       tax = 0,
       telegram_link = '',
       x_link = '',
@@ -224,7 +225,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       is_private = false,
       endgame_amount,
       endgame_type,
-      description = '',
       room_password = '',
 
       // Image generation options
@@ -234,6 +234,9 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
     } = req.body;
 
     console.log('🔍 VALIDATION STARTING');
+
+    let ticker = originalTicker;
+    let description = originalDescription;
 
     // Validation - Required fields
     const user_bet = parseFloat(bet_amount);
