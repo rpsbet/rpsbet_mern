@@ -165,7 +165,6 @@ const CoinInfo = ({
     setIsAutopopulating(true);
     
     try {
-      console.log('Starting manual auto-populate...');
       
       // Call the updated manualAutopopulate function
       const result = await manualAutopopulate(gameCode, onChangeState, dispatch, true);

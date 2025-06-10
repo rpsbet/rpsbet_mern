@@ -504,7 +504,7 @@ const PreSummaryPanel = React.memo((props) => {
             />
 
             {/* HOST PROFIT */}
-            <DataCard
+            {/* <DataCard
               icon={faBalanceScale}
               label="Host Performance"
               value={memoizedValues.netProfit}
@@ -512,7 +512,7 @@ const PreSummaryPanel = React.memo((props) => {
               warning={!isLowProfit}
               color={isLowProfit ? '#4caf50' : '#f44336'}
               width={200}
-            />
+            /> */}
 
             {/* TAX */}
             <DataCard

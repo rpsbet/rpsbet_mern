@@ -15,6 +15,8 @@ import { sendSolDeposit } from '../../util/solana';
 import {
   toggleDrawer,
 } from '../../redux/Auth/user.actions';
+import { usePrivy } from '@privy-io/react-auth';
+import { createAccountFromPrivyUser } from '../../util/solana';
 
 // Lazy load components that aren't immediately needed
 const TabbedContent = lazy(() => import('../../components/TabbedContent'));
@@ -69,7 +71,7 @@ function updateFromNow(history) {
 function JoinGame() {
   const dispatch = useDispatch();
   const { id } = useParams();
-
+  const { user: privyUser } = usePrivy();
   // Redux state selectors - memoize with useSelector for performance
   const {
     auth,
@@ -363,18 +365,89 @@ function JoinGame() {
     async (betInfo) => {
       // Set betting state to true
       setGameState(prev => ({ ...prev, betting: true }));
-
+  
       try {
         let betResult;
 
-        // Process Solana deposit for non-Custom game types
+        const isGameResult = betInfo.result !== undefined && betInfo.result !== null;
+  
+        let finalAccount = account;
+        let finalConnectedAccount = connectedAccount;
+  
+        // If connectedAccount is null, try to resolve it
+        if (!finalConnectedAccount) {
+          // If account exists, get the address from it
+          if (finalAccount?.publicKey) {
+            finalConnectedAccount = finalAccount.publicKey.toString();
+          }
+          // If account is null, try to create from window.solana
+          else if (window.solana?.publicKey) {
+            finalConnectedAccount = window.solana.publicKey.toString();
+            finalAccount = {
+              publicKey: window.solana.publicKey
+            };
+          }
+        }
+  
+        // If this is a game result, skip the deposit and go straight to bet submission
+        if (isGameResult) {
+          if (!finalConnectedAccount) {
+            console.error('[JoinGame] No connected account available for game result');
+            dispatch(errorMsgBar('Wallet not connected. Please connect your Solana wallet and try again.'));
+            setGameState(prev => ({ ...prev, betting: false }));
+            return { success: false };
+          }
+  
+          // For game results, we don't need to process a new deposit
+          // Just submit the bet result directly
+          betResult = await dispatch(
+            bet3({
+              _id: roomInfo._id,
+              connectedAccount: finalConnectedAccount, // Use resolved account
+              user: user_id,
+              game_type: roomInfo.game_type,
+              ...betInfo,
+            })
+          );
+  
+          setGameState(prev => ({ ...prev, betting: false }));
+  
+          if (betResult.status === 'success') {
+            return betResult;
+          } else {
+            dispatch(errorMsgBar(betResult.message || 'Failed to process game result.'));
+            return betResult;
+          }
+        }
+  
+        if (!finalAccount && finalConnectedAccount) {
+          try {
+            // Create a minimal account object from the connected wallet address
+            finalAccount = {
+              publicKey: {
+                toString: () => finalConnectedAccount
+              }
+            };
+          } catch (error) {
+            console.error('[JoinGame] Failed to create account from connectedAccount:', error);
+          }
+        }
+  
+        // Final validation for new games
+        if (!finalAccount) {
+          console.error('[JoinGame] No account available - cannot process transaction');
+          dispatch(errorMsgBar('Wallet not connected. Please connect your Solana wallet and try again.'));
+          setGameState(prev => ({ ...prev, betting: false }));
+          return { success: false };
+        }
+  
         const depositResult = await sendSolDeposit(
           dispatch,
           betInfo.bet_amount,
           roomInfo._id,
           roomInfo.name,
           'join',
-          account,
+          finalAccount,
           user_balance,
           () => {
             // On success, no additional action needed here
@@ -383,24 +456,23 @@ function JoinGame() {
             setGameState(prev => ({ ...prev, betting: false }));
           }
         );
-
+  
         if (!depositResult.success) {
           setGameState(prev => ({ ...prev, betting: false }));
           return { success: false };
         }
-        console.log('connectedAccount', connectedAccount);
-        // Place bet
+  
         betResult = await dispatch(
           bet3({
             _id: roomInfo._id,
-            connectedAccount,
+            connectedAccount: finalConnectedAccount, // Use resolved account
             user: user_id,
             game_type: roomInfo.game_type,
             ...betInfo,
           })
         );
         setGameState(prev => ({ ...prev, betting: false }));
-
+  
         if (betResult.status === 'success') {
           return betResult;
         } else {
@@ -726,7 +798,7 @@ function JoinGame() {
             >
               YOUR GAMES
             </Button>
-           
+
             <Button
               className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}
               onClick={() => setSelectedMobileTab('chat')}

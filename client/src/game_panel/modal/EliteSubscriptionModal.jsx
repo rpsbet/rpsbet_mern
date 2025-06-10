@@ -162,11 +162,11 @@ function EliteSubscriptionModal({
       return;
     }
 
-    console.log('Final account object:', {
-      publicKey: account.publicKey.toString(),
-      source: privyUser?.wallet?.address ? 'privy' : 
-              reduxAccount?.publicKey ? 'redux' : 'wallet'
-    });
+    // console.log('Final account object:', {
+    //   publicKey: account.publicKey.toString(),
+    //   source: privyUser?.wallet?.address ? 'privy' : 
+    //           reduxAccount?.publicKey ? 'redux' : 'wallet'
+    // });
 
     setLoading((prev) => ({ ...prev, [type]: true }));
     

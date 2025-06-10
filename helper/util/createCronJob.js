@@ -212,7 +212,7 @@ async function checkConfirmations(io) {
       const adminIndex = txInfo.transaction.message.accountKeys.findIndex((acc) =>
         acc.equals(adminPubkey)
       );
-      
+
       if (adminIndex === -1) {
         console.error('Admin wallet not found in elite subscription transaction:', txSignature);
         continue;
@@ -267,7 +267,7 @@ async function checkConfirmations(io) {
         if (!Array.isArray(user.subscriptionHistory)) {
           user.subscriptionHistory = [];
         }
-        
+
         user.subscriptionHistory.push({
           type: subscriptionType,
           transactionSignature: txSignature,
@@ -309,11 +309,11 @@ async function checkConfirmations(io) {
       };
 
       await saveDocumentWithRetry(notification);
-      
+
       // Send real-time updates
       socketController.sendNotification(user._id, notificationData);
       socketController.newTransaction(transaction);
-      
+
       // Note: User elite status will be updated when they refresh or through other mechanisms
       // You could add a custom socket event here if needed
 
@@ -337,12 +337,8 @@ async function checkConfirmations(io) {
         continue;
       }
 
-      const room = await Room.findById(withdrawal.room)
-        .populate({
-          path: 'game_type',
-          model: GameType,
-          select: 'game_type_name short_name',
-        });
+      // Fetch room without trying to populate game_type
+      const room = await Room.findById(withdrawal.room).lean();
       if (!room) {
         console.error('Room not found for withdrawal:', withdrawal.room);
         continue;
@@ -358,7 +354,7 @@ async function checkConfirmations(io) {
       }
 
       // Load admin wallet secret
-      let walletKey = process.env.wk;
+      const walletKey = process.env.wk;
       if (!walletKey) {
         console.error('Admin wallet secret not set in env');
         continue;
@@ -371,22 +367,16 @@ async function checkConfirmations(io) {
         console.error('Failed to decode walletKey:', error);
         continue;
       }
-
       if (secretKey.length !== 64) {
         console.error('Invalid secret key size. Must be 64 bytes.');
         continue;
       }
 
       const walletKeyPair = Keypair.fromSecretKey(secretKey);
-
-      // Convert amount to lamports
       const lamports = Math.floor(withdrawal.amount * LAMPORTS_PER_SOL);
 
-      // Get a fresh blockhash
       const { blockhash, lastValidBlockHeight } = await provider.getLatestBlockhash();
-
-      // Build the transaction
-      const transaction = new Transaction({
+      const tx = new Transaction({
         recentBlockhash: blockhash,
         feePayer: walletKeyPair.publicKey,
       }).add(
@@ -397,39 +387,29 @@ async function checkConfirmations(io) {
         })
       );
 
-      // Send and confirm the transaction
       let signature;
       try {
-        signature = await provider.sendTransaction(transaction, [walletKeyPair]);
-        await provider.confirmTransaction({
-          signature,
-          blockhash,
-          lastValidBlockHeight,
-        });
+        signature = await provider.sendTransaction(tx, [walletKeyPair]);
+        await provider.confirmTransaction({ signature, blockhash, lastValidBlockHeight });
       } catch (err) {
         console.error('Error sending withdrawal transaction:', err);
         continue;
       }
 
-      console.log(
-        `Withdrawal transaction sent: https://explorer.solana.com/tx/${signature}`
-      );
+      console.log(`Withdrawal sent: https://explorer.solana.com/tx/${signature}`);
 
-      // Update transaction
       withdrawal.status = 'completed';
       withdrawal.hash = signature;
       await saveDocumentWithRetry(withdrawal);
 
-
-      // Notify user of withdrawal
+      // Notify user
       const notification = new Notification({
         from: user._id,
         to: user._id,
         amount: withdrawal.amount,
         room: withdrawal.room,
-        message: `Winnings sent to your wallet`,
+        message: 'Winnings sent to your wallet',
       });
-
       const notificationData = {
         message: notification.message,
         username: user.username,
@@ -444,19 +424,16 @@ async function checkConfirmations(io) {
         is_read: false,
       };
 
-      // Fetch and send updated Solana balance
-      let solBalance;
+      // Send updated balance
       try {
         const solBalLamports = await provider.getBalance(toPubkey);
-        solBalance = solBalLamports / LAMPORTS_PER_SOL;
+        const solBalance = solBalLamports / LAMPORTS_PER_SOL;
         socketController.sendBalanceUpdate(user._id, { solanaBalance: solBalance });
-      } catch (balanceError) {
-        console.error('Failed to fetch Solana balance for withdrawal:', balanceError);
-        // Continue even if balance fetch fails
+      } catch (balanceErr) {
+        console.error('Failed to fetch Solana balance:', balanceErr);
       }
 
       await saveDocumentWithRetry(notification);
-      await saveDocumentWithRetry(withdrawal);
       socketController.sendNotification(user._id, notificationData);
       socketController.newTransaction(withdrawal);
     }

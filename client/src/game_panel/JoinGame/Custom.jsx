@@ -82,23 +82,17 @@ const usePhysicsEngine = () => {
     try {
       // Check if already loaded
       if (window.Matter && window.Matter.World && typeof window.Matter.World === 'function') {
-        console.log('[Custom] Using cached Matter.js');
         return window.Matter;
       }
 
-      console.log('[Custom] Loading Matter.js dynamically');
-
-      // Try dynamic import first
       try {
         const matterModule = await import('matter-js');
         if (!matterModule || !matterModule.World || !matterModule.Engine) {
           throw new Error('Matter.js module loaded but missing required properties');
         }
-        console.log('[Custom] Successfully loaded Matter.js via import');
         window.Matter = matterModule;
         return matterModule;
       } catch (importError) {
-        console.log('[Custom] Dynamic import failed, falling back to CDN');
 
         // CDN fallback
         const matterModule = await new Promise((resolve, reject) => {
@@ -106,7 +100,6 @@ const usePhysicsEngine = () => {
           script.src = 'https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js';
           script.onload = () => {
             if (window.Matter && window.Matter.World && window.Matter.Engine) {
-              console.log('[Custom] Loaded via CDN');
               resolve(window.Matter);
             } else {
               reject(new Error('Matter.js CDN loaded but missing required properties'));
@@ -573,7 +566,7 @@ function Custom(props) {
   // Solana deposit handler
   const processSolDeposit = useCallback(async () => {
     if (hasDepositedRef.current) {
-      console.log('[Custom] Deposit already processed for this game, skipping.');
+      // console.log('[Custom] Deposit already processed for this game, skipping.');
       return true;
     }
 
@@ -584,7 +577,6 @@ function Custom(props) {
     if (privyUser?.wallet?.address) {
       try {
         account = createAccountFromPrivyUser(privyUser);
-        console.log('[Custom] Account created from Privy user:', account);
       } catch (error) {
         console.error('[Custom] Failed to create account from Privy user:', error);
       }
@@ -593,7 +585,6 @@ function Custom(props) {
     // Method 2: Try using Redux account
     if (!account && reduxState.account?.publicKey) {
       account = reduxState.account;
-      console.log('[Custom] Using Redux account:', account);
     }
 
     // Method 3: Try getting from connected wallet directly
@@ -602,7 +593,6 @@ function Custom(props) {
         account = {
           publicKey: window.solana.publicKey
         };
-        console.log('[Custom] Account created from window.solana:', account);
       } catch (error) {
         console.error('[Custom] Failed to create account from window.solana:', error);
       }
@@ -612,7 +602,7 @@ function Custom(props) {
     if (!account && window.solana) {
       try {
         if (!window.solana.isConnected) {
-          console.log('[Custom] Wallet not connected, attempting to connect...');
+          // console.log('[Custom] Wallet not connected, attempting to connect...');
           await window.solana.connect();
         }
 
@@ -620,7 +610,6 @@ function Custom(props) {
           account = {
             publicKey: window.solana.publicKey
           };
-          console.log('[Custom] Account created after wallet connection:', account);
         }
       } catch (error) {
         console.error('[Custom] Failed to connect wallet:', error);
@@ -645,12 +634,11 @@ function Custom(props) {
       return false;
     }
 
-    console.log('[Custom] Final account object:', {
-      publicKey: account.publicKey.toString(),
-      source: privyUser?.wallet?.address ? 'privy' :
-        reduxState.account?.publicKey ? 'redux' : 'wallet'
-    });
-
+    // console.log('[Custom] Final account object:', {
+    //   publicKey: account.publicKey.toString(),
+    //   source: privyUser?.wallet?.address ? 'privy' :
+    //     reduxState.account?.publicKey ? 'redux' : 'wallet'
+    // });
     try {
       const depositResult = await sendSolDeposit(
         dispatch,
@@ -760,7 +748,7 @@ function Custom(props) {
 
   // Game event logger
   const logEvent = useCallback((eventType, data) => {
-    console.log(`Game Event: ${eventType}`, data);
+    // console.log(`Game Event: ${eventType}`, data);
 
     if (playSound) {
       playSound('select');
@@ -789,10 +777,10 @@ function Custom(props) {
       const validResults = ['win', 'loss', 'other'];
 
       if (validResults.includes(result) && gameState.gameStartedCount > 0 && hasDepositedRef.current) {
-        console.log('Processing game result:', result, 'Multiplier:', multiplier);
+        // console.log('Processing game result:', result, 'Multiplier:', multiplier);
         onBtnBetClick(result, result === 'win' ? multiplier : undefined);
       } else {
-        console.log('[Custom] Skipping bet placement: No deposit made or invalid state');
+        // console.log('[Custom] Skipping bet placement: No deposit made or invalid state');
         hasDepositedRef.current = false;
       }
     }

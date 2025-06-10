@@ -204,15 +204,15 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
 
   // Render loading skeleton
   const renderLoadingSkeleton = () => (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 2, width: '100%' }}>
       {Array.from({ length: 6 }).map((_, index) => (
         <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-          <Skeleton variant="text" width="120px" height={24} />
-          <Skeleton variant="text" width="100px" height={24} />
-          <Skeleton variant="text" width="200px" height={24} />
-          <Skeleton variant="text" width="80px" height={24} />
-          <Skeleton variant="text" width="120px" height={24} />
-          <Skeleton variant="text" width="80px" height={24} />
+          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="100%" height={24} />
         </Box>
       ))}
     </Box>

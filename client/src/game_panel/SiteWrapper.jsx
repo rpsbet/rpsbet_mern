@@ -296,7 +296,6 @@ function SiteWrapper({ children }) {
 
   // FIXED: Handle Privy authentication state changes
   useEffect(() => {
-    console.log('🔐 Auth state check:', { privyReady, privyAuthenticated, privyUser: privyUser?.id, reduxUser: user?._id });
 
     if (!privyReady) {
       // Privy is still initializing
@@ -309,10 +308,8 @@ function SiteWrapper({ children }) {
       // User is authenticated with Privy
       if (!user?._id) {
         // Redux doesn't have user data yet, fetch it
-        console.log('✅ Privy authenticated, fetching user data...');
         dispatch(getUser())
           .then(() => {
-            console.log('✅ User data fetched successfully');
             setAuthState({
               isReady: true,
               isAuthenticated: true,
@@ -331,7 +328,6 @@ function SiteWrapper({ children }) {
           });
       } else {
         // Both Privy and Redux have user data
-        console.log('✅ Full authentication confirmed');
         setAuthState({
           isReady: true,
           isAuthenticated: true,
@@ -341,7 +337,6 @@ function SiteWrapper({ children }) {
       }
     } else {
       // User is not authenticated
-      console.log('❌ User not authenticated');
       setAuthState({
         isReady: true,
         isAuthenticated: false,
@@ -518,10 +513,8 @@ function SiteWrapper({ children }) {
 
   // FIXED: Update logout function to work with Privy properly
   const handleLogout = useCallback(async (clearToken) => {
-    console.log('🚪 Starting logout process...');
 
     if (handleLogout.isLoggingOut) {
-      console.log('⏳ Logout already in progress, skipping...');
       return;
     }
 
@@ -532,31 +525,25 @@ function SiteWrapper({ children }) {
       setAnchorElProfile(null);
 
       // Step 2: Disconnect socket
-      console.log('🔌 Disconnecting socket...');
       if (socket) {
         socket.disconnect();
       }
 
       // Step 3: Backend logout with proper error handling
-      console.log('🔙 Calling backend logout...');
       try {
         await dispatch(userSignOut(clearToken, navigate));
-        console.log('✅ Backend logout successful');
       } catch (backendError) {
         console.warn('⚠️ Backend logout failed, continuing...', backendError);
       }
 
       // Step 4: Privy logout with error handling
-      console.log('🔐 Calling Privy logout...');
       try {
         await privyLogout();
-        console.log('✅ Privy logout successful');
       } catch (privyError) {
         console.error('❌ Privy logout failed:', privyError);
       }
 
       // Step 5: Force cleanup to ensure consistent state
-      console.log('🧹 Performing final cleanup...');
       if (clearToken) {
         localStorage.removeItem('token');
         localStorage.removeItem('isAuthenticated');
@@ -578,8 +565,6 @@ function SiteWrapper({ children }) {
       if (location.pathname !== '/') {
         navigate('/', { replace: true });
       }
-
-      console.log('✅ Logout process completed successfully');
 
     } catch (error) {
       console.error('❌ Logout error, forcing cleanup:', error);
@@ -646,8 +631,6 @@ function SiteWrapper({ children }) {
 
     const initializeApp = async () => {
       try {
-        console.log('🚀 Initializing app with auth state:', authState);
-        
         // Show UI immediately
         setIsInitialized(true);
         setWebsiteLoading(false);
@@ -673,7 +656,6 @@ function SiteWrapper({ children }) {
           setTokenModalOpen(false);
         }
 
-        console.log('✅ App initialization complete');
       } catch (error) {
         console.error('❌ App initialization error:', error);
         // Don't block the UI even if initialization fails

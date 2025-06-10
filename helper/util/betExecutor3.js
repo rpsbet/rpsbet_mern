@@ -100,34 +100,48 @@ const createTokenAndPool = async (roomInfo) => {
 // Function to process game end if needed
 const processGameEndIfNeeded = async (roomInfo, req, user) => {
   if (
-    roomInfo['endgame_type'] &&
-    roomInfo['user_bet'] >= roomInfo['endgame_amount'] &&
+    roomInfo.endgame_type &&
+    roomInfo.user_bet >= roomInfo.endgame_amount &&
     roomInfo.status !== 'finished'
   ) {
-    // Notify clients that room has ended
-    if (req.io && req.io.sockets) {
+    // 1) Notify clients that room has ended
+    if (req.io?.sockets) {
       req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
     }
 
-    // Create pool and get pool ID
+    // 2) Create pool and get pool ID
     const pool_id = await createTokenAndPool(roomInfo);
 
-    // Create game log for end event
+    // 3) Derive primary GameType _id from the string array
+    let gameTypeId = null;
+    if (Array.isArray(roomInfo.game_type) && roomInfo.game_type.length) {
+      const primaryTag = roomInfo.game_type[0];
+      const gameTypeDoc = await GameType
+        .findOne({ game_type_name: primaryTag })
+        .collation({ locale: 'en', strength: 2 })
+        .select('_id');
+      if (gameTypeDoc) {
+        gameTypeId = gameTypeDoc._id;
+      }
+    }
+
+    // 4) Build and save end-game log
     const newGameLogC = new GameLog({
-      room: roomInfo,
-      creator: roomInfo['creator'],
-      joined_user: roomInfo['creator'],
-      game_type: roomInfo['game_type'],
-      bet_amount: roomInfo['host_pr'],
-      user_bet: roomInfo['user_bet'],
+      room: roomInfo._id,
+      creator: roomInfo.creator._id || roomInfo.creator,
+      joined_user: roomInfo.creator._id || roomInfo.creator,
+      game_type: gameTypeId,
+      bet_amount: roomInfo.host_pr,
+      user_bet: roomInfo.user_bet,
       hosts: roomInfo.hosts,
-      endgame_amount: roomInfo['endgame_amount'],
+      endgame_amount: roomInfo.endgame_amount,
       game_result: 3,
     });
 
     await saveDocumentWithRetry(newGameLogC);
     return pool_id;
   }
+
   return '';
 };
 
@@ -179,12 +193,15 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
   if (newTransactionC.amount === 0) return;
 
   const host = await User.findOne({ _id: roomInfo['creator'] });
+  const shortName = primaryGameTypeDoc
+    ? primaryGameTypeDoc.short_name
+    : (primaryGameTypeName || 'Unknown').slice(0, 3).toUpperCase();
 
   let notification = new Notification({
     from: roomInfo['creator']._id,
     to: roomInfo['creator']._id,
     room: req.body._id,
-    message: `Hosting ${newTransactionC.amount} auto-payout in ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+    message: `Hosting ${newTransactionC.amount} auto-payout in ${shortName}-${roomInfo.room_number}`,
     amount: newTransactionC.amount,
     is_read: false,
   });
@@ -227,56 +244,62 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
 
 // Process payouts for multiple hosts
 const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) => {
+  // Derive a short tag name from the room's game_type array
+  const firstTag = Array.isArray(roomInfo.game_type) && roomInfo.game_type.length
+    ? roomInfo.game_type[0]
+    : 'Unknown';
+  const shortName = firstTag.slice(0, 3).toUpperCase();
+
   const hostPromises = roomInfo.hosts.map(async (host) => {
     const amountForHost = (host.share / 100) * newTransactionC.amount;
     if (amountForHost === 0) return;
 
+    // Create transaction for this co-host
     const newTransactionForHost = new GameTransaction({
       user: host.host,
       amount: amountForHost,
-      description: `Co-Hosting auto-payout in ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      description: `Co-Hosting auto-payout in ${shortName}-${roomInfo.room_number}`,
       room: req.body._id,
     });
 
+    // Create notification for this co-host
     const notification = new Notification({
-      from: roomInfo['creator'],
+      from: roomInfo.creator,
       to: host.host,
-      message: `Co-Hosting ${amountForHost} auto-payout in ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      message: `Co-Hosting ${amountForHost} auto-payout in ${shortName}-${roomInfo.room_number}`,
       amount: amountForHost,
       room: req.body._id,
       is_read: false,
     });
-
-    const notificationData = {
-      _id: roomInfo['creator']._id,
-      message: notification.message,
-      username: roomInfo['creator'].username,
-      avatar: roomInfo['creator'].avatar,
-      amount: amountForHost,
-      accessory: roomInfo['creator'].accessory,
-      elite: roomInfo['creator'].elite,
-      room: req.body._id,
-      rank: roomInfo['creator'].totalWagered,
-      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment(new Date()).format('LLL'),
-      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      is_read: false,
-    };
 
     try {
-      const coHost = await User.findOne({ _id: host.host });
-
+      // Save both in parallel
       await Promise.all([
         saveDocumentWithRetry(newTransactionForHost),
-        saveDocumentWithRetry(notification)
+        saveDocumentWithRetry(notification),
       ]);
 
+      // Update co-host balance
+      const coHost = await User.findById(host.host);
       if (coHost) {
         coHost.balance += amountForHost;
         await saveDocumentWithRetry(coHost);
       }
 
-      socket.sendNotification(host.host, notificationData);
+      // Emit notification & transaction
+      socket.sendNotification(host.host, {
+        _id: host.host,
+        message: notification.message,
+        amount: notification.amount,
+        room: req.body._id,
+        username: coHost?.username,
+        avatar: coHost?.avatar,
+        accessory: coHost?.accessory,
+        elite: coHost?.elite,
+        rank: coHost?.totalWagered,
+        created_at: moment().format('YYYY-MM-DD HH:mm'),
+        is_read: false,
+      });
       socket.newTransaction(newTransactionForHost);
     } catch (error) {
       console.error('Error processing co-host payout:', error);
@@ -370,7 +393,7 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     pool_id = await processGameEndIfNeeded(roomInfo, req, user);
 
     newTransactionAmount -= bet_amount;
-    
+
     // Set message
     message = new Notification({
       from: user,
@@ -533,21 +556,23 @@ const addToQueue = async (req, bot = false) => {
       const { bet_amount } = req.body;
 
       // Get room information with populated relations
-      roomInfo = await Room.findOne({ _id: req.body._id })
-        .select(
-          'name image tax ticker prompt room_number updated_at battles game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
-        )
-        .populate({
-          path: 'creator',
-          model: User,
-          select:
-            '_id avatar accessory elite totalWagered username gameProfit gamePlayed balance ',
-        })
-        .populate({
-          path: 'game_type',
-          model: GameType,
-          select: 'game_type_name short_name',
-        });
+      roomInfo = await Room.findById(req.body._id)
+        .select('name image tax ticker prompt room_number updated_at battles game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+        .populate({ path: 'creator', model: User, select: '_id avatar accessory elite totalWagered username gameProfit gamePlayed balance' })
+
+      // Pull the first tag name off the room
+      const primaryGameTypeName = Array.isArray(roomInfo.game_type) && roomInfo.game_type.length
+        ? roomInfo.game_type[0]
+        : null;
+
+      // Fetch its GameType doc (so you can get its ObjectId)
+      let primaryGameTypeDoc = null;
+      if (primaryGameTypeName) {
+        primaryGameTypeDoc = await GameType
+          .findOne({ game_type_name: primaryGameTypeName })
+          .collation({ locale: 'en', strength: 2 })
+          .select('_id short_name game_type_name');
+      }
 
       // Validate bet request
       const validation = validateBetRequest(req, user, roomInfo);
@@ -570,10 +595,10 @@ const addToQueue = async (req, bot = false) => {
 
       // Create game log
       const newGameLog = new GameLog({
-        room: roomInfo,
-        creator: roomInfo['creator'],
-        joined_user: user,
-        game_type: roomInfo['game_type'],
+        room: roomInfo._id,
+        creator: roomInfo.creator._id,
+        joined_user: user._id,
+        game_type: primaryGameTypeDoc ? primaryGameTypeDoc._id : null,
         bet_amount: req.body.bet_amount,
       });
 
@@ -602,42 +627,32 @@ const addToQueue = async (req, bot = false) => {
         is_read: false,
       });
 
-      // Process Custom game (only game type supported now)
-      if (roomInfo['game_type']['game_type_name'] === 'Custom') {
-        // Validate bet amount for Custom game
-        if (
-          bet_amount > roomInfo['user_bet'] ||
-          bet_amount > parseFloat(user.balance)
-        ) {
-          return {
-            success: false,
-            message: 'Bet amount exceeds available balance.',
-          };
-        }
-
-        const customResult = await processCustomGame(
-          req,
-          user,
-          roomInfo,
-          bet_amount,
-          tax,
-          newTransactionJ,
-          newGameLog
-        );
-
-        game_result = customResult.game_result;
-        newTransactionAmount = customResult.newTransactionAmount;
-        bet_item = customResult.bet_item;
-        pool_id = customResult.pool_id;
-        message = customResult.message;
-      } else {
-        // Unsupported game type
+      if (
+        bet_amount > roomInfo['user_bet'] ||
+        bet_amount > parseFloat(user.balance)
+      ) {
         return {
           success: false,
-          message: 'Unsupported game type',
-          betResult: -100,
+          message: 'Bet amount exceeds available balance.',
         };
       }
+
+      const customResult = await processCustomGame(
+        req,
+        user,
+        roomInfo,
+        bet_amount,
+        tax,
+        newTransactionJ,
+        newGameLog
+      );
+
+      game_result = customResult.game_result;
+      newTransactionAmount = customResult.newTransactionAmount;
+      bet_item = customResult.bet_item;
+      pool_id = customResult.pool_id;
+      message = customResult.message;
+
 
       // Update room and emit candle data
       await updateRoomAndEmitData(roomInfo, user, newTransactionAmount, req);
@@ -647,7 +662,6 @@ const addToQueue = async (req, bot = false) => {
       user.gameProfit += newTransactionAmount;
       user.totalWagered += Math.abs(bet_item.bet_amount);
 
-console.log(`User winning`, newTransactionAmount, req.body.connectedAccount);
       if (newTransactionAmount > 0 && req.body.connectedAccount) {
         // Validate deposit transaction (check both pending and completed)
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
@@ -677,7 +691,7 @@ console.log(`User winning`, newTransactionAmount, req.body.connectedAccount);
         } catch (error) {
           throw new Error('Invalid Solana wallet address');
         }
-console.log(`Processing winnings for user ${user._id} in room ${req.body._id} with amount ${newTransactionAmount}`);
+        console.log(`Processing winnings for user ${user._id} in room ${req.body._id} with amount ${newTransactionAmount}`);
         // Create a pending GameTransaction for the winnings
         const newGameTransaction = new GameTransaction({
           user: user._id,
