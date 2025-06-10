@@ -14,10 +14,7 @@ const GameLogSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'rps_users'
     },
-    game_type: {
-        type: Schema.Types.ObjectId,
-        ref: 'rps_game_types'
-    },
+    game_type: { type: String, required: true },
     bet_amount: {
         type: Number,
         default: 0.0

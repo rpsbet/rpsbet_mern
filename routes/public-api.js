@@ -1310,16 +1310,18 @@ async function convertDalleImageToPinata(dalleImageUrl) {
     const imageBuffer = await imageResponse.arrayBuffer();
     console.log('✅ Image downloaded, size:', imageBuffer.byteLength, 'bytes');
 
-    // Optional: Resize image using Sharp if you have it installed
-    // If you don't want to install Sharp, comment out this section
-    let processedBuffer = imageBuffer;
+    // Convert to Buffer
+    const buffer = Buffer.from(imageBuffer);
+
+    // Optional: Resize image using Sharp if available
+    let processedBuffer = buffer;
     try {
       const sharp = require('sharp');
       console.log('🔧 Resizing image with Sharp...');
-      processedBuffer = await sharp(imageBuffer)
-        .resize(250, null, {
-          withoutEnlargement: true,
-          fit: 'inside'
+      processedBuffer = await sharp(buffer)
+        .resize(512, 512, {
+          fit: 'inside',
+          withoutEnlargement: true
         })
         .png({
           quality: 90,
@@ -1329,34 +1331,53 @@ async function convertDalleImageToPinata(dalleImageUrl) {
       console.log('✅ Image resized, new size:', processedBuffer.byteLength, 'bytes');
     } catch (sharpError) {
       console.log('⚠️ Sharp not available or error, using original size:', sharpError.message);
-      processedBuffer = Buffer.from(imageBuffer);
+      processedBuffer = buffer;
     }
 
-    // Upload to Pinata
+    // Upload to Pinata using axios (more reliable than fetch for FormData)
     console.log('☁️ Uploading to Pinata...');
     const FormData = require('form-data');
     const formData = new FormData();
+    
+    // Add file with proper options
     formData.append('file', processedBuffer, {
-      filename: 'dalle-game-image.png',
+      filename: `game-image-${Date.now()}.png`,
       contentType: 'image/png'
     });
 
-    const pinataResponse = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.PINATA_JWT}`,
-        ...formData.getHeaders()
-      },
-      body: formData
+    // Add metadata (optional)
+    const metadata = JSON.stringify({
+      name: `Game Image ${Date.now()}`,
+      keyvalues: {
+        type: 'game-image',
+        source: 'dalle-generated',
+        timestamp: new Date().toISOString()
+      }
     });
+    formData.append('pinataMetadata', metadata);
 
-    if (!pinataResponse.ok) {
-      const errorText = await pinataResponse.text();
-      console.error('Pinata upload failed:', pinataResponse.status, errorText);
-      throw new Error(`Pinata upload failed: ${pinataResponse.status}`);
-    }
+    // Add options (optional)
+    const options = JSON.stringify({
+      cidVersion: 0
+    });
+    formData.append('pinataOptions', options);
 
-    const pinataData = await pinataResponse.json();
+    // Use axios instead of fetch for better FormData handling
+    const pinataResponse = await axios.post(
+      'https://api.pinata.cloud/pinning/pinFileToIPFS',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.PINATA_JWT}`,
+          ...formData.getHeaders() // This is crucial for proper boundary setting
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        timeout: 60000 // 60 second timeout
+      }
+    );
+
+    const pinataData = pinataResponse.data;
     const finalImageUrl = `https://gateway.pinata.cloud/ipfs/${pinataData.IpfsHash}`;
 
     console.log('✅ Successfully uploaded to Pinata');
@@ -1367,6 +1388,16 @@ async function convertDalleImageToPinata(dalleImageUrl) {
 
   } catch (error) {
     console.error('❌ Error converting DALL-E image to Pinata:', error);
+    
+    // Log more details about the error
+    if (error.response) {
+      console.error('Pinata API Error Response:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      });
+    }
+    
     throw new Error(`Failed to convert DALL-E image: ${error.message}`);
   }
 }
