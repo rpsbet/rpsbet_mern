@@ -446,17 +446,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       console.log('Using extracted name:', finalName);
     }
 
-    // Validation for final name (after extraction)
-    if (!finalName || finalName.length < 3 || finalName.length > 20) {
-      console.log('❌ Invalid final name:', finalName, 'Length:', finalName?.length);
-      return res.status(400).json({
-        success: false,
-        error: 'Game name must be 3-20 characters (provided or extracted from game code)'
-      });
-    }
-
-    console.log('✅ Final name validated:', finalName);
-
     // AUTOMATIC GAME TYPE CLASSIFICATION
     console.log('🏷️ CLASSIFYING GAME TYPES AUTOMATICALLY');
     let classifiedGameTypes = [];
