@@ -720,6 +720,60 @@ CRITICAL: **Never declare a local function or variable named logEvent. Always ca
 - Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
 - Always use the prop: props.logEvent or destructured logEvent from props
 
+PRACTICE MODE IMPLEMENTATION:
+- Add practice mode state: const [isPracticeMode, setIsPracticeMode] = useState(false);
+- Include TWO start buttons:
+  1. "Start Game" - Normal mode with logging: onClick={() => startGame(false)}
+  2. "Practice Mode" - No logging: onClick={() => startGame(true)}
+- Modify startGame function to accept practice parameter:
+  const startGame = (practiceMode = false) => {
+    setIsPracticeMode(practiceMode);
+    setGameStarted(true);
+    setGameEnded(false);
+    // Only log if NOT in practice mode
+    if (!practiceMode && logEvent) {
+      logEvent("gameStarted", { timestamp: new Date().toISOString() });
+    }
+    // Reset other game state...
+  };
+- Modify endGame function to respect practice mode:
+  const endGame = (result, multiplier) => {
+    setGameEnded(true);
+    // Only log if NOT in practice mode
+    if (!isPracticeMode && logEvent) {
+      logEvent("gameEnded", { 
+        timestamp: new Date().toISOString(), 
+        result, 
+        multiplier 
+      });
+    }
+    // Update game history for both modes
+    setGameHistory(prev => [...prev, { 
+      id: Date.now(), 
+      result, 
+      multiplier, 
+      timestamp: new Date().toISOString(),
+      practice: isPracticeMode 
+    }]);
+  };
+- Display practice indicator when active:
+  {isPracticeMode && (
+    <Typography variant="caption" sx={{ color: '#ffeb3b', textAlign: 'center' }}>
+      🎯 Practice Mode - No logging
+    </Typography>
+  )}
+- Style practice button differently:
+  <Button 
+    variant="outlined" 
+    sx={{ 
+      borderColor: '#ffeb3b', 
+      color: '#ffeb3b',
+      '&:hover': { borderColor: '#fff', color: '#fff' }
+    }}
+  >
+    Practice Mode
+  </Button>
+
 CRITICAL LAYOUT REQUIREMENTS:
 - Main game container MUST use: width: "100%", height: "100%", minHeight: "600px", maxWidth: "100%", padding: 2, gap: 1
 - PRIORITIZE COMPACT DESIGN: Use efficient spacing, minimal padding, dense layouts
@@ -3864,11 +3918,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
 
       // Step 3: Cache the processed chat logs for 2 minutes
       try {
-        await redisClient.setEx(
-          cacheKey,
-          120, // 2 minutes (chat changes frequently but not every second)
-          JSON.stringify(chatLogs)
-        );
+        await redisClient.setEx(cacheKey, 120, JSON.stringify(chatLogs));
       } catch (redisErr) {
         console.error('Failed to cache global chat:', redisErr);
       }

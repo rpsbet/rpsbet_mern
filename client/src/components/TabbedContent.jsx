@@ -261,13 +261,13 @@ function TabbedContent(props) {
               </Typography>
             }
             sx={{
-              bgcolor: 'rgba(76, 175, 80, 0.8)',
+              bgcolor: 'rgba(66, 66, 66, 0.8)',
               color: '#fff',
               borderRadius: '10px',
               flexGrow: 1,
               height: isMobile ? 28 : 32,
-              border: '1px solid rgba(76, 175, 80, 0.3)',
-              boxShadow: '0 2px 8px rgba(76, 175, 80, 0.25)',
+              border: '1px solid rgba(145, 145, 145, 0.37)',
+              boxShadow: '0 2px 8px rgba(100, 100, 100, 0.25)',
               '& .MuiChip-label': { 
                 px: 1.5,
               },

@@ -378,32 +378,46 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
 
             {/* Tabs */}
             <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              textColor="inherit"
-              variant="fullWidth"
-              sx={{
-                '& .MuiTabs-indicator': { backgroundColor: '#ff0000', height: '3px' },
-                '& .MuiTab-root': { 
-                  fontSize: '1rem', 
-                  fontWeight: 500,
-                  color: isDarkMode ? '#ccc' : '#555',
-                  '&.Mui-selected': { color: '#ff0000' } 
-                },
-              }}
-            >
-              {tabs.map((tab) => (
-                <Tab 
-                  key={tab.value} 
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <span>{tab.icon}</span>
-                      {tab.label}
-                    </Box>
-                  } 
-                />
-              ))}
-            </Tabs>
+  value={activeTab}
+  onChange={handleTabChange}
+  textColor="inherit"
+  variant="scrollable"
+  scrollButtons="auto"
+  allowScrollButtonsMobile
+  sx={{
+    // hide the *first* scroll button (backward arrow)
+    '& .MuiTabScrollButton-root:first-of-type': {
+      display: 'none',
+    },
+
+    '& .MuiTabs-indicator': {
+      backgroundColor: '#ff0000',
+      height: '3px',
+    },
+    '& .MuiTab-root': {
+      fontSize: '1rem',
+      fontWeight: 500,
+      color: isDarkMode ? '#ccc' : '#555',
+      px: 2,
+      '&.Mui-selected': {
+        color: '#ff0000',
+      },
+    },
+  }}
+>
+  {tabs.map((tab) => (
+    <Tab
+      key={tab.value}
+      value={tab.value}
+      label={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <span>{tab.icon}</span>
+          {tab.label}
+        </Box>
+      }
+    />
+  ))}
+</Tabs>
 
             {/* Content */}
             <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>

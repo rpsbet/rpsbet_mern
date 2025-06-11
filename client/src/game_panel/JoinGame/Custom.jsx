@@ -156,6 +156,8 @@ const ResponsiveGameContainer = React.memo(({
   logEvent,
   Physics,
   isWalletPopupActive,
+  isProcessing, // Add this prop
+  processingMessage,
   isCreator,
   containerSize,
   isMobile,
@@ -278,8 +280,8 @@ const ResponsiveGameContainer = React.memo(({
         width: '100%',
         height: '100%',
         overflow: 'visible',
-        filter: isWalletPopupActive ? 'blur(8px)' : 'none',
-        pointerEvents: isWalletPopupActive ? 'none' : 'auto',
+        filter: (isWalletPopupActive || isProcessing) ? 'blur(8px)' : 'none',
+        pointerEvents: (isWalletPopupActive || isProcessing) ? 'none' : 'auto',
         position: 'relative',
         transition: 'filter 0.3s ease',
       }}>
@@ -299,8 +301,7 @@ const ResponsiveGameContainer = React.memo(({
     <Box sx={containerStyles} tabIndex="0">
       {renderGameContent()}
 
-      {/* Enhanced Wallet Popup Overlay */}
-      {isWalletPopupActive && (
+      {isProcessing && (
         <Box sx={{
           position: 'absolute',
           top: 0,
@@ -311,7 +312,7 @@ const ResponsiveGameContainer = React.memo(({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'rgba(0, 0, 0, 0.8)',
+          background: 'rgba(0, 0, 0, 0.1)',
           backdropFilter: 'blur(10px)',
           zIndex: 10,
           pointerEvents: 'auto',
@@ -331,9 +332,7 @@ const ResponsiveGameContainer = React.memo(({
           >
             <CircularProgress
               color='error'
-              sx={{
-                mb: 3,
-              }}
+              sx={{ mb: 3 }}
               size={isMobile ? 40 : 48}
             />
             <Typography sx={{
@@ -342,14 +341,14 @@ const ResponsiveGameContainer = React.memo(({
               fontSize: isMobile ? '1rem' : '1.1rem',
               mb: 1,
             }}>
-              Confirm Transaction
+              Processing
             </Typography>
             <Typography sx={{
               color: 'rgba(255, 255, 255, 0.8)',
               fontSize: isMobile ? '0.85rem' : '0.9rem',
               lineHeight: 1.5,
             }}>
-              Please check your wallet and confirm the transaction to continue
+              {processingMessage || 'Please wait while we process your request...'}
             </Typography>
           </Box>
         </Box>
@@ -468,7 +467,17 @@ function Custom(props) {
     gameStartedCount: 0,
     isGameActive: false,
     hasDeposited: false,
+    isProcessing: false, // Add this
+    processingMessage: '', // Add this
   });
+
+  const blockGamePanel = (message = 'Processing...') => {
+    setGameState(prev => ({ ...prev, isProcessing: true, processingMessage: message }));
+  };
+
+  const unblockGamePanel = () => {
+    setGameState(prev => ({ ...prev, isProcessing: false, processingMessage: '' }));
+  };
 
   const [roomState, setRoomState] = useState({
     poolId: roomInfo.pool_id,
@@ -569,6 +578,7 @@ function Custom(props) {
       // console.log('[Custom] Deposit already processed for this game, skipping.');
       return true;
     }
+    blockGamePanel('Please check your wallet and confirm the transaction to continue');
 
     // Enhanced account creation with multiple fallbacks (copied from EliteSubscriptionModal)
     let account = null;
@@ -673,78 +683,108 @@ function Custom(props) {
       dispatch({ type: 'ERROR_MSG_BAR', payload: 'Error processing deposit.' });
       onChangeState({ betting: false });
       return false;
+    } finally {
+      unblockGamePanel();
     }
   }, [dispatch, bet_amount, roomInfo._id, roomInfo.name, reduxState.account, reduxState.balance, onChangeState, privyUser]);
 
   // Game join logic
   const joinGame = useCallback(async (result, multiplier) => {
     onChangeState({ result: '' });
+    blockGamePanel('Joining game...');
 
-    const resultData = await join({
-      bet_amount: parseFloat(bet_amount),
-      result: result || null,
-      multiplier: result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
-    });
+    try {
+      const resultData = await join({
+        bet_amount: parseFloat(bet_amount),
+        result: result || null,
+        multiplier: result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
+      });
 
-    const amount = resultData.amount || 0;
-    const currencyElement = convertToCurrency(Math.abs(amount), reduxState.solPrice);
-    const sign = amount >= 0 ? '+' : '-';
+      const amount = resultData.amount || 0;
+      const currencyElement = convertToCurrency(Math.abs(amount), reduxState.solPrice);
+      const sign = amount >= 0 ? '+' : '-';
 
-    let soundToPlay = null;
-    if (resultData.betResult === 1) soundToPlay = 'win';
-    else if (resultData.betResult === 0) soundToPlay = 'split';
-    else soundToPlay = 'lose';
+      let soundToPlay = null;
+      if (resultData.betResult === 1) soundToPlay = 'win';
+      else if (resultData.betResult === 0) soundToPlay = 'split';
+      else soundToPlay = 'lose';
 
-    if (playSound && soundToPlay) {
-      playSound(soundToPlay);
-    }
+      if (playSound && soundToPlay) {
+        playSound(soundToPlay);
+      }
 
-    const formattedResult = (
-      <span style={{
-        color: amount >= 0 ? '#00ff3a' : '#ff0000',
-        fontSize: '1.2rem',
-        fontWeight: 'bold',
-      }}>
-        {sign} {currencyElement}{' '}
-        <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
-          ({Math.abs(amount).toFixed(4)} SOL)
+      const formattedResult = (
+        <span style={{
+          color: amount >= 0 ? '#00ff3a' : '#ff0000',
+          fontSize: '1.2rem',
+          fontWeight: 'bold',
+        }}>
+          {sign} {currencyElement}{' '}
+          <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
+            ({Math.abs(amount).toFixed(4)} SOL)
+          </span>
         </span>
-      </span>
-    );
+      );
 
-    onResultChange(formattedResult, false);
-    onChangeState({ gameResult: resultData.betResult });
+      onResultChange(formattedResult, false);
+      onChangeState({ gameResult: resultData.betResult });
 
-    setGameState(prev => ({
-      ...prev,
-      gameStartedCount: prev.gameStartedCount + 1,
-      hasDeposited: false
-    }));
-  }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange]);
+      setGameState(prev => ({
+        ...prev,
+        gameStartedCount: prev.gameStartedCount + 1,
+        hasDeposited: false
+      }));
+
+    } catch (error) {
+      console.error('[Custom] Error joining game:', error);
+
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Failed to join game. Please try again.';
+      onResultChange(
+        <span style={{ color: '#ff0000', fontSize: '1rem' }}>
+          {errorMessage}
+        </span>,
+        false
+      );
+
+      // Reset betting state
+      onChangeState({ betting: false });
+
+    } finally {
+      // Always unblock the game panel, regardless of success or failure
+      unblockGamePanel();
+    }
+  }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange, blockGamePanel, unblockGamePanel, dispatch]);
 
   // Bet click handler
   const onBtnBetClick = useCallback(async (result, multiplier) => {
-    if (!validateIsAuthenticated(reduxState.isAuthenticated, dispatch)) return;
-    if (!validateBetAmount(bet_amount, reduxState.balance, dispatch)) return;
-    if (!validateBankroll(bet_amount, bankrollRef.current, dispatch)) return;
+    blockGamePanel('Validating bet...');
 
-    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-    const passwordCorrect = rooms[roomInfo._id];
+    try {
+      if (!validateIsAuthenticated(reduxState.isAuthenticated, dispatch)) return;
+      if (!validateBetAmount(bet_amount, reduxState.balance, dispatch)) return;
+      if (!validateBankroll(bet_amount, bankrollRef.current, dispatch)) return;
 
-    const executeJoin = async () => {
-      if (roomInfo.is_private && passwordCorrect !== true) {
-        dispatch(openGamePasswordModal());
+      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+      const passwordCorrect = rooms[roomInfo._id];
+
+      const executeJoin = async () => {
+        if (roomInfo.is_private && passwordCorrect !== true) {
+          dispatch(openGamePasswordModal());
+        } else {
+          await joinGame(result, multiplier);
+        }
+      };
+
+      if (modalState.skipConfirm) {
+        await executeJoin();
       } else {
-        await joinGame(result, multiplier);
+        openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', executeJoin);
       }
-    };
-
-    if (modalState.skipConfirm) {
-      await executeJoin();
-    } else {
-      openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', executeJoin);
+    } finally {
+      unblockGamePanel();
     }
-  }, [reduxState.isAuthenticated, reduxState.balance, bet_amount, roomInfo._id, roomInfo.is_private, modalState.skipConfirm, dispatch, joinGame]);
+  }, []);
 
   // Game event logger
   const logEvent = useCallback((eventType, data) => {
@@ -780,7 +820,7 @@ function Custom(props) {
         // console.log('Processing game result:', result, 'Multiplier:', multiplier);
         onBtnBetClick(result, result === 'win' ? multiplier : undefined);
       } else {
-        // console.log('[Custom] Skipping bet placement: No deposit made or invalid state');
+        onBtnBetClick(result, result === 'loss' ? multiplier : undefined);
         hasDepositedRef.current = false;
       }
     }
@@ -1193,6 +1233,8 @@ function Custom(props) {
             logEvent={logEvent}
             Physics={Physics}
             isWalletPopupActive={gameState.isWalletPopupActive}
+            isProcessing={gameState.isProcessing} // Add this
+            processingMessage={gameState.processingMessage} // Add this
             isCreator={isCreator}
             containerSize={containerSize}
             isMobile={isMobile}

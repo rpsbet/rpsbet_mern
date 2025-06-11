@@ -38,7 +38,7 @@ export const sendSolDeposit = async (
   onPopupClose = () => {},
   subscriptionInfo = null
 ) => {
-console.log('[sendSolDeposit] Starting SOL deposit process...', account);
+// console.log('[sendSolDeposit] Starting SOL deposit process...', account);
   const numAmount = parseFloat(amount);
   if (isNaN(numAmount) || numAmount <= 0) {
     const errorText = 'Please enter a valid SOL amount.';
@@ -132,22 +132,22 @@ console.log('[sendSolDeposit] Starting SOL deposit process...', account);
         return { success: false, error: errorText };
     }
 
-    console.log('[sendSolDeposit] User PublicKey:', fromUserPublicKey.toString());
-    console.log('[sendSolDeposit] Admin Wallet:', adminWalletPubkey.toString());
-    console.log('[sendSolDeposit] Amount:', numAmount, 'SOL');
+    // console.log('[sendSolDeposit] User PublicKey:', fromUserPublicKey.toString());
+    // console.log('[sendSolDeposit] Admin Wallet:', adminWalletPubkey.toString());
+    // console.log('[sendSolDeposit] Amount:', numAmount, 'SOL');
 
     const lamports = Math.floor(numAmount * LAMPORTS_PER_SOL);
-    console.log('[sendSolDeposit] Lamports to transfer:', lamports);
+    // console.log('[sendSolDeposit] Lamports to transfer:', lamports);
 
     // Enhanced balance check with real-time balance
     const userBalance = await connection.getBalance(fromUserPublicKey);
     const estimatedFee = 10000; // Increased fee estimate for safety (0.00001 SOL)
     
-    console.log('[sendSolDeposit] Current balance check:', {
-        userBalance: userBalance / LAMPORTS_PER_SOL,
-        required: (lamports + estimatedFee) / LAMPORTS_PER_SOL,
-        hasEnough: userBalance >= lamports + estimatedFee
-    });
+    // console.log('[sendSolDeposit] Current balance check:', {
+    //     userBalance: userBalance / LAMPORTS_PER_SOL,
+    //     required: (lamports + estimatedFee) / LAMPORTS_PER_SOL,
+    //     hasEnough: userBalance >= lamports + estimatedFee
+    // });
     
     if (userBalance < lamports + estimatedFee) {
         const errorText = `Insufficient balance. Need ${((lamports + estimatedFee) / LAMPORTS_PER_SOL).toFixed(6)} SOL, but only have ${(userBalance / LAMPORTS_PER_SOL).toFixed(6)} SOL.`;
@@ -161,7 +161,7 @@ console.log('[sendSolDeposit] Starting SOL deposit process...', account);
     }
 
     // Get fresh blockhash
-    console.log('[sendSolDeposit] Getting latest blockhash...');
+    // console.log('[sendSolDeposit] Getting latest blockhash...');
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
     
     // Create transaction with proper setup
@@ -176,18 +176,17 @@ console.log('[sendSolDeposit] Starting SOL deposit process...', account);
       })
     );
 
-    console.log('[sendSolDeposit] Transaction created, requesting signature...');
     onPopupOpen();
 
     let signature;
     try {
       // Use the most compatible wallet method
       if (window.solana.signAndSendTransaction) {
-        console.log('[sendSolDeposit] Using signAndSendTransaction...');
+        // console.log('[sendSolDeposit] Using signAndSendTransaction...');
         const result = await window.solana.signAndSendTransaction(transaction);
         signature = result.signature || result;
       } else if (window.solana.signTransaction) {
-        console.log('[sendSolDeposit] Using signTransaction + sendRawTransaction...');
+        // console.log('[sendSolDeposit] Using signTransaction + sendRawTransaction...');
         const signedTransaction = await window.solana.signTransaction(transaction);
         signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
           skipPreflight: false,
@@ -228,10 +227,10 @@ console.log('[sendSolDeposit] Starting SOL deposit process...', account);
       return { success: false, error: errorMessage };
     }
 
-    console.log('[sendSolDeposit] Transaction signed and sent. Signature:', signature);
+    // console.log('[sendSolDeposit] Transaction signed and sent. Signature:', signature);
 
     // Enhanced transaction confirmation
-    console.log('[sendSolDeposit] Confirming transaction...');
+    // console.log('[sendSolDeposit] Confirming transaction...');
     try {
       const confirmation = await connection.confirmTransaction({
           signature,
@@ -253,7 +252,6 @@ console.log('[sendSolDeposit] Starting SOL deposit process...', account);
     }
     
     onPopupClose();
-    console.log('[sendSolDeposit] Transaction confirmed, sending to backend...');
 
     // Send to backend for verification
     const result = await axios.post('/stripe/sol_deposit', {

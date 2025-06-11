@@ -209,12 +209,12 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
     const {
       // Required fields
       bet_amount,
-      name,
       connectedAccount, // Web3 wallet address
       privateKey, // Required for automated signing
       reactPrompt, // Required for React generation
-
-      // Optional fields
+    
+      // Optional fields (name can be extracted from generated code)
+      name: providedName, // Rename to avoid confusion
       imageUrls = [],
       ticker: originalTicker,
       description: originalDescription = '',
@@ -226,9 +226,9 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       endgame_amount,
       endgame_type,
       room_password = '',
-
+    
       // Image generation options
-      generateImage = true, // Generate image from prompt if no imageUrls provided
+      generateImage = true,
       imageSize = '1024x1024',
       imageQuality = 'standard'
     } = req.body;
@@ -247,14 +247,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       return res.status(400).json({
         success: false,
         error: 'Invalid bet amount. Minimum is 0.001 SOL'
-      });
-    }
-
-    if (!name || name.length < 3 || name.length > 20) {
-      console.log('❌ Invalid name:', name, 'Length:', name?.length);
-      return res.status(400).json({
-        success: false,
-        error: 'Game name must be 3-20 characters'
       });
     }
 
@@ -446,13 +438,32 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         error: 'Failed to generate required React component: ' + reactError.message
       });
     }
+
+    // DETERMINE FINAL NAME - Use provided name or extract from code
+    let finalName = providedName;
+    if (!finalName && extractedInfo && extractedInfo.name) {
+      finalName = extractedInfo.name;
+      console.log('Using extracted name:', finalName);
+    }
+
+    // Validation for final name (after extraction)
+    if (!finalName || finalName.length < 3 || finalName.length > 20) {
+      console.log('❌ Invalid final name:', finalName, 'Length:', finalName?.length);
+      return res.status(400).json({
+        success: false,
+        error: 'Game name must be 3-20 characters (provided or extracted from game code)'
+      });
+    }
+
+    console.log('✅ Final name validated:', finalName);
+
     // AUTOMATIC GAME TYPE CLASSIFICATION
     console.log('🏷️ CLASSIFYING GAME TYPES AUTOMATICALLY');
     let classifiedGameTypes = [];
 
     try {
       classifiedGameTypes = await classifyGameTypes(
-        name,
+        finalName, // Use finalName instead of undefined name
         finalGameCode,
         reactPrompt,
         description || extractedInfo?.description || ''
@@ -470,7 +481,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         privateKey,
         amount: user_bet,
         fromAddress: connectedAccount,
-        roomName: name
+        roomName: finalName // Use finalName instead of undefined name
       });
       console.log('✅ Automated deposit successful:', depositResult.txHash);
     } catch (depositError) {
@@ -523,9 +534,9 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       game_type: classifiedGameTypes,
       user_bet: amountAfterFee,
       tax,
-      name,
+      name: finalName, // Use finalName instead of undefined name
       image: finalImageUrl,
-      ticker: ticker || name.substring(0, 6).toUpperCase(),
+      ticker: ticker || finalName.substring(0, 6).toUpperCase(), // Use finalName for ticker fallback
       x_link,
       gameCode: finalGameCode,
       prompt: reactPrompt,
@@ -543,7 +554,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       description: description || 'An exciting game room',
       gameTypes: classifiedGameTypes, // Add the automatically classified game types
     });
-
 
     console.log('New room created (not saved yet):', {
       name: newRoom.name,
@@ -712,8 +722,62 @@ CRITICAL: **Never declare a local function or variable named logEvent. Always ca
 - Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
 - Always use the prop: props.logEvent or destructured logEvent from props
 
+PRACTICE MODE IMPLEMENTATION:
+- Add practice mode state: const [isPracticeMode, setIsPracticeMode] = useState(false);
+- Include TWO start buttons:
+  1. "Start Game" - Normal mode with logging: onClick={() => startGame(false)}
+  2. "Practice Mode" - No logging: onClick={() => startGame(true)}
+- Modify startGame function to accept practice parameter:
+  const startGame = (practiceMode = false) => {
+    setIsPracticeMode(practiceMode);
+    setGameStarted(true);
+    setGameEnded(false);
+    // Only log if NOT in practice mode
+    if (!practiceMode && logEvent) {
+      logEvent("gameStarted", { timestamp: new Date().toISOString() });
+    }
+    // Reset other game state...
+  };
+- Modify endGame function to respect practice mode:
+  const endGame = (result, multiplier) => {
+    setGameEnded(true);
+    // Only log if NOT in practice mode
+    if (!isPracticeMode && logEvent) {
+      logEvent("gameEnded", { 
+        timestamp: new Date().toISOString(), 
+        result, 
+        multiplier 
+      });
+    }
+    // Update game history for both modes
+    setGameHistory(prev => [...prev, { 
+      id: Date.now(), 
+      result, 
+      multiplier, 
+      timestamp: new Date().toISOString(),
+      practice: isPracticeMode 
+    }]);
+  };
+- Display practice indicator when active:
+  {isPracticeMode && (
+    <Typography variant="caption" sx={{ color: '#ffeb3b', textAlign: 'center' }}>
+      🎯 Practice Mode - No logging
+    </Typography>
+  )}
+- Style practice button differently:
+  <Button 
+    variant="outlined" 
+    sx={{ 
+      borderColor: '#ffeb3b', 
+      color: '#ffeb3b',
+      '&:hover': { borderColor: '#fff', color: '#fff' }
+    }}
+  >
+    Practice Mode
+  </Button>
+
 CRITICAL LAYOUT REQUIREMENTS:
-- Main game container MUST use: width: "100%", height: "100vh", minHeight: "100vh"
+- Main game container MUST use: width: "100%", height: "100%", minHeight: "600px"
 - PRIORITIZE COMPACT DESIGN: Use efficient spacing, minimal padding, dense layouts
 - Avoid excessive whitespace - pack UI elements efficiently
 - Game areas should be concentrated, not spread across full viewport
@@ -723,8 +787,8 @@ CRITICAL LAYOUT REQUIREMENTS:
 Container Structure:
 <Box sx={{
   width: "100%",
-  height: "100vh",
-  minHeight: "100vh",
+  height: "100%",
+  minHeight: "100%",
   maxWidth: "100%",
   overflow: "hidden",
   position: "relative",
@@ -743,46 +807,8 @@ COMPACT DESIGN PATTERNS:
 - Use flex layouts with minimal gaps
 
 CUSTOM MODAL/EXPANDABLE REQUIREMENTS:
-- DO NOT use MUI Modal components
-- Create custom overlay modals using fixed positioning
-- Use full-screen overlay approach for better reliability and mobile experience
-
-Modal Structure:
-{showRules && (
-  <Box 
-    sx={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(8, 8, 8, 0.95)',
-      zIndex: 9999,
-      padding: 3,
-      overflowY: 'auto',
-      backdropFilter: 'blur(10px)'
-    }}
-  >
-    <Typography variant="h4" sx={{ color: 'white', mb: 3, textAlign: 'center' }}>Game Rules</Typography>
-    <Box sx={{ maxWidth: '600px', margin: '0 auto' }}>
-      <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>Rule 1: Click to score points...</Typography>
-      <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 3 }}>Rule 2: Avoid obstacles...</Typography>
-    </Box>
-    <Box sx={{ textAlign: 'center', mt: 4 }}>
-      <Button 
-        onClick={() => setShowRules(false)} 
-        variant="contained"
-        sx={{ 
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          color: 'white',
-          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-        }}
-      >
-        Close Rules
-      </Button>
-    </Box>
-  </Box>
-)}
+      - Center modal within the main game container
+      - NO viewport units anywhere
 
 RESPONSIVE DESIGN RULES:
 - Use const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
