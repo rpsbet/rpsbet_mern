@@ -15,7 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { getCommentsForRoom, createComment, deleteComment } from '../redux/Logic/logic.actions';
 import Avatar from './Avatar';
 import PlayerModal from '../game_panel/modal/PlayerModal';
-import { formatDistanceToNow, parse } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
 import { ThemeProvider } from '@mui/material/styles';
@@ -227,23 +227,7 @@ const Comments = ({ roomId }) => {
                     handleCommentSubmit();
                   }
                 }}
-                sx={{
-                  mr: 2,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: 1,
-                  '& .MuiFilledInput-root': {
-                    color: '#ffffff',
-                    '&:before': {
-                      borderBottomColor: 'rgba(255, 255, 255, 0.2)',
-                    },
-                    '&:hover:before': {
-                      borderBottomColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  },
-                }}
+               
               />
               <Button
                 onClick={handleCommentSubmit}
@@ -355,7 +339,7 @@ const Comments = ({ roomId }) => {
                     variant="caption"
                     sx={{ fontSize: '0.6em', color: 'rgba(255, 255, 255, 0.7)' }}
                   >
-                    {formatDistanceToNow(parse(comment.created_at, 'dd-MM-yyyy HH:mm', new Date()), { addSuffix: true })}
+  {comment.created_at ? formatDistanceToNow(parseISO(comment.created_at), { addSuffix: true }) : 'N/A'}
 
 
                   </Typography>
@@ -370,7 +354,7 @@ const Comments = ({ roomId }) => {
                   aria-label="delete"
                   sx={{
                     ml: 1,
-                    color: '#ff4d4d',
+                    color: '#ff0000',
                     '&:hover': {
                       background: 'rgba(255, 77, 77, 0.1)',
                     },

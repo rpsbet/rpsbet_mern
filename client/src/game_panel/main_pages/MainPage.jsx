@@ -134,7 +134,6 @@ const CreateRoomPanel = ({
                 height: 'auto',
                 float: 'right',
                 transform: 'scale(0.6)',
-                filter: user?.elite === 'black' ? 'grayscale(1)' : 'hue-rotate(132deg)',
               }}
             >
             <VerifiedIcon
@@ -144,8 +143,9 @@ const CreateRoomPanel = ({
                 right: 0,
                 transform: 'translate(25%, -25%)', // Adjust position
                 fontSize: '1.2rem', // Adjust size
-                color: '#ff0000', // Example: gray for black elite, green for red elite
-                backgroundColor: 'white', // Give it a background to stand out
+                color: '#fff', // Example: gray for black elite, green for red elite
+                backgroundColor: '#fff',
+                fill: '#ff0000', // Give it a background to stand out
                 borderRadius: '50%', // Make it circular
               }}
             />
@@ -158,6 +158,9 @@ const CreateRoomPanel = ({
                   : '#ff0000',
                 fontWeight: 'bold',
                 fontSize: '0.7rem',
+                ml: 0.5,
+                mt: 0.5,
+
               }}
             >
               {isEliteUser ? `${user.elite.toUpperCase()} ELITE USER` : 'ELITE USERS ONLY'}

@@ -7,6 +7,8 @@ const User = require('../model/User');
 const GameLog = require('../model/GameLog');
 const System = require('../model/SystemSetting');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
+const transpileReactCode = require('../helper/util/transpileReactCode');
+
 const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const anthropic = new Anthropic({
@@ -681,6 +683,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
 });
 
 // Helper function to generate React component
+// Replace the generateReactComponent function in public-api.js with this:
+
 async function generateReactComponent(prompt, imageUrls = []) {
   console.log('⚛️ GENERATING REACT COMPONENT');
   console.log('Prompt:', prompt);
@@ -697,6 +701,7 @@ async function generateReactComponent(prompt, imageUrls = []) {
     audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
   };
 
+  // Use the EXACT same system prompt as /generate-react endpoint
   const systemPrompt = `You are an elite React developer. Generate a complete, working React game component with MANDATORY logging and house edge enforcement.
 
 Output Requirements:
@@ -952,7 +957,16 @@ House Edge Validation Comment:
     messages: [
       {
         role: 'user',
-        content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.`,
+        content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.
+        
+        CRITICAL REQUIREMENTS:
+        1. MUST accept and use logEvent prop for game start/end tracking
+        2. MUST implement working practice mode (no logging)
+        3. MUST enforce house edge on all multipliers
+        4. MUST include proper game history and state management
+        5. NO financial/betting logic allowed
+        
+        The component will be tested for all logging functionality and house edge compliance.`,
       },
     ],
     stream: true,
@@ -972,15 +986,66 @@ House Edge Validation Comment:
     .replace(/^\s*[\r\n]+/gm, '')
     .trim();
 
+  // Add validation similar to /generate-react endpoint
+  const validationErrors = [];
+
+  // Check for logEvent prop handling
+  if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
+    validationErrors.push('Missing logEvent prop in component signature');
+  }
+
+  // Check for specific logEvent patterns
+  if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
+    validationErrors.push('Missing required gameStarted logging call');
+  }
+
+  if (!cleanedCode.includes('logEvent("gameEnded"') && !cleanedCode.includes("logEvent('gameEnded'")) {
+    validationErrors.push('Missing required gameEnded logging call');
+  }
+
+  // Check for practice mode implementation
+  if (!cleanedCode.includes('isPracticeMode') || !cleanedCode.includes('Practice Mode')) {
+    validationErrors.push('Missing practice mode implementation');
+  }
+
+  // Check for house edge implementation
+  const hasHouseEdge = cleanedCode.includes('houseEdge') ||
+    cleanedCode.includes('0.9') ||
+    cleanedCode.includes('Math.min') ||
+    cleanedCode.includes('* 0.') ||
+    cleanedCode.includes('houseEdgeFactor');
+
+  if (!hasHouseEdge) {
+    validationErrors.push('Missing house edge enforcement in multiplier calculations');
+  }
+
+  // If validation fails, log but don't regenerate (to match public API behavior)
+  if (validationErrors.length > 0) {
+    console.warn(`[Public API] Generated code has validation issues: ${validationErrors.join('; ')}`);
+    // You can choose to regenerate here or just log the warning
+  }
+
+  // Ensure proper export
   if (!cleanedCode.endsWith('export default App;')) {
     cleanedCode = `${cleanedCode}\nexport default App;`;
+  }
+
+  // IMPORTANT: Add transpilation like /generate-react does
+  // You need to import or copy the transpileReactCode function
+  let transpiledCode;
+  try {
+    transpiledCode = await transpileReactCode(cleanedCode);
+  } catch (transpileError) {
+    console.error('Transpilation failed, using cleaned code:', transpileError);
+    transpiledCode = cleanedCode;
   }
 
   console.log('Cleaned code length:', cleanedCode.length);
   console.log('✅ React component generation completed');
 
   return {
-    finalApp: cleanedCode,
+    finalApp: transpiledCode, // Use transpiled code instead of cleaned code
+    originalCode: cleanedCode, // Keep original for reference
     proxiedAssets
   };
 }
