@@ -12,6 +12,8 @@ const Anthropic = require('@anthropic-ai/sdk');
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+const GameCode = require('../model/GameCode');
+
 const { OpenAI } = require('openai');
 // Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
 const openai = new OpenAI({
@@ -212,7 +214,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       connectedAccount, // Web3 wallet address
       privateKey, // Required for automated signing
       reactPrompt, // Required for React generation
-    
+
       // Optional fields (name can be extracted from generated code)
       name: providedName, // Rename to avoid confusion
       imageUrls = [],
@@ -226,7 +228,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       endgame_amount,
       endgame_type,
       room_password = '',
-    
+
       // Image generation options
       generateImage = true,
       imageSize = '1024x1024',
@@ -527,7 +529,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       image: finalImageUrl,
       ticker: ticker || finalName.substring(0, 6).toUpperCase(), // Use finalName for ticker fallback
       x_link,
-      gameCode: finalGameCode,
       prompt: reactPrompt,
       telegram_link,
       website_link,
@@ -552,6 +553,12 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       image: newRoom.image
     });
 
+    const gameCodeDoc = finalGameCode ? new GameCode({
+      room: newRoom._id,
+      code: finalGameCode,
+      created_by: req.user._id,
+      version: 1
+    }) : null;
     // Create game log
     console.log('📝 CREATING GAME LOG');
     const newGameLog = new GameLog({
@@ -591,6 +598,9 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
           { $inc: { value: fee } }
         )
       ]);
+      if (gameCodeDoc) {
+        await saveDocumentWithRetry(gameCodeDoc);
+      }
       console.log('✅ All documents saved successfully');
     } catch (saveError) {
       console.error('❌ Database save error:', saveError);
@@ -687,11 +697,11 @@ async function generateReactComponent(prompt, imageUrls = []) {
     audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
   };
 
-  const systemPrompt = `You are an elite React developer. Generate a complete, working React game component.
+  const systemPrompt = `You are an elite React developer. Generate a complete, working React game component with MANDATORY logging and house edge enforcement.
 
 Output Requirements:
 - Return ONLY valid JavaScript/React code for the App component
-- Start with "const App = ..." or "function App"
+- Start with "const App = ({ logEvent }) => {" or "const App = (props) => { const { logEvent } = props;"
 - End with "export default App;"
 - No markdown, explanations, or extra text
 
@@ -699,198 +709,240 @@ Required Imports:
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 
+🚨 ABSOLUTE FORBIDDEN TERMS 🚨
+NEVER use these words anywhere in your code (will cause automatic rejection):
+- "bet" (use "wager", "stake", "play" instead)
+- "balance" (use "score", "points", "total" instead) 
+- "wallet" (use "account", "profile" instead)
+- "coins", "credits", "cash", "money", "currency", "dollar", "cent"
+- "deposit", "withdraw", "payout", "jackpot"
+
+SAFE ALTERNATIVES:
+- Instead of "bet amount" → "play amount" or "stake"
+- Instead of "balance" → "player score" or "current total"
+- Instead of "betting" → "playing" or "gaming"
+- Instead of "place bet" → "start round" or "begin game"
+
 CRITICAL: NO FINANCIAL LOGIC
-- DO NOT include any bet amount, balance, wallet, or money-related state
-- DO NOT implement betting mechanics, currency displays, or financial calculations
-- DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
-- Focus purely on game mechanics and user interaction
-- Financial logic will be handled by external systems
+- DO NOT include any financial amounts, monetary calculations, or payment processing
+- DO NOT implement financial mechanics, currency displays, or monetary transactions
+- Focus purely on game mechanics, scoring, and user interaction
+- All financial logic will be handled by external systems
 
-CRITICAL: **Never declare a local function or variable named logEvent. Always call the logEvent prop as provided. If you redefine logEvent, your code will break in production.**
-- The component receives logEvent as a prop - use it directly: logEvent("gameStarted", { ... })
-- Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
-- Always use the prop: props.logEvent or destructured logEvent from props
+🚨 MANDATORY LOGEVENT IMPLEMENTATION 🚨
+This is CRITICAL - games without proper logging will be rejected:
 
-PRACTICE MODE IMPLEMENTATION:
-- Add practice mode state: const [isPracticeMode, setIsPracticeMode] = useState(false);
-- Include TWO start buttons:
-  1. "Start Game" - Normal mode with logging: onClick={() => startGame(false)}
-  2. "Practice Mode" - No logging: onClick={() => startGame(true)}
-- Modify startGame function to accept practice parameter:
-  const startGame = (practiceMode = false) => {
-    setIsPracticeMode(practiceMode);
-    setGameStarted(true);
-    setGameEnded(false);
-    // Only log if NOT in practice mode
-    if (!practiceMode && logEvent) {
-      logEvent("gameStarted", { timestamp: new Date().toISOString() });
+1. COMPONENT SIGNATURE - MUST start with logEvent prop:
+REQUIRED FORMAT: const App = ({ logEvent }) => {
+ALTERNATIVE FORMAT: const App = (props) => { const { logEvent } = props;
+DO NOT USE: const App = () => { (this will fail validation)
+
+2. FIRST LINE AFTER COMPONENT START - Add logEvent validation:
+const App = ({ logEvent }) => {
+  // MANDATORY: Add this validation immediately
+  useEffect(() => {
+    if (!logEvent || typeof logEvent !== 'function') {
+      console.error('⚠️ CRITICAL: logEvent prop is missing or invalid');
+    } else {
+      console.log('✅ logEvent prop validated successfully');
     }
-    // Reset other game state...
-  };
-- Modify endGame function to respect practice mode:
-  const endGame = (result, multiplier) => {
-    setGameEnded(true);
-    // Only log if NOT in practice mode
-    if (!isPracticeMode && logEvent) {
-      logEvent("gameEnded", { 
-        timestamp: new Date().toISOString(), 
-        result, 
-        multiplier 
-      });
-    }
-    // Update game history for both modes
-    setGameHistory(prev => [...prev, { 
-      id: Date.now(), 
-      result, 
-      multiplier, 
+  }, [logEvent]);
+
+3. MANDATORY GAME START LOGGING - Must be exactly this pattern:
+const startGame = (practiceMode = false) => {
+  setIsPracticeMode(practiceMode);
+  setGameStarted(true);
+  setGameEnded(false);
+  setGameStartTime(Date.now());
+  
+  // CRITICAL: This exact logging pattern is required
+  if (!practiceMode && logEvent && typeof logEvent === 'function') {
+    logEvent("gameStarted", { 
       timestamp: new Date().toISOString(),
-      practice: isPracticeMode 
-    }]);
-  };
-- Display practice indicator when active:
-  {isPracticeMode && (
-    <Typography variant="caption" sx={{ color: '#ffeb3b', textAlign: 'center' }}>
-      🎯 Practice Mode - No logging
-    </Typography>
-  )}
-- Style practice button differently:
+      gameType: "REPLACE_WITH_ACTUAL_GAME_NAME",
+      practiceMode: false,
+      sessionId: Date.now()
+    });
+    console.log('🎮 Game started - event logged');
+  } else if (practiceMode) {
+    console.log('🎯 Practice mode - no logging');
+  }
+  
+  // Reset other game state here...
+};
+
+4. MANDATORY GAME END LOGGING - Must use this exact pattern:
+const endGame = useCallback((result, multiplier) => {
+  setGameEnded(true);
+  const finalMultiplier = parseFloat(multiplier) || 1.0;
+  
+  // CRITICAL: This exact logging pattern is required
+  if (!isPracticeMode && logEvent && typeof logEvent === 'function') {
+    logEvent("gameEnded", { 
+      timestamp: new Date().toISOString(),
+      result: result, // Must be "win", "loss", or "draw"
+      multiplier: finalMultiplier,
+      gameType: "REPLACE_WITH_ACTUAL_GAME_NAME",
+      practiceMode: false,
+      sessionData: {
+        duration: Math.round((Date.now() - gameStartTime) / 1000),
+        actionsPerformed: actionCount || 0
+      }
+    });
+  }
+  
+  // Always update game history (both modes)
+  setGameHistory(prev => [...prev.slice(-9), { 
+    id: Date.now(), 
+    result, 
+    multiplier: finalMultiplier, 
+    timestamp: new Date().toISOString(),
+    practice: isPracticeMode || false
+  }]);
+}, [isPracticeMode, logEvent, gameStartTime]);
+
+5. PRACTICE MODE IMPLEMENTATION - MANDATORY:
+- Add state: const [isPracticeMode, setIsPracticeMode] = useState(false);
+- Include TWO start buttons:
+  
+  {/* Normal Mode Button */}
+  <Button 
+    variant="contained" 
+    onClick={() => startGame(false)}
+    sx={{ 
+      background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+      '&:hover': { background: 'linear-gradient(45deg, #1976D2 30%, #0288D1 90%)' }
+    }}
+  >
+    Start Game
+  </Button>
+  
+  {/* Practice Mode Button */}
   <Button 
     variant="outlined" 
+    onClick={() => startGame(true)}
     sx={{ 
       borderColor: '#ffeb3b', 
       color: '#ffeb3b',
       '&:hover': { borderColor: '#fff', color: '#fff' }
     }}
   >
-    Practice Mode
+    🎯 Practice Mode
   </Button>
 
-CRITICAL LAYOUT REQUIREMENTS:
-- Main game container MUST use: width: "100%", height: "100%", minHeight: "600px"
-- PRIORITIZE COMPACT DESIGN: Use efficient spacing, minimal padding, dense layouts
-- Avoid excessive whitespace - pack UI elements efficiently
-- Game areas should be concentrated, not spread across full viewport
-- Use compact button sizes and tight grid layouts where appropriate
-- Desktop/tablet versions should still use full width but with compact vertical spacing
+6. PRACTICE MODE INDICATOR:
+{isPracticeMode && (
+  <Typography variant="caption" sx={{ 
+    color: '#ffeb3b', 
+    textAlign: 'center',
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(255, 235, 59, 0.1)',
+    padding: 1,
+    borderRadius: 1,
+    border: '1px solid #ffeb3b'
+  }}>
+    🎯 PRACTICE MODE - Free to Play
+  </Typography>
+)}
 
-Container Structure:
-<Box sx={{
-  width: "100%",
-  height: "100%",
-  minHeight: "100%",
-  maxWidth: "100%",
-  overflow: "hidden",
-  position: "relative",
-  display: "flex",
-  flexDirection: "column",
-  padding: 1, // Compact padding
-  gap: 1 // Tight spacing between elements
-}}>
+🚨 MANDATORY HOUSE EDGE ENFORCEMENT 🚨
+ALL games must maintain 5-8% house edge to ensure profitability:
 
-COMPACT DESIGN PATTERNS:
-- Use dense prop on MUI components where available
-- Reduce default spacing: gap: 1, padding: 1-2, margin: 0.5-1
-- Smaller button sizes: size="small" for non-critical buttons
-- Tighter typography: Reduce line height and spacing
-- Group related elements closely together
-- Use flex layouts with minimal gaps
+CASINO GAME TYPES (mines, crash, slots, dice, roulette, lottery):
+- Apply house edge factor: 0.92-0.95 (5-8% house edge)
+- Maximum multiplier cap: 50x
+- Example mines calculation:
+const calculateMinesMultiplier = (safeReveals, totalMines, totalSpaces) => {
+  const baseMultiplier = Math.pow((totalSpaces - totalMines) / (totalSpaces - totalMines - safeReveals), safeReveals);
+  const houseEdgeFactor = 0.93; // 7% house edge
+  const finalMultiplier = baseMultiplier * houseEdgeFactor;
+  return Math.min(finalMultiplier, 50).toFixed(2);
+};
 
-CUSTOM MODAL/EXPANDABLE REQUIREMENTS:
-      - Center modal within the main game container
-      - NO viewport units anywhere
+CRASH GAME MULTIPLIERS:
+const generateCrashPoint = () => {
+  const random = Math.random();
+  // House-favored crash generation (favors lower multipliers)
+  const crashPoint = 1 / (1 - Math.pow(random, 1.3) * 0.90);
+  return Math.max(crashPoint, 1.01).toFixed(2);
+};
 
-RESPONSIVE DESIGN RULES:
-- Use const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-- Add window resize listener: useEffect(() => { const handleResize = () => setIsMobile(window.innerWidth <= 768); window.addEventListener('resize', handleResize); return () => window.removeEventListener('resize', handleResize); }, []);
-- Desktop/Tablet (≥768px): Full width, no responsive scaling, fixed layouts
-- Mobile (<768px): Apply responsive adjustments only
-- Font sizes: Use fixed sizes for desktop, scale down only on mobile
-- Button sizes: Full size on desktop, compact on mobile only
-- Game elements: Maintain full width, adjust spacing/padding for mobile only
+SKILL-BASED GAMES (puzzle, platformer, racing):
+- Apply house edge to score conversion: score * 0.92
+- Cap multipliers at 4x maximum
+const calculateSkillMultiplier = (score) => {
+  const adjustedScore = score * 0.92; // House edge
+  const multiplier = 1 + Math.log10(1 + adjustedScore / 150);
+  return Math.min(multiplier, 4.0).toFixed(2);
+};
 
-Mobile-Only Responsive Patterns:
-- Conditional styling: sx={{ fontSize: isMobile ? '1rem' : '1.5rem' }}
-- Mobile-specific layouts: flexDirection: isMobile ? 'column' : 'row'
-- Touch targets: Ensure minimum 44px on mobile only
-- Spacing: Reduce padding/margins on mobile only
+MULTIPLIER VALIDATION - Add this function:
+const validateMultiplier = (multiplier, gameType) => {
+  const numMultiplier = parseFloat(multiplier);
+  if (isNaN(numMultiplier) || numMultiplier < 0) return "0.00";
+  
+  const maxMultiplier = gameType === 'skill' ? 4.0 : 50.0;
+  return Math.min(numMultiplier, maxMultiplier).toFixed(2);
+};
 
-Game Title Requirement:
-- Include a game title displayed prominently at the top
-- Use a <Typography> component with id="game-title"
-- Example: <Typography id="game-title" variant={isMobile ? "h5" : "h4"}>Game Name</Typography>
-- The title should be 3-20 characters, catchy, and relevant to the game theme
+🚨 MANDATORY CODE STRUCTURE 🚨
 
-GAME STATE MANAGEMENT:
-- Track game state: gameStarted (boolean), gameEnded (boolean), multiplier (number, initially 1.0), result (string: "win"/"loss"/"other"), totalOptions (number), safeOptions (number), totalMines (number), actionsTaken (number)
-- On game start: logEvent("gameStarted", { timestamp: new Date().toISOString() }), set gameStarted to true
-- On game end: determine result, set gameEnded to true, call logEvent("gameEnded", { timestamp: new Date().toISOString(), result, multiplier })
+REQUIRED STATE VARIABLES:
+const [gameStarted, setGameStarted] = useState(false);
+const [gameEnded, setGameEnded] = useState(false);
+const [isPracticeMode, setIsPracticeMode] = useState(false);
+const [gameHistory, setGameHistory] = useState([]);
+const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
+const [gameStartTime, setGameStartTime] = useState(0);
 
-DYNAMIC CHART/GRAPH SYSTEM (for crash games):
-- If prompt implies "crash" game, include line chart with canvas:
-  - Use canvas via useRef: <canvas ref={chartRef} width={500} height={200} />
-  - Plot hardcoded exponential curve from 1.0 to 10x over 100 points
-  - Formula: displayMultiplier = 1 * Math.exp(0.05 * (x / 100) * 100)
-  - Animate with requestAnimationFrame over fixed 10-second duration
-  - Style with neon gradient and glow effects
-  - Chart progression is cosmetic only, independent of actual game logic
+REQUIRED FUNCTIONS (all must be present):
+- startGame(practiceMode = false)
+- endGame(result, multiplier) 
+- resetGame()
+- validateMultiplier(multiplier, gameType)
 
-GAME EVENTS AND RESULTS:
-- Initialize: const [gameHistory, setGameHistory] = useState([]);
-- On game end: setGameHistory(prev => [...prev, { id: Date.now(), result, multiplier, timestamp: new Date().toISOString() }]);
-- Display history table at bottom, limit to 10-20 recent games
-- Color positive values #48ff00, negative values #ff0000
+LAYOUT REQUIREMENTS:
+- Main container: width: "100%", height: "100%", minHeight: "400px", padding: "60px 30px"
+- Game title: <Typography id="game-title" variant="h4">GAME NAME</Typography>
+- Responsive design with isMobile state
+- Game rules overlay: <Box id="game-rules"> with toggle functionality
 
-DYNAMIC MULTIPLIER CALCULATION:
-- **Casino-style games (mines, crash, slots, dice, roulette, etc.)**:
-  - For mines/choice games: multiplier = (1.0 + 0.5 * (totalMines / (totalOptions - totalMines)) * Math.pow(1.3, actionsTaken)).toFixed(2)
-  - For crash games: Generate crash point: multiplier = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95)
-    Real-time progression: multiplier = 1 * Math.exp(k * timeElapsed), where k = 0.03
-    Game ends when multiplier >= crash point (loss) or user cashes out (win)
-  - For other casino games: Use predetermined multiplier based on game outcome (e.g., 2x for win, 0x for loss)
-- **Skill-based games (puzzle, platformer, racing, arcade, etc.)**:
-  - Convert final score to multiplier using: calculateMultiplierFromScore(score)
-  - Use logarithmic scaling to keep multipliers reasonable (1-5x range)
+GAME HISTORY DISPLAY:
+- Show last 10 games in a table format
+- Color code: wins (#48ff00), losses (#ff0000)
+- Include practice mode indicator
+- Display timestamp and multiplier
 
-MULTIPLIER SYSTEM DETECTION:
-- Casino-style indicators: "mines", "crash", "rocket", "slots", "dice", "roulette", "blackjack", "poker", "lottery", "scratch", "spin"
-- Skill-based indicators: "puzzle", "platformer", "racing", "arcade", "shooting", "jumping", "collecting", "avoiding", "speed", "accuracy"
-- Default to casino-style if unclear
+ERROR PREVENTION:
+- Validate all numeric inputs
+- Handle edge cases (division by zero, negative values)
+- Ensure multiplier never exceeds caps
+- Always return valid multiplier strings with 2 decimal places
 
-VISIBLE MULTIPLIER DISPLAY:
-- Display multiplier prominently during gameplay:
-  - Format as "Multiplier: 1.56×" or "🚀 1.56×"
+TESTING CHECKLIST (the generated code must pass all):
+✅ logEvent prop is accepted and used
+✅ gameStarted event is logged on game start (non-practice)
+✅ gameEnded event is logged with result and multiplier (non-practice)
+✅ Practice mode works without logging
+✅ Multipliers respect house edge calculations
+✅ Maximum multiplier caps are enforced
+✅ Game history displays correctly
+✅ Both game modes (normal/practice) function properly
+✅ No financial terms or betting logic present
+✅ Component exports properly
 
-OPTIONAL GAME SETTINGS (if relevant):
-- Implement as Box panel with rgba background and border radius
-- 1-3 options: TextField for numbers, basic input controls
-- Examples: "Number of Hazards", "Speed Limit", "Time Limit"
-- Include "Apply" button with gradient styling
-- Toggle visibility with "Settings" button
+FAILURE CONDITIONS (will cause rejection):
+❌ Missing logEvent prop handling
+❌ No game start/end logging
+❌ Practice mode missing or broken
+❌ Multipliers too generous (no house edge)
+❌ Missing required state variables
+❌ Broken game history
+❌ Financial logic present
+❌ Missing multiplier validation
 
-PHYSICS-BASED GAMES (if applicable):
-- Initialize Matter.js in useEffect
-- Use canvas with useRef for rendering
-- Update multiplier based on velocity/proximity for skill games, or fixed outcomes for casino games
-- Clean up on unmount
-
-SCORE-TO-MULTIPLIER CONVERSION (SKILL GAMES ONLY):
-- Only for skill-based games (puzzle, platformer, racing, etc.), convert scores to multipliers:
-const calculateMultiplierFromScore = (score) => {
-  let multiplier = 1 + Math.log10(1 + score/100);
-  return Math.min(multiplier, 5).toFixed(2);
-}
-- Casino games: Use direct multiplier values based on game outcome (no score conversion)
-- Event logging: 
-  - Skill games: logEvent("gameEnded", { multiplier: calculateMultiplierFromScore(playerScore), result })
-  - Casino games: logEvent("gameEnded", { multiplier: gameMultiplier, result })
-
-Game Requirements:
-- Interactive game with clear mechanics (no financial elements)
-- Glassmorphic dark theme design (#080808 background)
-- Include startGame, endGame, resetGame functions
-- Full viewport height usage
-- Restart button with reset functionality
-- Custom modals/overlays instead of MUI Modal components`;
+House Edge Validation Comment:
+// House Edge: 7% | Max Multiplier: 50x | Expected RTP: 93%`;
 
   console.log('Calling Anthropic API...');
   const stream = await anthropic.messages.create({
@@ -1353,7 +1405,7 @@ async function convertDalleImageToPinata(dalleImageUrl) {
     console.log('☁️ Uploading to Pinata...');
     const FormData = require('form-data');
     const formData = new FormData();
-    
+
     // Add file with proper options
     formData.append('file', processedBuffer, {
       filename: `game-image-${Date.now()}.png`,
@@ -1403,7 +1455,7 @@ async function convertDalleImageToPinata(dalleImageUrl) {
 
   } catch (error) {
     console.error('❌ Error converting DALL-E image to Pinata:', error);
-    
+
     // Log more details about the error
     if (error.response) {
       console.error('Pinata API Error Response:', {
@@ -1412,7 +1464,7 @@ async function convertDalleImageToPinata(dalleImageUrl) {
         data: error.response.data
       });
     }
-    
+
     throw new Error(`Failed to convert DALL-E image: ${error.message}`);
   }
 }
