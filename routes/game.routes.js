@@ -1964,14 +1964,9 @@ router.get('/topWins', async (req, res) => {
 // ============================================
 // BACKEND: Enhanced Game History with Redis Caching
 // ============================================
-
-const getHistory = async (
-  game_type_filter,
-  redisClient = null
-) => {
+const getHistory = async (redisClient = null) => {
   try {
-
-    const cacheKey = `history:all:${game_type_filter}`;
+    const cacheKey = `history:all`;
     let result = null,
       fromCache = false;
 
@@ -1989,65 +1984,29 @@ const getHistory = async (
     }
 
     if (!result) {
-      const filters = [];
+      // Use findOne instead of find + limit(1) for better performance
+      const latestGameLog = await GameLog.findOne({})
+        .sort({ created_at: -1 })
+        .populate({
+          path: 'room',
+          model: Room,
+          select: [
+            '_id', 'winnings', 'ticker', 'image', 'commission',
+            'creator', 'status', 'hosts',
+            'room_number', 'bet_amount', 'user_bet',
+            'host_pr', 'created_at', 'name'
+          ].join(' ')
+        })
+        .populate('creator', '_id avatar accessory totalWagered username')
+        .populate('joined_user', '_id avatar accessory totalWagered username')
+        .lean();
 
-      // ——————— Filter by game type if requested ———————
-      if (game_type_filter && game_type_filter !== 'All') {
-        let gameTypeId = null;
-
-        // If they passed in an ObjectId string, use it directly
-        if (ObjectId.isValid(game_type_filter)) {
-          gameTypeId = new ObjectId(game_type_filter); // Fixed: added 'new'
-        } else {
-          // Otherwise look up by name (case-insensitive)
-          const gameTypeDoc = await GameType
-            .findOne({ game_type_name: game_type_filter })
-            .collation({ locale: 'en', strength: 2 })  // case-insensitive
-            .select('_id');
-
-          if (gameTypeDoc) {
-            gameTypeId = gameTypeDoc._id;
-          } else {
-            // No such game type → empty result
-            result = { latestItem: null };
-          }
-        }
-
-        if (gameTypeId) {
-          filters.push({ game_type: gameTypeId });
-        }
-      }
-
-      // Build the final Mongo filter
-      const finalCondition = filters.length > 0 ? { $and: filters } : {};
-
-      // Only query if we haven't already set `result` to empty
-      if (!result) {
-        // Use findOne instead of find + limit(1) for better performance
-        const latestGameLog = await GameLog.findOne(finalCondition)
-          .sort({ created_at: -1 })
-          .populate({
-            path: 'room',
-            model: Room,
-            select: [
-              '_id', 'winnings', 'ticker', 'image', 'commission',
-              'creator', 'status', 'hosts',
-              'room_number', 'bet_amount', 'user_bet',
-              'host_pr', 'created_at', 'name'
-            ].join(' ')
-          })
-          .populate('game_type', 'short_name game_type_name')
-          .populate('creator', '_id avatar accessory totalWagered username')
-          .populate('joined_user', '_id avatar accessory totalWagered username')
-          .lean();
-
-        if (latestGameLog) {
-          // Convert single item to history style
-          const historyData = await convertGameLogToHistoryStyle([latestGameLog]);
-          result = { latestItem: historyData[0] || null };
-        } else {
-          result = { latestItem: null };
-        }
+      if (latestGameLog) {
+        // Convert single item to history style
+        const historyData = await convertGameLogToHistoryStyle([latestGameLog]);
+        result = { latestItem: historyData[0] || null };
+      } else {
+        result = { latestItem: null };
       }
 
       // ——————— Cache it ———————
@@ -2071,11 +2030,9 @@ const getHistory = async (
 // Optimized route for getting just the latest history item
 router.get('/history', async (req, res) => {
   try {
-    const { game_type = 'All' } = req.query;
-
     const redisClient = req.app.get('redisClient');
 
-    const latestHistory = await getHistory(game_type, redisClient);
+    const latestHistory = await getHistory(redisClient);
 
     if (latestHistory === false) {
       return res.status(500).json({
@@ -2098,17 +2055,15 @@ router.get('/history', async (req, res) => {
   }
 });
 
-
 router.get('/my_history', auth, async (req, res) => {
   try {
-    const { pageSize = 16, game_type = 'All' } = req.query;
+    const { pageSize = 16 } = req.query;
 
     const redisClient = req.app.get('redisClient'); // Get Redis client for my_history too
 
     const history = await getHistory(
       parseInt(pageSize),
       req.user._id,
-      game_type,
       redisClient // Pass redisClient to getHistory for my_history as well
     );
 
@@ -4666,19 +4621,19 @@ router.post('/bet3', auth, async (req, res) => {
 
         return res.json(responseData);
       }
-       if (betResult.success) {
+      if (betResult.success) {
         // *** START: CACHE INVALIDATION LOGIC ***
         try {
           if (roomId) {
             const keys = await redisClient.keys(`room:${roomId}:limit:*`);
-            
+
             if (keys.length > 0) {
               await redisClient.del(keys);
               console.log(`✅ Invalidated ${keys.length} cache keys for room: ${roomId}`);
             }
           }
         } catch (err) {
-            console.error('Redis cache invalidation failed:', err);
+          console.error('Redis cache invalidation failed:', err);
         }
       }
 
