@@ -4,14 +4,21 @@ const Schema = mongoose.Schema;
 const ChatSchema = new Schema({
   sender: {
     type: Schema.Types.ObjectId,
-    ref: 'rps_users'
+    ref: 'rps_users',
+    required: true
+  },
+  // ADD THIS MISSING FIELD
+  username: {
+    type: String,
+    required: true
   },
   message: {
-    type: String
+    type: String,
+    required: true
   },
   messageType: {
     type: String,
-    enum: ['text', 'gif'], // Add more types if needed
+    enum: ['text', 'gif'],
     default: 'text'
   },
   messageContent: {
@@ -22,61 +29,51 @@ const ChatSchema = new Schema({
     default: Date.now
   },
   avatar: {
-    type: String,
-    ref: 'rps_users.avatar'
+    type: String
   },
   accessory: {
-    type: String,
-    ref: 'rps_users.accessory'
+    type: String
   },
   elite: {
-    type: String,
-    ref: 'rps_users.elite'
+    type: String
   },
   rank: {
-    type: Number,
-    ref: 'rps_users.totalWagered'
+    type: Number
   },
-  replyTo: [
-    {
-      sender: {
-        type: Schema.Types.ObjectId,
-        ref: 'rps_users'
-      },
-      username: {
-        type: String,
-        ref: 'rps_users.username'
-      },
-      avatar: {
-        type: String
-      },
-      rank: {
-        type: Number,
-        ref: 'rps_users.totalWagered'
-      },
-      accessory: {
-        type: String,
-        ref: 'rps_users.accessory'
-      },
-      elite: {
-        type: String,
-        ref: 'rps_users.elite'
-      },
-      message: {
-        type: String
-      },
-      messageType: {
-        type: String
-      },
-      time: {
-        type: String
-      }
+  replyTo: {
+    sender: {
+      type: Schema.Types.ObjectId,
+      ref: 'rps_users'
+    },
+    username: {
+      type: String
+    },
+    avatar: {
+      type: String
+    },
+    rank: {
+      type: Number
+    },
+    accessory: {
+      type: String
+    },
+    elite: {
+      type: String
+    },
+    message: {
+      type: String
+    },
+    messageType: {
+      type: String
+    },
+    time: {
+      type: String
     }
-  ]
+  }
 });
 
-ChatSchema.index({ created_at: -1 }); // Index on created_at for sorting
-ChatSchema.index({ sender: 1 }); // Index on sender for populating
-ChatSchema.index({ 'replyTo.sender': 1 })
+ChatSchema.index({ created_at: -1 });
+ChatSchema.index({ sender: 1, created_at: -1 });
+ChatSchema.index({ username: 1 });
 
 module.exports = Chat = mongoose.model('rps_chat', ChatSchema);

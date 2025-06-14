@@ -23,7 +23,6 @@ import {
   ALL_TRANSACTIONS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
-  SET_SPECTATE_MODE,
   SET_FOCUSED,
   SET_NOTIFICATIONS_ALLOWED,
   TOGGLE_MUTE,
@@ -43,10 +42,9 @@ import {
   API_KEYS_ERROR,
   API_KEY_GENERATED,
   API_KEY_REVOKED,
-  UPDATE_WALLET_BALANCE,
-  UPDATE_WALLET_BALANCE_START,
-  UPDATE_WALLET_BALANCE_SUCCESS,
-  UPDATE_WALLET_BALANCE_FAIL,
+  LOADING_TRANSACTIONS,
+  SET_LIVE_WALLET_BALANCE,
+  WALLET_BALANCE_LOADING
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -124,34 +122,56 @@ export const disconnectWalletAddress = () => async (dispatch) => {
   });
 };
 
+// Add this new action to your user.actions.js file
+
+export const getUserTransactions = () => async dispatch => {
+  try {
+    dispatch({ type: LOADING_TRANSACTIONS, payload: true });
+
+    const res = await axios.get('/auth/user/transactions');
+
+    if (res.data.success) {
+      dispatch({ type: TRANSACTION_LOADED, payload: res.data.transactions });
+      dispatch({ type: LOADING_TRANSACTIONS, payload: false });
+      
+      return {
+        status: 'success',
+        transactions: res.data.transactions
+      };
+    } else {
+      dispatch({ type: LOADING_TRANSACTIONS, payload: false });
+      return { status: 'failed' };
+    }
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
+    dispatch({ type: LOADING_TRANSACTIONS, payload: false });
+    dispatch({ type: MSG_WARNING, payload: err });
+    return { status: 'failed' };
+  }
+};
+
+// Updated getUser action (remove transactions)
 export const getUser = () => async dispatch => {
   try {
-    // If we have a token in localStorage, set it in headers
-    if (localStorage.token) {
-      localStorage.removeItem('isAdminAuthenticated');
-      setAuthToken(localStorage.token);
-    }
-
-    // Indicate we’re about to fetch user data
+    // Indicate we're about to fetch user data
     dispatch({ type: LOADING_USER, payload: true });
 
-    // Call the simplified /auth/user route
+    // Call the simplified /auth/user route (without transactions)
     const res = await axios.get('/auth/user');
 
     if (res.data.success) {
-      const { user, unread_message_count, transactions, message } = res.data;
+      const { user, unread_message_count, message } = res.data;
 
-      // Dispatch user info, unread count, and last 5 transactions
+      // Dispatch user info and unread count only
       dispatch({ type: USER_LOADED, payload: user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: unread_message_count });
-      dispatch({ type: TRANSACTION_LOADED, payload: transactions });
 
       // If the server returned a message, display it
       if (message) {
         dispatch({ type: MSG_INFO, payload: message });
       }
 
-      // Indicate we’ve finished fetching user data
+      // Indicate we've finished fetching user data
       dispatch({ type: LOADING_USER, payload: false });
 
       return {
@@ -533,13 +553,13 @@ export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) =
 };
 
 export const refreshWalletBalance = (privyUser) => async (dispatch) => {
-  dispatch({ type: 'WALLET_BALANCE_LOADING', payload: true });
+  dispatch({ type: WALLET_BALANCE_LOADING, payload: true });
 
   try {
     const result = await dispatch(getPrivyWalletBalance(privyUser));
     return result;
   } finally {
-    dispatch({ type: 'WALLET_BALANCE_LOADING', payload: false });
+    dispatch({ type: WALLET_BALANCE_LOADING, payload: false });
   }
 };
 
@@ -609,7 +629,7 @@ export const getPrivyWalletBalance = (privyUser) => async (dispatch) => {
 
     // Store both balance and account (as object with publicKey)
     dispatch({
-      type: 'SET_LIVE_WALLET_BALANCE',
+      type: SET_LIVE_WALLET_BALANCE,
       payload: {
         balance: solanaBalance,
         walletAddress: privyUser.wallet.address,
@@ -629,7 +649,7 @@ export const getPrivyWalletBalance = (privyUser) => async (dispatch) => {
       if (response.data.success) {
         const account = { publicKey: new PublicKey(privyUser.wallet.address) };
         dispatch({
-          type: 'SET_LIVE_WALLET_BALANCE',
+          type: SET_LIVE_WALLET_BALANCE,
           payload: {
             balance: response.data.balance,
             walletAddress: privyUser.wallet.address,
@@ -832,9 +852,7 @@ export const toggleDrawer = isDrawerOpen => dispatch => {
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
 }
-export const setSpectateMode = isWatching => dispatch => {
-  dispatch({ type: SET_SPECTATE_MODE, payload: isWatching });
-}
+
 
 export const setNotificationsAllowed = isNotificationsAllowed => dispatch => {
   if (isNotificationsAllowed) {

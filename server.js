@@ -58,7 +58,11 @@ const io = socketController.socketio(server, {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   },
-  transports: ['websocket'],
+  allowEIO3: true, // Allow Engine.IO v3 clients
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 30000,
+  maxHttpBufferSize: 1e6, // 1MB
 });
 
 setTimeout(() => callCronJob.callCronJobs(io), 500);
@@ -77,12 +81,12 @@ app.use((req, res, next) => {
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'http://localhost:3000', 
+      'http://localhost:3000',
       'https://catsino.fun',
       // Add your external API domains here if needed
       // 'https://your-external-app.com'
     ];
-    
+
     // Allow requests with no origin (mobile apps, server-to-server, etc.)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -130,7 +134,8 @@ const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       maxPoolSize: 20,
-      serverSelectionTimeoutMS: 5000, 
+      serverSelectionTimeoutMS: 5000,
+      writeConcern: { w: 1, j: false },
     });
     console.log('*** MongoDB connected');
   } catch (error) {
@@ -146,7 +151,6 @@ connectWithRetry();
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const gameRoutes = require('./routes/game.routes');
-const itemRoutes = require('./routes/item.routes');
 const loanRoutes = require('./routes/loan.routes');
 const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
@@ -160,7 +164,6 @@ const publicApiRoutes = require('./routes/public-api');
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/game', gameRoutes);
-app.use('/api/item', itemRoutes);
 app.use('/api/loan', loanRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
@@ -269,11 +272,11 @@ if (process.env.NODE_ENV === 'production') {
 // Enhanced error handling for API routes
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  
+
   // API routes get JSON error responses
   if (req.path.startsWith('/api/')) {
     const isDevelopment = process.env.NODE_ENV === 'development';
-    
+
     res.status(err.status || 500).json({
       success: false,
       error: err.message || 'Internal server error',

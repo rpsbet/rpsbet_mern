@@ -26,7 +26,7 @@ import {
   CHECK_AND_ADD_WALLET_ADDRESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
-  SET_SPECTATE_MODE,
+  LOADING_TRANSACTIONS,
   SET_FOCUSED,
   SET_REFERRAL_CODE,
   TOGGLE_MUTE,
@@ -46,6 +46,8 @@ import {
   UPDATE_WALLET_BALANCE_START,
   UPDATE_WALLET_BALANCE_SUCCESS,
   UPDATE_WALLET_BALANCE_FAIL,
+  SET_LIVE_WALLET_BALANCE,
+  WALLET_BALANCE_LOADING
 } from '../types';
 
 const initialState = {
@@ -55,7 +57,6 @@ const initialState = {
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
   isWatching: localStorage.getItem('isWatching') === 'false' ? false : true,
   isNotificationsAllowed: localStorage.getItem('isNotificationsAllowed') === 'false' ? false : true,
-  isAdmin: false,
   isMusicEnabled:
     localStorage.getItem('isMusicEnabled') === 'false' ? false : true,
   isLowGraphics:
@@ -70,14 +71,14 @@ const initialState = {
   loading_user: false,
   user: { _id: null, password: '' },
   unreadMessageCount: 0,
-  balance: 0,
   gasfee: 0,
   connectedAccount: '',
-  ai_mode: '',
   isFocused: false,
   userName: '',
   liveUrl: null,
   transactions: [],
+  isLoadingTransactions: false,
+  transactionsLoaded: false,
   all_transactions: null,
   page: 0,
   totalCount: 0,
@@ -85,10 +86,6 @@ const initialState = {
   transactions_loading: false,
   apiKeys: [],
   apiKeysLoading: false,
-  apiKeysError: null,
-  sevenDayProfit: null,
-  oneDayProfit: null,
-  allTimeProfit: null,
   referralCode: null,
   balance: 0,
   isWalletBalanceLoading: false,
@@ -140,12 +137,7 @@ export default function (state = initialState, action) {
         ...state,
         isDarkMode: payload
       };
-    case SET_SPECTATE_MODE:
-      localStorage.setItem('isWatching', payload);
-      return {
-        ...state,
-        isWatching: payload
-      };
+  
     case TOGGLE_MUTE:
       localStorage.setItem('isMuted', payload);
       return {
@@ -186,23 +178,24 @@ export default function (state = initialState, action) {
     case CHECK_AND_ADD_WALLET_ADDRESS:
       return {
         ...state,
-        connectedAccount: action.payload,
+        connectedAccount: payload,
       };
 
-    case 'SET_LIVE_WALLET_BALANCE':
+    case SET_LIVE_WALLET_BALANCE:
       return {
         ...state,
-        liveWalletBalance: action.payload.balance,
-        walletAddress: action.payload.walletAddress,
-        walletBalanceTimestamp: action.payload.timestamp,
-        account: action.payload.account,
+        liveWalletBalance: payload.balance,
+        balance: payload.balance,
+        walletAddress: payload.walletAddress,
+        walletBalanceTimestamp: payload.timestamp,
+        account: payload.account,
         walletBalanceError: null
       };
 
-    case 'WALLET_BALANCE_LOADING':
+    case WALLET_BALANCE_LOADING:
       return {
         ...state,
-        isWalletBalanceLoading: action.payload
+        isWalletBalanceLoading: payload
       };
 
     case 'SET_WALLET_BALANCE_ERROR':
@@ -284,11 +277,7 @@ export default function (state = initialState, action) {
         ...state,
         socket: payload
       };
-    case TRANSACTION_LOADED:
-      return {
-        ...state,
-        transactions: payload,
-      };
+  
     case LOADING_USER:
       return {
         ...state,
@@ -397,16 +386,27 @@ export default function (state = initialState, action) {
         ...state,
         unreadMessageCount: payload
       };
+    case LOADING_TRANSACTIONS:
+      return {
+        ...state,
+        isLoadingTransactions: action.payload
+      };
+      
+    case TRANSACTION_LOADED:
+      return {
+        ...state,
+        transactions: action.payload,
+        transactionsLoaded: true,
+        isLoadingTransactions: false
+      };
+      
     case USER_LOADED:
       return {
         ...state,
-        isAdmin: 0,
-        userName: payload.username,
         isAuthenticated: true,
-        totalWagered: payload.totalWagered,
-        loading: false,
-        user: { ...payload, password: '' },
-        balance: payload.balance
+        isLoading: false,
+        user: action.payload,
+        // Don't reset transactions when user loads
       };
     case UPDATED_USER:
       return {

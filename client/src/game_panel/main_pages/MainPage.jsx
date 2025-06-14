@@ -123,17 +123,19 @@ const CreateRoomPanel = ({
             mb: 2,
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-evenly',
             gap: 1,
           }}
         >
           {/* <FontAwesomeIcon icon={faHome} /> */}
-          Create Your Own 😼
+          Get Rich 👇😼💵
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
             <Box
               sx={{
                 width: 22,
                 height: 'auto',
+                float: 'right',
                 transform: 'scale(0.6)',
                 filter: user?.elite === 'black' ? 'grayscale(1)' : 'hue-rotate(132deg)',
               }}

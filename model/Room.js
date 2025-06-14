@@ -1,4 +1,3 @@
-// models/Room.js
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -16,7 +15,6 @@ const RoomSchema = new Schema({
   telegram_link: { type: String, default: '' },
   creator: { type: Schema.Types.ObjectId, ref: 'rps_users' },
   joiners: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
-  // --- MODIFICATION HERE ---
   game_type: [{ type: String, default: [] }],
   last_updated_strat: { type: Date },
   bet_amount: { type: Number, default: 0.0 },
@@ -35,11 +33,11 @@ const RoomSchema = new Schema({
     theme: { type: Schema.Types.Mixed, default: {} },
     background: { type: Schema.Types.Mixed, default: {} }
   },
-  gameCode: { type: String, default: '' },
+  // gameCode field removed - now stored in separate GameCode collection
   battles: { type: Number, default: 0 },
-  status: { type: String },
+  status: { type: String, index: true },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now, index: true },
   hosts: [{
     host: { type: Schema.Types.ObjectId, ref: 'rps_users' },
     rank: { type: Number, default: 0 },
@@ -52,9 +50,9 @@ const RoomSchema = new Schema({
   }],
 });
 
-// Add indexes (existing ones are fine, no need to remove game_type index as it was an ObjectId)
+// Existing indexes
 RoomSchema.index({ status: 1, updated_at: -1 });
-RoomSchema.index({ game_type: 1, status: 1 }); // This index will now work on the String field
+RoomSchema.index({ game_type: 1, status: 1 });
 RoomSchema.index({ creator: 1 });
 RoomSchema.index({ joiners: 1 });
 RoomSchema.index({ created_at: -1 });

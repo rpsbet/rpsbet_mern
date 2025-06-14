@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setFocused } from '../../redux/Auth/user.actions';
 import {
   Box,
@@ -78,9 +77,6 @@ function AdvancedSettings(props) {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isDarkMode = props.isDarkMode;
-
-  // Map state from Redux using useSelector
-  const data = useSelector((state) => state.itemReducer.myItemArray);
 
   const [showOptions, setShowOptions] = useState(false);
 

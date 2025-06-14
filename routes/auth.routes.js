@@ -17,6 +17,36 @@ const { OAuth2Client } = require('google-auth-library');
 const auth = require('../middleware/auth');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const userCache = new Map();
+// Memory cache for transactions (separate from user cache)
+const transactionCache = new Map();
+
+// Cache validity check function (if not already defined)
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const isCacheValid = (cached) => {
+  return cached && (Date.now() - cached.timestamp) < CACHE_DURATION;
+};
+
+// Clean cache function (if not already defined)
+const cleanCache = () => {
+  const now = Date.now();
+  
+  // Clean user cache
+  for (const [key, value] of userCache) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      userCache.delete(key);
+    }
+  }
+  
+  // Clean transaction cache
+  for (const [key, value] of transactionCache) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      transactionCache.delete(key);
+    }
+  }
+};
+
+
 const generateRandomPassword = (length = 12) => {
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
   let password = "";
@@ -706,50 +736,105 @@ router.post('/set-referral', auth, async (req, res) => {
 
 router.get('/user', auth, async (req, res) => {
   try {
-    const userId = req.user._id;
-    const cacheKey = `user:${userId}`;
-
-    // Get Redis client from app (set in server.js)
-    const redisClient = req.app.get('redisClient');
-
-    // Check cache
-    let cached;
-    try {
-      cached = await redisClient.get(cacheKey);
-    } catch (redisErr) {
-      console.error('Redis error, bypassing cache:', redisErr);
+    const userId = req.user._id.toString();
+    const cacheKey = `user_${userId}`;
+    
+    // Check cache first
+    const cached = userCache.get(cacheKey);
+    if (isCacheValid(cached)) {
+      return res.json({
+        ...cached.data,
+        fromCache: true
+      });
     }
 
-    if (cached) {
-      return res.json(JSON.parse(cached));
-    }
-
-    // Fetch data from database
-    const transactions = await Transaction.find({ user: userId })
-      .sort({ created_at: -1 })
-      .limit(5)
-      .lean(); // Optimize with lean
+    // Fetch only user data (no transactions)
+    const user = await User.findById(userId)
+      .select('-password -ip_addresses') // Exclude sensitive data
+      .lean(); // Much faster than full mongoose docs
 
     const response = {
       success: true,
-      user: req.user,
-      transactions,
+      user,
+      fromCache: false
     };
 
-    // Cache for 5 minutes
-    try {
-      await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
-    } catch (redisErr) {
-      console.error('Failed to cache:', redisErr);
+    // Cache the result
+    userCache.set(cacheKey, {
+      data: response,
+      timestamp: Date.now()
+    });
+
+    // Clean old cache entries occasionally
+    if (userCache.size > 1000) {
+      cleanCache();
     }
 
     res.json(response);
+
   } catch (error) {
     console.error('Error in /user:', error);
-    res.json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// New route for transactions only
+router.get('/user/transactions', auth, async (req, res) => {
+  try {
+    const userId = req.user._id.toString();
+    const cacheKey = `transactions_${userId}`;
+    
+    // Check cache first
+    const cached = transactionCache.get(cacheKey);
+    if (isCacheValid(cached)) {
+      return res.json({
+        ...cached.data,
+        fromCache: true
+      });
+    }
+
+    // Get user transactions with pagination support
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50; // Default to 50 transactions
+    const skip = (page - 1) * limit;
+
+    const [transactions, totalCount] = await Promise.all([
+      Transaction.find({ user: userId })
+        .sort({ created_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('amount description created_at hash status')
+        .lean(),
+      
+      Transaction.countDocuments({ user: userId })
+    ]);
+
+    const response = {
+      success: true,
+      transactions,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasMore: skip + transactions.length < totalCount
+      },
+      fromCache: false
+    };
+
+    // Cache the result (shorter cache time for transactions as they change more frequently)
+    transactionCache.set(cacheKey, {
+      data: response,
+      timestamp: Date.now()
+    });
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('Error in /user/transactions:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // routes/auth.js (or wherever you have your transactions endpoint)
 router.get('/transactions', auth, async (req, res) => {

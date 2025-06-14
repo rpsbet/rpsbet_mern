@@ -42,8 +42,6 @@ import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
 import { openOfferLoanModal, errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
 import { setChatRoomInfo, addNewTransaction, setSolanaBalance } from '../../redux/Logic/logic.actions';
 import { acGetCustomerInfo, getSpendingHabit } from '../../redux/Customer/customer.action';
-import { queryProducts } from '../../redux/Item/item.action';
-import { convertToCurrency } from '../../util/conversion';
 
 import Avatar from '../../components/Avatar';
 // import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
@@ -60,7 +58,6 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
   const solPrice = useSelector((state) => state.logic.solPrice);
   const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
   const onlineUserList = useSelector((state) => state.logic.onlineUserList);
-  const productArray = useSelector((state) => state.itemReducer.productArray) || [];
 
   // Local state
   const [creatorId, setCreatorId] = useState(selectedCreator || '');
@@ -93,11 +90,6 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
     fetchUserData(selectedCreator);
   }, [selectedCreator]);
 
-  useEffect(() => {
-    if (creatorId) {
-      dispatch(queryProducts(127, 1, creatorId));
-    }
-  }, [creatorId, dispatch]);
 
   const fetchUserData = async (userId) => {
     if (!userId) return;
@@ -367,7 +359,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                   <FontAwesomeIcon
                     icon={isBot ? faRobot : isSystem ? faCog : faUser}
                     style={{
-                      color: isBot ? '#FF4444' : isSystem ? '#888' : '#4A90E2',
+                      color: isBot ? '#FF4444' : isSystem ? '#888' : '#FF0000',
                       fontSize: '1.1rem'
                     }}
                   />
@@ -435,6 +427,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                             backgroundColor: isOnline ? '#10B981' : '#',
                             color: 'white',
                             fontWeight: 600,
+                            padding: '4px 8px',
                             fontSize: '0.75rem',
                             '&::before': {
                               content: '""',
@@ -461,7 +454,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                             boxShadow: `0 4px 12px ${isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'}`,
                           }}
                         >
-                          <Avatar
+                          <img
                             src={avatar || '/img/profile-thumbnail.svg'}
                             accessory={accessory}
                             user_id={creatorId}

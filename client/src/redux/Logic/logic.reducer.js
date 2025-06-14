@@ -420,7 +420,7 @@ export default function (state = initialState, action) {
     case HISTORY_LOADED:
       return {
         ...state,
-        history: [...payload.history],
+        history: payload.history,
         historyTotalPage: payload.pages,
         historyPageNumber: payload.page
       };

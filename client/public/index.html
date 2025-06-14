@@ -4,73 +4,310 @@
   <meta charset="utf-8" />
   <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
   <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#ff0000" />
   <meta name="description" content="Create your own cat-sino games. All games must die. Few are reborn as Tokens. 📈😼 📈😼" />
   <meta property="og:title" content="Catsino.Fun" />
   <meta property="og:description" content="Create your own cat-sino games. All games must die. Few are reborn as Tokens. 📈😼 📈😼" />
+  <meta property="og:image" content="%PUBLIC_URL%/game-logo-white.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- Inline critical CSS -->
+  <!-- Critical CSS with enhanced styling -->
   <style>
-    html, body, * {
-      font-family: 'Source Code Pro', monospace !important; /* Monospace coding-style font */
-      margin: 0;
+    :root {
+      --primary-red: #ff0000;
+      --dark-bg: #0a0a0a;
+      --darker-bg: #000000;
+      --text-light: #ffffff;
+      --text-gray: #cccccc;
+      --border-color: #333333;
+      --glow-red: 0 0 20px rgba(255, 0, 0, 0.3);
+      --glow-red-strong: 0 0 30px rgba(255, 0, 0, 0.5);
     }
-    .container { width: 100%; max-width: 1140px; margin: 0 auto; }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: 'Source Code Pro', 'Courier New', monospace !important;
+      background: #262626;
+      margin: 0;
+      color: var(--text-light);
+      height: 100%;
+    }
+
+    /* Enhanced loading screen */
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #262626;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+    }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Animated logo */
+    .loading-logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 30px;
+      animation: pulse 2s ease-in-out infinite;
+      filter: drop-shadow(var(--glow-red));
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(var(--glow-red));
+      }
+      50% {
+        transform: scale(1.1);
+        filter: drop-shadow(var(--glow-red-strong));
+      }
+    }
+
+    /* Loading text */
+    .loading-text {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-red);
+      margin-bottom: 30px;
+      text-shadow: var(--glow-red);
+      animation: glow 2s ease-in-out infinite alternate;
+      letter-spacing: 3px;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+      }
+      to {
+        text-shadow: 0 0 30px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.3);
+      }
+    }
+
+
+
+    /* Loading subtitle */
+    .loading-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-gray);
+      text-align: center;
+      opacity: 0.8;
+      animation: fade 3s ease-in-out infinite;
+      margin-top: 10px;
+    }
+
+    @keyframes fade {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+
+
+    /* App container styling */
+    #root {
+      min-height: 100vh;
+    }
+
+    /* Enhanced button styling */
     button, .btn {
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover, .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+    }
+
+    /* Container improvements */
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .loading-text {
+        font-size: 1.5rem;
+        letter-spacing: 2px;
+      }
+      
+      .loading-logo {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--dark-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-red);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #cc0000;
+    }
+
+    /* Selection styling */
+    ::selection {
+      background: rgba(255, 0, 0, 0.3);
+      color: white;
     }
   </style>
 
-  <!-- Preload Bootstrap CSS -->
+  <!-- Preload resources -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap" as="style" onload="this.rel='stylesheet'">
   <link rel="preload" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" as="style" onload="this.rel='stylesheet'" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  
+  <!-- Fallbacks for critical resources -->
   <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  </noscript>
-
-  <!-- Preload Google Fonts - Source Code Pro -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;700&display=swap" as="style" onload="this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;700&display=swap">
   </noscript>
 
   <link rel="apple-touch-icon" href="game-logo-white.svg" />
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-  <title>Catsino.Fun</title>
+  <title>Catsino.Fun - Cat-sino Gaming Platform</title>
   <base href="/" />
 </head>
 <body>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <noscript>
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #ff0000; font-family: 'Source Code Pro', monospace;">
+      <h1>🚨 JAVASCRIPT REQUIRED 🚨</h1>
+      <p>You need to enable JavaScript to run this app.</p>
+      <p style="margin-top: 20px; opacity: 0.7;">Enable JS and refresh to continue...</p>
+    </div>
+  </noscript>
+
+  <!-- Enhanced loading screen -->
+  <div id="loading-screen">
+    <img src="/img/game-logo.svg" alt="Catsino Logo" class="loading-logo" onerror="this.style.display='none'">
+    <div class="loading-text">CATSINO</div>
+    <div class="loading-subtitle">Get Rich or Die 😼🩸...</div>
+  </div>
+
+  <!-- Main app container -->
   <div id="root"></div>
 
-  <!-- Load Google Sign-In -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-  <!-- Load Google Tag Manager with delay -->
+  <!-- Enhanced scripts with better loading -->
   <script>
-    setTimeout(() => {
-      const script = document.createElement('script');
-      script.src = 'https://www.googletagmanager.com/gtag/js?id=UA-55401494-4';
-      script.async = true;
-      document.body.appendChild(script);
+    // Enhanced loading screen management
+    (function() {
+      const loadingScreen = document.getElementById('loading-screen');
 
-      window.dataLayer = window.dataLayer || [];
-      function gtag() { dataLayer.push(arguments); }
-      gtag('js', new Date());
-      gtag('config', 'UA-55401494-4');
-    }, 3000);
-  </script>
+      // Hide loading screen when React app loads
+      function hideLoadingScreen() {
+        setTimeout(() => {
+          if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+              loadingScreen.remove();
+            }, 800);
+          }
+        }, 500);
+      }
 
-  <!-- Handle preload to stylesheet transition -->
-  <script>
-    (function(){
-      var links = document.getElementsByTagName('link');
-      for (var i = 0; i < links.length; i++) {
-        if (links[i].rel === 'preload' && links[i].as === 'style') {
-          links[i].rel = 'stylesheet';
+      // Watch for React app to load
+      function checkForReactApp() {
+        const root = document.getElementById('root');
+        if (root && root.children.length > 0) {
+          hideLoadingScreen();
+          clearInterval(checkInterval);
         }
       }
+
+      const checkInterval = setInterval(checkForReactApp, 100);
+
+      // Fallback: hide after 10 seconds regardless
+      setTimeout(() => {
+        hideLoadingScreen();
+        clearInterval(checkInterval);
+      }, 10000);
+
+      // Handle preload to stylesheet transition
+      setTimeout(() => {
+        const links = document.getElementsByTagName('link');
+        for (let i = 0; i < links.length; i++) {
+          if (links[i].rel === 'preload' && links[i].as === 'style') {
+            links[i].rel = 'stylesheet';
+          }
+        }
+      }, 100);
     })();
+  </script>
+
+  <!-- Load external resources with delay for better performance -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Google Analytics with enhanced loading -->
+  <script>
+    // Load GA after everything else is ready
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        // Create and load gtag script
+        const script = document.createElement('script');
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=UA-55401494-4';
+        script.async = true;
+        document.head.appendChild(script);
+
+        // Initialize gtag
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'UA-55401494-4', {
+          page_title: 'Catsino Gaming Platform',
+          page_location: window.location.href
+        });
+      }, 2000);
+    });
+  </script>
+
+  <!-- Performance monitoring -->
+  <script>
+    // Optional: Add performance monitoring
+    window.addEventListener('load', () => {
+      if ('performance' in window) {
+        const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+        console.log(`🎯 Page loaded in ${loadTime}ms`);
+        
+        // Send to analytics if needed
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'timing_complete', {
+            name: 'load',
+            value: loadTime
+          });
+        }
+      }
+    });
   </script>
 </body>
 </html>

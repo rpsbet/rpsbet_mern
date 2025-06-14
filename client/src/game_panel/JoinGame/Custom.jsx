@@ -486,16 +486,6 @@ function Custom(props) {
     status: roomInfo.status,
   });
 
-  const [modalState, setModalState] = useState({
-    showImageModal: false,
-    image: '',
-    productName: '',
-    openConfirmBet: false,
-    confirmBetMessage: '',
-    confirmBetCallback: null,
-    skipConfirm: localStorage.getItem('hideConfirmModal') === 'true',
-  });
-
   const [componentState, setComponentState] = useState({
     GameComponent: null,
     componentError: physicsError,
@@ -762,6 +752,8 @@ function Custom(props) {
 
     try {
       if (!validateIsAuthenticated(reduxState.isAuthenticated, dispatch)) return;
+      console.log('[Custom] Validating bet amount:', bet_amount);
+      console.log('[Custom] Current balance:', reduxState.balance);
       if (!validateBetAmount(bet_amount, reduxState.balance, dispatch)) return;
       if (!validateBankroll(bet_amount, bankrollRef.current, dispatch)) return;
 
@@ -776,20 +768,14 @@ function Custom(props) {
         }
       };
 
-      if (modalState.skipConfirm) {
-        await executeJoin();
-      } else {
-        openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', executeJoin);
-      }
+      await executeJoin();
+
     } finally {
       unblockGamePanel();
     }
   }, []);
 
-  // Game event logger
   const logEvent = useCallback((eventType, data) => {
-    // console.log(`Game Event: ${eventType}`, data);
-
     if (playSound) {
       playSound('select');
     }
@@ -803,13 +789,15 @@ function Custom(props) {
 
       onResultChange('', true);
 
-      openConfirmBetDialog('ARE YOU SURE YOU WANT TO JOIN THIS GAME?', async () => {
+      const executeDeposit = async () => {
         const depositSuccess = await processSolDeposit();
         if (!depositSuccess) {
           setGameState(prev => ({ ...prev, isGameActive: false }));
           onResultChange('Deposit failed, please try again.', false);
         }
-      });
+      };
+
+      executeDeposit();
     } else if (eventType === 'gameEnded') {
       setGameState(prev => ({ ...prev, isGameActive: false }));
 
@@ -817,7 +805,6 @@ function Custom(props) {
       const validResults = ['win', 'loss', 'other'];
 
       if (validResults.includes(result) && gameState.gameStartedCount > 0 && hasDepositedRef.current) {
-        // console.log('Processing game result:', result, 'Multiplier:', multiplier);
         onBtnBetClick(result, result === 'win' ? multiplier : undefined);
       } else {
         onBtnBetClick(result, result === 'loss' ? multiplier : undefined);
@@ -825,6 +812,7 @@ function Custom(props) {
       }
     }
   }, [gameState.gameStartedCount, onBtnBetClick, playSound, onResultChange, processSolDeposit]);
+
 
   // Game code processing - optimized with useMemo
   const processedGameCode = useMemo(() => {
@@ -1050,43 +1038,6 @@ function Custom(props) {
     }
   }, [componentState.isPasswordCorrect, joinGame, componentState.gameResult]);
 
-  // Modal handlers
-  const openConfirmBetDialog = useCallback((message, callback) => {
-    if (modalState.skipConfirm) {
-      callback();
-      return;
-    }
-    setModalState(prev => ({
-      ...prev,
-      openConfirmBet: true,
-      confirmBetMessage: message,
-      confirmBetCallback: () => callback
-    }));
-  }, [modalState.skipConfirm]);
-
-  const closeConfirmBetDialog = useCallback(() => {
-    setModalState(prev => ({
-      ...prev,
-      openConfirmBet: false,
-      confirmBetMessage: '',
-      confirmBetCallback: null
-    }));
-  }, []);
-
-  const handleConfirmBet = useCallback(async () => {
-    if (modalState.confirmBetCallback) {
-      await modalState.confirmBetCallback();
-    }
-    closeConfirmBetDialog();
-  }, [modalState.confirmBetCallback, closeConfirmBetDialog]);
-
-  const handleSkipConfirmChange = useCallback((event) => {
-    const checked = event.target.checked;
-    setModalState(prev => ({ ...prev, skipConfirm: checked }));
-    localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
-  }, []);
-
-  // Render optimized game section
   const renderGameSection = () => {
     if (roomState.status !== 'open') {
       return (
@@ -1273,97 +1224,6 @@ function Custom(props) {
 
   return (
     <Box className="game-page">
-      {/* Enhanced Confirmation Dialog */}
-      <Dialog
-        open={modalState.openConfirmBet}
-        onClose={closeConfirmBetDialog}
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-description"
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '20px',
-            color: '#fff',
-          }
-        }}
-      >
-        <DialogTitle
-          id="confirm-dialog-title"
-          sx={{
-            fontSize: '1.3rem',
-            fontWeight: 700,
-            color: '#fff',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          Confirm Your Bet
-        </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
-          <Typography sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.9)', fontSize: '1rem' }}>
-            {modalState.confirmBetMessage}
-          </Typography>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={modalState.skipConfirm}
-                onChange={handleSkipConfirmChange}
-                sx={{
-                  color: '#f44336',
-                  '&.Mui-checked': {
-                    color: '#f44336',
-                  },
-                }}
-              />
-            }
-            label={
-              <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>
-                Don't show this again
-              </Typography>
-            }
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button
-            onClick={closeConfirmBetDialog}
-            variant="outlined"
-            sx={{
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              borderRadius: '12px',
-              px: 3,
-              '&:hover': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmBet}
-            variant="contained"
-            autoFocus
-            sx={{
-              background: 'linear-gradient(135deg, #f44336, #d32f2f)',
-              borderRadius: '12px',
-              px: 3,
-              fontWeight: 600,
-              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.4)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #d32f2f, #c62828)',
-                boxShadow: '0 6px 16px rgba(244, 67, 54, 0.5)',
-              },
-            }}
-          >
-            Confirm Bet
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Lazy loaded modals */}
       <Suspense fallback={null}>
 

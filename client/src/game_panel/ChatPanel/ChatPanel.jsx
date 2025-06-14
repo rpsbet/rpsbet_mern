@@ -486,21 +486,59 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
     handleGifSearch(debouncedGifSearch);
   }, [debouncedGifSearch, handleGifSearch]);
 
-  // Enhanced message sending with validation
   const handleSendMessage = useCallback(async (messageData) => {
-    if (!socket || !user?._id) {
-      dispatch(errorMsgBar('Connection error. Please refresh and try again.'));
-      return;
-    }
+  console.log('🚀 handleSendMessage called');
+  console.log('🚀 Message data:', JSON.stringify(messageData, null, 2));
+  
+  console.log('🚀 Pre-flight checks:');
+  console.log('  - Socket exists:', !!socket);
+  console.log('  - Socket connected:', socket?.connected);
+  console.log('  - Socket ID:', socket?.id);
+  console.log('  - User ID exists:', !!user?._id);
 
-    try {
-      socket.emit('GLOBAL_CHAT_SEND', messageData);
-      // Optional: Add optimistic UI update here
-    } catch (error) {
-      console.error('Error sending message:', error);
-      dispatch(errorMsgBar('Failed to send message. Please try again.'));
-    }
-  }, [socket, user?._id, dispatch]);
+  if (!socket || !user?._id) {
+    console.error('❌ Missing socket or user ID');
+    dispatch(errorMsgBar('Connection error. Please refresh and try again.'));
+    return;
+  }
+
+  if (!socket.connected) {
+    console.error('❌ Socket not connected');
+    dispatch(errorMsgBar('Connection lost. Please refresh the page.'));
+    return;
+  }
+
+  try {
+    console.log('🚀 About to emit GLOBAL_CHAT_SEND directly...');
+// Test 1: Use fake data (like the working test)
+socket.emit('TEST_ACTUAL_CHAT', { test: true });
+
+// Test 2: Use your EXACT frontend data
+const frontendData = {
+  sender: 'SYSTEM',
+  senderId: '629685058f368a1838372754', 
+  message: 'test message',
+  messageType: 'text',        
+  messageContent: 'test message',
+  username: 'SYSTEM',         
+  avatar: 'your_avatar',
+  accessory: 'your_accessory',
+  elite: false,
+  replyTo: null,
+  rank: 100,
+};
+socket.emit('TEST_FRONTEND_DATA', frontendData);
+
+// Test 3: Try the actual chat (this should fail)
+socket.emit('GLOBAL_CHAT_SEND', frontendData);
+    socket.emit('GLOBAL_CHAT_SEND', messageData);
+    console.log('✅ GLOBAL_CHAT_SEND emitted successfully');
+    
+  } catch (error) {
+    console.error('❌ Error in handleSendMessage:', error);
+    dispatch(errorMsgBar('Failed to send message. Please try again.'));
+  }
+}, [socket, user?._id, dispatch]);
 
   // Enhanced text input handler with typing indicators
   const handleTextChange = useCallback((e) => {
@@ -522,43 +560,63 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
     }
   }, [isTyping, socket, user?._id]);
 
-  // Enhanced keyboard handler
   const handleKeyDown = useCallback((e) => {
-    e.stopPropagation();
+  e.stopPropagation();
 
-    if (!socket || !user?._id || !isChatEnabled) return;
+  console.log('🎯 handleKeyDown called');
+  console.log('🎯 Key pressed:', e.key);
+  console.log('🎯 Shift key:', e.shiftKey);
 
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const trimmedText = text.trim();
+  if (!socket || !user?._id || !isChatEnabled) {
+    console.log('🎯 Early return - missing requirements:', {
+      socket: !!socket,
+      userId: !!user?._id,
+      chatEnabled: isChatEnabled
+    });
+    return;
+  }
 
-      if (trimmedText) {
-        const message = {
-          sender: userName,
-          senderId: user._id,
-          message: trimmedText,
-          avatar: user.avatar,
-          accessory: user.accessory,
-          elite: user.elite,
-          replyTo: selectedMessage.sender ? selectedMessage : null,
-          rank: user.totalWagered,
-          timestamp: Date.now(),
-        };
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    console.log('🎯 Enter pressed, processing message...');
+    
+    const trimmedText = text.trim();
+    console.log('🎯 Trimmed text:', trimmedText);
 
-        handleSendMessage(message);
-        setText('');
-        setSelectedMessage(INITIAL_STATES.SELECTED_MESSAGE);
-        setIsTyping(false);
-        socket?.emit('TYPING_STOP', { userId: user._id });
-      }
-    }
+    if (trimmedText) {
+      console.log('🎯 Socket state before sending:');
+      console.log('  - Socket exists:', !!socket);
+      console.log('  - Socket connected:', socket?.connected);
+      console.log('  - Socket ID:', socket?.id);
+      
+      const message = {
+        sender: userName,
+        senderId: user._id,
+        message: trimmedText,
+        messageType: 'text',        
+        messageContent: trimmedText,
+        username: userName,         
+        avatar: user.avatar,
+        accessory: user.accessory,
+        elite: user.elite,
+        replyTo: selectedMessage.sender ? selectedMessage : null,
+        rank: user.totalWagered,
+      };
 
-    if (e.key === 'Escape') {
+      console.log('🎯 Message object created:', JSON.stringify(message, null, 2));
+      console.log('🎯 About to call handleSendMessage...');
+      
+      handleSendMessage(message);
+      
+      console.log('🎯 handleSendMessage called, clearing text...');
+      setText('');
       setSelectedMessage(INITIAL_STATES.SELECTED_MESSAGE);
-      setEmojiAnchorEl(null);
-      setGifAnchorEl(null);
+      setIsTyping(false);
+      socket?.emit('TYPING_STOP', { userId: user._id });
+      console.log('🎯 Text cleared and cleanup done');
     }
-  }, [socket, user, userName, text, selectedMessage, isChatEnabled, handleSendMessage]);
+  }
+}, [socket, user, userName, text, selectedMessage, isChatEnabled, handleSendMessage]);
 
   // Enhanced emoji selection
   const handleEmojiSelect = useCallback((emojiCommand) => {
@@ -625,7 +683,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
   const renderTabs = () => (
     <Box sx={{
       position: 'relative',
-     
+
       borderBottom: '1px solid',
       borderColor: isDarkMode ? 'rgba(255, 71, 87, 0.2)' : 'rgba(255, 0, 21, 0.15)',
       '&::before': {
@@ -706,7 +764,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
               background: isDarkMode
                 ? 'linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(255, 0, 21, 0.08))'
                 : 'linear-gradient(135deg, rgba(255, 71, 87, 0.12), rgba(255, 0, 21, 0.06))',
-           
+
               '& .tab-label': {
                 background: 'linear-gradient(135deg,rgb(255, 0, 21),rgb(255, 0, 25))',
                 backgroundClip: 'text',
@@ -746,19 +804,19 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
               }} />
             </Box>
           }
-          label={
-            <Typography
-              variant="body2"
-              className="tab-label"
-              sx={{
-                fontWeight: 'inherit',
-                fontSize: 'inherit',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              Inbox
-            </Typography>
-          }
+          // label={
+          //   <Typography
+          //     variant="body2"
+          //     className="tab-label"
+          //     sx={{
+          //       fontWeight: 'inherit',
+          //       fontSize: 'inherit',
+          //       transition: 'all 0.3s ease',
+          //     }}
+          //   >
+          //     Inbox
+          //   </Typography>
+          // }
           onMouseEnter={() => setHoverTabIndex(0)}
           onMouseLeave={() => setHoverTabIndex(-1)}
           sx={{
@@ -811,19 +869,19 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
               )} */}
             </Box>
           }
-          label={
-            <Typography
-              variant="body2"
-              className="tab-label"
-              sx={{
-                fontWeight: 'inherit',
-                fontSize: 'inherit',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              Global Chat
-            </Typography>
-          }
+          // label={
+          //   <Typography
+          //     variant="body2"
+          //     className="tab-label"
+          //     sx={{
+          //       fontWeight: 'inherit',
+          //       fontSize: 'inherit',
+          //       transition: 'all 0.3s ease',
+          //     }}
+          //   >
+          //     Global Chat
+          //   </Typography>
+          // }
           onMouseEnter={() => setHoverTabIndex(1)}
           onMouseLeave={() => setHoverTabIndex(-1)}
           sx={{

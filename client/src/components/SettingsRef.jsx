@@ -2016,7 +2016,7 @@ const SettingsRef = ({
                     fontWeight: 600,
                     px: 3,
                     '&:hover': {
-                      bgcolor: 'linear-gradient(45deg, #f50057, #ff4081)',
+                      bgcolor: '#ff0000',
                       transform: 'scale(1.05)',
                       transition: 'all 0.3s ease',
                     },

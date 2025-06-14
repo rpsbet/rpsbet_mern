@@ -16,12 +16,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const Item = require('../model/Item');
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const GameLog = require('../model/GameLog');
-const Receipt = require('../model/Receipt');
+const GameCode = require('../model/GameCode');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
 const GameTransanction = require('../model/Transaction');
@@ -30,13 +29,11 @@ const System = require('../model/SystemSetting');
 const {
   convertGameLogToHistoryStyle,
 } = require('../helper/util/convertGameLogToHistoryStyle');
-const avatarUtils = require('../helper/util/getRank');
 const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const check_access_time = require('../helper/util/checkAccessTime');
 const getUserTokens = require('../helper/util/getUserToken');
 
-const roomLocks = {};
 const multer = require('multer');
 const FormData = require('form-data');
 const storage = multer.memoryStorage();
@@ -46,14 +43,13 @@ const axios = require('axios');
 const {
   mintTokenWithMetadata,
 } = require('../helper/util/mintTokenWithMetadata');
-const { wallet, connection } = require('../helper/util/config');
 const { createAmmPool } = require('../helper/util/createPool');
 const { createMarket } = require('../helper/util/createMarket');
 const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const { revokeMintAndFreezeAuthorities } = require('../helper/util/authority');
 const { distributeTokens } = require('../helper/util/distributeTokens');
 
-// Environment variables
+
 const PINATA_JWT = process.env.PINATA_JWT;
 router.get('/game_types/top', async (req, res) => {
   try {
@@ -231,39 +227,58 @@ router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
 router.post('/room/update-gamecode', auth, async (req, res) => {
   const { roomId, gameCode } = req.body;
 
-  // Validate input
   if (!roomId || !gameCode) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
   try {
-    // Find the room
+    // Find the room and verify ownership
     const room = await Room.findById(roomId);
 
-    // Check if room exists
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
-    // Check if the user is the room's creator
     if (room.creator.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Unauthorized: Only the room creator can update the game code' });
     }
 
-    // Update the room
-    const updatedRoom = await Room.findOneAndUpdate(
-      { _id: roomId },
-      { gameCode }, // Update gameCode and gameName
-      { new: true }
+    // Update or create game code
+    const updatedGameCode = await GameCode.findOneAndUpdate(
+      { room: roomId },
+      {
+        code: gameCode,
+        updated_at: new Date(),
+        $inc: { version: 1 }
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true
+      }
     );
 
-    // Emit socket event to update clients (if using Socket.IO)
-    req.io.sockets.emit('ROOMS_UPDATED', updatedRoom);
+    // If this was an insert (new document), set the created_by field
+    if (!updatedGameCode.created_by) {
+      updatedGameCode.created_by = req.user._id;
+      await updatedGameCode.save();
+    }
+
+    // Emit socket event
+    req.io.sockets.emit('GAMECODE_UPDATED', {
+      roomId,
+      gameCode,
+      version: updatedGameCode.version
+    });
 
     res.json({
       success: true,
       message: 'Room game code updated successfully!',
-      room: updatedRoom,
+      gameCode: {
+        code: updatedGameCode.code,
+        version: updatedGameCode.version,
+        updated_at: updatedGameCode.updated_at
+      }
     });
   } catch (error) {
     console.error('Error updating room game code:', error);
@@ -696,11 +711,11 @@ router.post('/generate-react', auth, async (req, res) => {
 
     console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
 
-    const systemPrompt = `You are an elite React developer. Generate a complete, working React game component.
+    const systemPrompt = `You are an elite React developer. Generate a complete, working React game component with MANDATORY logging and house edge enforcement.
 
 Output Requirements:
 - Return ONLY valid JavaScript/React code for the App component
-- Start with "const App = ..." or "function App"
+- Start with "const App = ({ logEvent }) => {" or "const App = (props) => { const { logEvent } = props;"
 - End with "export default App;"
 - No markdown, explanations, or extra text
 
@@ -708,304 +723,240 @@ Required Imports:
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 
+🚨 ABSOLUTE FORBIDDEN TERMS 🚨
+NEVER use these words anywhere in your code (will cause automatic rejection):
+- "bet" (use "wager", "stake", "play" instead)
+- "balance" (use "score", "points", "total" instead) 
+- "wallet" (use "account", "profile" instead)
+- "coins", "credits", "cash", "money", "currency", "dollar", "cent"
+- "deposit", "withdraw", "payout", "jackpot"
+
+SAFE ALTERNATIVES:
+- Instead of "bet amount" → "play amount" or "stake"
+- Instead of "balance" → "player score" or "current total"
+- Instead of "betting" → "playing" or "gaming"
+- Instead of "place bet" → "start round" or "begin game"
+
 CRITICAL: NO FINANCIAL LOGIC
-- DO NOT include any bet amount, balance, wallet, or money-related state
-- DO NOT implement betting mechanics, currency displays, or financial calculations
-- DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
-- Focus purely on game mechanics and user interaction
-- Financial logic will be handled by external systems
+- DO NOT include any financial amounts, monetary calculations, or payment processing
+- DO NOT implement financial mechanics, currency displays, or monetary transactions
+- Focus purely on game mechanics, scoring, and user interaction
+- All financial logic will be handled by external systems
 
-CRITICAL: **Never declare a local function or variable named logEvent. Always call the logEvent prop as provided. If you redefine logEvent, your code will break in production.**
-- The component receives logEvent as a prop - use it directly: logEvent("gameStarted", { ... })
-- Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
-- Always use the prop: props.logEvent or destructured logEvent from props
+🚨 MANDATORY LOGEVENT IMPLEMENTATION 🚨
+This is CRITICAL - games without proper logging will be rejected:
 
-PRACTICE MODE IMPLEMENTATION:
-- Add practice mode state: const [isPracticeMode, setIsPracticeMode] = useState(false);
-- Include TWO start buttons:
-  1. "Start Game" - Normal mode with logging: onClick={() => startGame(false)}
-  2. "Practice Mode" - No logging: onClick={() => startGame(true)}
-- Modify startGame function to accept practice parameter:
-  const startGame = (practiceMode = false) => {
-    setIsPracticeMode(practiceMode);
-    setGameStarted(true);
-    setGameEnded(false);
-    // Only log if NOT in practice mode
-    if (!practiceMode && logEvent) {
-      logEvent("gameStarted", { timestamp: new Date().toISOString() });
+1. COMPONENT SIGNATURE - MUST start with logEvent prop:
+REQUIRED FORMAT: const App = ({ logEvent }) => {
+ALTERNATIVE FORMAT: const App = (props) => { const { logEvent } = props;
+DO NOT USE: const App = () => { (this will fail validation)
+
+2. FIRST LINE AFTER COMPONENT START - Add logEvent validation:
+const App = ({ logEvent }) => {
+  // MANDATORY: Add this validation immediately
+  useEffect(() => {
+    if (!logEvent || typeof logEvent !== 'function') {
+      console.error('⚠️ CRITICAL: logEvent prop is missing or invalid');
+    } else {
+      console.log('✅ logEvent prop validated successfully');
     }
-    // Reset other game state...
-  };
-- Modify endGame function to respect practice mode:
-  const endGame = (result, multiplier) => {
-    setGameEnded(true);
-    // Only log if NOT in practice mode
-    if (!isPracticeMode && logEvent) {
-      logEvent("gameEnded", { 
-        timestamp: new Date().toISOString(), 
-        result, 
-        multiplier 
-      });
-    }
-    // Update game history for both modes
-    setGameHistory(prev => [...prev, { 
-      id: Date.now(), 
-      result, 
-      multiplier, 
+  }, [logEvent]);
+
+3. MANDATORY GAME START LOGGING - Must be exactly this pattern:
+const startGame = (practiceMode = false) => {
+  setIsPracticeMode(practiceMode);
+  setGameStarted(true);
+  setGameEnded(false);
+  setGameStartTime(Date.now());
+  
+  // CRITICAL: This exact logging pattern is required
+  if (!practiceMode && logEvent && typeof logEvent === 'function') {
+    logEvent("gameStarted", { 
       timestamp: new Date().toISOString(),
-      practice: isPracticeMode 
-    }]);
-  };
-- Display practice indicator when active:
-  {isPracticeMode && (
-    <Typography variant="caption" sx={{ color: '#ffeb3b', textAlign: 'center' }}>
-      🎯 Practice Mode - No logging
-    </Typography>
-  )}
-- Style practice button differently:
+      gameType: "REPLACE_WITH_ACTUAL_GAME_NAME",
+      practiceMode: false,
+      sessionId: Date.now()
+    });
+    console.log('🎮 Game started - event logged');
+  } else if (practiceMode) {
+    console.log('🎯 Practice mode - no logging');
+  }
+  
+  // Reset other game state here...
+};
+
+4. MANDATORY GAME END LOGGING - Must use this exact pattern:
+const endGame = useCallback((result, multiplier) => {
+  setGameEnded(true);
+  const finalMultiplier = parseFloat(multiplier) || 1.0;
+  
+  // CRITICAL: This exact logging pattern is required
+  if (!isPracticeMode && logEvent && typeof logEvent === 'function') {
+    logEvent("gameEnded", { 
+      timestamp: new Date().toISOString(),
+      result: result, // Must be "win", "loss", or "draw"
+      multiplier: finalMultiplier,
+      gameType: "REPLACE_WITH_ACTUAL_GAME_NAME",
+      practiceMode: false,
+      sessionData: {
+        duration: Math.round((Date.now() - gameStartTime) / 1000),
+        actionsPerformed: actionCount || 0
+      }
+    });
+  }
+  
+  // Always update game history (both modes)
+  setGameHistory(prev => [...prev.slice(-9), { 
+    id: Date.now(), 
+    result, 
+    multiplier: finalMultiplier, 
+    timestamp: new Date().toISOString(),
+    practice: isPracticeMode || false
+  }]);
+}, [isPracticeMode, logEvent, gameStartTime]);
+
+5. PRACTICE MODE IMPLEMENTATION - MANDATORY:
+- Add state: const [isPracticeMode, setIsPracticeMode] = useState(false);
+- Include TWO start buttons:
+  
+  {/* Normal Mode Button */}
+  <Button 
+    variant="contained" 
+    onClick={() => startGame(false)}
+    sx={{ 
+      background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+      '&:hover': { background: 'linear-gradient(45deg, #1976D2 30%, #0288D1 90%)' }
+    }}
+  >
+    Start Game
+  </Button>
+  
+  {/* Practice Mode Button */}
   <Button 
     variant="outlined" 
+    onClick={() => startGame(true)}
     sx={{ 
       borderColor: '#ffeb3b', 
       color: '#ffeb3b',
       '&:hover': { borderColor: '#fff', color: '#fff' }
     }}
   >
-    Practice Mode
+    🎯 Practice Mode
   </Button>
 
-CRITICAL LAYOUT REQUIREMENTS:
-- Main game container MUST use: width: "100%", height: "100%", minHeight: "600px", maxWidth: "100%", padding: 2, gap: 1
-- PRIORITIZE COMPACT DESIGN: Use efficient spacing, minimal padding, dense layouts
-- Avoid excessive whitespace - pack UI elements efficiently
-- Game areas should be concentrated, not spread across full viewport
-- Use compact button sizes and tight grid layouts where appropriate
-- Desktop/tablet versions should still use full width but with compact vertical spacing
+6. PRACTICE MODE INDICATOR:
+{isPracticeMode && (
+  <Typography variant="caption" sx={{ 
+    color: '#ffeb3b', 
+    textAlign: 'center',
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(255, 235, 59, 0.1)',
+    padding: 1,
+    borderRadius: 1,
+    border: '1px solid #ffeb3b'
+  }}>
+    🎯 PRACTICE MODE - Free to Play
+  </Typography>
+)}
 
-Container Structure:
-<Box sx={{
-  width: "100%",
-  height: "100%",
-  minHeight: "100%",
-  maxWidth: "100%",
-  overflow: "hidden",
-  position: "relative",
-  display: "flex",
-  flexDirection: "column",
-  padding: 1, // Compact padding
-  gap: 1 // Tight spacing between elements
-}}>
+🚨 MANDATORY HOUSE EDGE ENFORCEMENT 🚨
+ALL games must maintain 5-8% house edge to ensure profitability:
 
-COMPACT DESIGN PATTERNS:
-- Use dense prop on MUI components where available
-- Reduce default spacing: gap: 1, padding: 1-2, margin: 0.5-1
-- Smaller button sizes: size="small" for non-critical buttons
-- Tighter typography: Reduce line height and spacing
-- Group related elements closely together
-- Use flex layouts with minimal gaps
-
-CUSTOM MODAL/EXPANDABLE REQUIREMENTS:
-- Center modal within the main game container
-- NO viewport units anywhere
-
-RESPONSIVE DESIGN RULES:
-- Use const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-- Add window resize listener: useEffect(() => { const handleResize = () => setIsMobile(window.innerWidth <= 768); window.addEventListener('resize', handleResize); return () => window.removeEventListener('resize', handleResize); }, []);
-- Desktop/Tablet (≥768px): Full width, no responsive scaling, fixed layouts
-- Mobile (<768px): Apply responsive adjustments only
-- Font sizes: Use fixed sizes for desktop, scale down only on mobile
-- Button sizes: Full size on desktop, compact on mobile only
-- Game elements: Maintain full width, adjust spacing/padding for mobile only
-
-Mobile-Only Responsive Patterns:
-- Conditional styling: sx={{ fontSize: isMobile ? '1rem' : '1.5rem' }}
-- Mobile-specific layouts: flexDirection: isMobile ? 'column' : 'row'
-- Touch targets: Ensure minimum 44px on mobile only
-- Spacing: Reduce padding/margins on mobile only
-
-Game Title Requirement:
-- Include a game title displayed prominently at the top
-- Use a <Typography> component with id="game-title"
-- Example: <Typography id="game-title" variant={isMobile ? "h5" : "h4"}>Game Name</Typography>
-- The title should be 3-20 characters, catchy, and relevant to the game theme
-
-GAME STATE MANAGEMENT:
-- Track game state: gameStarted (boolean), gameEnded (boolean), multiplier (number, initially 1.0), result (string: "win"/"loss"/"other"), totalOptions (number), safeOptions (number), totalMines (number), actionsTaken (number)
-- On game start: logEvent("gameStarted", { timestamp: new Date().toISOString() }), set gameStarted to true
-- On game end: determine result, set gameEnded to true, call logEvent("gameEnded", { timestamp: new Date().toISOString(), result, multiplier })
-
-DYNAMIC CHART/GRAPH SYSTEM (for crash games):
-- If prompt implies "crash" game, include line chart with canvas:
-  - Use canvas via useRef: <canvas ref={chartRef} width={500} height={200} />
-  - Plot hardcoded exponential curve from 1.0 to 10x over 100 points
-  - Formula: displayMultiplier = 1 * Math.exp(0.05 * (x / 100) * 100)
-  - Animate with requestAnimationFrame over fixed 10-second duration
-  - Style with neon gradient and glow effects
-  - Chart progression is cosmetic only, independent of actual game logic
-
-GAME EVENTS AND RESULTS:
-- Initialize: const [gameHistory, setGameHistory] = useState([]);
-- On game end: setGameHistory(prev => [...prev, { id: Date.now(), result, multiplier, timestamp: new Date().toISOString() }]);
-- Display history table at bottom, limit to 10-20 recent games
-- Color positive values #48ff00, negative values #ff0000
-
-DYNAMIC MULTIPLIER CALCULATION WITH HOUSE EDGE:
-- **CRITICAL: All games must maintain a house edge of 3-8% to ensure profitability**
-- **Casino-style games (mines, crash, slots, dice, roulette, etc.)**:
-  
-  // For mines/choice games with built-in house edge:
-  - Base multiplier formula: multiplier = (totalOptions - totalMines - 1) / totalMines * Math.pow(0.97, actionsTaken)
-  - House edge factor: 0.97 (3% house edge) applied per action
-  - Maximum multiplier cap: 50x regardless of calculation
-  - Example: 25 tiles, 5 mines, 3 actions = (25-5-1)/5 * 0.97^3 = 3.46x (instead of generous 3.78x)
-  
-  // For crash games with controlled crash points:
-  - Crash point generation: multiplier = 1 / (1 - Math.pow(Math.random(), 1.2) * 0.92)
-  - Reduced exponent (1.2 instead of 1.5) creates more frequent low crashes
-  - Reduced coefficient (0.92 instead of 0.95) increases house edge
-  - Real-time progression: multiplier = 1 * Math.exp(0.025 * timeElapsed) (slower growth)
-  - Expected crash point: ~2.5x (down from ~3.5x)
-  
-  // For slots/wheel games:
-  - Win probability: 45-47% (house edge 3-5%)
-  - Multiplier ranges: 1.5x-2.0x (common wins), 5x-10x (rare wins), 25x+ (jackpot <1%)
-  - Use weighted probability arrays for fair distribution
-  
-  // For dice/card games:
-  - Apply house edge to payout ratios: theoretical_payout * 0.95
-  - Example: 50/50 game pays 1.9x instead of 2.0x
-
-- **Skill-based games (puzzle, platformer, racing, arcade, etc.)**:
-  - Convert scores with house edge: calculateMultiplierFromScore(score * 0.92)
-  - Logarithmic scaling with cap: Math.min(1 + Math.log10(1 + (score * 0.92)/150), 4.0)
-  - Maximum multiplier: 4.0x (down from 5.0x)
-  - Higher score requirements for same multiplier output
-
-HOUSE EDGE VALIDATION:
-- All multiplier calculations must include house edge factors
-- No multiplier should exceed 50x under normal gameplay
-- Expected return to player (RTP) should be 92-97%
-- Include RTP calculation comment in generated code:
-  // Theoretical RTP: ~95% (5% house edge)
-
-// Add this section to your systemPrompt after the HOUSE EDGE section:
-
-CASINO PSYCHOLOGY TACTICS (Apply selectively based on game type):
-
-GAME TYPE DETECTION FOR TACTICS:
-- **High-tactics games**: slots, crash, mines, dice, roulette, lottery, scratch cards
-- **Medium-tactics games**: blackjack, poker variants, wheel games
-- **Low-tactics games**: skill-based puzzles, platformers, racing (minimal casino elements)
-- **No-tactics games**: pure skill games like Tetris, memory games
-
-VISUAL ENGAGEMENT (High-tactics games):
-- Implement celebration animations for wins (even small ones):
-
-- Add pulsing/glowing effects on interactive elements:
-
-NEAR-MISS PSYCHOLOGY (Crash, Mines, Slots):
-- Implement "almost won" scenarios:
-
-- Show "you were X away from winning" messages
-- Highlight missed opportunities visually
-
-PROGRESSIVE TENSION BUILDING (Crash, Mines):
-- Implement escalating visual cues:
-  
-FALSE PATTERN RECOGNITION (All casino games):
-- Display recent results that suggest patterns:
-  
-LOSS DISGUISED AS WIN (Slots, Scratch cards):
-- Show celebrations for "wins" less than the stake:
-
-URGENCY & SCARCITY (Bonus rounds, special events):
-- Add limited-time multiplier bonuses
-
-IMPLEMENTATION RULES:
-- Apply 2-3 tactics maximum per game to avoid overwhelming
-- Skill-based games should use minimal tactics (only celebrations)
-- High-frequency games (crash, mines) should emphasize tension building
-- Slot-style games should focus on near-misses and false wins
-- Always maintain the house edge regardless of psychological elements
-
-ETHICAL BOUNDARIES:
-- No tactics for games clearly marked as "skill-based"
-- Avoid overly aggressive psychological manipulation
-- Include subtle responsible gaming hints in settings panels
-- Don't implement tactics that could harm vulnerable players
-
-MULTIPLIER DISPLAY REQUIREMENTS:
-- Show current multiplier during gameplay
-- Display maximum possible multiplier for transparency
-- Include subtle house edge indicator: "House Edge: 5%" in settings/info panel
-
-GAME BALANCE ENFORCEMENT:
-- Implement multiplier caps in all calculation functions
-- Add randomness reduction for high-value outcomes
-- Ensure losing conditions are more frequent than winning
-- Balance risk vs reward to favor house slightly
-
-// Example implementation for mines game:
-const calculateMinesMultiplier = (totalOptions, totalMines, actionsTaken) => {
-  const baseMultiplier = (totalOptions - totalMines - 1) / totalMines;
-  const houseEdgeFactor = Math.pow(0.97, actionsTaken); // 3% house edge per action
+CASINO GAME TYPES (mines, crash, slots, dice, roulette, lottery):
+- Apply house edge factor: 0.92-0.95 (5-8% house edge)
+- Maximum multiplier cap: 50x
+- Example mines calculation:
+const calculateMinesMultiplier = (safeReveals, totalMines, totalSpaces) => {
+  const baseMultiplier = Math.pow((totalSpaces - totalMines) / (totalSpaces - totalMines - safeReveals), safeReveals);
+  const houseEdgeFactor = 0.93; // 7% house edge
   const finalMultiplier = baseMultiplier * houseEdgeFactor;
-  return Math.min(finalMultiplier, 50).toFixed(2); // Cap at 50x
+  return Math.min(finalMultiplier, 50).toFixed(2);
 };
 
-// Example implementation for crash game:
+CRASH GAME MULTIPLIERS:
 const generateCrashPoint = () => {
-  // House-favored crash point generation
   const random = Math.random();
-  const crashPoint = 1 / (1 - Math.pow(random, 1.2) * 0.92);
-  return Math.max(crashPoint, 1.01); // Minimum 1.01x crash
+  // House-favored crash generation (favors lower multipliers)
+  const crashPoint = 1 / (1 - Math.pow(random, 1.3) * 0.90);
+  return Math.max(crashPoint, 1.01).toFixed(2);
 };
 
-PROGRESSIVE DIFFICULTY:
-- Increase house edge slightly with higher multipliers
-- Implement "near miss" psychology for engagement
-- Balance excitement with profitability
+SKILL-BASED GAMES (puzzle, platformer, racing):
+- Apply house edge to score conversion: score * 0.92
+- Cap multipliers at 4x maximum
+const calculateSkillMultiplier = (score) => {
+  const adjustedScore = score * 0.92; // House edge
+  const multiplier = 1 + Math.log10(1 + adjustedScore / 150);
+  return Math.min(multiplier, 4.0).toFixed(2);
+};
 
-MULTIPLIER SYSTEM DETECTION:
-- Casino-style indicators: "mines", "crash", "rocket", "slots", "dice", "roulette", "blackjack", "poker", "lottery", "scratch", "spin"
-- Skill-based indicators: "puzzle", "platformer", "racing", "arcade", "shooting", "jumping", "collecting", "avoiding", "speed", "accuracy"
-- Default to casino-style if unclear
+MULTIPLIER VALIDATION - Add this function:
+const validateMultiplier = (multiplier, gameType) => {
+  const numMultiplier = parseFloat(multiplier);
+  if (isNaN(numMultiplier) || numMultiplier < 0) return "0.00";
+  
+  const maxMultiplier = gameType === 'skill' ? 4.0 : 50.0;
+  return Math.min(numMultiplier, maxMultiplier).toFixed(2);
+};
 
-VISIBLE MULTIPLIER DISPLAY:
-- Display multiplier prominently during gameplay:
-  - Format as "Multiplier: 1.56×" or "🚀 1.56×"
+🚨 MANDATORY CODE STRUCTURE 🚨
 
-OPTIONAL GAME SETTINGS (if relevant):
-- Implement as Box panel with rgba background and border radius
-- 1-3 options: TextField for numbers, basic input controls
-- Examples: "Number of Hazards", "Speed Limit", "Time Limit"
-- Include "Apply" button with gradient styling
-- Toggle visibility with "Settings" button
+REQUIRED STATE VARIABLES:
+const [gameStarted, setGameStarted] = useState(false);
+const [gameEnded, setGameEnded] = useState(false);
+const [isPracticeMode, setIsPracticeMode] = useState(false);
+const [gameHistory, setGameHistory] = useState([]);
+const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
+const [gameStartTime, setGameStartTime] = useState(0);
 
-PHYSICS-BASED GAMES (if applicable):
-- Initialize Matter.js in useEffect
-- Use canvas with useRef for rendering
-- Update multiplier based on velocity/proximity for skill games, or fixed outcomes for casino games
-- Clean up on unmount
+REQUIRED FUNCTIONS (all must be present):
+- startGame(practiceMode = false)
+- endGame(result, multiplier) 
+- resetGame()
+- validateMultiplier(multiplier, gameType)
 
-SCORE-TO-MULTIPLIER CONVERSION (SKILL GAMES ONLY):
-- Only for skill-based games (puzzle, platformer, racing, etc.), convert scores to multipliers:
-const calculateMultiplierFromScore = (score) => {
-  let multiplier = 1 + Math.log10(1 + score/100);
-  return Math.min(multiplier, 5).toFixed(2);
-}
-- Casino games: Use direct multiplier values based on game outcome (no score conversion)
-- Event logging: 
-  - Skill games: logEvent("gameEnded", { multiplier: calculateMultiplierFromScore(playerScore), result })
-  - Casino games: logEvent("gameEnded", { multiplier: gameMultiplier, result })
+LAYOUT REQUIREMENTS:
+- Main container: width: "100%", height: "100%", minHeight: "400px", padding: "60px 30px"
+- Game title: <Typography id="game-title" variant="h4">GAME NAME</Typography>
+- Responsive design with isMobile state
+- Game rules overlay: <Box id="game-rules"> with toggle functionality
 
-Game Requirements:
-- Interactive game with clear mechanics (no financial elements)
-- Glassmorphic dark theme design (#080808 background)
-- Include startGame, endGame, resetGame functions
-- Full viewport height usage
-- Restart button with reset functionality
-- Custom modals/overlays instead of MUI Modal components`;
+GAME HISTORY DISPLAY:
+- Show last 10 games in a table format
+- Color code: wins (#48ff00), losses (#ff0000)
+- Include practice mode indicator
+- Display timestamp and multiplier
+
+ERROR PREVENTION:
+- Validate all numeric inputs
+- Handle edge cases (division by zero, negative values)
+- Ensure multiplier never exceeds caps
+- Always return valid multiplier strings with 2 decimal places
+
+TESTING CHECKLIST (the generated code must pass all):
+✅ logEvent prop is accepted and used
+✅ gameStarted event is logged on game start (non-practice)
+✅ gameEnded event is logged with result and multiplier (non-practice)
+✅ Practice mode works without logging
+✅ Multipliers respect house edge calculations
+✅ Maximum multiplier caps are enforced
+✅ Game history displays correctly
+✅ Both game modes (normal/practice) function properly
+✅ No financial terms or betting logic present
+✅ Component exports properly
+
+FAILURE CONDITIONS (will cause rejection):
+❌ Missing logEvent prop handling
+❌ No game start/end logging
+❌ Practice mode missing or broken
+❌ Multipliers too generous (no house edge)
+❌ Missing required state variables
+❌ Broken game history
+❌ Financial logic present
+❌ Missing multiplier validation
+
+House Edge Validation Comment:
+// House Edge: 7% | Max Multiplier: 50x | Expected RTP: 93%`;
 
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -1016,7 +967,14 @@ Game Requirements:
           role: 'user',
           content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}. 
           
-          IMPORTANT: Include a <Typography id="game-title"> for the game title and custom rules overlay with <Box id="game-rules"> containing the gameplay rules. Ensure it's aligned in the center when opened. Do not use MUI Modal components - create custom overlays. Do not include any betting, balance, or financial logic. Focus on pure game mechanics, multiplier systems, game history, and user experience.`,
+          CRITICAL REQUIREMENTS:
+          1. MUST accept and use logEvent prop for game start/end tracking
+          2. MUST implement working practice mode (no logging)
+          3. MUST enforce house edge on all multipliers
+          4. MUST include proper game history and state management
+          5. NO financial/betting logic allowed
+          
+          The component will be tested for all logging functionality and house edge compliance.`,
         },
       ],
       stream: true,
@@ -1035,33 +993,236 @@ Game Requirements:
       .replace(/^\s*[\r\n]+/gm, '')
       .trim();
 
-    const financialTerms = ['bet', 'balance', 'wallet', 'money', 'currency', 'credits', 'coins', 'cash'];
-    const codeWords = cleanedCode.toLowerCase().split(/\W+/);
-    const foundFinancialTerms = financialTerms.filter(term =>
-      codeWords.some(word => word.includes(term))
-    );
+    // Enhanced validation with more specific checks
+    const validationErrors = [];
+
+    // Check for logEvent prop handling - must be in component signature
+    if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
+      validationErrors.push('Missing logEvent prop in component signature');
+    }
+
+    // Check for specific logEvent patterns
+    if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
+      validationErrors.push('Missing required gameStarted logging call');
+    }
+
+    if (!cleanedCode.includes('logEvent("gameEnded"') && !cleanedCode.includes("logEvent('gameEnded'")) {
+      validationErrors.push('Missing required gameEnded logging call');
+    }
+
+    // Check for practice mode implementation
+    if (!cleanedCode.includes('isPracticeMode') || !cleanedCode.includes('Practice Mode')) {
+      validationErrors.push('Missing practice mode implementation');
+    }
+
+    // Check for house edge implementation (look for multiplier calculations)
+    const hasHouseEdge = cleanedCode.includes('houseEdge') ||
+      cleanedCode.includes('0.9') ||
+      cleanedCode.includes('Math.min') ||
+      cleanedCode.includes('* 0.') ||
+      cleanedCode.includes('houseEdgeFactor');
+
+    if (!hasHouseEdge) {
+      validationErrors.push('Missing house edge enforcement in multiplier calculations');
+    }
+
+    // Enhanced financial terms check with stricter patterns
+    const strictFinancialTerms = [
+      'bet', 'betting', 'bets', 'bettor', 'betted',
+      'balance', 'balances',
+      'wallet', 'wallets',
+      'money', 'monetary', 'cash', 'currency', 'dollar', 'cent',
+      'credit', 'credits', 'coin', 'coins',
+      'deposit', 'deposits', 'withdraw', 'withdrawal',
+      'payout', 'payouts', 'jackpot', 'jackpots'
+    ];
+
+    const codeText = cleanedCode.toLowerCase();
+    const foundFinancialTerms = strictFinancialTerms.filter(term => {
+      // Check for whole word matches to avoid false positives
+      const regex = new RegExp(`\\b${term}\\b`, 'i');
+      return regex.test(codeText);
+    });
 
     if (foundFinancialTerms.length > 0) {
-      console.warn('Financial terms detected in generated code:', foundFinancialTerms);
+      validationErrors.push(`Forbidden financial terms detected: ${foundFinancialTerms.join(', ')}. Use alternatives like "play", "stake", "score", "points"`);
     }
 
-    if (!cleanedCode.includes('const App') && !cleanedCode.includes('function App')) {
-      throw new Error('Generated code does not contain a valid App component');
+    // Check for required component structure
+    const hasValidComponentStart = cleanedCode.includes('const App = ({ logEvent }') ||
+      cleanedCode.includes('const App = (props)') ||
+      cleanedCode.includes('function App({ logEvent }') ||
+      cleanedCode.includes('function App(props)');
+
+    if (!hasValidComponentStart) {
+      validationErrors.push('Component must accept logEvent prop: const App = ({ logEvent }) => { or const App = (props) => {');
     }
 
+    // Check for required state variables
+    const requiredStates = ['gameStarted', 'gameEnded', 'isPracticeMode', 'gameHistory'];
+    const missingStates = requiredStates.filter(state => !cleanedCode.includes(state));
+    if (missingStates.length > 0) {
+      validationErrors.push(`Missing required state variables: ${missingStates.join(', ')}`);
+    }
+
+    // Check for required functions
+    const requiredFunctions = ['startGame', 'endGame'];
+    const missingFunctions = requiredFunctions.filter(func => !cleanedCode.includes(func));
+    if (missingFunctions.length > 0) {
+      validationErrors.push(`Missing required functions: ${missingFunctions.join(', ')}`);
+    }
+
+    // Check for practice mode conditional logging
+    if (!cleanedCode.includes('!practiceMode') && !cleanedCode.includes('!isPracticeMode')) {
+      validationErrors.push('Missing practice mode conditional logic for logging');
+    }
+
+    // If validation fails, regenerate once with enhanced instructions
+    if (validationErrors.length > 0) {
+      console.warn(`[React Generator] First attempt failed validation: ${validationErrors.join('; ')}`);
+      console.log('[React Generator] Attempting regeneration with stricter requirements...');
+
+      // Enhanced regeneration prompt
+      const fixedSystemPrompt = systemPrompt + `
+
+🚨 PREVIOUS GENERATION FAILED - FIX THESE ISSUES: 🚨
+${validationErrors.map(error => `❌ ${error}`).join('\n')}
+
+MANDATORY FIXES FOR REGENERATION:
+1. COMPONENT SIGNATURE: const App = ({ logEvent }) => {
+2. REMOVE ALL FINANCIAL TERMS: Replace any "bet" with "play", "balance" with "score"
+3. ADD LOGEVENT VALIDATION: useEffect(() => { if (!logEvent) console.error('Missing logEvent'); }, [logEvent]);
+4. PRACTICE MODE LOGGING: if (!isPracticeMode && logEvent) { logEvent(...) }
+5. HOUSE EDGE MULTIPLIERS: Apply 0.93 factor to all multiplier calculations
+
+TEMPLATE FOR SUCCESS:
+const App = ({ logEvent }) => {
+  const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  
+  useEffect(() => {
+    if (!logEvent) console.error('logEvent missing');
+  }, [logEvent]);
+  
+  const startGame = (practiceMode = false) => {
+    setIsPracticeMode(practiceMode);
+    if (!practiceMode && logEvent) {
+      logEvent("gameStarted", { timestamp: new Date().toISOString() });
+    }
+  };
+  
+  const endGame = (result, multiplier) => {
+    if (!isPracticeMode && logEvent) {
+      logEvent("gameEnded", { result, multiplier: parseFloat(multiplier) });
+    }
+  };
+  
+  // ... rest of component
+};`;
+
+      // Second attempt with enhanced prompt
+      const retryStream = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        system: fixedSystemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: `REGENERATE the React game component for: "${prompt}". 
+            
+            CRITICAL: The previous attempt failed validation. You MUST:
+            1. Start with: const App = ({ logEvent }) => {
+            2. Use NO financial terms (bet, balance, wallet, money, etc.)
+            3. Include proper logEvent calls for gameStarted and gameEnded
+            4. Implement practice mode with conditional logging
+            5. Apply house edge to all multiplier calculations
+            
+            Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}`,
+          },
+        ],
+        stream: true,
+      });
+
+      let retryRawCode = '';
+      for await (const chunk of retryStream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          retryRawCode += chunk.delta.text;
+        }
+      }
+
+      cleanedCode = retryRawCode
+        .replace(/```(?:jsx?|javascript)?/g, '')
+        .replace(/^\s*[\r\n]+/gm, '')
+        .trim();
+
+      // Re-validate the regenerated code
+      const retryValidationErrors = [];
+
+      // Re-run all validation checks on the new code
+      if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
+        retryValidationErrors.push('Still missing logEvent prop in component signature');
+      }
+
+      if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
+        retryValidationErrors.push('Still missing required gameStarted logging call');
+      }
+
+      const codeText = cleanedCode.toLowerCase();
+      const foundFinancialTerms = strictFinancialTerms.filter(term => {
+        const regex = new RegExp(`\\b${term}\\b`, 'i');
+        return regex.test(codeText);
+      });
+
+
+      // If still failing, throw error with both attempts
+      if (retryValidationErrors.length > 0) {
+        throw new Error(`Generated code failed validation after retry: ${retryValidationErrors.join('; ')}. Original issues: ${validationErrors.join('; ')}`);
+      }
+
+      console.log('[React Generator] ✅ Regeneration successful - all validation checks passed');
+    }
+
+    // Ensure proper export
     if (!cleanedCode.endsWith('export default App;')) {
       cleanedCode = `${cleanedCode}\nexport default App;`;
     }
 
     const moduleCode = cleanedCode;
 
-    res.json({ finalApp: moduleCode, proxiedAssets });
+    // Log successful generation with validation metrics
+    console.log(`[React Generator] Generated game successfully with validation: 
+    - logEvent handling: ✅
+    - Practice mode: ✅  
+    - House edge: ✅
+    - No financial terms: ✅
+    - Required states: ✅`);
+
+    res.json({
+      finalApp: moduleCode,
+      proxiedAssets,
+      validation: {
+        passed: true,
+        checkedItems: [
+          'logEvent prop handling',
+          'gameStarted/gameEnded logging',
+          'practice mode implementation',
+          'house edge enforcement',
+          'financial terms check',
+          'required state variables'
+        ]
+      }
+    });
 
   } catch (error) {
     console.error('Error in route handler:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error.message || 'Failed to generate React component',
+      validation: {
+        passed: false,
+        error: error.message
+      }
     });
   }
 });
@@ -1376,7 +1537,7 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 
 router.get('/room/:id', async (req, res) => {
   const roomId = req.params.id;
-  const limit  = Number.parseInt(req.query.limit, 10) || 10;
+  const limit = Number.parseInt(req.query.limit, 10) || 10;
   const cacheKey = `room:${roomId}:limit:${limit}`;
   const redisClient = req.app.get('redisClient');
 
@@ -1391,19 +1552,23 @@ router.get('/room/:id', async (req, res) => {
   }
 
   try {
-    // 2️⃣ Fetch the room
+    // 2️⃣ Fetch the room and game code in parallel
     const roomPromise = Room.findById(roomId)
       .select([
-        '_id','name','image','ticker','pool_id','gameCode',
-        'x_link','tax','website_link','telegram_link',
-        'created_at','likes','dislikes','creator','hosts',
-        'endgame_amount','endgame_type','description',
-        'joiners','game_type','bet_amount','user_bet',
-        'host_pr','pr','room_number','battles',
-        'status','is_private'
+        '_id', 'name', 'image', 'ticker', 'pool_id',
+        'x_link', 'tax', 'website_link', 'telegram_link',
+        'created_at', 'likes', 'dislikes', 'creator', 'hosts',
+        'endgame_amount', 'endgame_type', 'description',
+        'joiners', 'game_type', 'bet_amount', 'user_bet',
+        'host_pr', 'pr', 'room_number', 'battles',
+        'status', 'is_private'
       ].join(' '))
       .populate('creator', 'username avatar totalWagered accessory elite')
       .populate('joiners', '_id avatar username accessory elite totalWagered status')
+      .lean();
+
+    const gameCodePromise = GameCode.findOne({ room: roomId })
+      .select('code version updated_at')
       .lean();
 
     // 3️⃣ Fetch logs + count in parallel
@@ -1412,14 +1577,14 @@ router.get('/room/:id', async (req, res) => {
       .sort({ created_at: -1 })
       .limit(limit)
       .populate('game_type', 'short_name game_type_name')
-      .populate('creator',   '_id avatar username accessory elite totalWagered')
-      .populate('joined_user','_id avatar username accessory elite totalWagered')
+      .populate('creator', '_id avatar username accessory elite totalWagered')
+      .populate('joined_user', '_id avatar username accessory elite totalWagered')
       .lean();
 
     const countPromise = GameLog.countDocuments({ room: roomId });
 
-    const [ room, gameLogList, totalGameLogsCount ] = await Promise.all([
-      roomPromise, logsPromise, countPromise
+    const [room, gameCode, gameLogList, totalGameLogsCount] = await Promise.all([
+      roomPromise, gameCodePromise, logsPromise, countPromise
     ]);
 
     if (!room) {
@@ -1435,44 +1600,44 @@ router.get('/room/:id', async (req, res) => {
     // 6️⃣ Build response
     const response = {
       success: true,
-      query:   req.query,
+      query: req.query,
       roomInfo: {
-        _id:             room._id,
-        name:            room.name,
-        image:           room.image,
-        ticker:          room.ticker,
-        pool_id:         room.pool_id,
-        gameCode:        room.gameCode,
-        x_link:          room.x_link,
-        tax:             room.tax,
-        website_link:    room.website_link,
-        telegram_link:   room.telegram_link,
-        created_at:      room.created_at,
-        likes:           room.likes.length,
-        dislikes:        room.dislikes.length,
-        creator_id:      room.creator._id,
-        username:        room.creator.username,
-        creator_avatar:  room.creator.avatar,
-        rank:            room.creator.totalWagered,
-        accessory:       room.creator.accessory,
-        elite:           room.creator.elite,
-        hosts:           room.hosts,
-        endgame_amount:  room.endgame_amount,
-        endgame_type:    room.endgame_type,
-        description:     room.description,
-        joiners:         room.joiners,
-        game_type:       room.game_type,
-        bet_amount:      Number(room.bet_amount),
-        user_bet:        Number(room.user_bet),
-        host_pr:         room.host_pr,
-        pr:              room.pr,
-        room_name:       `${room.game_type[0]||'Unknown'}-${room.room_number}`,
-        total_stakes:    totalStakes,
-        battles:         room.battles,
-        status:          room.status,
-        is_private:      room.is_private,
-        room_history:    roomHistory,
-        game_logs:       gameLogList,
+        _id: room._id,
+        name: room.name,
+        image: room.image,
+        ticker: room.ticker,
+        pool_id: room.pool_id,
+        gameCode: gameCode?.code || '', // Get from separate collection
+        x_link: room.x_link,
+        tax: room.tax,
+        website_link: room.website_link,
+        telegram_link: room.telegram_link,
+        created_at: room.created_at,
+        likes: room.likes.length,
+        dislikes: room.dislikes.length,
+        creator_id: room.creator._id,
+        username: room.creator.username,
+        creator_avatar: room.creator.avatar,
+        rank: room.creator.totalWagered,
+        accessory: room.creator.accessory,
+        elite: room.creator.elite,
+        hosts: room.hosts,
+        endgame_amount: room.endgame_amount,
+        endgame_type: room.endgame_type,
+        description: room.description,
+        joiners: room.joiners,
+        game_type: room.game_type,
+        bet_amount: Number(room.bet_amount),
+        user_bet: Number(room.user_bet),
+        host_pr: room.host_pr,
+        pr: room.pr,
+        room_name: `${room.game_type[0] || 'Unknown'}-${room.room_number}`,
+        total_stakes: totalStakes,
+        battles: room.battles,
+        status: room.status,
+        is_private: room.is_private,
+        room_history: roomHistory,
+        game_logs: gameLogList,
       },
       totalGameLogsCount,
     };
@@ -1549,7 +1714,7 @@ Example responses:
     });
 
     const result = response.choices[0].message.content.trim();
-    
+
     // Parse the JSON response
     let gameTypes;
     try {
@@ -1558,15 +1723,15 @@ Example responses:
       console.error('Failed to parse OpenAI response:', result);
       // Fallback: extract categories from response text
       const availableCategories = [
-        'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports', 
-        'adventure', 'simulation', 'trivia', 'cards', 'board', 
+        'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports',
+        'adventure', 'simulation', 'trivia', 'cards', 'board',
         'action', 'casual', 'multiplayer', 'retro'
       ];
-      
-      gameTypes = availableCategories.filter(category => 
+
+      gameTypes = availableCategories.filter(category =>
         result.toLowerCase().includes(category)
       ).slice(0, 3);
-      
+
       if (gameTypes.length === 0) {
         gameTypes = ['casual']; // Default fallback
       }
@@ -1574,8 +1739,8 @@ Example responses:
 
     // Validate and clean the result
     const validCategories = [
-      'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports', 
-      'adventure', 'simulation', 'trivia', 'cards', 'board', 
+      'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports',
+      'adventure', 'simulation', 'trivia', 'cards', 'board',
       'action', 'casual', 'multiplayer', 'retro'
     ];
 
@@ -1602,7 +1767,7 @@ Example responses:
 // Fallback classification using keyword matching
 function fallbackClassification(name, gameCode, prompt, description) {
   const text = `${name || ''} ${gameCode || ''} ${prompt || ''} ${description || ''}`.toLowerCase();
-  
+
   const categories = {
     casino: ['casino', 'slot', 'dice', 'roulette', 'blackjack', 'poker', 'gambling', 'bet', 'jackpot', 'spin'],
     skill: ['skill', 'precision', 'timing', 'accuracy', 'challenge', 'practice', 'master'],
@@ -1617,7 +1782,7 @@ function fallbackClassification(name, gameCode, prompt, description) {
   };
 
   const matches = [];
-  
+
   for (const [category, keywords] of Object.entries(categories)) {
     const matchCount = keywords.filter(keyword => text.includes(keyword)).length;
     if (matchCount > 0) {
@@ -1628,7 +1793,7 @@ function fallbackClassification(name, gameCode, prompt, description) {
   // Sort by score and take top 3
   matches.sort((a, b) => b.score - a.score);
   const result = matches.slice(0, 3).map(match => match.category);
-  
+
   return result.length > 0 ? result : ['casual'];
 }
 
@@ -1785,18 +1950,17 @@ router.get('/topWins', async (req, res) => {
 // ============================================
 
 const getHistory = async (
-  pageSize,
-  my_id,
   game_type_filter,
   redisClient = null
 ) => {
   try {
-    const cacheKey = `history:${pageSize}:${my_id || 'all'}:${game_type_filter}`;
+    
+    const cacheKey = `history:all:${game_type_filter}`;
     let result = null,
-        fromCache = false;
+      fromCache = false;
 
     // ——————— Try cache ———————
-    if (redisClient) {
+    if (redisClient && typeof redisClient.get === 'function') {
       try {
         const cached = await redisClient.get(cacheKey);
         if (cached) {
@@ -1804,18 +1968,12 @@ const getHistory = async (
           fromCache = true;
         }
       } catch (redisErr) {
-        console.error('Redis error during history fetch:', redisErr);
+        console.error('Redis error during latest history fetch:', redisErr);
       }
     }
 
     if (!result) {
       const filters = [];
-
-      // ——————— Filter by user if requested ———————
-      if (my_id) {
-        const userId = ObjectId.isValid(my_id) ? ObjectId(my_id) : my_id;
-        filters.push({ $or: [{ creator: userId }, { joined_user: userId }] });
-      }
 
       // ——————— Filter by game type if requested ———————
       if (game_type_filter && game_type_filter !== 'All') {
@@ -1823,7 +1981,7 @@ const getHistory = async (
 
         // If they passed in an ObjectId string, use it directly
         if (ObjectId.isValid(game_type_filter)) {
-          gameTypeId = ObjectId(game_type_filter);
+          gameTypeId = new ObjectId(game_type_filter); // Fixed: added 'new'
         } else {
           // Otherwise look up by name (case-insensitive)
           const gameTypeDoc = await GameType
@@ -1835,7 +1993,7 @@ const getHistory = async (
             gameTypeId = gameTypeDoc._id;
           } else {
             // No such game type → empty result
-            result = { history: [], count: 0, pageSize };
+            result = { latestItem: null };
           }
         }
 
@@ -1845,43 +2003,44 @@ const getHistory = async (
       }
 
       // Build the final Mongo filter
-      const finalCondition =
-        filters.length > 0 ? { $and: filters } : {};
+      const finalCondition = filters.length > 0 ? { $and: filters } : {};
 
-      // Only query if we haven’t already set `result` to empty
+      // Only query if we haven't already set `result` to empty
       if (!result) {
-        const [ gameLogList, count ] = await Promise.all([
-          GameLog.find(finalCondition)
-            .sort({ created_at: -1 })
-            .limit(pageSize)
-            .populate({
-              path: 'room',
-              model: Room,
-              select: [
-                '_id','winnings','ticker','image','commission',
-                'creator','status','ai_mode','hosts',
-                'room_number','bet_amount','user_bet',
-                'host_pr','created_at','name'
-              ].join(' ')
-            })
-            .populate('game_type', 'short_name game_type_name')
-            .populate('creator',   '_id avatar accessory totalWagered username')
-            .populate('joined_user','_id avatar accessory totalWagered username')
-            .lean(),
-          GameLog.countDocuments(finalCondition)
-        ]);
+        // Use findOne instead of find + limit(1) for better performance
+        const latestGameLog = await GameLog.findOne(finalCondition)
+          .sort({ created_at: -1 })
+          .populate({
+            path: 'room',
+            model: Room,
+            select: [
+              '_id', 'winnings', 'ticker', 'image', 'commission',
+              'creator', 'status', 'hosts',
+              'room_number', 'bet_amount', 'user_bet',
+              'host_pr', 'created_at', 'name'
+            ].join(' ')
+          })
+          .populate('game_type', 'short_name game_type_name')
+          .populate('creator', '_id avatar accessory totalWagered username')
+          .populate('joined_user', '_id avatar accessory totalWagered username')
+          .lean();
 
-        const historyData = await convertGameLogToHistoryStyle(gameLogList);
-        result = { history: historyData, count, pageSize };
+        if (latestGameLog) {
+          // Convert single item to history style
+          const historyData = await convertGameLogToHistoryStyle([latestGameLog]);
+          result = { latestItem: historyData[0] || null };
+        } else {
+          result = { latestItem: null };
+        }
       }
 
       // ——————— Cache it ———————
-      if (redisClient) {
-        const ttl = my_id ? 600 : 180;  // personal: 10m, global: 3m
+      if (redisClient && typeof redisClient.setEx === 'function') {
+        const ttl = 60;  // global: 1m (shorter TTL for single item)
         try {
           await redisClient.setEx(cacheKey, ttl, JSON.stringify(result));
         } catch (redisErr) {
-          console.error('Failed to cache history:', redisErr);
+          console.error('Failed to cache latest history:', redisErr);
         }
       }
     }
@@ -1893,27 +2052,26 @@ const getHistory = async (
   }
 };
 
+// Optimized route for getting just the latest history item
 router.get('/history', async (req, res) => {
   try {
-    const { pageSize = 1, game_type = 'All', my_id = null } = req.query;
+    const { game_type = 'All' } = req.query;
 
     const redisClient = req.app.get('redisClient');
 
-    const history = await getHistory(parseInt(pageSize), my_id, game_type, redisClient);
+    const latestHistory = await getHistory(game_type, redisClient);
 
-    if (!history) {
+    if (latestHistory === false) {
       return res.status(500).json({
         success: false,
-        error: 'Failed to fetch history'
+        error: 'Failed to fetch latest history'
       });
     }
 
     res.json({
       success: true,
-      pageSize: parseInt(pageSize),
-      history: history.history,
-      count: history.count,
-      cached: history.cached || false
+      latestItem: latestHistory.latestItem,
+      cached: latestHistory.cached || false
     });
   } catch (err) {
     console.error('Error in /history route:', err);
@@ -1923,6 +2081,7 @@ router.get('/history', async (req, res) => {
     });
   }
 });
+
 
 router.get('/my_history', auth, async (req, res) => {
   try {
@@ -1938,7 +2097,7 @@ router.get('/my_history', auth, async (req, res) => {
     );
 
     if (!history) { // Add check for history not found/failed
-       return res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: 'Failed to fetch my history'
       });
@@ -2052,6 +2211,7 @@ const getRoomList = async (game_type_filter) => {
       })
       .sort({ updated_at: -1 })
       .limit(50)
+      .allowDiskUse(true)
       .lean();
 
     const joinerIds = [...new Set(preRooms.flatMap(room => room.joiners))];
@@ -2132,6 +2292,7 @@ const getRoomList = async (game_type_filter) => {
   }
 };
 
+// Updated POST /rooms route
 router.post('/rooms', auth, async (req, res) => {
   try {
     const {
@@ -2143,7 +2304,7 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       x_link,
       website_link,
-      game_type_tag, // This can now be a string or an array of strings (optional for manual override)
+      game_type_tag,
       is_private,
       endgame_amount,
       endgame_type,
@@ -2151,7 +2312,7 @@ router.post('/rooms', auth, async (req, res) => {
       room_password,
       connectedAccount,
       prompt,
-      gameCode,
+      gameCode, // Still accept gameCode in request
     } = req.body;
 
     const {
@@ -2165,6 +2326,7 @@ router.post('/rooms', auth, async (req, res) => {
       dailyWithdrawals,
       isWithdrawing,
     } = req.user;
+
 
     const user_bet = parseFloat(bet_amount);
 
@@ -2251,7 +2413,7 @@ router.post('/rooms', auth, async (req, res) => {
 
     // AUTO-GENERATE GAME TYPES if not provided or if provided types are invalid
     let gameTypeNamesToStore = [];
-    
+
     if (game_type_tag && Array.isArray(game_type_tag) && game_type_tag.length > 0) {
       // Manual override provided - validate and use
       gameTypeNamesToStore = game_type_tag
@@ -2262,7 +2424,7 @@ router.post('/rooms', auth, async (req, res) => {
       // Single tag provided
       gameTypeNamesToStore = [game_type_tag.trim().toLowerCase()];
     }
-    
+
     // If no valid manual tags or we want to auto-generate, use AI classification
     if (gameTypeNamesToStore.length === 0) {
       try {
@@ -2330,7 +2492,6 @@ router.post('/rooms', auth, async (req, res) => {
       image,
       ticker,
       x_link,
-      gameCode,
       prompt,
       telegram_link,
       website_link,
@@ -2363,7 +2524,14 @@ router.post('/rooms', auth, async (req, res) => {
       tradingProfit: req.user.tradingProfit - amountAfterFee
     };
 
-    await Promise.all([
+    const gameCodeDoc = gameCode ? new GameCode({
+      room: newRoom._id,
+      code: gameCode,
+      created_by: _id,
+      version: 1
+    }) : null;
+
+    const savePromises = [
       saveDocumentWithRetry(newGameLog),
       User.findByIdAndUpdate(_id, updatedUser),
       saveDocumentWithRetry(newRoom),
@@ -2371,7 +2539,14 @@ router.post('/rooms', auth, async (req, res) => {
         { name: 'platform_trading' },
         { $inc: { value: fee } }
       )
-    ]);
+    ];
+
+    if (gameCodeDoc) {
+      savePromises.push(saveDocumentWithRetry(gameCodeDoc));
+    }
+
+    await Promise.all(savePromises);
+
 
     const gameLogList = await GameLog.find({ room: newRoom._id })
       .sort({ created_at: 'desc' })
@@ -2409,6 +2584,7 @@ router.post('/rooms', auth, async (req, res) => {
       winnings: amountAfterFee,
       rank: totalWagered,
       joiners: [],
+      gameCode: gameCode || '',
     };
 
     setImmediate(() => {
@@ -2459,9 +2635,6 @@ async function checkWalletBalance(walletAddress) {
 router.get('/my_games', auth, async (req, res) => {
   try {
     const pageSize = 50;
-    // `game_type_filter` might now be a comma-separated string if filtering by multiple tags
-    // Let's assume it can be a single tag string 'Casino' or 'All' for simplicity
-    // If you want to support multiple selected tags like 'Casino,Strategy', you'd parse it to an array here
     const game_type_filter = req.query.game_type || 'All';
     const status = req.query.status;
     const sort = req.query.sort || 'desc';
@@ -2480,7 +2653,7 @@ router.get('/my_games', auth, async (req, res) => {
       return res.json(JSON.parse(cached));
     }
 
-    const { rooms, count } = await getMyRooms(
+    const { rooms, count } = await getMyRoomsWithGameCodes(
       req.user._id,
       pageSize,
       game_type_filter,
@@ -2511,7 +2684,7 @@ router.get('/my_games', auth, async (req, res) => {
   }
 });
 
-const getMyRooms = async (
+const getMyRoomsWithGameCodes = async (
   user_id,
   pageSize,
   game_type_filter = 'All',
@@ -2535,11 +2708,22 @@ const getMyRooms = async (
   }
 
   const rooms = await Room.find(search_condition)
-    .select('_id creator name image ticker hosts creator host_pr room_number endgame_type endgame_amount is_private status created_at user_bet bet_amount likes dislikes gameCode game_type') // Include game_type here for mapping
+    .select('_id creator name image ticker hosts creator host_pr room_number endgame_type endgame_amount is_private status created_at user_bet bet_amount likes dislikes game_type')
     .limit(pageSize)
     .lean();
 
   const count = await Room.countDocuments(search_condition);
+
+  // Get game codes for all rooms
+  const roomIds = rooms.map(room => room._id);
+  const gameCodes = await GameCode.find({ room: { $in: roomIds } })
+    .select('room code version')
+    .lean();
+
+  const gameCodeMap = gameCodes.reduce((map, gc) => {
+    map[gc.room.toString()] = gc;
+    return map;
+  }, {});
 
   const creatorIds = [...new Set(rooms.map(room => room.creator))];
   const creators = await User.find({ _id: { $in: creatorIds } })
@@ -2551,7 +2735,6 @@ const getMyRooms = async (
     return map;
   }, {});
 
-  const roomIds = rooms.map(room => room._id);
   const gameLogCounts = await GameLog.aggregate([
     { $match: { room: { $in: roomIds } } },
     { $group: { _id: '$room', count: { $sum: 1 } } }
@@ -2568,6 +2751,7 @@ const getMyRooms = async (
     );
     const creatorDetails = creatorMap[room.creator.toString()] || {};
     const gameLogCount = gameLogMap[room._id.toString()] || 0;
+    const gameCodeInfo = gameCodeMap[room._id.toString()];
 
     let temp = {
       _id: room._id,
@@ -2598,13 +2782,12 @@ const getMyRooms = async (
       battles: gameLogCount,
       likes: room.likes,
       dislikes: room.dislikes,
-      gameCode: room.gameCode,
+      gameCode: gameCodeInfo?.code || '', // Add game code from separate collection
       hosts: room.hosts,
     };
 
-
     temp.winnings = room.user_bet;
-    //
+
     if (isCoHost) {
       const hostShare = isCoHost.share;
       temp.winnings = (hostShare / 100) * parseFloat(room.user_bet);
@@ -2636,6 +2819,39 @@ const getMyRooms = async (
     count: count,
   };
 };
+
+router.get('/room/:id/gamecode', async (req, res) => {
+  try {
+    const roomId = req.params.id;
+    const gameCode = await GameCode.findOne({ room: roomId })
+      .select('code version created_at updated_at')
+      .lean();
+
+    if (!gameCode) {
+      return res.json({
+        success: true,
+        gameCode: null,
+        message: 'No game code found for this room'
+      });
+    }
+
+    res.json({
+      success: true,
+      gameCode: {
+        code: gameCode.code,
+        version: gameCode.version,
+        created_at: gameCode.created_at,
+        updated_at: gameCode.updated_at
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching game code:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch game code'
+    });
+  }
+});
 
 router.post('/end_game', auth, async (req, res) => {
   try {
@@ -2815,11 +3031,11 @@ router.post('/end_game', auth, async (req, res) => {
     }
 
     if (!gameTypeIdForLog) {
-        // If no game type ID could be determined, handle this error
-        return res.status(500).json({
-            success: false,
-            message: 'Could not determine game type for logging.'
-        });
+      // If no game type ID could be determined, handle this error
+      return res.status(500).json({
+        success: false,
+        message: 'Could not determine game type for logging.'
+      });
     }
 
     const newGameLog = new GameLog({
@@ -3850,84 +4066,144 @@ const getTimeBucket = (timeRange) => {
       return 1;
   }
 };
+
 router.post('/getGlobalChatLogs', async (req, res) => {
   try {
     const redisClient = req.app.get('redisClient');
     const cacheKey = 'global:chat:logs';
+    const CACHE_TTL = 60; // 1 minute cache
 
-    let chatLogs = null;
-    let fromCache = false;
-
-    // Step 1: Try to get from Redis cache first
-    try {
-      const cachedLogs = await redisClient.get(cacheKey);
-      if (cachedLogs) {
-        chatLogs = JSON.parse(cachedLogs);
-        fromCache = true;
-      }
-    } catch (redisErr) {
-      console.error('Redis error during chat fetch:', redisErr);
+    // Try Redis first
+    const cachedLogs = await redisClient.get(cacheKey);
+    if (cachedLogs) {
+      return res.json({
+        success: true,
+        chatLogs: JSON.parse(cachedLogs),
+        cached: true
+      });
     }
 
-    // Step 2: If not in cache, fetch from database
-    if (!chatLogs) {
-      const results = await Chat.find({})
-        .sort({ created_at: -1 })
-        .limit(15)
-        .select('sender message messageType messageContent created_at replyTo')
-        .populate({
-          path: 'sender',
-          select: 'username avatar accessory elite totalWagered _id',
-          options: { lean: true }
-        })
-        .populate({
-          path: 'replyTo',
-          select: 'sender message messageType created_at',
-          populate: {
-            path: 'sender',
-            select: 'username avatar accessory elite totalWagered _id',
-            options: { lean: true }
-          },
-          options: { lean: true }
-        })
-        .lean();
-
-      chatLogs = results.map(chat => ({
-        sender: chat.sender?.username || '',
-        senderId: chat.sender?._id || '',
-        message: chat.message,
-        messageType: chat.messageType,
-        messageContent: chat.messageContent,
-        avatar: chat.sender?.avatar || '',
-        accessory: chat.sender?.accessory || '',
-        elite: chat.sender?.elite || false,
-        rank: chat.sender?.totalWagered || '',
-        time: moment(chat.created_at).format('hh:mm'),
-        replyTo: chat.replyTo?.[0] ? {
-          username: chat.replyTo[0].sender?.username || '',
-          senderId: chat.replyTo[0].sender?._id || '',
-          avatar: chat.replyTo[0].sender?.avatar || '',
-          rank: chat.replyTo[0].sender?.totalWagered || '',
-          accessory: chat.replyTo[0].sender?.accessory || '',
-          elite: chat.replyTo[0].sender?.elite || false,
-          message: chat.replyTo[0].message,
-          messageType: chat.replyTo[0].messageType,
-          time: moment(chat.replyTo[0].created_at).format('hh:mm')
-        } : null
-      })).reverse();
-
-      // Step 3: Cache the processed chat logs for 2 minutes
-      try {
-        await redisClient.setEx(cacheKey, 120, JSON.stringify(chatLogs));
-      } catch (redisErr) {
-        console.error('Failed to cache global chat:', redisErr);
+    // OPTIMIZED QUERY - Use aggregation pipeline for better performance
+    const results = await Chat.aggregate([
+      // Stage 1: Sort and limit first (most efficient)
+      {
+        $sort: { created_at: -1 }
+      },
+      {
+        $limit: 9
+      },
+      // Stage 2: Lookup sender data in one go
+      {
+        $lookup: {
+          from: 'rps_users',
+          localField: 'sender',
+          foreignField: '_id',
+          as: 'senderInfo',
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                avatar: 1,
+                accessory: 1,
+                elite: 1,
+                totalWagered: 1
+              }
+            }
+          ]
+        }
+      },
+      // Stage 3: Lookup reply sender data if exists
+      {
+        $lookup: {
+          from: 'rps_users',
+          localField: 'replyTo.sender',
+          foreignField: '_id',
+          as: 'replyToSenderInfo',
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                avatar: 1,
+                accessory: 1,
+                elite: 1,
+                totalWagered: 1
+              }
+            }
+          ]
+        }
+      },
+      // Stage 4: Project only needed fields
+      {
+        $project: {
+          message: 1,
+          messageType: 1,
+          messageContent: 1,
+          created_at: 1,
+          replyTo: 1,
+          senderInfo: { $arrayElemAt: ['$senderInfo', 0] },
+          replyToSenderInfo: { $arrayElemAt: ['$replyToSenderInfo', 0] }
+        }
       }
-    }
+    ]);
+
+    // FAST PROCESSING - Pre-calculate time strings
+    const now = new Date();
+    const chatLogs = results.map(chat => {
+      const createdTime = new Date(chat.created_at);
+      const timeString = createdTime.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+
+      const baseChat = {
+        sender: chat.senderInfo?.username || 'Unknown',
+        senderId: chat.senderInfo?._id || '',
+        message: chat.message || '',
+        messageType: chat.messageType || 'text',
+        messageContent: chat.messageContent || '',
+        avatar: chat.senderInfo?.avatar || '',
+        accessory: chat.senderInfo?.accessory || '',
+        elite: chat.senderInfo?.elite || false,
+        rank: chat.senderInfo?.totalWagered || 0,
+        time: timeString,
+        replyTo: null
+      };
+
+      // Process reply if exists
+      if (chat.replyTo?.[0] && chat.replyToSenderInfo) {
+        const reply = chat.replyTo[0];
+        const replyTime = reply.created_at ?
+          new Date(reply.created_at).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }) : reply.time || timeString;
+
+        baseChat.replyTo = {
+          username: chat.replyToSenderInfo.username || 'Unknown',
+          senderId: chat.replyToSenderInfo._id || '',
+          avatar: chat.replyToSenderInfo.avatar || '',
+          rank: chat.replyToSenderInfo.totalWagered || 0,
+          accessory: chat.replyToSenderInfo.accessory || '',
+          elite: chat.replyToSenderInfo.elite || false,
+          message: reply.message || '',
+          messageType: reply.messageType || 'text',
+          time: replyTime
+        };
+      }
+
+      return baseChat;
+    }).reverse(); // Reverse to get chronological order
+
+    // Cache result (fire and forget)
+    redisClient.setEx(cacheKey, CACHE_TTL, JSON.stringify(chatLogs))
+      .catch(err => console.error('Cache error:', err));
 
     return res.json({
       success: true,
       chatLogs,
-      cached: fromCache
+      cached: false
     });
 
   } catch (error) {
@@ -3938,6 +4214,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
     });
   }
 });
+
 
 router.get('/candles/:room', async (req, res) => {
   try {

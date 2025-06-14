@@ -30,9 +30,9 @@ const formatTimeAgo = (date) => {
 };
 
 /**
- * SingleHistoryItem - Displays the most recent transaction with real-time updates
+ * HistoryTable - Displays the most recent transaction with real-time updates
  */
-function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice: propSolPrice }) {
+function HistoryTable({ socket: propSocket, history: propHistory, solPrice: propSolPrice }) {
   const dispatch = useDispatch();
   const theme = useTheme();
 
@@ -59,12 +59,29 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
 
-  // Get the most recent history item
-  useEffect(() => {
-    if (history && Array.isArray(history) && history.length > 0) {
-      setLatestItem(history[0]); // Get the first (most recent) item
+ // Get the most recent history item
+useEffect(() => {
+  // Handle different data structures
+  let historyArray = [];
+  
+  if (history) {
+    if (Array.isArray(history)) {
+      historyArray = history;
+    } else if (typeof history === 'object' && history._id) {
+      // Single history object - convert to array
+      historyArray = [history];
+    } else if (history.history && Array.isArray(history.history)) {
+      // History wrapped in an object with history property
+      historyArray = history.history;
     }
-  }, [history]);
+  }
+  
+  if (historyArray.length > 0) {
+    setLatestItem(historyArray[0]); // Get the first (most recent) item
+  } else {
+    setLatestItem(null); // Clear if no history
+  }
+}, [history]);
 
   // Socket event handler for new logs
   const handleNewLog = useCallback((data) => {
@@ -267,18 +284,13 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
       <Box
         sx={{
           padding: '8px 12px',
-          background: 'rgba(216, 23, 25, 0.25)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: '8px',
-          border: '2px solid rgba(216, 23, 25, 0.4)',
           display: 'flex',
           alignItems: 'center',
           minHeight: '36px',
-          boxShadow: '0 4px 12px rgba(216, 23, 25, 0.2)'
         }}
       >
         <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
-          No activity
+          Loading...
         </Typography>
       </Box>
     );
@@ -290,21 +302,9 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
     <Box>
       <Box
         sx={{
-          padding: '8px 12px',
-          background: 'rgba(216, 23, 25, 0.25)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderRadius: '8px',
-          border: '2px solid rgba(216, 23, 25, 0.4)',
+          padding: '4px 6px',
           transition: 'all 0.2s ease',
-          boxShadow: '0 4px 12px rgba(216, 23, 25, 0.2)',
-          '@supports not (backdrop-filter: blur(12px))': {
-            background: 'rgba(216, 23, 25, 0.35)'
-          },
           '&:hover': {
-            background: 'rgba(216, 23, 25, 0.35)',
-            boxShadow: '0 6px 20px rgba(216, 23, 25, 0.3)',
-            borderColor: 'rgba(216, 23, 25, 0.6)',
             transform: 'translateY(-1px)'
           },
           display: 'flex',
@@ -314,6 +314,7 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
           animation: 'slideIn 0.3s ease-out',
           minHeight: '36px',
           maxWidth: '100%',
+          mt: 1
         }}
       >
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -362,4 +363,4 @@ function SingleHistoryItem({ socket: propSocket, history: propHistory, solPrice:
   );
 }
 
-export default React.memo(SingleHistoryItem);
+export default React.memo(HistoryTable);

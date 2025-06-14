@@ -24,17 +24,8 @@ import {
   Card,
   Chip,
   InputAdornment,
-  IconButton
 } from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import CategoryIcon from '@mui/icons-material/Category';
 import SearchIcon from '@mui/icons-material/Search';
-import {
-  faHeart,
-  faHeartBroken,
-  faStopwatch,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Avatar from '../../components/Avatar';
 import { convertToCurrency } from '../../util/conversion';
 import {
@@ -59,8 +50,6 @@ function OpenGamesTable(props) {
     selectedCreator,
     handleOpenPlayerModal,
     handleClosePlayerModal,
-    onlineUserList,
-    balance: propBalance,
     connectedAccount: propConnectedAccount,
     solPrice: propSolPrice,
   } = props;
@@ -78,9 +67,6 @@ function OpenGamesTable(props) {
   const effectiveLoading = propLoading !== undefined ? propLoading : loading;
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
   const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
-
-  // No longer directly storing roomList in local state for primary display
-  // const [localRoomList, setLocalRoomList] = useState(roomList); // REMOVE THIS STATE
 
   const [selectedGameType, setSelectedGameType] = useState('All');
   const [page, setPage] = useState(1);
@@ -438,14 +424,13 @@ function OpenGamesTable(props) {
               }}
             >
               <Typography
-                variant="h5"
+                variant="h6"
                 color="text.secondary"
                 sx={{
-                  fontWeight: 600,
+                  fontWeight: 400,
                   letterSpacing: '0.5px',
                 }}
-              >
-                NO LIVE GAMES FOUND FOR THIS TYPE. GO TO 'BE THE HOUSE' TO CREATE ONE!
+              > GO TO 'BE THE HOUSE' TO CREATE ONE!
               </Typography>
             </Box>
           ) : (

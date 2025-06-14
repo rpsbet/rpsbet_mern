@@ -43,8 +43,8 @@
     "uniqid": "^5.0.3"
   },
   "scripts": {
-    "start": "cross-env PORT=3000 SKIP_PREFLIGHT_CHECK=true react-scripts start",
-    "build": "export SKIP_PREFLIGHT_CHECK=true && react-scripts build",
+    "start": "GENERATE_SOURCEMAP=false cross-env PORT=3000 SKIP_PREFLIGHT_CHECK=true react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false export SKIP_PREFLIGHT_CHECK=true && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

@@ -7,7 +7,6 @@ const mongoose = require('mongoose');
 const User = require('../model/User');
 const Receipt = require('../model/Receipt');
 const Transaction = require('../model/Transaction');
-const Item = require('../model/Item');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');

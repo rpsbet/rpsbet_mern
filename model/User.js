@@ -5,7 +5,8 @@ const UserSchema = new Schema({
   username: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true // Add index for faster lookups
   },
   accounts: {
     type: [String],
@@ -17,7 +18,8 @@ const UserSchema = new Schema({
   },
   last_elite_payment: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
   isWithdrawing: {
     type: Boolean,
@@ -88,48 +90,35 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
-  credits: {
-    type: Number,
-    default: 0
-  },
   totalWagered: {
     type: Number,
-    default: 0
+    default: 0,
+    index: true // Index for ranking queries
   },
-  totalTraded: {
+  last_seen: {
+    type: Date,
+    default: Date.now,
+    index: true // Index for activity tracking
+  },
+  // Add cache invalidation timestamp
+  cache_version: {
+    type: Number,
+    default: 1
+  },
+  // Add frequently accessed computed fields
+  rank: {
     type: Number,
     default: 0
   },
-  gameProfit: {
-    type: Number,
-    default: 0
-  },
-  tradingProfit: {
-    type: Number,
-    default: 0
-  },
-  gamePlayed: {
-    type: Number,
-    default: 0
-  },
-  status: { type: String },
-  created_at: {
-    type: Date,
-    default: Date.now
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now
-  },
-  last_seen:  {
-    type: Date,
-    default: Date.now
-  },
-  last_bonus:  {
-    type: Date,
-    default: Date.now
-  },
-  
+  displayName: {
+    type: String
+  }
 });
+
+// Compound indexes for complex queries
+UserSchema.index({ totalWagered: -1, last_seen: -1 }); // Leaderboard queries
+UserSchema.index({ elite: 1, last_elite_payment: -1 }); // Elite user queries
+UserSchema.index({ referralCode: 1, created_at: -1 }); // Referral queries
+
 
 module.exports = User = mongoose.model('rps_users', UserSchema);

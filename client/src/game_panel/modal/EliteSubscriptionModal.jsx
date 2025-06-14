@@ -487,7 +487,7 @@ function EliteSubscriptionModal({
                 </Box>
               </Stack>
               <Typography variant="caption" sx={{ color: themeColors.textSecondary, lineHeight: 1.4, fontSize: '0.75rem', display:'block' }}>
-                Pay directly from your Solana wallet. Monthly subscription billing.
+                Pay directly from your Solana wallet. One-time fee, manually renewed.
               </Typography>
             </Box>
           </Box>

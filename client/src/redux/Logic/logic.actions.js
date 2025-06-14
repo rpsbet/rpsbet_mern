@@ -795,59 +795,6 @@ export const deListLoan = data => async (dispatch) => {
   return false;
 };
 
-export const listItem = data => async (dispatch) => {
-  try {
-    dispatch({ type: TNX_INCOMPLETE });
-
-    const res = await axios.post('/item/list-for-sale', data);
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
-      return res.data;
-    }
-  } catch (err) {
-  } finally {
-    dispatch({ type: TNX_COMPLETE });
-  }
-  return false;
-};
-
-export const deListItem = data => async (dispatch) => {
-  try {
-    dispatch({ type: TNX_INCOMPLETE });
-
-    const res = await axios.post('/item/delist-from-sale', data);
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
-      return res.data;
-    }
-  } catch (err) {
-  } finally {
-    dispatch({ type: TNX_COMPLETE });
-  }
-  return false;
-};
-
-export const confirmTrade = data => async dispatch => {
-  try {
-    dispatch({ type: TNX_INCOMPLETE });
-    const res = await axios.post('/item/trade/', data);
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-      dispatch({ type: TNX_COMPLETE });
-
-      return res.data;
-    } else {
-      return res.data;
-    }
-  } catch (err) {
-  } finally {
-    dispatch({ type: TNX_COMPLETE });
-  }
-  return false;
-};
-
 export const confirmLoan = data => async dispatch => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
@@ -884,40 +831,6 @@ export const offerLoan = data => async dispatch => {
   return false;
 };
 
-export const fetchAccessory = data => async dispatch => {
-  try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.post('/item/accessory', data);
-    if (res.data.success) {
-      // dispatch({ type: FETCH_ACCESSORY_SUCCESS, payload: res.data });
-      return res.data;
-    }
-  } catch (err) {
-    // Handle the error if needed
-  } finally {
-    dispatch({ type: END_LOADING });
-  }
-  return false;
-};
-
-export const equipItem = data => async dispatch => {
-  try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.post('/item/equip/', data);
-
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-      return res.data;
-    }
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'FAILED TO EQUIP ACCESSORY' });
-
-  } finally {
-    dispatch({ type: END_LOADING });
-  }
-  return false;
-};
-
 // logic.actions.js
 export const getRoomList = (params) => async (dispatch) => {
   console.log('Fetching room list with params:', params);
@@ -940,18 +853,25 @@ export const getRoomList = (params) => async (dispatch) => {
 };
 
 // actions
-export const getHistory = search_condition => async dispatch => {
 
+// Updated Redux action for fetching latest history
+export const getHistory = search_condition => async dispatch => {
   dispatch({ type: TNX_COMPLETE });
 
   try {
     const res = await axios.get('/game/history', { params: search_condition });
     if (res.data.success) {
-      dispatch({ type: HISTORY_LOADED, payload: res.data });
+      // Dispatch with just the latest item
+      dispatch({ 
+        type: HISTORY_LOADED, 
+        payload: { history: res.data.latestItem, cached: res.data.cached }
+      });
       dispatch({ type: TNX_INCOMPLETE });
-
     }
-  } catch (err) { }
+  } catch (err) {
+    console.error('Error fetching latest history:', err);
+    dispatch({ type: TNX_INCOMPLETE });
+  }
 };
 
 export const getWins = () => async dispatch => {

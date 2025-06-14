@@ -70,6 +70,7 @@ import {
   setSocket,
   userSignOut,
   getUser,
+  getUserTransactions,
   setUnreadMessageCount,
 } from '../redux/Auth/user.actions.js';
 import setAuthToken from '../util/setAuthToken.js';
@@ -102,7 +103,6 @@ const PlayerModal = lazy(() => import('./modal/PlayerModal.jsx'));
 const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal.jsx'));
 const LeaderboardsModal = lazy(() => import('./modal/LeaderboardsModal.jsx'));
 const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal.jsx'));
-const LoginModal = lazy(() => import('./modal/LoginModal.jsx'));
 const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal.jsx'));
 
 // Constants and utilities
@@ -192,11 +192,11 @@ function SiteWrapper({ children }) {
   const navigate = useNavigate();
 
   // FIXED: Add Privy authentication hooks first
-  const { 
-    ready: privyReady, 
-    authenticated: privyAuthenticated, 
+  const {
+    ready: privyReady,
+    authenticated: privyAuthenticated,
     user: privyUser,
-    logout: privyLogout 
+    logout: privyLogout
   } = usePrivy();
 
   // Direct selectors for better performance - avoid complex selector objects
@@ -213,7 +213,9 @@ function SiteWrapper({ children }) {
   const showCookieConsent = useSelector(state => state.auth?.showCookieConsent ?? false);
   const solPrice = useSelector(state => state.logic?.solPrice ?? 0);
   const notifications = useSelector(state => state.logic?.notifications ?? []);
-  const remainingLoans = useSelector(state => state.loanReducer?.remainingLoans ?? 0);
+  const isLoadingTransactions = useSelector(state => state.auth?.isLoadingTransactions ?? false);
+  const transactionsLoaded = useSelector(state => state.auth?.transactionsLoaded ?? false);
+
 
   // Wallet balance selector - kept as is for wallet functionality
   const walletData = useSelector(state => {
@@ -241,7 +243,6 @@ function SiteWrapper({ children }) {
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
@@ -586,7 +587,7 @@ function SiteWrapper({ children }) {
       });
 
       dispatch({ type: 'LOGOUT' });
-      
+
       if (location.pathname !== '/') {
         navigate('/', { replace: true });
       }
@@ -611,10 +612,20 @@ function SiteWrapper({ children }) {
   };
 
   // Balance click handler
-  const handleBalanceClick = (e) => {
+  const handleBalanceClick = useCallback(async (e) => {
     e.preventDefault();
     setAnchorElGameLog(e.currentTarget);
-  };
+
+    // Only fetch transactions if they haven't been loaded yet
+    if (!transactionsLoaded && !isLoadingTransactions) {
+      try {
+        await dispatch(getUserTransactions());
+      } catch (error) {
+        console.error('Failed to load transactions:', error);
+      }
+    }
+  }, [dispatch, transactionsLoaded, isLoadingTransactions]);
+
 
   // Notifications click handler
   const handleNotificationsClick = (e) => {
@@ -622,43 +633,37 @@ function SiteWrapper({ children }) {
     setAnchorElNotifications(e.currentTarget);
   };
 
-  // FIXED: Initialize app only after authentication is determined
   useEffect(() => {
     if (!authState.hasCheckedAuth || isInitialized) return;
 
-    let mounted = true;
-    isUnmountedRef.current = false;
-
     const initializeApp = async () => {
       try {
-        // Show UI immediately
+        // CRITICAL: Show UI immediately
         setIsInitialized(true);
         setWebsiteLoading(false);
-        
-        // Always initialize basic functionality
+
+        // Initialize basic functionality
         document.addEventListener('mousedown', handleClickOutside);
-        await initializeAudio();
 
-        // Initialize global data (no auth required)
-        const globalDataPromises = [
-          dispatch(getGlobalChatLogs()),
-          dispatch(getHistory()),
-        ];
+        // Start loading data in background (non-blocking)
+        setTimeout(() => {
+          // Load global data with error handling
+          Promise.allSettled([
+            dispatch(getGlobalChatLogs()),
+            dispatch(getHistory()),
+            authState.isAuthenticated && user?._id ? dispatch(getNotifications()) : Promise.resolve()
+          ]).catch(console.error);
 
-        // Only load user-specific data if authenticated
-        if (authState.isAuthenticated && user?._id) {
-          globalDataPromises.push(dispatch(getNotifications()));
-        }
+          // Initialize audio after everything else
+          initializeAudio().catch(console.warn);
+        }, 50); // Small delay to let UI render first
 
-        await Promise.allSettled(globalDataPromises);
-
-        if (mounted && location.pathname.startsWith('/play')) {
+        if (location.pathname.startsWith('/play')) {
           setTokenModalOpen(false);
         }
 
       } catch (error) {
         console.error('❌ App initialization error:', error);
-        // Don't block the UI even if initialization fails
         setIsInitialized(true);
         setWebsiteLoading(false);
       }
@@ -667,14 +672,13 @@ function SiteWrapper({ children }) {
     initializeApp();
 
     return () => {
-      mounted = false;
       isUnmountedRef.current = true;
       document.removeEventListener('mousedown', handleClickOutside);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id, dispatch, handleClickOutside, initializeAudio, location.pathname]);
+  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id]);
 
   // Handle balance changes - simple effect
   useEffect(() => {
@@ -684,18 +688,24 @@ function SiteWrapper({ children }) {
   // Socket connection management - only connect once
   useEffect(() => {
     if (!isInitialized || socketRef.current) return;
+    console.log('🔧 Starting socket connection...');
+    console.log('🔧 Endpoint:', endpoint);
+    console.log('🔧 isInitialized:', isInitialized);
+    console.log('🔧 socketRef.current:', socketRef.current);
 
     let isMounted = true;
 
     const connectSocket = () => {
+      console.log('🔧 Creating socket connection to:', endpoint);
+
       try {
         const newSocket = socketIOClient(endpoint, {
-          transports: ['websocket'],
+          transports: ['websocket', 'polling'],
           withCredentials: true,
           forceNew: false,
-          timeout: 10000,
+          timeout: 20000,
           reconnection: true,
-          reconnectionAttempts: 3,
+          reconnectionAttempts: 5,
           reconnectionDelay: 1000,
         });
 
@@ -703,7 +713,9 @@ function SiteWrapper({ children }) {
 
         newSocket.on('connect', () => {
           if (isMounted) {
-            console.log('🔌 Socket connected');
+            console.log('✅ Frontend: Socket connected successfully');
+            console.log('✅ Socket ID:', newSocket.id);
+            console.log('✅ Transport:', newSocket.io.engine.transport.name);
             dispatch(setSocket(newSocket));
           }
         });
@@ -766,6 +778,7 @@ function SiteWrapper({ children }) {
   // User-specific socket events
   useEffect(() => {
     const currentSocket = socketRef.current;
+    
     if (!currentSocket || !user?._id || !currentSocket.connected) return;
 
     try {
@@ -1106,7 +1119,7 @@ function SiteWrapper({ children }) {
         },
       }}
     >
-      {/* Compact Header */}
+      {/* Header - same as before */}
       <Box sx={{
         p: 2,
         borderBottom: '1px solid',
@@ -1153,7 +1166,7 @@ function SiteWrapper({ children }) {
         </Box>
       </Box>
 
-      {/* Compact Content */}
+      {/* Content with loading state */}
       <Box sx={{ p: 2 }}>
         <TableContainer
           component={Paper}
@@ -1168,7 +1181,22 @@ function SiteWrapper({ children }) {
         >
           <Table size="small">
             <TableBody>
-              {processedTransactions.length === 0 ? (
+              {isLoadingTransactions ? (
+                // Show loading skeletons
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TableRow key={`loading-${index}`}>
+                    <TableCell sx={{ py: 1, px: 1.5 }}>
+                      <Skeleton variant="text" width="60%" height={20} />
+                    </TableCell>
+                    <TableCell sx={{ py: 1, px: 1.5 }}>
+                      <Skeleton variant="text" width="80%" height={20} />
+                    </TableCell>
+                    <TableCell sx={{ py: 1, px: 1.5 }}>
+                      <Skeleton variant="text" width="40%" height={20} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : processedTransactions.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={3}
@@ -1241,12 +1269,13 @@ function SiteWrapper({ children }) {
           </Table>
         </TableContainer>
 
-        {/* Compact Button */}
+        {/* Button */}
         <Button
           color="error"
           variant="contained"
           onClick={() => setShowAllGameLogs(true)}
           fullWidth
+          disabled={isLoadingTransactions}
           sx={{
             borderRadius: '6px',
             py: 1,
@@ -1256,9 +1285,12 @@ function SiteWrapper({ children }) {
             '&:hover': {
               backgroundColor: '#cc0000',
             },
+            '&:disabled': {
+              backgroundColor: 'rgba(255, 0, 0, 0.3)',
+            },
           }}
         >
-          All Transactions
+          {isLoadingTransactions ? 'Loading...' : 'All Transactions'}
         </Button>
       </Box>
     </Popover>
@@ -1549,15 +1581,6 @@ function SiteWrapper({ children }) {
             player_name={userName}
             balance={balance}
             isDarkMode={isDarkMode}
-          />
-        </Suspense>
-      )}
-
-      {showLoginModal && (
-        <Suspense fallback={<div>Loading Login...</div>}>
-          <LoginModal
-            modalIsOpen={showLoginModal}
-            closeModal={() => setShowLoginModal(false)}
           />
         </Suspense>
       )}

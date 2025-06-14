@@ -2,18 +2,14 @@ import { combineReducers } from 'redux';
 import Auth from './Auth/user.reducer';
 import snackbar from './Notification/notification.reducer';
 import customerReducer from './Customer/customer.reducer';
-import itemReducer from './Item/item.reducer';
 import loanReducer from './Loan/loan.reducer';
-// import AdminAuth from './AdminAuth/admin.reducer';
 import Logic from './Logic/logic.reducer';
 import settingReducer from './Setting/setting.reducer';
 
 export default combineReducers({
   auth: Auth,
-  // admin_auth: AdminAuth,
   snackbar,
   customerReducer,
-  itemReducer,
   loanReducer,
   logic: Logic,
   setting: settingReducer,
