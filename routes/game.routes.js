@@ -1592,7 +1592,6 @@ router.get('/room/:id', async (req, res) => {
       .select('bet_amount created_at game_type creator joined_user')
       .sort({ created_at: -1 })
       .limit(limit)
-      .populate('game_type', 'short_name game_type_name')
       .populate('creator', '_id avatar username accessory elite totalWagered')
       .populate('joined_user', '_id avatar username accessory elite totalWagered')
       .lean();
@@ -2526,11 +2525,6 @@ router.post('/rooms', auth, async (req, res) => {
         path: 'room',
         model: Room,
         select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name',
-      })
-      .populate({
-        path: 'game_type',
-        model: GameType,
-        select: 'short_name game_type_name',
       })
       .populate({
         path: 'creator',
