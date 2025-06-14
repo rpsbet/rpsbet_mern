@@ -40,8 +40,6 @@ async function convertGameLogToHistoryStyle(gameLogList) {
         created_at: gameLog.room?.created_at || null,
         image: gameLog.room?.image || '',
         ticker: gameLog.room?.ticker || '',
-        game_type_name: gameLog.game_type?.game_type_name || '',
-        short_name: gameLog.game_type?.short_name || '',
       },
 
       // Creator references

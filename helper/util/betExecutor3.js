@@ -5,7 +5,6 @@ const bs58 = require('bs58');
 const { LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const SystemSetting = require('../../model/SystemSetting');
 const User = require('../../model/User');
-const GameType = require('../../model/GameType');
 const Room = require('../../model/Room');
 const Notification = require('../../model/Notification');
 const CustomBetItem = require('../../model/CustomBetItem');
@@ -112,25 +111,11 @@ const processGameEndIfNeeded = async (roomInfo, req, user) => {
     // 2) Create pool and get pool ID
     const pool_id = await createTokenAndPool(roomInfo);
 
-    // 3) Derive primary GameType _id from the string array
-    let gameTypeId = null;
-    if (Array.isArray(roomInfo.game_type) && roomInfo.game_type.length) {
-      const primaryTag = roomInfo.game_type[0];
-      const gameTypeDoc = await GameType
-        .findOne({ game_type_name: primaryTag })
-        .collation({ locale: 'en', strength: 2 })
-        .select('_id');
-      if (gameTypeDoc) {
-        gameTypeId = gameTypeDoc._id;
-      }
-    }
-
     // 4) Build and save end-game log
     const newGameLogC = new GameLog({
       room: roomInfo._id,
       creator: roomInfo.creator._id || roomInfo.creator,
       joined_user: roomInfo.creator._id || roomInfo.creator,
-      game_type: gameTypeId,
       bet_amount: roomInfo.host_pr,
       user_bet: roomInfo.user_bet,
       hosts: roomInfo.hosts,
@@ -193,15 +178,12 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
   if (newTransactionC.amount === 0) return;
 
   const host = await User.findOne({ _id: roomInfo['creator'] });
-  const shortName = primaryGameTypeDoc
-    ? primaryGameTypeDoc.short_name
-    : (primaryGameTypeName || 'Unknown').slice(0, 3).toUpperCase();
 
   let notification = new Notification({
     from: roomInfo['creator']._id,
     to: roomInfo['creator']._id,
     room: req.body._id,
-    message: `Hosting ${newTransactionC.amount} auto-payout in ${shortName}-${roomInfo.room_number}`,
+    message: `Hosting ${newTransactionC.amount} auto-payout`,
     amount: newTransactionC.amount,
     is_read: false,
   });
@@ -244,11 +226,7 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
 
 // Process payouts for multiple hosts
 const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) => {
-  // Derive a short tag name from the room's game_type array
-  const firstTag = Array.isArray(roomInfo.game_type) && roomInfo.game_type.length
-    ? roomInfo.game_type[0]
-    : 'Unknown';
-  const shortName = firstTag.slice(0, 3).toUpperCase();
+
 
   const hostPromises = roomInfo.hosts.map(async (host) => {
     const amountForHost = (host.share / 100) * newTransactionC.amount;
@@ -258,7 +236,7 @@ const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) 
     const newTransactionForHost = new GameTransaction({
       user: host.host,
       amount: amountForHost,
-      description: `Co-Hosting auto-payout in ${shortName}-${roomInfo.room_number}`,
+      description: `Co-Hosting auto-payout`,
       room: req.body._id,
     });
 
@@ -266,7 +244,7 @@ const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) 
     const notification = new Notification({
       from: roomInfo.creator,
       to: host.host,
-      message: `Co-Hosting ${amountForHost} auto-payout in ${shortName}-${roomInfo.room_number}`,
+      message: `Co-Hosting ${amountForHost} auto-payout`,
       amount: amountForHost,
       room: req.body._id,
       is_read: false,
@@ -557,23 +535,10 @@ const addToQueue = async (req, bot = false) => {
 
       // Get room information with populated relations
       roomInfo = await Room.findById(req.body._id)
-        .select('name image tax ticker prompt room_number updated_at battles game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+        .select('name image tax ticker room_number updated_at battles joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private status hosts')
         .populate({ path: 'creator', model: User, select: '_id avatar accessory elite totalWagered username gameProfit gamePlayed balance' })
 
-      // Pull the first tag name off the room
-      const primaryGameTypeName = Array.isArray(roomInfo.game_type) && roomInfo.game_type.length
-        ? roomInfo.game_type[0]
-        : null;
-
-      // Fetch its GameType doc (so you can get its ObjectId)
-      let primaryGameTypeDoc = null;
-      if (primaryGameTypeName) {
-        primaryGameTypeDoc = await GameType
-          .findOne({ game_type_name: primaryGameTypeName })
-          .collation({ locale: 'en', strength: 2 })
-          .select('_id short_name game_type_name');
-      }
-
+    
       // Validate bet request
       const validation = validateBetRequest(req, user, roomInfo);
       if (!validation.success) {
@@ -594,7 +559,6 @@ const addToQueue = async (req, bot = false) => {
         room: roomInfo._id,
         creator: roomInfo.creator._id,
         joined_user: user._id,
-        game_type: primaryGameTypeDoc ? primaryGameTypeDoc._id : null,
         bet_amount: req.body.bet_amount,
       });
 
@@ -747,12 +711,7 @@ const addToQueue = async (req, bot = false) => {
           path: 'room',
           model: Room,
           select:
-            '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
-        })
-        .populate({
-          path: 'game_type',
-          model: GameType,
-          select: 'short_name game_type_name',
+            '_id winnings ticker image commission username creator status hosts room_number bet_amount user_bet host_pr created_at',
         })
         .populate({
           path: 'creator',

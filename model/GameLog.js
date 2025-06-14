@@ -14,22 +14,9 @@ const GameLogSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'rps_users'
     },
-    game_type: { type: String, required: true },
     bet_amount: {
         type: Number,
         default: 0.0
-    },
-    selected_rps: {
-        type: String,
-        default: ''
-    },
-    qs_game_type: {
-        type: Number,
-        default: 0
-    },
-    selected_qs_position: {
-        type: Number,
-        default: 0
     },
     commission: {
         type: Number,
@@ -56,10 +43,6 @@ const GameLogSchema = new Schema({
         default: 0.0
     },
     status: {
-        type: String,
-        default: ''
-    },
-    ai_mode: {
         type: String,
         default: ''
     },
