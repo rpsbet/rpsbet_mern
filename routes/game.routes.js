@@ -1589,7 +1589,7 @@ router.get('/room/:id', async (req, res) => {
 
     // 3️⃣ Fetch logs + count in parallel
     const logsPromise = GameLog.find({ room: roomId })
-      .select('bet_amount created_at game_type creator joined_user')
+      .select('bet_amount created_at creator joined_user')
       .sort({ created_at: -1 })
       .limit(limit)
       .populate('creator', '_id avatar username accessory elite totalWagered')
@@ -2481,7 +2481,6 @@ router.post('/rooms', auth, async (req, res) => {
       room: newRoom._id,
       creator: _id,
       joined_user: _id,
-      game_type: primaryGameTypeDoc ? primaryGameTypeDoc._id : null,
       bet_amount: amountAfterFee,
       hosts: [hostObj],
       game_result: -3000,
@@ -3007,7 +3006,6 @@ router.post('/end_game', auth, async (req, res) => {
       room: roomInfo._id,
       creator: roomInfo.creator._id,
       joined_user: roomInfo.creator._id,
-      game_type: gameTypeIdForLog, // Assign the fetched GameType _id
       bet_amount: roomInfo.host_pr,
       hosts: roomInfo.hosts,
       game_result: -100,
@@ -3037,11 +3035,7 @@ router.post('/end_game', auth, async (req, res) => {
         model: Room,
         select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name', // Do NOT select game_type as it's now string array. Include `name`
       })
-      .populate({
-        path: 'game_type', // This still populates from GameType collection via GameLog's ObjectId
-        model: GameType,
-        select: 'short_name game_type_name',
-      })
+   
       .populate({
         path: 'creator',
         model: User,
@@ -3348,10 +3342,7 @@ router.post('/pump', auth, async (req, res) => {
       room: room._id,
       creator: req.user._id,
       joined_user: null, // Joined user is null for pump action
-      game_type: gameTypeIdForLog, // Use the fetched GameType ID
       bet_amount: netDeposit,
-      selected_rps: '', // Specific to RPS, might not be relevant for pump
-      ai_mode: '', // Might not be relevant for pump
       commission: 0, // Commission is handled separately
       game_result: 444, // Custom result for pump action
       winnings: 0, // No direct winnings for pump
@@ -3371,11 +3362,6 @@ router.post('/pump', auth, async (req, res) => {
           path: 'room',
           model: Room,
           select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name', // Include `name` and ensure `game_type` is not populated
-        })
-        .populate({
-          path: 'game_type',
-          model: GameType,
-          select: 'short_name game_type_name',
         })
         .populate({
           path: 'creator',
@@ -3477,7 +3463,7 @@ router.post('/jeet', auth, async (req, res) => {
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
       .select(
-        'status hosts user_bet name host_pr pr bet_amount room_number game_type updated_at total_share_supply',
+        'status hosts user_bet name host_pr pr bet_amount room_number updated_at total_share_supply',
       );
 
     if (!roomInfo) {
@@ -3664,10 +3650,7 @@ router.post('/jeet', auth, async (req, res) => {
       room: roomInfo._id,
       creator: req.user._id,
       joined_user: null,
-      game_type: gameTypeIdForLog, // Use the fetched GameType ID
       bet_amount: amountAfterFee,
-      selected_rps: '',
-      ai_mode: '',
       commission: 0,
       game_result: 666,
       winnings: amountAfterFee,
@@ -3688,11 +3671,7 @@ router.post('/jeet', auth, async (req, res) => {
         model: Room,
         select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name',
       })
-      .populate({
-        path: 'game_type',
-        model: GameType,
-        select: 'short_name game_type_name',
-      })
+   
       .populate({
         path: 'creator',
         model: User,
