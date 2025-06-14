@@ -424,7 +424,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                           size="small"
                           sx={{
                             mb: 2,
-                            backgroundColor: isOnline ? '#10B981' : '#',
+                            backgroundColor: isOnline ? '#4caf50' : '#',
                             color: 'white',
                             fontWeight: 600,
                             padding: '4px 8px',

@@ -14,13 +14,11 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ThemeProvider } from '@mui/material/styles';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoins, faStore, faHome } from '@fortawesome/free-solid-svg-icons';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import {
   AutoAwesome as AutoAwesomeIcon,
   Add as AddIcon,
 } from '@mui/icons-material';
-import Lottie from 'react-lottie';
 
 // Actions
 import {
@@ -34,7 +32,6 @@ import { toggleDrawer } from '../../redux/Auth/user.actions';
 import DrawerButton from './DrawerButton';
 import Footer from './Footer';
 import { getCustomTheme } from '../../config/theme';
-import verified from '../LottieAnimations/verified.json';
 
 // Lazy-loaded components
 const MyGamesTable = lazy(() => import('../MyGames/MyGamesTable'));
@@ -140,14 +137,18 @@ const CreateRoomPanel = ({
                 filter: user?.elite === 'black' ? 'grayscale(1)' : 'hue-rotate(132deg)',
               }}
             >
-              <Lottie
-                options={{
-                  loop: !isLowGraphics,
-                  autoplay: !isLowGraphics,
-                  animationData: verified,
-                }}
-                style={{ width: '100%', height: '100%' }}
-              />
+            <VerifiedIcon
+              sx={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                transform: 'translate(25%, -25%)', // Adjust position
+                fontSize: '1.2rem', // Adjust size
+                color: '#ff0000', // Example: gray for black elite, green for red elite
+                backgroundColor: 'white', // Give it a background to stand out
+                borderRadius: '50%', // Make it circular
+              }}
+            />
             </Box>
             <Typography
               variant="caption"
@@ -390,7 +391,7 @@ function MainPage() {
   const handleCreatePreMadeGame = useCallback(() => {
     if (user?.elite === 'red' || user?.elite === 'black') {
       dispatch(goToCreate(navigate, aiPrompt));
-      console.log('Creating pre-made game with prompt:', aiPrompt);
+      // console.log('Creating pre-made game with prompt:', aiPrompt);
     } else {
       setOpenModal(true);
     }

@@ -30,14 +30,14 @@ const isCacheValid = (cached) => {
 // Clean cache function (if not already defined)
 const cleanCache = () => {
   const now = Date.now();
-  
+
   // Clean user cache
   for (const [key, value] of userCache) {
     if (now - value.timestamp > CACHE_DURATION) {
       userCache.delete(key);
     }
   }
-  
+
   // Clean transaction cache
   for (const [key, value] of transactionCache) {
     if (now - value.timestamp > CACHE_DURATION) {
@@ -272,12 +272,12 @@ router.post('/privy', async (req, res) => {
 
   try {
     const redisClient = req.app.get('redisClient');
-    
+
     // Step 1: Check Redis cache first
     const userCacheKey = `user:privy:${privyId}`;
     let user = null;
     let fromCache = false;
-    
+
     try {
       const cachedUser = await redisClient.get(userCacheKey);
       if (cachedUser) {
@@ -331,7 +331,7 @@ router.post('/privy', async (req, res) => {
       // Cache the user data for 15 minutes
       try {
         await redisClient.setEx(
-          userCacheKey, 
+          userCacheKey,
           900, // 15 minutes
           JSON.stringify(user.toObject())
         );
@@ -387,7 +387,7 @@ router.post('/privy', async (req, res) => {
 router.get('/wallet-balance/:walletAddress', auth, async (req, res) => {
   try {
     const { walletAddress } = req.params;
-    
+
     if (!walletAddress) {
       return res.status(400).json({
         success: false,
@@ -542,7 +542,7 @@ router.post('/cancel-elite', auth, async (req, res) => {
 router.post('/purchase-elite', auth, async (req, res) => {
   const { type, signature, amount } = req.body;
   const userId = req.user.id;
-  
+
   // Define subscription amounts (use the FRONTEND amounts, not backend amounts)
   const subscriptionAmounts = {
     red: 0.1,   // Changed from 0.2 to match frontend
@@ -614,7 +614,7 @@ router.post('/purchase-elite', auth, async (req, res) => {
     });
 
     await saveDocumentWithRetry(newTransaction);
-    
+
     // console.log('[purchase-elite] Pending transaction created:', newTransaction._id);
 
     // Emit the pending transaction immediately
@@ -738,7 +738,7 @@ router.get('/user', auth, async (req, res) => {
   try {
     const userId = req.user._id.toString();
     const cacheKey = `user_${userId}`;
-    
+
     // Check cache first
     const cached = userCache.get(cacheKey);
     if (isCacheValid(cached)) {
@@ -783,7 +783,7 @@ router.get('/user/transactions', auth, async (req, res) => {
   try {
     const userId = req.user._id.toString();
     const cacheKey = `transactions_${userId}`;
-    
+
     // Check cache first
     const cached = transactionCache.get(cacheKey);
     if (isCacheValid(cached)) {
@@ -805,7 +805,7 @@ router.get('/user/transactions', auth, async (req, res) => {
         .limit(limit)
         .select('amount description created_at hash status')
         .lean(),
-      
+
       Transaction.countDocuments({ user: userId })
     ]);
 
@@ -915,10 +915,31 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
       req.user.password = hash;
     }
 
-    req.user.avatar = new_avatar;
+    // FIXED: Avatar is now a URL, not base64 data
+    if (new_avatar) {
+      // Validate it's a proper Pinata URL
+      if (new_avatar.startsWith('https://gateway.pinata.cloud/ipfs/')) {
+        req.user.avatar = new_avatar;
+        console.log('✅ Avatar URL saved:', new_avatar.substring(0, 60) + '...');
+      } else if (new_avatar.startsWith('data:')) {
+        // Reject base64 data
+        console.warn('⚠️ Rejected base64 avatar upload');
+        return res.json({
+          success: false,
+          error: 'Please upload avatar through the proper upload system.'
+        });
+      } else {
+        req.user.avatar = new_avatar; // Allow other valid URLs
+      }
+    }
 
     await saveDocumentWithRetry(req.user);
-
+    const userId = req.user._id.toString();
+    const cacheKey = `user_${userId}`;
+    if (userCache.has(cacheKey)) {
+      userCache.delete(cacheKey);
+      console.log(`✅ Invalidated cache for user: ${userId}`);
+    }
     return res.json({ success: true });
   } catch (error) {
     console.error("Error in /changePasswordAndAvatar:", error);
@@ -958,19 +979,19 @@ router.post('/logout', auth, async (req, res) => {
   try {
     // Update user status
     req.user.status = 'off';
-    
+
     // Save with proper error handling
     await saveDocumentWithRetry(req.user);
-    
+
     res.json({
       success: true,
       message: 'Successfully logged out!'
     });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to complete logout process' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to complete logout process'
     });
   }
 });

@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box } from '@mui/material';
-import Lottie from 'react-lottie';
-import LottieRankIcon from '../game_panel/LottieAnimations/rankIcon.json'
 import { convertToCurrency } from '../util/conversion';
 import { getRank } from '../util/getRank';
 
@@ -64,12 +62,7 @@ const RankAllowancesTable = ({ categories }) => {
 								>
 									<TableCell sx={{ color: '#fff' }} align="center">
 										<Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-											<Lottie
-												options={{ loop: true, autoplay: true, animationData: LottieRankIcon }}
-												height={22}
-												width={22}
-												style={{ display: 'inline-block' }}
-											/>
+										
 											<span>{category.rankThreshold}</span>
 										</Box>
 									</TableCell>

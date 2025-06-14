@@ -90,7 +90,7 @@ export const endLoading = () => async (dispatch) => {
 export const verifyGameResult = (
   user_id, // Kept for consistency, though not used in the request
   inputLog,
-  setLoading = () => {} // Optional callback to manage loading state in UI
+  setLoading = () => { } // Optional callback to manage loading state in UI
 ) => async (dispatch) => {
   if (!inputLog || !Array.isArray(inputLog) || inputLog.length === 0) {
     dispatch({ type: MSG_ERROR, payload: 'Input log is required, must be an array, and cannot be empty.' });
@@ -153,7 +153,7 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
 
   try {
     console.log('[AutoPopulate] Starting extraction process...');
-    
+
     // Step 1: Extract room information from game code
     const extractResponse = await axios.post('/game/extract-room-info', {
       gameCode: gameCode
@@ -176,13 +176,13 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
     let imageUrl = null;
     try {
       console.log('[AutoPopulate] Generating image for:', name);
-      
+
       const imagePrompt = `Create a clean, modern logo for a game called "${name}". 
         Game theme: ${gameTheme}. 
         Style: Simple, bold, professional logo design with solid background. 
         Gaming aesthetic, high contrast, perfect for use as a coin/token icon. 
         Square format, minimal design. No text in the image.`;
-      
+
       const imageResponse = await axios.post('/game/generate-image', {
         prompt: imagePrompt,
         size: '1024x1024',
@@ -200,19 +200,19 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
 
     // Step 4: Prepare updates object
     const updates = {};
-    
+
     if (name && name !== 'Default Game' && name.length >= 3 && name.length <= 20) {
       updates.name = name;
     }
-    
+
     if (ticker && ticker !== 'GAME' && ticker.length >= 2 && ticker.length <= 6) {
       updates.ticker = ticker;
     }
-    
+
     if (description && description.length > 20) {
       updates.description = description;
     }
-    
+
     if (imageUrl) {
       updates.image = imageUrl;
     }
@@ -221,13 +221,13 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
     if (Object.keys(updates).length > 0) {
       console.log('[AutoPopulate] Applying updates:', updates);
       onChangeState(updates);
-      
-      return { 
-        name: updates.name || name, 
-        ticker: updates.ticker || ticker, 
-        description: updates.description || description, 
+
+      return {
+        name: updates.name || name,
+        ticker: updates.ticker || ticker,
+        description: updates.description || description,
         imageUrl,
-        confidence 
+        confidence
       };
     }
 
@@ -289,7 +289,7 @@ export const generateReactGameFromPrompt = (
   dispatch({ type: START_LOADING });
   setGameLoading(true);
 
-  // Enhanced progress simulation
+  // Progress simulation with randomized intervals
   let progressInterval = null;
   if (onStreamUpdate && typeof onStreamUpdate === 'function') {
     let progress = 0;
@@ -302,13 +302,13 @@ export const generateReactGameFromPrompt = (
       { progress: 55, message: 'Creating multiplier logic...' },
       { progress: 65, message: 'Adding visual effects...' },
       { progress: 75, message: 'Finalizing components...' },
-      { progress: 85, message: 'Processing generated code...' },
+      { progress: 85, message: 'Transpiling code on server...' },
       { progress: 95, message: 'Almost ready...' }
     ];
 
     let messageIndex = 0;
-    
-    progressInterval = setInterval(() => {
+
+    const scheduleNextMessage = () => {
       if (messageIndex < progressMessages.length) {
         const currentMessage = progressMessages[messageIndex];
         onStreamUpdate({
@@ -317,8 +317,15 @@ export const generateReactGameFromPrompt = (
           progress: currentMessage.progress
         });
         messageIndex++;
+
+        // Schedule next message with random delay between 1-10 seconds
+        const randomDelay = Math.floor(Math.random() * 16000) + 2000; // 1000ms to 11000ms
+        progressInterval = setTimeout(scheduleNextMessage, randomDelay);
       }
-    }, 2000);
+    };
+
+    // Start the first message immediately
+    scheduleNextMessage();
   }
 
   try {
@@ -329,13 +336,14 @@ export const generateReactGameFromPrompt = (
     });
 
     if (progressInterval) {
-      clearInterval(progressInterval);
+      clearTimeout(progressInterval);
     }
 
-    const { finalApp, proxiedAssets } = response.data;
-    
-    // Set the game code first
-    setGameCode(finalApp);
+    // Backend now returns both original and transpiled code
+    const { transpiledCode, proxiedAssets } = response.data;
+
+    // Use transpiled code for execution
+    setGameCode(transpiledCode);
     setProxiedAssets(proxiedAssets);
 
     // Final progress update
@@ -348,13 +356,13 @@ export const generateReactGameFromPrompt = (
     }
 
     dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
-    
-    // Return the result with game code for auto-population
-    return { payload: { finalApp, proxiedAssets } };
+
+    // Return the result with transpiled code
+    return { payload: { finalApp: transpiledCode, proxiedAssets } };
 
   } catch (error) {
     if (progressInterval) {
-      clearInterval(progressInterval);
+      clearTimeout(progressInterval);
     }
 
     console.error('Error generating React app:', error);
@@ -362,32 +370,32 @@ export const generateReactGameFromPrompt = (
       type: MSG_ERROR,
       payload: error.response?.data?.message || error.message || 'Failed to generate React app.',
     });
-    
+
+    // Simple error component (no transpilation needed)
     const errorComponent = `
-      import React from 'react';
-      const App = () => {
-        return (
-          <div style={{ 
-            padding: '20px', 
-            color: '#FF0000',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <h3>Generation Failed</h3>
-            <p>Error: ${error.message}</p>
-            <p>Please try again with a different prompt.</p>
-          </div>
-        );
-      };
-      export default App;
-    `;
-    
+(function(React) {
+  return function ErrorApp() {
+    return React.createElement('div', {
+      style: {
+        padding: '20px',
+        color: '#FF0000',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '8px',
+        textAlign: 'center'
+      }
+    }, [
+      React.createElement('h3', { key: 'title' }, 'Generation Failed'),
+      React.createElement('p', { key: 'error' }, 'Error: ${error.message}'),
+      React.createElement('p', { key: 'retry' }, 'Please try again with a different prompt.')
+    ]);
+  };
+})`;
+
     setGameCode(errorComponent);
     throw error;
   } finally {
     if (progressInterval) {
-      clearInterval(progressInterval);
+      clearTimeout(progressInterval);
     }
     dispatch({ type: END_LOADING });
     setGameLoading(false);
@@ -460,6 +468,90 @@ export const uploadImageToPinata = (formData) => async (dispatch) => {
     throw error;
   }
 };
+
+export const uploadAvatarToPinata = (file) => async (dispatch) => {
+  try {
+    // Create canvas for resizing (similar to your game image logic)
+    const resizeAvatar = (file) => {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target.result;
+        };
+        
+        img.onload = () => {
+          // Avatar-specific sizing (square, smaller than game images)
+          const maxSize = 200; // 200x200 for avatars
+          let width = img.width;
+          let height = img.height;
+          
+          // Make it square by cropping to center
+          const size = Math.min(width, height);
+          const x = (width - size) / 2;
+          const y = (height - size) / 2;
+          
+          canvas.width = maxSize;
+          canvas.height = maxSize;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          // Draw cropped and resized image
+          ctx.drawImage(img, x, y, size, size, 0, 0, maxSize, maxSize);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject('Failed to generate avatar blob.');
+            }
+          }, 'image/webp', 0.8); // Use WebP for better compression
+        };
+        
+        img.onerror = (error) => {
+          reject('Error processing avatar: ' + error);
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    };
+
+    // Resize the avatar
+    const resizedBlob = await resizeAvatar(file);
+    
+    // Create FormData for upload
+    const formData = new FormData();
+    formData.append('file', resizedBlob, 'avatar.webp');
+
+    // Use your existing Pinata upload endpoint
+    const response = await axios.post('/game/upload-to-pinata', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (response.status !== 200) {
+      throw new Error('Failed to upload avatar to Pinata.');
+    }
+
+    const { success, imageUrl, message } = response.data;
+    if (!success || !imageUrl) {
+      throw new Error(message || 'Avatar upload failed, no imageUrl received.');
+    }
+
+    console.log('✅ Avatar uploaded to Pinata:', imageUrl);
+    return imageUrl;
+
+  } catch (error) {
+    console.error('❌ Avatar upload error:', error);
+    dispatch(errorMsgBar('Failed to upload avatar. Please try again.'));
+    throw error;
+  }
+};
+
 
 export const getGlobalChatLogs = () => async dispatch => {
   try {
@@ -575,7 +667,7 @@ export const bet3 = bet_info => async dispatch => {
     dispatch({ type: START_BET });
     const res = await axios.post('/game/bet3', bet_info);
     dispatch({ type: END_BET });
-    
+
     if (res.data.success) {
       // dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       return {
@@ -735,17 +827,20 @@ export const updateRoomGameCode = ({ roomId, gameCode, proxiedAssets }) => async
   }
 };
 
-
 export const actionRoom = ({ roomId, type }) => async dispatch => {
   try {
     const res = await axios.patch(`/game/room/${roomId}/${type}`);
 
     if (res.data.success) {
+      // Don't need to dispatch anything here - socket will handle the update
+      return Promise.resolve(); // Return resolved promise for optimistic updates
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
+      return Promise.reject(new Error(res.data.message)); // Reject for error handling
     }
   } catch (err) {
-    dispatch({ type: MSG_WARNING, payload: err });
+    dispatch({ type: MSG_WARNING, payload: err.message || err });
+    return Promise.reject(err); // Reject for error handling
   }
 };
 
@@ -833,7 +928,6 @@ export const offerLoan = data => async dispatch => {
 
 // logic.actions.js
 export const getRoomList = (params) => async (dispatch) => {
-  console.log('Fetching room list with params:', params);
   dispatch({ type: START_LOADING });
   try {
     const res = await axios.get('/game/rooms', { params });
@@ -852,9 +946,6 @@ export const getRoomList = (params) => async (dispatch) => {
   }
 };
 
-// actions
-
-// Updated Redux action for fetching latest history
 export const getHistory = search_condition => async dispatch => {
   dispatch({ type: TNX_COMPLETE });
 
@@ -862,8 +953,8 @@ export const getHistory = search_condition => async dispatch => {
     const res = await axios.get('/game/history', { params: search_condition });
     if (res.data.success) {
       // Dispatch with just the latest item
-      dispatch({ 
-        type: HISTORY_LOADED, 
+      dispatch({
+        type: HISTORY_LOADED,
         payload: { history: res.data.latestItem, cached: res.data.cached }
       });
       dispatch({ type: TNX_INCOMPLETE });

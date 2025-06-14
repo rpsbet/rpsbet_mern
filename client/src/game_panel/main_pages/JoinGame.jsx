@@ -16,7 +16,6 @@ import {
   toggleDrawer,
 } from '../../redux/Auth/user.actions';
 import { usePrivy } from '@privy-io/react-auth';
-import { createAccountFromPrivyUser } from '../../util/solana';
 
 // Lazy load components that aren't immediately needed
 const TabbedContent = lazy(() => import('../../components/TabbedContent'));

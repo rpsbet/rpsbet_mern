@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-// import verified from '../game_panel/LottieAnimations/verified.json'; // No longer needed
 import { Box, Avatar as MUIAvatar, Badge } from '@mui/material';
-// import Lottie from 'react-lottie'; // No longer needed
 import VerifiedIcon from '@mui/icons-material/Verified'; // Import the MUI icon
 import { getRank } from '../util/getRank';
 

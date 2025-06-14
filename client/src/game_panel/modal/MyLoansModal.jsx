@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import Lottie from 'react-lottie';
 import {
   Modal,
   Box,
@@ -16,10 +15,10 @@ import { Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faPlus } from '@fortawesome/free-solid-svg-icons';
 import AttachMoney from '@mui/icons-material/AttachMoney';
-import verified from '../LottieAnimations/verified.json';
 import MyBankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyBankPage';
 import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
 import { getRank } from '../../util/getRank';
+import VerifiedIcon from '@mui/icons-material/Verified';
 
 const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModal'));
 
@@ -285,13 +284,17 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
                   filter: user?.elite === 'black' ? 'grayscale(1)' : 'hue-rotate(132deg)',
                 }}
               >
-                <Lottie
-                  options={{
-                    loop: !isLowGraphics,
-                    autoplay: !isLowGraphics,
-                    animationData: verified,
+                <VerifiedIcon
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    transform: 'translate(25%, -25%)', // Adjust position
+                    fontSize: '1.2rem', // Adjust size
+                    color: '#ff0000', // Example: gray for black elite, green for red elite
+                    backgroundColor: 'white', // Give it a background to stand out
+                    borderRadius: '50%', // Make it circular
                   }}
-                  style={{ width: '100%', height: '100%' }}
                 />
               </Box>
               <span style={{ color: user?.elite === 'red' ? '#ff0000' : user?.elite === 'black' ? '#e5e5e5' : '#ff0000' }}>
@@ -321,7 +324,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
           </Box>
         </Box>
       </Modal>
- 
+
 
       {/* PRODUCT CREATE DIALOG */}
       <Dialog

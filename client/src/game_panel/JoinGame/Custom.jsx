@@ -20,7 +20,6 @@ import {
   Zoom, Grow, CardContent, CardActions, TableContainer, Checkbox, Modal, FormControlLabel,
 } from '@mui/material';
 import styled from 'styled-components';
-import * as Babel from '@babel/standalone';
 import { convertToCurrency } from '../../util/conversion';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import {
@@ -161,7 +160,9 @@ const ResponsiveGameContainer = React.memo(({
   isCreator,
   containerSize,
   isMobile,
-  isTablet
+  isTablet,
+  gameState,        // Add this prop
+  setGameState
 }) => {
 
   const containerStyles = useMemo(() => ({
@@ -355,7 +356,7 @@ const ResponsiveGameContainer = React.memo(({
       )}
 
       {/* Enhanced Creator Overlay */}
-      {isCreator && (
+      {isCreator && !gameState.creatorOverlayDismissed && (
         <Box sx={{
           position: 'absolute',
           top: 0,
@@ -367,7 +368,7 @@ const ResponsiveGameContainer = React.memo(({
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'auto',
-          background: 'rgba(0, 0, 0, 0.8)',
+          background: 'rgba(0, 0, 0, 0.2)',
           backdropFilter: 'blur(10px)',
           borderRadius: '20px',
         }}>
@@ -404,9 +405,33 @@ const ResponsiveGameContainer = React.memo(({
               color: 'rgba(255, 255, 255, 0.9)',
               fontSize: isMobile ? '0.9rem' : '1rem',
               lineHeight: 1.6,
+              mb: 3,
             }}>
-              As the creator of this game, you cannot participate in your own room. Please invite others to join!
+              As the creator of this game, you cannot participate in betting. You can still view and test the game functionality.
             </Typography>
+            <Button
+              variant="contained"
+              onClick={() => setGameState(prev => ({ ...prev, creatorOverlayDismissed: true }))}
+              sx={{
+                background: 'linear-gradient(135deg, #ff9800, #f57c00)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '1rem',
+                textTransform: 'none',
+                borderRadius: '12px',
+                px: 4,
+                py: 1.5,
+                boxShadow: '0 6px 16px rgba(255, 152, 0, 0.4)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #f57c00, #ef6c00)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 20px rgba(255, 152, 0, 0.5)',
+                },
+              }}
+            >
+              OK, Got It
+            </Button>
           </Box>
         </Box>
       )}
@@ -468,7 +493,8 @@ function Custom(props) {
     isGameActive: false,
     hasDeposited: false,
     isProcessing: false, // Add this
-    processingMessage: '', // Add this
+    processingMessage: '',
+    creatorOverlayDismissed: false,
   });
 
   const blockGamePanel = (message = 'Processing...') => {
@@ -752,8 +778,6 @@ function Custom(props) {
 
     try {
       if (!validateIsAuthenticated(reduxState.isAuthenticated, dispatch)) return;
-      console.log('[Custom] Validating bet amount:', bet_amount);
-      console.log('[Custom] Current balance:', reduxState.balance);
       if (!validateBetAmount(bet_amount, reduxState.balance, dispatch)) return;
       if (!validateBankroll(bet_amount, bankrollRef.current, dispatch)) return;
 
@@ -776,6 +800,7 @@ function Custom(props) {
   }, []);
 
   const logEvent = useCallback((eventType, data) => {
+
     if (playSound) {
       playSound('select');
     }
@@ -789,6 +814,12 @@ function Custom(props) {
 
       onResultChange('', true);
 
+      // For creators: skip deposit but allow game to run
+      if (isCreator) {
+        return;
+      }
+
+      // For non-creators: process deposit
       const executeDeposit = async () => {
         const depositSuccess = await processSolDeposit();
         if (!depositSuccess) {
@@ -802,17 +833,37 @@ function Custom(props) {
       setGameState(prev => ({ ...prev, isGameActive: false }));
 
       const { result, multiplier } = data;
-      const validResults = ['win', 'loss', 'other'];
 
-      if (validResults.includes(result) && gameState.gameStartedCount > 0 && hasDepositedRef.current) {
-        onBtnBetClick(result, result === 'win' ? multiplier : undefined);
-      } else {
-        onBtnBetClick(result, result === 'loss' ? multiplier : undefined);
-        hasDepositedRef.current = false;
+      // For creators: show mock result without actual betting
+      if (isCreator) {
+
+        const mockResult = (
+          <span style={{
+            color: result === 'win' ? '#00ff3a' : result === 'loss' ? '#ff0000' : '#ffeb3b',
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+          }}>
+            {result === 'win' ? '🎉 Preview Win!' : result === 'loss' ? '(Free Mode)' : '(Free Mode)'}
+          </span>
+        );
+
+        onResultChange(mockResult, false);
+        return;
       }
-    }
-  }, [gameState.gameStartedCount, onBtnBetClick, playSound, onResultChange, processSolDeposit]);
 
+      // For non-creators: process actual betting
+      setGameState(currentState => {
+        const validResults = ['win', 'loss', 'other'];
+        if (validResults.includes(result) && currentState.gameStartedCount > 0 && hasDepositedRef.current) {
+          onBtnBetClick(result, result === 'win' ? multiplier : undefined);
+        } else {
+          onBtnBetClick(result, result === 'loss' ? multiplier : undefined);
+          hasDepositedRef.current = false;
+        }
+        return currentState;
+      });
+    }
+  }, [isCreator, playSound, onResultChange]);
 
   // Game code processing - optimized with useMemo
   const processedGameCode = useMemo(() => {
@@ -821,129 +872,28 @@ function Custom(props) {
     }
 
     try {
-      // Clean the code
-      let cleanedCode = roomInfo.gameCode
-        .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
-        .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-        .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
-        .replace(/export\s+[\w\s]*?\s*;?/g, '')
-        .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-        .trim();
+      // Backend sends transpiled component factory, execute directly
+      if (typeof roomInfo.gameCode === 'string' && roomInfo.gameCode.includes('function(React')) {
+        // This is a transpiled component factory from the backend
+        const componentFactory = eval(roomInfo.gameCode);
 
-      // Babel helpers (moved to external constant for performance)
-      const babelHelpers = `
-        function _defineProperty(obj, key, value) {
-          if (key in obj) {
-            Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
-          } else {
-            obj[key] = value;
-          }
-          return obj;
-        }
-        function _slicedToArray(arr, i) {
-          return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
-        }
-        function _arrayWithHoles(arr) {
-          if (Array.isArray(arr)) return arr;
-        }
-        function _iterableToArrayLimit(arr, i) {
-          var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
-          if (_i == null) return;
-          var _arr = [];
-          var _n = true;
-          var _d = false;
-          var _s, _e;
-          try {
-            for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
-              _arr.push(_s.value);
-              if (i && _arr.length === i) break;
-            }
-          } catch (err) {
-            _d = true;
-            _e = err;
-          } finally {
-            try {
-              if (!_n && _i["return"] != null) _i["return"]();
-            } finally {
-              if (_d) throw _e;
-            }
-          }
-          return _arr;
-        }
-        function _unsupportedIterableToArray(o, minLen) {
-          if (!o) return;
-          if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-          var n = Object.prototype.toString.call(o).slice(8, -1);
-          if (n === "Object" && o.constructor) n = o.constructor.name;
-          if (n === "Map" || n === "Set") return Array.from(o);
-          if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-        }
-        function _arrayLikeToArray(arr, len) {
-          if (len == null || len > arr.length) len = arr.length;
-          for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-          return arr2;
-        }
-        function _nonIterableRest() {
-          throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-        }
-        function _objectSpread(target) {
-          for (var i = 1; i < arguments.length; i++) {
-            var source = arguments[i] != null ? arguments[i] : {};
-            var ownKeys = Object.keys(source);
-            if (typeof Object.getOwnPropertySymbols === 'function') {
-              ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-                return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-              }));
-            }
-            ownKeys.forEach(function (key) {
-              _defineProperty(target, key, source[key]);
-            });
-          }
-          return target;
-        }
-      `;
-
-      // Transpile with Babel
-      let transpiledCode;
-      try {
-        transpiledCode = Babel.transform(cleanedCode, {
-          presets: ['react', ['env', { modules: false, targets: { browsers: ['last 2 versions'] } }]],
-          filename: 'app.jsx',
-        }).code;
-        transpiledCode = `${babelHelpers}\n${transpiledCode}`;
-      } catch (babelError) {
-        throw new Error(`Babel transpilation failed: ${babelError.message}`);
+        return componentFactory(
+          React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
+          Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
+          Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+          TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
+          faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
+          faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,
+          Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence,
+          IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions,
+          Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog,
+          faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
+          faShieldAlt, faHeart, faSkull, faClock, faBolt, componentState.proxiedAssets
+        );
+      } else {
+        // Legacy handling for non-transpiled code (shouldn't happen)
+        throw new Error('Expected transpiled code from backend');
       }
-
-      // Create component factory
-      const componentFactory = new Function(
-        'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'useAnimation',
-        'Grid', 'Box', 'Typography', 'TextField', 'Button', 'Slider', 'Dialog', 'Divider', 'Paper', 'Chip',
-        'Collapse', 'DialogContent', 'DialogTitle', 'CircularProgress', 'logEvent', 'FontAwesomeIcon',
-        'TableContainer', 'Table', 'TableBody', 'TableRow', 'TableCell', 'TableHead',
-        'faDice', 'faCoins', 'faPlay', 'faRocket', 'faChevronDown', 'faGem', 'faSpinner', 'faCogs',
-        'faExchangeAlt', 'faTrophy', 'faArrowUp', 'faArrowDown', 'faRedo', 'faBomb', 'faStar', 'faHome',
-        'Physics', 'Card', 'CardContent', 'CardActions', 'Tooltip', 'motion', 'styled', 'Modal',
-        'AnimatePresence', 'IconButton', 'Container', 'Badge', 'Snackbar', 'Alert', 'DialogContentText',
-        'DialogActions', 'Zoom', 'Grow', 'faInfoCircle', 'faChevronUp', 'faVolumeUp', 'faVolumeMute',
-        'faCog', 'faExclamationTriangle', 'faCheck', 'faTimes', 'faHistory', 'faChartLine', 'faWallet',
-        'faShieldAlt', 'faHeart', 'faSkull', 'faClock', 'faBolt', 'proxiedAssets',
-        `return function App(props) { ${transpiledCode} return App(props); };`
-      );
-
-      return componentFactory(
-        React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
-        Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
-        Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
-        TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
-        faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
-        faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,
-        Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence,
-        IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions,
-        Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog,
-        faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
-        faShieldAlt, faHeart, faSkull, faClock, faBolt, componentState.proxiedAssets
-      );
     } catch (error) {
       console.error('[Custom] Error processing game code:', error);
       return null;
@@ -952,42 +902,49 @@ function Custom(props) {
 
   // Update component when processed code changes
   useEffect(() => {
-    if (processedGameCode) {
-      try {
-        setComponentState(prev => ({
-          ...prev,
-          GameComponent: (props) => React.createElement(processedGameCode, {
+
+  if (processedGameCode && Physics && !isPhysicsLoading) {
+    try {
+      
+      setComponentState(prev => ({
+        ...prev,
+        GameComponent: React.memo((props) => {
+
+          return React.createElement(processedGameCode, {
             ...props,
             Physics,
-            proxiedAssets: componentState.proxiedAssets,
-            containerSize,
-            isMobile,
-            isTablet
-          }),
-          componentError: null
-        }));
-      } catch (error) {
-        console.error('[Custom] Failed to create component:', error);
-        setComponentState(prev => ({
-          ...prev,
-          GameComponent: null,
-          componentError: `Failed to create component: ${error.message}`
-        }));
-      }
-    } else if (physicsError) {
-      setComponentState(prev => ({
-        ...prev,
-        GameComponent: null,
-        componentError: `Failed to load physics engine: ${physicsError}`
-      }));
-    } else if (!roomInfo.gameCode) {
-      setComponentState(prev => ({
-        ...prev,
-        GameComponent: null,
+            proxiedAssets: props.proxiedAssets || componentState.proxiedAssets,
+            logEvent: props.logEvent, // Use the logEvent passed as prop
+            containerSize: props.containerSize,
+            isMobile: props.isMobile,
+            isTablet: props.isTablet
+          });
+        }),
         componentError: null
       }));
+    } catch (error) {
+      console.error('[Custom] Failed to create component:', error);
+      setComponentState(prev => ({
+        ...prev,
+        GameComponent: null,
+        componentError: `Failed to create component: ${error.message}`
+      }));
     }
-  }, [processedGameCode, Physics, physicsError, componentState.proxiedAssets, containerSize, isMobile, isTablet, roomInfo.gameCode]);
+  } else if (physicsError) {
+    setComponentState(prev => ({
+      ...prev,
+      GameComponent: null,
+      componentError: `Failed to load physics engine: ${physicsError}`
+    }));
+  } else if (!roomInfo.gameCode) {
+    setComponentState(prev => ({
+      ...prev,
+      GameComponent: null,
+      componentError: null
+    }));
+  }
+}, [processedGameCode, Physics, isPhysicsLoading, physicsError, roomInfo.gameCode]); // ✅ Removed logEvent from deps
+
 
   // Socket effects
   useEffect(() => {
@@ -1190,6 +1147,8 @@ function Custom(props) {
             containerSize={containerSize}
             isMobile={isMobile}
             isTablet={isTablet}
+            gameState={gameState}        // Add this prop
+            setGameState={setGameState}
           />
         </Box>
 

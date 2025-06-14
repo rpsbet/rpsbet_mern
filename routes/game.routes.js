@@ -15,7 +15,7 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
+const babel = require('@babel/core');
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
@@ -683,6 +683,146 @@ router.post('/generate-image', auth, async (req, res) => {
   }
 });
 
+async function transpileReactCode(code) {
+  try {
+    // Remove imports and exports first
+    const cleanedCode = code
+      .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
+      .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+      .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
+      .replace(/export\s+[\w\s]*?\s*;?/g, '')
+      .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+      .trim();
+
+    // Babel helpers
+    const babelHelpers = `
+      function _defineProperty(obj, key, value) {
+        if (key in obj) {
+          Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+        } else {
+          obj[key] = value;
+        }
+        return obj;
+      }
+      function _slicedToArray(arr, i) {
+        return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+      }
+      function _arrayWithHoles(arr) {
+        if (Array.isArray(arr)) return arr;
+      }
+      function _iterableToArrayLimit(arr, i) {
+        var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+        if (_i == null) return;
+        var _arr = [];
+        var _n = true;
+        var _d = false;
+        var _s, _e;
+        try {
+          for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+            _arr.push(_s.value);
+            if (i && _arr.length === i) break;
+          }
+        } catch (err) {
+          _d = true;
+          _e = err;
+        } finally {
+          try {
+            if (!_n && _i["return"] != null) _i["return"]();
+          } finally {
+            if (_d) throw _e;
+          }
+        }
+        return _arr;
+      }
+      function _unsupportedIterableToArray(o, minLen) {
+        if (!o) return;
+        if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+        var n = Object.prototype.toString.call(o).slice(8, -1);
+        if (n === "Object" && o.constructor) n = o.constructor.name;
+        if (n === "Map" || n === "Set") return Array.from(o);
+        if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+      }
+      function _arrayLikeToArray(arr, len) {
+        if (len == null || len > arr.length) len = arr.length;
+        for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+        return arr2;
+      }
+      function _nonIterableRest() {
+        throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+      }
+      function _objectSpread(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i] != null ? arguments[i] : {};
+          var ownKeys = Object.keys(source);
+          if (typeof Object.getOwnPropertySymbols === 'function') {
+            ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+              return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+            }));
+          }
+          ownKeys.forEach(function (key) {
+            _defineProperty(target, key, source[key]);
+          });
+        }
+        return target;
+      }
+    `;
+
+    // FIXED: Use sync version and proper preset configuration
+    const result = babel.transformSync(cleanedCode, {
+      presets: [
+        ['@babel/preset-react', {
+          runtime: 'classic', // Changed from 'automatic' to 'classic'
+          pragma: 'React.createElement' // Explicit pragma
+        }],
+        ['@babel/preset-env', {
+          modules: false,
+          targets: { browsers: ['last 2 versions'] },
+          // Ensure compatibility
+          loose: true
+        }]
+      ],
+      filename: 'game-component.jsx',
+      // Add these options for better compatibility
+      compact: false,
+      comments: false
+    });
+
+    if (!result || !result.code) {
+      throw new Error('Babel transpilation returned empty result');
+    }
+
+    // Combine helpers with transpiled code
+    const finalCode = `${babelHelpers}\n${result.code}`;
+
+    // FIXED: Create a proper component factory that returns the component directly
+    const componentFactoryCode = `
+(function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
+  Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
+  Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+  TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
+  faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
+  faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,
+  Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence,
+  IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions,
+  Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog,
+  faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
+  faShieldAlt, faHeart, faSkull, faClock, faBolt, proxiedAssets, faQuestionCircle) {
+  
+  ${finalCode}
+  
+  // Return the App component
+  return typeof App !== 'undefined' ? App : null;
+})`;
+
+    return componentFactoryCode;
+
+  } catch (error) {
+    console.error('Babel transpilation error:', error);
+    throw new Error(`Babel transpilation failed: ${error.message}`);
+  }
+}
+
+
 router.post('/generate-react', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
@@ -1169,10 +1309,6 @@ const App = ({ logEvent }) => {
       }
 
       const codeText = cleanedCode.toLowerCase();
-      const foundFinancialTerms = strictFinancialTerms.filter(term => {
-        const regex = new RegExp(`\\b${term}\\b`, 'i');
-        return regex.test(codeText);
-      });
 
 
       // If still failing, throw error with both attempts
@@ -1188,18 +1324,11 @@ const App = ({ logEvent }) => {
       cleanedCode = `${cleanedCode}\nexport default App;`;
     }
 
-    const moduleCode = cleanedCode;
-
-    // Log successful generation with validation metrics
-    console.log(`[React Generator] Generated game successfully with validation: 
-    - logEvent handling: ✅
-    - Practice mode: ✅  
-    - House edge: ✅
-    - No financial terms: ✅
-    - Required states: ✅`);
+    const transpiledCode = await transpileReactCode(cleanedCode);
 
     res.json({
-      finalApp: moduleCode,
+      originalCode: cleanedCode,      // Original JSX for editing
+      transpiledCode: transpiledCode, // Transpiled for execution
       proxiedAssets,
       validation: {
         passed: true,
@@ -1414,8 +1543,11 @@ IMPORTANT: Do not use MUI Modal components - maintain custom overlay modals. Do 
 
     console.log(`[React Update] Successfully updated component for user: ${req.user._id}`);
 
+    const transpiledCode = await transpileReactCode(cleanedCode);
+
     res.json({
-      finalApp: cleanedCode,
+      originalCode: cleanedCode,      // Original JSX
+      transpiledCode: transpiledCode, // Transpiled for execution
       proxiedAssets: updatedProxiedAssets,
       message: 'Component updated successfully'
     });
@@ -1466,69 +1598,91 @@ router.post('/checkGamePassword', async (req, res) => {
 });
 
 router.patch('/room/:id/:type', auth, async (req, res) => {
+  console.log('Updating room action:', req.params);
   const { id, type } = req.params;
+  const userId = req.user._id;
+  const redisClient = req.app.get('redisClient');
 
-  // Validate type
   if (!['like', 'dislike', 'view'].includes(type)) {
     return res.status(400).json({ success: false, message: 'Invalid type' });
   }
 
   try {
-    // Define the update query
-    let updateQuery;
+    // 1. Find the room by its ID first
+    const room = await Room.findById(id);
 
-    if (type === 'view') {
-      // Views: Append user ID to views array (no toggle or conflict)
-      updateQuery = [
-        {
-          $set: {
-            views: {
-              $cond: [
-                { $in: [req.user._id, '$views'] },
-                '$views', // Already viewed, no change
-                { $concatArrays: ['$views', [req.user._id]] }, // Add user ID
-              ],
-            },
-          },
-        },
-      ];
-    } else {
-      // Likes or Dislikes: Toggle the action and remove from opposite array
-      const oppositeType = type === 'like' ? 'dislike' : 'like';
-      updateQuery = [
-        {
-          $set: {
-            // Toggle the current action (like/dislike)
-            [`${type}s`]: {
-              $cond: [
-                { $in: [req.user._id, `$${type}s`] },
-                { $setDifference: [`$${type}s`, [req.user._id]] }, // Remove user ID (unlike/undislike)
-                { $concatArrays: [`$${type}s`, [req.user._id]] }, // Add user ID (like/dislike)
-              ],
-            },
-            // Remove user from opposite array (dislikes/likes)
-            [`${oppositeType}s`]: {
-              $setDifference: [`$${oppositeType}s`, [req.user._id]],
-            },
-          },
-        },
-      ];
-    }
-
-    // Perform the update
-    const room = await Room.findOneAndUpdate({ _id: id }, updateQuery, {
-      new: true,
-    });
-
-    // Check if room exists
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
-    req.io.sockets.emit('ROOMS_UPDATED', room);
+
+    // 2. Modify the document in your JavaScript code
+    if (type === 'view') {
+      if (!room.views.includes(userId)) {
+        room.views.push(userId);
+      }
+    } else {
+      const oppositeType = type === 'like' ? 'dislikes' : 'likes';
+      const typeArray = type === 'like' ? 'likes' : 'dislikes';
+
+      // Check if the user has already performed this action
+      const alreadyDone = room[typeArray].includes(userId);
+
+      // Remove from the opposite array first, if present
+      const oppositeIndex = room[oppositeType].indexOf(userId);
+      if (oppositeIndex > -1) {
+        room[oppositeType].splice(oppositeIndex, 1);
+      }
+
+      // If the user already liked/disliked, this click removes it (toggle off)
+      if (alreadyDone) {
+        const index = room[typeArray].indexOf(userId);
+        room[typeArray].splice(index, 1);
+      } else {
+        // Otherwise, add the like/dislike (toggle on)
+        room[typeArray].push(userId);
+      }
+    }
+
+    // 3. Save the modified document. This is the crucial step that persists the changes.
+    const savedRoom = await room.save();
+    try {
+      await redisClient.del('rooms:All');
+
+      // Also invalidate the cache for each specific game type this room belongs to
+      if (Array.isArray(room.game_type)) {
+        for (const gameType of room.game_type) {
+          await redisClient.del(`rooms:${gameType}`);
+        }
+      } else {
+        await redisClient.del(`rooms:${room.game_type}`);
+      }
+    } catch (redisErr) {
+      console.error('Failed to invalidate cache:', redisErr);
+    }
+    // Now populate the necessary fields on the saved document before sending it back
+    const populatedRoom = await savedRoom.populate([
+      { path: 'hosts.host', select: 'username avatar elite accessory rank walletAddress' },
+      { path: 'joiners', select: 'username avatar elite accessory rank walletAddress' }
+    ]);
+
+
+    // 4. Emit the update via sockets
+    req.io.sockets.emit('ROOM_ACTION_UPDATED', {
+      roomId: populatedRoom._id,
+      likes: populatedRoom.likes,
+      dislikes: populatedRoom.dislikes,
+      views: populatedRoom.views,
+      type: type,
+      userId: req.user._id
+    });
+
+    // 5. Send the successful response
     res.json({
       success: true,
       message: 'Successful!',
+      room: populatedRoom
     });
+
   } catch (error) {
     console.error('Error updating room action:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -1954,7 +2108,7 @@ const getHistory = async (
   redisClient = null
 ) => {
   try {
-    
+
     const cacheKey = `history:all:${game_type_filter}`;
     let result = null,
       fromCache = false;
@@ -4083,72 +4237,20 @@ router.post('/getGlobalChatLogs', async (req, res) => {
       });
     }
 
-    // OPTIMIZED QUERY - Use aggregation pipeline for better performance
-    const results = await Chat.aggregate([
-      // Stage 1: Sort and limit first (most efficient)
-      {
-        $sort: { created_at: -1 }
-      },
-      {
-        $limit: 9
-      },
-      // Stage 2: Lookup sender data in one go
-      {
-        $lookup: {
-          from: 'rps_users',
-          localField: 'sender',
-          foreignField: '_id',
-          as: 'senderInfo',
-          pipeline: [
-            {
-              $project: {
-                username: 1,
-                avatar: 1,
-                accessory: 1,
-                elite: 1,
-                totalWagered: 1
-              }
-            }
-          ]
-        }
-      },
-      // Stage 3: Lookup reply sender data if exists
-      {
-        $lookup: {
-          from: 'rps_users',
-          localField: 'replyTo.sender',
-          foreignField: '_id',
-          as: 'replyToSenderInfo',
-          pipeline: [
-            {
-              $project: {
-                username: 1,
-                avatar: 1,
-                accessory: 1,
-                elite: 1,
-                totalWagered: 1
-              }
-            }
-          ]
-        }
-      },
-      // Stage 4: Project only needed fields
-      {
-        $project: {
-          message: 1,
-          messageType: 1,
-          messageContent: 1,
-          created_at: 1,
-          replyTo: 1,
-          senderInfo: { $arrayElemAt: ['$senderInfo', 0] },
-          replyToSenderInfo: { $arrayElemAt: ['$replyToSenderInfo', 0] }
-        }
-      }
-    ]);
+    // FIXED: Simpler query that matches your Chat schema structure
+    const results = await Chat.find({})
+      .populate({
+        path: 'sender',
+        select: 'username avatar accessory elite totalWagered'
+      })
+      .sort({ created_at: -1 })
+      .limit(9)
+      .lean(); // Use lean() for better performance
 
-    // FAST PROCESSING - Pre-calculate time strings
-    const now = new Date();
-    const chatLogs = results.map(chat => {
+
+    // Process the results to match the real-time socket structure
+    const chatLogs = results.map((chat, index) => {
+
       const createdTime = new Date(chat.created_at);
       const timeString = createdTime.toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -4157,40 +4259,39 @@ router.post('/getGlobalChatLogs', async (req, res) => {
       });
 
       const baseChat = {
-        sender: chat.senderInfo?.username || 'Unknown',
-        senderId: chat.senderInfo?._id || '',
+        id: chat._id.toString(), // Add unique ID for React keys
+        sender: chat.username || chat.sender?.username || 'Unknown', // Use username field first
+        senderId: chat.sender?._id?.toString() || chat.sender?.toString() || '',
         message: chat.message || '',
         messageType: chat.messageType || 'text',
         messageContent: chat.messageContent || '',
-        avatar: chat.senderInfo?.avatar || '',
-        accessory: chat.senderInfo?.accessory || '',
-        elite: chat.senderInfo?.elite || false,
-        rank: chat.senderInfo?.totalWagered || 0,
+        avatar: chat.sender?.avatar || '',
+        accessory: chat.sender?.accessory || '',
+        elite: chat.sender?.elite || false,
+        rank: chat.sender?.totalWagered || 0,
         time: timeString,
+        created_at: chat.created_at,
         replyTo: null
       };
 
-      // Process reply if exists
-      if (chat.replyTo?.[0] && chat.replyToSenderInfo) {
-        const reply = chat.replyTo[0];
-        const replyTime = reply.created_at ?
-          new Date(reply.created_at).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }) : reply.time || timeString;
+      // FIXED: Process replyTo to match socket structure
+      if (chat.replyTo && typeof chat.replyTo === 'object') {
 
+        // The replyTo is stored as an object with the structure from socket
         baseChat.replyTo = {
-          username: chat.replyToSenderInfo.username || 'Unknown',
-          senderId: chat.replyToSenderInfo._id || '',
-          avatar: chat.replyToSenderInfo.avatar || '',
-          rank: chat.replyToSenderInfo.totalWagered || 0,
-          accessory: chat.replyToSenderInfo.accessory || '',
-          elite: chat.replyToSenderInfo.elite || false,
-          message: reply.message || '',
-          messageType: reply.messageType || 'text',
-          time: replyTime
+          sender: chat.replyTo.sender || chat.replyTo.username, // Username for display
+          senderId: chat.replyTo.sender || chat.replyTo.senderId, // ID for references
+          username: chat.replyTo.username || chat.replyTo.sender,
+          avatar: chat.replyTo.avatar || '',
+          rank: chat.replyTo.rank || 0,
+          accessory: chat.replyTo.accessory || '',
+          elite: chat.replyTo.elite || false,
+          message: chat.replyTo.message || '',
+          messageType: chat.replyTo.messageType || 'text',
+          time: chat.replyTo.time || timeString,
+          created_at: chat.replyTo.created_at || chat.created_at
         };
+
       }
 
       return baseChat;
@@ -4207,7 +4308,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching global chat:', error);
+    console.error('❌ Error fetching global chat:', error);
     return res.status(500).json({
       success: false,
       message: 'Error fetching global chat'
@@ -4683,6 +4784,8 @@ router.post('/bet3', auth, async (req, res) => {
   while (retryCount < MAX_RETRIES) {
     try {
       const requestId = uuidv4();
+      const redisClient = req.app.get('redisClient');
+      const roomId = req.body._id;
 
       const [accessAllowed, betResult] = await Promise.all([
         check_access_time(req.user._id),
@@ -4700,6 +4803,21 @@ router.post('/bet3', auth, async (req, res) => {
         };
 
         return res.json(responseData);
+      }
+       if (betResult.success) {
+        // *** START: CACHE INVALIDATION LOGIC ***
+        try {
+          if (roomId) {
+            const keys = await redisClient.keys(`room:${roomId}:limit:*`);
+            
+            if (keys.length > 0) {
+              await redisClient.del(keys);
+              console.log(`✅ Invalidated ${keys.length} cache keys for room: ${roomId}`);
+            }
+          }
+        } catch (err) {
+            console.error('Redis cache invalidation failed:', err);
+        }
       }
 
       return res.json({

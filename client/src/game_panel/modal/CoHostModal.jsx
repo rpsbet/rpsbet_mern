@@ -436,7 +436,6 @@ function CoHostModal({
 
 
       try {
-        console.log('handleSendCoHostWithDeposit called with account:', account);
         // Call sendSolDeposit for non-Custom games
         const depositResult = await sendSolDeposit(
           dispatch,

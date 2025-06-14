@@ -4,56 +4,68 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 
 export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
-  // Local state for optimistic updates
   const [localLikes, setLocalLikes] = useState(row.likes || []);
   const [localDislikes, setLocalDislikes] = useState(row.dislikes || []);
+  // This state is the key to the solution
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Sync local state with row props when they change (e.g., Redux update)
   useEffect(() => {
     setLocalLikes(row.likes || []);
     setLocalDislikes(row.dislikes || []);
   }, [row.likes, row.dislikes]);
 
-  // Handle like with optimistic update
-  const onLike = (event) => {
+  const onLike = async (event) => {
     event.stopPropagation();
+    if (isProcessing) return; // Prevent clicks while processing
+
     const userId = user._id;
     const isLiked = localLikes.includes(userId);
 
-    // Optimistic update
-    setLocalLikes(
-      isLiked
-        ? localLikes.filter(id => id !== userId) // Unlike
-        : [...localLikes, userId] // Like
-    );
-    setLocalDislikes(localDislikes.filter(id => id !== userId)); // Remove from dislikes
+    const newLikes = isLiked
+      ? localLikes.filter(id => id !== userId)
+      : [...localLikes, userId];
+    const newDislikes = localDislikes.filter(id => id !== userId);
 
-    // Dispatch backend request and revert on failure
-    handleLike(row).catch(() => {
+    setLocalLikes(newLikes);
+    setLocalDislikes(newDislikes);
+    setIsProcessing(true); // <-- Set processing to true
+
+    try {
+      await handleLike(row);
+    } catch (error) {
       setLocalLikes(row.likes || []);
       setLocalDislikes(row.dislikes || []);
-    });
+      console.error('Like action failed:', error);
+    } finally {
+      setIsProcessing(false); // <-- Set back to false in a `finally` block
+    }
   };
 
-  // Handle dislike with optimistic update
-  const onDislike = (event) => {
+  const onDislike = async (event) => {
     event.stopPropagation();
+    if (isProcessing) return; // Prevent clicks while processing
+
     const userId = user._id;
     const isDisliked = localDislikes.includes(userId);
 
-    // Optimistic update
-    setLocalDislikes(
-      isDisliked
-        ? localDislikes.filter(id => id !== userId) // Undislike
-        : [...localDislikes, userId] // Dislike
-    );
-    setLocalLikes(localLikes.filter(id => id !== userId)); // Remove from likes
+    const newDislikes = isDisliked
+      ? localDislikes.filter(id => id !== userId)
+      : [...localDislikes, userId];
+    const newLikes = localLikes.filter(id => id !== userId);
 
-    // Dispatch backend request and revert on failure
-    handleDislike(row).catch(() => {
+    setLocalDislikes(newDislikes);
+    setLocalLikes(newLikes);
+    setIsProcessing(true); // <-- Set processing to true
+
+    try {
+      await handleDislike(row);
+    } catch (error) {
       setLocalLikes(row.likes || []);
       setLocalDislikes(row.dislikes || []);
-    });
+      console.error('Dislike action failed:', error);
+    } finally {
+      setIsProcessing(false); // <-- Set back to false in a `finally` block
+    }
   };
 
   // Calculate percentages for progress bar
@@ -69,6 +81,8 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
           onClick={onLike}
           size="small"
           aria-label="like"
+          disabled={isProcessing}
+          sx={{ opacity: isProcessing ? 0.6 : 1 }}
         >
           {localLikes.includes(user._id) ? (
             <Typography
@@ -89,32 +103,32 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
       {/* Progress Bar */}
       {totalVotes > 0 && (
         <Tooltip title={`${likesPercentage.toFixed(1)}% likes, ${dislikesPercentage.toFixed(1)}% dislikes`}>
-          <Box sx={{ 
-            display: 'flex', 
-            width: '40px', 
-            height: '4px', 
+          <Box sx={{
+            display: 'flex',
+            width: '40px',
+            height: '4px',
             borderRadius: '2px',
             overflow: 'hidden',
             bgcolor: '#e0e0e0', // Light gray background for empty state
             alignSelf: 'center'
           }}>
             {/* Likes portion */}
-            <Box 
-              sx={{ 
-                width: `${likesPercentage}%`, 
+            <Box
+              sx={{
+                width: `${likesPercentage}%`,
                 bgcolor: '#4CAF50', // Green for likes
                 height: '100%',
                 transition: 'width 0.3s ease'
-              }} 
+              }}
             />
             {/* Dislikes portion */}
-            <Box 
-              sx={{ 
-                width: `${dislikesPercentage}%`, 
+            <Box
+              sx={{
+                width: `${dislikesPercentage}%`,
                 bgcolor: '#F44336', // Red for dislikes
                 height: '100%',
                 transition: 'width 0.3s ease'
-              }} 
+              }}
             />
           </Box>
         </Tooltip>

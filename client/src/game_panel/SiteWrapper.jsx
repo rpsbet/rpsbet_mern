@@ -43,7 +43,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram } from '@fortawesome/free-brands-svg-icons';
 
 import {
-  AccountBalanceWallet,
   ArrowDropDown,
   ExitToApp,
   ManageAccounts,
@@ -56,10 +55,9 @@ import {
   Notifications as NotificationsIcon,
   NotificationsOff as NotificationsOffIcon,
   History as HistoryIcon,
-  TrendingUp,
 } from '@mui/icons-material';
 import WalletBalanceDisplay from '../components/WalletBalanceDisplay.jsx';
-import socketIOClient from 'socket.io-client';
+import socketClient from '../util/socketClient.js';
 import { formatDistanceToNow } from 'date-fns';
 import Avatar from '../components/Avatar.jsx';
 
@@ -145,9 +143,6 @@ const THEMES = {
   })
 };
 
-const RESTRICTED_COUNTRIES = ['UK'];
-
-// Optimized utility function - reduced complexity
 const updateFromNow = (items, timestampField = 'created_at') => {
   if (!items?.length) return [];
 
@@ -216,7 +211,6 @@ function SiteWrapper({ children }) {
   const isLoadingTransactions = useSelector(state => state.auth?.isLoadingTransactions ?? false);
   const transactionsLoaded = useSelector(state => state.auth?.transactionsLoaded ?? false);
 
-
   // Wallet balance selector - kept as is for wallet functionality
   const walletData = useSelector(state => {
     const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
@@ -241,9 +235,7 @@ function SiteWrapper({ children }) {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
-  const [showBankModal, setShowBankModal] = useState(false);
   const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
-  const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
   const [eliteModalOpen, setEliteModalOpen] = useState(false);
@@ -262,7 +254,6 @@ function SiteWrapper({ children }) {
   const needALoanRef = useRef(null);
   const intervalRef = useRef(null);
   const isUnmountedRef = useRef(false);
-  const socketRef = useRef(null);
   const initializationRef = useRef(false);
 
   // Stable endpoint - only calculate once
@@ -297,7 +288,6 @@ function SiteWrapper({ children }) {
 
   // FIXED: Handle Privy authentication state changes
   useEffect(() => {
-
     if (!privyReady) {
       // Privy is still initializing
       setAuthState(prev => ({ ...prev, isLoading: true, isReady: false }));
@@ -375,7 +365,7 @@ function SiteWrapper({ children }) {
     }
   }, []);
 
-  // Simplified socket handlers with better error handling
+  // UPDATED: Create socket handlers using the new socketClient
   const createSocketHandlers = useCallback(() => {
     return {
       handleSendChat: (data) => {
@@ -388,9 +378,9 @@ function SiteWrapper({ children }) {
           if (user?._id) {
             const pathSegments = location.pathname.split('/');
             if (location.pathname.startsWith('/chat/') && pathSegments[2] === data.from) {
-              socketRef.current?.emit('READ_MESSAGE', { to: user._id, from: data.from });
+              socketClient.markMessageAsRead(user._id, data.from);
             } else {
-              socketRef.current?.emit('REQUEST_UNREAD_MESSAGE_COUNT', { to: user._id });
+              socketClient.requestUnreadMessageCount(user._id);
             }
           }
         } catch (error) {
@@ -502,7 +492,7 @@ function SiteWrapper({ children }) {
       },
     };
   }, [
-    dispatch, user?._id, isMuted, notificationSounds, isNotificationsAllowed
+    dispatch, user?._id, isMuted, notificationSounds, isNotificationsAllowed, location.pathname
   ]);
 
   // Event handlers - simplified
@@ -512,9 +502,8 @@ function SiteWrapper({ children }) {
     }
   }, [anchorElProfile]);
 
-  // FIXED: Update logout function to work with Privy properly
+  // 3. Fixed logout function to properly disconnect socket
   const handleLogout = useCallback(async (clearToken) => {
-
     if (handleLogout.isLoggingOut) {
       return;
     }
@@ -525,26 +514,28 @@ function SiteWrapper({ children }) {
       // Step 1: Close UI elements first
       setAnchorElProfile(null);
 
-      // Step 2: Disconnect socket
-      if (socket) {
-        socket.disconnect();
+      // Step 2: Disconnect socket cleanly
+      try {
+        socketClient.disconnect();
+      } catch (socketError) {
+        console.warn('⚠️ Socket disconnect error:', socketError);
       }
 
-      // Step 3: Backend logout with proper error handling
+      // Step 3: Backend logout
       try {
         await dispatch(userSignOut(clearToken, navigate));
       } catch (backendError) {
         console.warn('⚠️ Backend logout failed, continuing...', backendError);
       }
 
-      // Step 4: Privy logout with error handling
+      // Step 4: Privy logout
       try {
         await privyLogout();
       } catch (privyError) {
         console.error('❌ Privy logout failed:', privyError);
       }
 
-      // Step 5: Force cleanup to ensure consistent state
+      // Step 5: Force cleanup
       if (clearToken) {
         localStorage.removeItem('token');
         localStorage.removeItem('isAuthenticated');
@@ -562,7 +553,7 @@ function SiteWrapper({ children }) {
       // Clear Redux state
       dispatch({ type: 'LOGOUT' });
 
-      // Navigate to home (but don't force redirect)
+      // Navigate to home
       if (location.pathname !== '/') {
         navigate('/', { replace: true });
       }
@@ -571,7 +562,7 @@ function SiteWrapper({ children }) {
       console.error('❌ Logout error, forcing cleanup:', error);
 
       // Force cleanup even if there's an error
-      if (socket) socket.disconnect();
+      socketClient.disconnect();
 
       if (clearToken) {
         localStorage.removeItem('token');
@@ -594,7 +585,13 @@ function SiteWrapper({ children }) {
     } finally {
       handleLogout.isLoggingOut = false;
     }
-  }, [dispatch, navigate, socket, privyLogout, location.pathname]);
+  }, [dispatch, navigate, privyLogout, location.pathname]);
+
+  window.socketDebug = () => {
+    const status = socketClient.getConnectionStatus();
+
+    return status;
+  };
 
   const handlePortfolio = useCallback(() => {
     navigate('/portfolio');
@@ -626,7 +623,6 @@ function SiteWrapper({ children }) {
     }
   }, [dispatch, transactionsLoaded, isLoadingTransactions]);
 
-
   // Notifications click handler
   const handleNotificationsClick = (e) => {
     e.preventDefault();
@@ -645,22 +641,32 @@ function SiteWrapper({ children }) {
         // Initialize basic functionality
         document.addEventListener('mousedown', handleClickOutside);
 
-        // Start loading data in background (non-blocking)
-        setTimeout(() => {
-          // Load global data with error handling
-          Promise.allSettled([
-            dispatch(getGlobalChatLogs()),
-            dispatch(getHistory()),
-            authState.isAuthenticated && user?._id ? dispatch(getNotifications()) : Promise.resolve()
-          ]).catch(console.error);
+        // Connect socket in background AFTER UI is ready
+        setTimeout(async () => {
+          try {
+            const socket = await socketClient.connect(endpoint);
 
-          // Initialize audio after everything else
+            if (socket) {
+              dispatch(setSocket(socket));
+            }
+          } catch (socketError) {
+            console.error('❌ Socket connection failed during init:', socketError);
+            // Don't block the app if socket fails
+          }
+          // Load initial data
+          try {
+            await Promise.allSettled([
+              dispatch(getGlobalChatLogs()),
+              dispatch(getHistory()),
+              authState.isAuthenticated && user?._id ? dispatch(getNotifications()) : Promise.resolve()
+            ]);
+          } catch (dataError) {
+            console.error('⚠️ Failed to load initial data:', dataError);
+          }
+
+          // Initialize audio
           initializeAudio().catch(console.warn);
-        }, 50); // Small delay to let UI render first
-
-        if (location.pathname.startsWith('/play')) {
-          setTokenModalOpen(false);
-        }
+        }, 100); // Small delay to let UI render
 
       } catch (error) {
         console.error('❌ App initialization error:', error);
@@ -678,137 +684,99 @@ function SiteWrapper({ children }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id]);
+  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id, endpoint, dispatch]);
 
-  // Handle balance changes - simple effect
-  useEffect(() => {
-    setShowNegativeBalanceDialog(balance < 0);
-  }, [balance]);
 
-  // Socket connection management - only connect once
   useEffect(() => {
-    if (!isInitialized || socketRef.current) return;
-    console.log('🔧 Starting socket connection...');
-    console.log('🔧 Endpoint:', endpoint);
-    console.log('🔧 isInitialized:', isInitialized);
-    console.log('🔧 socketRef.current:', socketRef.current);
+    if (!isInitialized || !authState.hasCheckedAuth) return;
 
     let isMounted = true;
+    let socketConnectionRef = null;
 
-    const connectSocket = () => {
-      console.log('🔧 Creating socket connection to:', endpoint);
-
+    const connectSocket = async () => {
       try {
-        const newSocket = socketIOClient(endpoint, {
-          transports: ['websocket', 'polling'],
-          withCredentials: true,
-          forceNew: false,
-          timeout: 20000,
-          reconnection: true,
-          reconnectionAttempts: 5,
-          reconnectionDelay: 1000,
-        });
+        // Don't create multiple connections
+        if (socketClient.getConnectionStatus().isConnected) {
+          return;
+        }
 
-        socketRef.current = newSocket;
+        socketConnectionRef = await socketClient.connect(endpoint);
 
-        newSocket.on('connect', () => {
-          if (isMounted) {
-            console.log('✅ Frontend: Socket connected successfully');
-            console.log('✅ Socket ID:', newSocket.id);
-            console.log('✅ Transport:', newSocket.io.engine.transport.name);
-            dispatch(setSocket(newSocket));
-          }
-        });
+        if (socketConnectionRef && isMounted) {
+          dispatch(setSocket(socketConnectionRef));
+        }
 
-        newSocket.on('disconnect', () => {
-          console.log('🔌 Socket disconnected');
-        });
-
-        newSocket.on('connect_error', (error) => {
-          console.error('❌ Socket connection error:', error);
-        });
-
-        return newSocket;
       } catch (error) {
         console.error('❌ Socket connection failed:', error);
-        return null;
+        // Don't retry immediately to prevent loops
+        if (isMounted) {
+          setTimeout(() => {
+            if (isMounted && !socketClient.getConnectionStatus().isConnected) {
+              connectSocket();
+            }
+          }, 3000); // Wait 3 seconds before retry
+        }
       }
     };
 
-    const socket = connectSocket();
+    connectSocket();
 
     return () => {
       isMounted = false;
-      if (socket) {
-        socket.disconnect();
-        socketRef.current = null;
-      }
+      // Don't disconnect here - let other effects handle cleanup
     };
-  }, [isInitialized, endpoint, dispatch]);
+  }, [isInitialized, authState.hasCheckedAuth, endpoint, dispatch]);
 
-  // Global socket events - separate from user events
   useEffect(() => {
-    const currentSocket = socketRef.current;
-    if (!currentSocket || !currentSocket.connected) return;
+    if (!socket?.id || !socket.connected) {
+      return;
+    }
 
     const handlers = createSocketHandlers();
 
-    const globalEvents = {
-      'ONLINE_STATUS_UPDATED': handlers.handleOnlineStatusUpdated,
-      'GLOBAL_CHAT_RECEIVED': handlers.handleGlobalChat,
-      'ROOMS_UPDATED': handlers.handleUpdatedRoomList,
-      'ROOM_ENDED': handlers.handleRoomEnded,
-    };
-
-    // Add event listeners
-    Object.entries(globalEvents).forEach(([event, handler]) => {
-      if (handler) {
-        currentSocket.on(event, handler);
-      }
-    });
+    try {
+      socketClient.setupGlobalHandlers(handlers);
+    } catch (error) {
+      console.error('❌ Failed to setup global handlers:', error);
+    }
 
     return () => {
-      // Remove event listeners
-      Object.keys(globalEvents).forEach(event => {
-        currentSocket.off(event);
-      });
+      try {
+        // Don't clear all handlers, just the global ones
+        if (socketClient.socket?.id === socket.id) {
+          socketClient.clearHandlers();
+        }
+      } catch (error) {
+        console.error('❌ Error cleaning up handlers:', error);
+      }
     };
-  }, [createSocketHandlers]);
+  }, [socket?.id]);  // Use socket.id to detect actual socket changes
 
-  // User-specific socket events
+  // UPDATED: User-specific socket events
   useEffect(() => {
-    const currentSocket = socketRef.current;
-    
-    if (!currentSocket || !user?._id || !currentSocket.connected) return;
+    if (!user?._id || !socket?.id || !socket.connected) {
+
+      return;
+    }
+
+    const handlers = createSocketHandlers();
 
     try {
-      currentSocket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
-
-      const handlers = createSocketHandlers();
-      const userEvents = {
-        'SEND_CHAT': handlers.handleSendChat,
-        [`RECEIVED_LOAN_OFFER_${user._id}`]: handlers.handleLoanOffer,
-        'UPDATE_BET_RESULT': handlers.handleBetResult,
-        'SEND_NOTIFICATION': handlers.handleSendNotification,
-        'NEW_TRANSACTION': handlers.handleAddTransaction,
-        'SET_UNREAD_MESSAGE_COUNT': handlers.handleUnreadCount,
-      };
-
-      Object.entries(userEvents).forEach(([event, handler]) => {
-        if (handler) {
-          currentSocket.on(event, handler);
-        }
-      });
-
-      return () => {
-        Object.keys(userEvents).forEach(event => {
-          currentSocket.off(event);
-        });
-      };
+      socketClient.setupUserHandlers(user._id, handlers);
     } catch (error) {
-      console.error('Error setting up user socket events:', error);
+      console.error('❌ Failed to setup user handlers:', error);
     }
-  }, [user?._id, createSocketHandlers]);
+
+    return () => {
+      try {
+        if (socketClient.socket?.id === socket.id) {
+          socketClient.clearUserHandlers(user._id);
+        }
+      } catch (error) {
+        console.error('❌ Error cleaning up user handlers:', error);
+      }
+    };
+  }, [user?._id, socket?.id]);
 
   // Render functions for complex UI parts
   const renderRestrictedCountryDialog = () => (
@@ -917,56 +885,6 @@ function SiteWrapper({ children }) {
     </Dialog>
   );
 
-  const renderNegativeBalanceDialog = () => (
-    <Dialog
-      open={showNegativeBalanceDialog}
-      disableEscapeKeyDown
-      BackdropProps={{
-        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
-        onClick: (e) => e.stopPropagation(),
-      }}
-      PaperProps={{
-        sx: {
-          backgroundColor: '#0a0a0a',
-          color: '#fff',
-        },
-      }}
-    >
-      <DialogTitle sx={{ color: '#fff' }}>
-        Account Under Review
-      </DialogTitle>
-      <DialogContent>
-        <Typography variant="body1" sx={{ color: '#fff' }}>
-          Your profile is currently under review due to breaking our terms of service.
-          We cannot give any details at this moment. Your balance is to be negative
-          during this verification period.
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#ccc', mt: 1 }}>
-          Need assistance? Contact us via:
-        </Typography>
-        <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-            onClick={() => window.open("https://x.com/catsinofun", "_blank")}
-          >
-            X
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<FontAwesomeIcon icon={faTelegram} />}
-            onClick={() => window.open("https://t.me/catsinofun", "_blank")}
-          >
-            Telegram
-          </Button>
-        </Box>
-      </DialogContent>
-    </Dialog>
-  );
-
-  // Compact Profile Menu with Red Theme - No Animations
   const renderProfileMenu = () => (
     <Menu
       anchorEl={anchorElProfile}
@@ -1650,7 +1568,6 @@ function SiteWrapper({ children }) {
     <ThemeProvider theme={theme}>
       {showCookieConsent && <CookieConsent />}
 
-      {renderNegativeBalanceDialog()}
       {renderRestrictedCountryDialog()}
 
       <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>

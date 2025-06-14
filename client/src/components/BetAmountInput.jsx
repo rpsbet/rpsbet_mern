@@ -1,9 +1,8 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Button, InputAdornment, TextField, Box } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../config/theme';
 import { debounce } from 'lodash';
-import sol from '../game_panel/icons/sol.png';
 
 export default function BetAmountInput(props) {
   const {

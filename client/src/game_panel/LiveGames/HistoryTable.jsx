@@ -59,29 +59,29 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
 
- // Get the most recent history item
-useEffect(() => {
-  // Handle different data structures
-  let historyArray = [];
-  
-  if (history) {
-    if (Array.isArray(history)) {
-      historyArray = history;
-    } else if (typeof history === 'object' && history._id) {
-      // Single history object - convert to array
-      historyArray = [history];
-    } else if (history.history && Array.isArray(history.history)) {
-      // History wrapped in an object with history property
-      historyArray = history.history;
+  // Get the most recent history item
+  useEffect(() => {
+    // Handle different data structures
+    let historyArray = [];
+
+    if (history) {
+      if (Array.isArray(history)) {
+        historyArray = history;
+      } else if (typeof history === 'object' && history._id) {
+        // Single history object - convert to array
+        historyArray = [history];
+      } else if (history.history && Array.isArray(history.history)) {
+        // History wrapped in an object with history property
+        historyArray = history.history;
+      }
     }
-  }
-  
-  if (historyArray.length > 0) {
-    setLatestItem(historyArray[0]); // Get the first (most recent) item
-  } else {
-    setLatestItem(null); // Clear if no history
-  }
-}, [history]);
+
+    if (historyArray.length > 0) {
+      setLatestItem(historyArray[0]); // Get the first (most recent) item
+    } else {
+      setLatestItem(null); // Clear if no history
+    }
+  }, [history]);
 
   // Socket event handler for new logs
   const handleNewLog = useCallback((data) => {
@@ -89,7 +89,7 @@ useEffect(() => {
     if (!newLogArray || !Array.isArray(newLogArray) || newLogArray.length === 0) return;
 
     const [firstLog] = newLogArray;
-    
+
     // Highlight room briefly
     if (firstLog?.room?._id) {
       dispatch(setHighlightedRooms([firstLog.room._id]));
@@ -102,11 +102,12 @@ useEffect(() => {
 
   // Set up socket connection
   useEffect(() => {
-    if (socket) {
-      socket.on('NEW_LOG', handleNewLog);
-    }
+    if (!socket || typeof socket.on !== 'function') return;
+
+    socket.on('NEW_LOG', handleNewLog);
+
     return () => {
-      if (socket) {
+      if (socket && typeof socket.off === 'function') {
         socket.off('NEW_LOG', handleNewLog);
       }
     };
@@ -320,10 +321,10 @@ useEffect(() => {
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
           {buildMessage(latestItem)}
         </Box>
-        
-        <Typography 
-          variant="caption" 
-          sx={{ 
+
+        <Typography
+          variant="caption"
+          sx={{
             color: 'rgba(255, 255, 255, 0.6)',
             fontSize: '0.65rem',
             fontWeight: 500,

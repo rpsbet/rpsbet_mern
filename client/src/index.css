@@ -15,55 +15,6 @@
 /*****************/
 /*** ANIMATIONS **/
 /*****************/
-.fade-in {
-  opacity: 1;
-  transition: opacity 0.1s;
-}
-
-.fade-out {
-  opacity: 0;
-  transition: opacity 0.1s;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes fade {
-  from {
-    filter: brightness(1);
-  }
-
-  to {
-    filter: brightness(1.5);
-  }
-}
-
-@keyframes move-diagonal {
-  from {
-    transform: translate(-25%, -25%);
-  }
-
-  to {
-    transform: translate(25%, 25%);
-  }
-}
 
 @keyframes ticker {
   0% {
@@ -177,24 +128,6 @@ a:hover {
   transform: translateY(20px) rotate(180deg) !important;
 }
 
-#rps-radio div {
-  transform: rotate(180deg) !important;
-  margin-top: -60px;
-  opacity: 0.5;
-  pointer-events: none;
-  padding: 0 15px;
-  margin: 10px 4px 8px;
-  background-image: url('../public/img/rps-logo-white.svg');
-  background-repeat: no-repeat;
-  background-position: center;
-  border-radius: 8px;
-  background-color: #d81719;
-  box-shadow:
-    0 10px 27px rgb(255 0 0 / 10%),
-    inset 0 -3px #af0000,
-    inset 0 2px #ff2525;
-}
-
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 #rps-radio div.active {
@@ -208,22 +141,6 @@ a:hover {
 .hover-text-button:hover {
   width: 200px;
 }
-
-#rps-radio div.active {
-  background-color: transparent;
-  border-radius: 8px;
-  border: 2px solid #ff0000;
-  box-shadow: none !important;
-}
-
-#balance button:hover,
-.game_header .main_header .header_action_panel button#btn-login:hover,
-.btn-create-room:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-  transition: 0.1s;
-}
-
 .cookie-banner {
   position: fixed;
   bottom: 20px;
@@ -422,18 +339,6 @@ h4.game_header {
 	fill: transparent !important;
 }
 
-.dark_mode .modal-body .modal-icon.alert-icon {
-	background-image: url("../public/img/icons/dark-alert-icon.svg");
-}
-
-.dark_mode .modal-body .modal-icon.result-icon-password {
-	background-image: url("../public/img/icons/dark-result-icon-password.svg");
-}
-
-.dark_mode .modal-body .modal-icon.result-icon-trade {
-	background-image: url("../public/img/icons/dark-result-icon-trade.svg");
-}
-
 .dark_mode div.main-page-nav-button-group button svg {
 	filter: unset;
 }
@@ -442,6 +347,178 @@ h4.game_header {
 	border: unset;
 }
 
+
+.statistics-panel h5 {
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.statistics-panel table {
+  width: 100%;
+  display: table;
+}
+.statistics-paneltbody tr td {
+  text-transform: uppercase;
+  padding: 0.5rem;
+}
+.statistics-panel .label {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #e9e9e9;
+  width: 40%;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+.statistics-panel .value {
+    color: #ff8500;
+    font-size: 1.1em;
+    white-space: nowrap;
+}
+/* Outer container */
+.custom-progress-bar-outer {
+  width: 300px;              /* Make the bar wider */
+  height: 20px;              /* Taller for easier readability */
+  background: #3f3f3f;       /* A dark grey background for unfilled portion */
+  border-radius: 10px;       /* Smooth corners */
+  position: relative;
+  margin: 0 auto;            /* Center horizontally (optional) */
+  overflow: hidden;          /* Hide overflow of the filled portion's corners */
+}
+
+/* Filled portion */
+.custom-progress-bar-filled {
+  height: 100%;
+  background: linear-gradient(90deg, #cc00ff, #ff00cc); 
+  /* or any gradient you like */
+  transition: width 0.4s ease;
+}
+
+/* Single label, absolutely centered */
+.custom-progress-bar-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: bold;
+  pointer-events: none; /* So clicks pass through */
+  z-index: 2;
+}
+
+/* Ranks below the bar, spaced out */
+.custom-rank-row {
+  display: flex;
+  justify-content: space-between;
+  width: 300px; /* match bar width */
+  margin: 4px auto 0; /* small top margin, auto to center horizontally */
+  font-weight: bold;
+  color: #ff8500; /* or your chosen color */
+  font-size: 0.9rem;
+}
+
+/* Example left vs. right styling (optional) */
+.custom-rank-left, .custom-rank-right {
+  min-width: 20px;
+  margin-top: -20px;
+  text-align: center;
+  z-index: 1;
+}
+
+.rank-indicators {
+  display: flex;
+  justify-content: space-between;
+}
+.rank-indicators div{
+  margin-top: -5px !important;
+ padding: 4px;
+ border-radius: 50%;
+ box-shadow:  0 0 4px #f9f9f972;
+}
+
+.progress-label-left {
+  left: 5px !important;
+}
+
+.progress-label-right {
+  right: 5px !important;
+}
+.rank-indicators .rank-minus-one {
+  transform: translateX(-20px) !important;
+  
+}
+.rank-indicators .rank-plus-one {
+  transform: translateX(20px) !important;
+
+}
+.progress-bar-filled {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  background: linear-gradient(#c73434, #9e0000) !important; /* Green to teal */
+}
+
+.progress-bar-filled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0px;
+  height: 0;
+  border-style: solid;
+  border-width: 0px 2px 20px 4px;
+  border-color: #c7343480; /* Green with 50% opacity */
+  z-index: 3;
+}
+
+.progress-bar-remaining {
+  height: 100%;
+  background: linear-gradient(#4A5A6A, #080808) !important; /* Gray-blue to background */
+  position: relative;
+  z-index: 1;
+  float: right;
+  margin-top: -10px !important;
+}
+
+.statistics-panel {
+  margin-bottom: 20px;
+}
+
+
+.room-link {
+  z-index: 9;
+  background-color: rgba(0, 0, 0, 0.5);
+  margin: auto !important;
+  transform: translateY(-200%);
+  display: block !important;
+}
+
+.statistics-panel .loading {
+  text-align: center;
+  font-style: italic;
+  color: gray;
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateX(-20%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.statistics-panel {
+  margin: 30px 0;
+}
+.statistics-panel .filters {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.statistics-panel div {
+  margin: 5px;
+}
 
 
 /*********************************/
@@ -532,19 +609,6 @@ div.table.main-history-table .table-row > div > .room-id {
 td {
   border-bottom: 1px solid #33333333;
 }
-
-#ai_mode {
-  border: 1px solid #fe3b3b;
-  border-radius: 8px;
-  color: #ff8a8a;
-  font-size: 0.5em !important;
-  padding: 2px 4px;
-  background: linear-gradient(45deg, #a341418c, #ff181887);
-}
-#ai_mode svg{
-  fill: #ff0003;
-}
-
 
 .history-row .player .avatar,
 .room img.game-type-icon {
@@ -671,24 +735,6 @@ button.win-bg {
   filter: unset !important;
 }
 
-.game-page .game-contents .qs-buttons button.ball {
-  background: url('../public/img/football.svg') !important;
-  background-size: 30px !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-}
-
-/* .rock {
-  background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d573ef16953e6b2f5828e_Rock.svg') !important;
-}
-
-.paper {
-  background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d57421c911684423e8848_Paper.svg') !important;
-}
-
-.scissors {
-  background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d5739333d096545f81475_Scissors.svg') !important;
-} */
 
 div {
   -ms-overflow-style: none;
@@ -827,65 +873,6 @@ svg#delete:hover {
   cursor: pointer;
   padding: 0.5px;
   transition: 0.2s;
-}
-
-
-#rps-radio {
-  display: flex;
-  flex-direction: row;
-  text-align: center;
-}
-
-#rps-radio button,
-#rps-radio div {
-  background-position: center !important;
-  background-size: contain !important;
-  background-repeat: no-repeat !important;
-  width: 72px;
-  margin: 0 4px;
-  height: 120px !important;
-  cursor: pointer;
-}
-
-#rps-radio button:hover {
-  filter: brightness(1.1);
-  transform: translateY(-4px);
-}
-
-#rps-radio button:before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  border-radius: 12px;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.1);
-  transform: rotateX(90deg) translateZ(25px);
-  opacity: 0;
-  transition: all 0.1s ease-in-out;
-}
-
-#rps-radio button.active {
-  transition: 0.1s;
-  transform: translateY(-10px) !important;
-}
-
-#rps-radio button:hover:before {
-  opacity: 1;
-  transform: rotateX(0deg) translateZ(25px);
-}
-
-#rps-radio .rock {
-  background-image: url('../public/img/rock.gif') !important;
-}
-
-#rps-radio .paper {
-  background-image: url('../public/img/paper.gif') !important;
-}
-
-#rps-radio .scissors {
-  background-image: url('../public/img/scissors.gif') !important;
 }
 
 .settings tr td:last-child {
@@ -1172,7 +1159,6 @@ svg#delete:hover {
 
 .mat-chat .chat-wrapper {
   overflow: hidden;
-  width: 260px;
   height: 100%;
 }
 
@@ -1351,80 +1337,6 @@ svg {
 
 .btn {
   transition: 0.1s ease-in-out;
-}
-
-.join-game-panel .qs-image-panel {
-  position: relative;
-  height: 230px;
-}
-
-
-#cat-football {
-  position: absolute;
-}
-
-#quickShoot_lottie {
-  position: absolute;
-  margin: 0 !important;
-}
-
-.join-game-panel .qs-buttons button {
-  opacity: 1;
-  transform: scale(3);
-}
-
-.game-page .game-contents .game-info-panel .qs-buttons button {
-  position: absolute !important;
-  background: #ff0019;
-  color: #fff !important;
-  width: 2.75rem !important;
-  background-image: unset !important;
-  height: 2.75rem !important;
-  border-radius: 50% !important;
-  margin: 0 !important;
-  border: 3px solid #ddd;
-}
-
-button#l {
-  transform: translate(-118px, -12px);
-}
-
-/* Right button */
-button#r {
-  transform: translate(74px, -12px);
-}
-
-button#tr {
-  right: 21%;
-  transform: translateY(-90px);
-}
-
-button#tl {
-  left: 20.85%;
-  transform: translateY(-90px);
-}
-
-button#c {
-  left: 45%;
-  transform: translateY(-50px);
-}
-
-button#br {
-  right: 21%;
-  transform: translateY(-10px);
-}
-
-button#bl {
-  left: 20.95%;
-  transform: translateY(-10px);
-}
-
-#busd {
-  margin-top: -1px;
-  margin-left: 4px;
-  margin-right: 2px;
-  width: 0.7em;
-  height: 0.7em;
 }
 
 .cell-joiners .avatar {
@@ -1704,7 +1616,7 @@ circle {
 }
 
 .payout-bar .value {
-  background: linear-gradient(45deg, #9f0c0c, #f13595);
+  background: linear-gradient(45deg, #9f0c0c, #f13535);
   height: 100%;
 }
 
@@ -1989,19 +1901,6 @@ circle {
 /***** ALERT MODAL ****/
 /**********************/
 
-.react-confirm-alert .modal-body.alert-body {
-  border-radius: 0.5em !important;
-}
-
-.password-modal-body {
-  text-align: center !important;
-}
-
-.react-confirm-alert .modal-footer {
-  border-top: unset !important;
-  background: unset !important;
-}
-
 
 .modal-body .modal-icon {
   height: 72px;
@@ -2018,26 +1917,6 @@ circle {
 
 .modal-body.result-body .modal-icon {
   margin-bottom: 0 !important;
-}
-
-.modal-body .modal-icon.result-icon-prize {
-  background-image: url('../public/img/icons/alert-prize-icon.svg');
-}
-
-.modal-body .modal-icon.alert-icon {
-  background-image: url('../public/img/icons/alert-icon.svg');
-}
-
-#interest {
-  color: rgb(0, 255, 58) !important;
-}
-
-.modal-body .modal-icon.result-icon-password {
-  background-image: url('../public/img/icons/result-icon-password.svg');
-}
-
-.modal-body .modal-icon.result-icon-trade {
-  background-image: url('../public/img/icons/result-icon-trade.svg');
 }
 
 .modal-body.alert-body button.btn-close {
@@ -2339,10 +2218,6 @@ circle {
     height: 40px;
   }
 
-  #quickShoot_lottie div {
-    height: 156px !important;
-  }
-
   .game-info-panel table th:last-child {
     border-color: #282a2d !important;
     background: none;
@@ -2581,13 +2456,6 @@ circle {
     padding-bottom: 90px;
   }
 
-  .mat-chat .chat-wrapper {
-    width: 100vw !important;
-    overflow: auto;
-    overscroll-behavior-y: none;
-    flex: 1;
-  }
-
   .bottom-footer {
     margin-left: unset !important;
   }
@@ -2626,65 +2494,6 @@ circle {
     overflow-y: scroll;
   }
 
-  .qs-buttons button {
-    position: absolute !important;
-    color: #fff !important;
-    width: 2.75rem !important;
-    height: 2.75rem !important;
-    border-radius: 50% !important;
-    margin: 0 !important;
-    transform: scale(0.7);
-  }
-
-  .qs-buttons button:hover,
-  .qs-buttons button:focus {
-    transform: scale(0.7);
-  }
-
-  button#tr {
-    right: 19%;
-    transform: translateY(-73px);
-  }
-
-  button#tl {
-    left: 19%;
-    transform: translateY(-73px);
-  }
-
-  button#c {
-    left: 43%;
-    transform: translateY(-43px);
-  }
-
-  button#l {
-    transform: translate(-100px, -15px);
-  }
-
-  button#r {
-    transform: translate(56px, -15px);
-  }
-
-  button#br {
-    right: 19%;
-    transform: translateY(-14px);
-  }
-
-  button#bl {
-    left: 19%;
-    transform: translateY(-14px);
-  }
-
-  .game-info-panel .qs-image-panel {
-    width: 286px;
-  }
-
-  .join-game-panel .qs-image-panel {
-    height: 180px;
-  }
-
-  .game-info-panel .qs-image-panel img {
-    height: unset !important;
-  }
 
   .chat-input-panel .form-control {
     margin-bottom: 10px;
@@ -2713,10 +2522,6 @@ circle {
     margin-right: -6px;
   }
 
-  .chat-wrapper .chat-input-panel {
-    border-top: 1px solid #111;
-  }
-
 
   .chat {
     width: 100vw;
@@ -2737,10 +2542,4 @@ circle {
     height: unset;
   }
 
-  .chat-wrapper .chat-input-panel {
-    width: 100%;
-    z-index: 1;
-    bottom: 70px;
-    background-color: #0f0f0f;
-  }
 }

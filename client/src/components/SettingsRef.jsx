@@ -48,7 +48,6 @@ import { green, yellow, blue, grey } from '@mui/material/colors';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChatIcon from '@mui/icons-material/Chat';
 import axios from '../util/Api';
-import * as Babel from '@babel/standalone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faDice,
@@ -198,12 +197,10 @@ const SettingsRef = ({
     const loadPhysicsOnMount = async () => {
       setIsPhysicsLoading(true);
       try {
-        console.log('[SettingsRef] Loading Matter.js on page load');
         const matterModule = await loadPhysics();
         if (!matterModule || !matterModule.World || !matterModule.Engine) {
           throw new Error('Matter.js loaded but missing required properties');
         }
-        console.log('[SettingsRef] Matter.js loaded successfully:', matterModule);
         setPhysics(matterModule);
       } catch (error) {
         console.error('[SettingsRef] Failed to load Matter.js:', error.message, error.stack);
@@ -288,7 +285,7 @@ const SettingsRef = ({
           systemPrompt,
           userPrompt: 'Filter comments and generate suggested prompts based on the provided game code and comments.',
         });
-        const { filteredComments = [], suggestions = [] } = response.data || {};
+
         setSuggestedPrompts(suggestions);
         setHasGeneratedSuggestions(true);
       } catch (error) {
@@ -332,7 +329,6 @@ const SettingsRef = ({
   }, [initialGameCode, initialProxiedAssets, rowName, creator_prompt, prompt, setGameCode, setProxiedAssets]);
 
   useEffect(() => {
-    console.log('[SettingsRef] Initializing game generation with creator prompt:', creator_prompt); 
     if (creator_prompt && !hasGenerated && !gameLoading && !saving && !initialGameCode && !initialProxiedAssets) {
       setLocalPrompt(creator_prompt);
       handleGenerateClick();
@@ -344,159 +340,66 @@ const SettingsRef = ({
     if (initialGameCode && Physics && !isPhysicsLoading) {
       let isMounted = true;
       setComponentError(null);
-      console.log('[Raw initialGameCode]', initialGameCode);
-  
+
       const processGameCode = async () => {
         try {
           if (!Physics || !Physics.World) {
             throw new Error('Matter.js not loaded or missing World property');
           }
-  
-          let cleanedCode = initialGameCode
-            .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
-            .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-            .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
-            .replace(/export\s+[\w\s]*?\s*;?/g, '')
-            .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-            .trim();
-          console.log('[Cleaned Code]', cleanedCode);
-  
-          const babelHelpers = `
-            function _defineProperty(obj, key, value) {
-              if (key in obj) {
-                Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
-              } else {
-                obj[key] = value;
-              }
-              return obj;
-            }
-            function _slicedToArray(arr, i) {
-              return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
-            }
-            function _arrayWithHoles(arr) {
-              if (Array.isArray(arr)) return arr;
-            }
-            function _iterableToArrayLimit(arr, i) {
-              var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
-              if (_i == null) return;
-              var _arr = [];
-              var _n = true;
-              var _d = false;
-              var _s, _e;
-              try {
-                for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
-                  _arr.push(_s.value);
-                  if (i && _arr.length === i) break;
-                }
-              } catch (err) {
-                _d = true;
-                _e = err;
-              } finally {
-                try {
-                  if (!_n && _i["return"] != null) _i["return"]();
-                } finally {
-                  if (_d) throw _e;
-                }
-              }
-              return _arr;
-            }
-            function _unsupportedIterableToArray(o, minLen) {
-              if (!o) return;
-              if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-              var n = Object.prototype.toString.call(o).slice(8, -1);
-              if (n === "Object" && o.constructor) n = o.constructor.name;
-              if (n === "Map" || n === "Set") return Array.from(o);
-              if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-            }
-            function _arrayLikeToArray(arr, len) {
-              if (len == null || len > arr.length) len = arr.length;
-              for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-              return arr2;
-            }
-            function _nonIterableRest() {
-              throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-            }
-            function _objectSpread(target) {
-              for (var i = 1; i < arguments.length; i++) {
-                var source = arguments[i] != null ? arguments[i] : {};
-                var ownKeys = Object.keys(source);
-                if (typeof Object.getOwnPropertySymbols === 'function') {
-                  ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-                    return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-                  }));
-                }
-                ownKeys.forEach(function (key) {
-                  _defineProperty(target, key, source[key]);
-                });
-              }
-              return target;
-            }
-          `;
-  
-          let transpiledCode;
+
+          // The code from backend is already transpiled - execute it directly
+          let GeneratedApp;
+
           try {
-            transpiledCode = Babel.transform(cleanedCode, {
-              presets: ['react', ['env', { modules: false, targets: { browsers: ['last 2 versions'] } }]],
-              filename: 'app.jsx',
-            }).code;
-            transpiledCode = `${babelHelpers}\n${transpiledCode}`;
-          } catch (babelError) {
-            console.error('[Babel Transpile Error]', babelError);
-            throw new Error(`Babel transpilation failed: ${babelError.message}`);
+            // Execute the component factory function
+            const componentFactory = eval(initialGameCode);
+
+            // Call the factory with all dependencies
+            GeneratedApp = componentFactory(
+              React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
+              Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
+              Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+              TableContainer, Table, TableBody, TableHead, TableCell, TableRow,
+              faDice, faCoins, faRocket, faChevronDown, faGem, faSpinner, faCogs, faExchangeAlt,
+              faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faPlay, faHome, Physics,
+              Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence, IconButton,
+              Container, Badge, Snackbar, Alert, DialogContentText, DialogActions, Zoom, Grow,
+              faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle,
+              faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull,
+              faClock, faBolt, initialProxiedAssets, faQuestionCircle
+            );
+          } catch (evalError) {
+            console.error('[SettingsRef] Error executing component factory:', evalError);
+            throw new Error(`Failed to execute transpiled code: ${evalError.message}`);
           }
-  
-          const componentFactory = new Function(
-            'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'useAnimation',
-            'Grid', 'Box', 'Typography', 'TextField', 'Button', 'Slider', 'Dialog', 'Divider', 'Paper', 'Chip',
-            'Collapse', 'DialogContent', 'DialogTitle', 'CircularProgress', 'logEvent', 'FontAwesomeIcon', 'TableContainer', 'Table', 'TableBody', 'TableRow', 'TableCell', 'TableHead',
-            'faDice', 'faCoins', 'faPlay', 'faRocket', 'faChevronDown', 'faGem', 'faSpinner', 'faCogs', 'faExchangeAlt', 'faTrophy', 'faArrowUp', 'faArrowDown',
-            'faRedo', 'faBomb', 'faStar', 'faHome', 'Physics', 'Card', 'CardContent', 'CardActions',
-            'Tooltip', 'motion', 'styled', 'AnimatePresence', 'IconButton', 'Container', 'Badge',
-            'Snackbar', 'Alert', 'DialogContentText', 'DialogActions', 'Zoom', 'Grow',
-            'faInfoCircle', 'faChevronUp', 'faVolumeUp', 'faVolumeMute', 'faCog', 'faExclamationTriangle',
-            'faCheck', 'faTimes', 'faHistory', 'faChartLine', 'faWallet', 'faShieldAlt', 'faHeart', 'faSkull', 'faClock', 'faBolt', 'faMoneyBillWave',
-            'initialProxiedAssets', 'faQuestionCircle',
-            `
-              return function App(props) {
-                ${transpiledCode}
-                return App(props);
-              };
-            `
-          );
-  
-          const GeneratedApp = componentFactory(
-            React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
-            Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
-            Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
-            faDice, faCoins, faRocket, faChevronDown, faGem, faSpinner, faCogs, faExchangeAlt, faTrophy, faArrowUp, faArrowDown,
-            faRedo, faBomb, faStar, faPlay, faHome, Physics, Card, CardContent, CardActions, TableContainer, Table, TableBody, TableHead, TableCell, TableRow,
-            Tooltip, motion, styled, AnimatePresence, IconButton, Container, Badge,
-            Snackbar, Alert, DialogContentText, DialogActions, Zoom, Grow, // Removed useMediaQuery
-            faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle,
-            faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull, faClock, faBolt, faMoneyBillWave,
-            initialProxiedAssets, faQuestionCircle,
-          );
-  
+
           if (typeof GeneratedApp === 'function') {
             if (isMounted) {
-              setGameComponent(() => (props) => <GeneratedApp {...props} Physics={Physics} />);
+              setGameComponent(() => (props) =>
+                React.createElement(GeneratedApp, {
+                  ...props,
+                  Physics,
+                  proxiedAssets: initialProxiedAssets,
+                  logEvent
+                })
+              );
             }
           } else {
-            throw new Error('Generated code did not return a valid React component');
+            throw new Error('Component factory did not return a valid React component function');
           }
-  
+
         } catch (error) {
-          console.error('Error creating component:', error);
+          console.error('[SettingsRef] Error creating component from transpiled code:', error);
           if (isMounted) {
             setComponentError(`Failed to create component: ${error.message}`);
             setGameComponent(null);
           }
         }
       };
-  
-      // Process the game code first
+
       processGameCode();
-  
+
+      // Auto-populate logic (unchanged)
       if (!hasGenerated && !rowName && !prompt && !initialProxiedAssets?.images?.length) {
         setTimeout(() => {
           if (isMounted) {
@@ -504,12 +407,10 @@ const SettingsRef = ({
           }
         }, 1000);
       }
-  
+
       return () => {
         isMounted = false;
       };
-    } else if (initialGameCode && isPhysicsLoading) {
-      console.log('[SettingsRef] Waiting for Matter.js to load before processing game code');
     } else {
       setGameComponent(null);
       setComponentError(null);
@@ -544,7 +445,6 @@ const SettingsRef = ({
         }
         try {
           const result = await dispatch(proxyAsset(key, url));
-          console.log(`[ProxyAsset] Key: ${key}, Proxied URL: ${result.proxiedUrl || url}`);
           return { key, proxiedUrl: result.proxiedUrl || url };
         } catch (error) {
           console.error(`[ProxyAsset] Failed for ${key}: ${error.message}`);
@@ -560,7 +460,6 @@ const SettingsRef = ({
         }
         try {
           const result = await dispatch(proxyAsset(key, url));
-          console.log(`[ProxyAsset] Key: ${key}, Proxied URL: ${result.proxiedUrl || url}`);
           return { key, proxiedUrl: result.proxiedUrl || url };
         } catch (error) {
           console.error(`[ProxyAsset] Failed for ${key}: ${error.message}`);
@@ -575,7 +474,6 @@ const SettingsRef = ({
       theme: assets.theme,
       background: assets.background,
     };
-    console.log(`[preProxyAssets] Final Assets: ${JSON.stringify(finalAssets, null, 2)}`);
     setProxiedAssets(finalAssets);
     return finalAssets;
   };
@@ -637,16 +535,16 @@ const SettingsRef = ({
       addAIMessage('Insufficient credits to generate game. Please add more credits.');
       return;
     }
-  
+
     setSaving(true);
     setGameLoading(true);
     setComponentError(null);
     addUserMessage(localPrompt);
     setShowChat(true);
     startProcessingUpdates();
-  
+
     const assets = await preProxyAssets(localPrompt);
-  
+
     try {
       const response = await dispatch(
         generateReactGameFromPrompt(
@@ -662,14 +560,14 @@ const SettingsRef = ({
           handleStreamUpdate
         )
       );
-  
+
       const backendAssets = response.payload?.proxiedAssets || { images: [], audio: [], theme: {}, background: {} };
       await preProxyAssets(localPrompt, backendAssets);
       setLocalCredits(prev => prev - modelCost);
       addAIMessage('Game generated successfully! What would you like to modify or improve?');
       setLocalPrompt('');
       setHasGenerated(true);
-  
+
       // Trigger auto-populate ONLY if we successfully generated a game
       if (response.payload?.finalApp) {
         console.log('[SettingsRef] Triggering auto-populate for generated game');
@@ -700,26 +598,24 @@ const SettingsRef = ({
     //   const hasTicker = ticker && ticker.trim();
     //   const hasImage = image && image.trim();
     //   const hasDescription = description && description.trim();
-      
+
     //   if (hasName || hasTicker || hasImage || hasDescription) {
     //     console.log('[SettingsRef] Skipping auto-populate: Fields already populated');
     //     return;
     //   }
     // }
-  
+
     setIsAutopopulating(true);
-    
+
     try {
-      console.log('[SettingsRef] Starting auto-population...');
-      
+
       const extractedInfo = await autopopulateRoomInfo(
         generatedGameCode,
         onChangeState,
         dispatch
       );
-  
+
       if (extractedInfo) {
-        console.log('[SettingsRef] Auto-populated successfully:', extractedInfo);
         const imageText = extractedInfo.imageUrl ? ' with generated image' : '';
         addAIMessage(`I've auto-populated the room info: "${extractedInfo.name}" ($${extractedInfo.ticker})${imageText}. Feel free to modify these suggestions!`);
       } else {
@@ -866,27 +762,23 @@ const SettingsRef = ({
     setProxiedAssets({ images: [], audio: [], theme: {}, background: {} });
   };
 
-  const logEvent = useCallback((eventType, data) => {
-    console.log(`Game Event: ${eventType}`, data);
-  }, []);
+  // const logEvent = useCallback((eventType, data) => {
+  //   console.log(`Game Event: ${eventType}`, data);
+  // }, []);
 
   const loadPhysics = async () => {
     try {
       if (window.Matter && window.Matter.World && typeof window.Matter.World === 'function') {
-        console.log('[Matter.js] Using cached Matter.js');
         return window.Matter;
       }
-      console.log('[Matter.js] Attempting to load Matter.js dynamically');
       const matterModule = await import('matter-js');
       if (!matterModule || !matterModule.World || !matterModule.Engine) {
         throw new Error('Matter.js module loaded but missing required properties');
       }
-      console.log('[Matter.js] Successfully loaded Matter.js:', matterModule);
       window.Matter = matterModule;
       return matterModule;
     } catch (error) {
       console.error('[Matter.js] Local import failed:', error.message);
-      console.log('[Matter.js] Falling back to CDN');
       try {
         const matterModule = await new Promise((resolve, reject) => {
           const script = document.createElement('script');
@@ -1087,7 +979,7 @@ const SettingsRef = ({
             </Box>
           ) : null}
 
-         
+
           {/* Chat Interface */}
           {showChat && (
             <Box
@@ -1417,7 +1309,7 @@ const SettingsRef = ({
               </Typography>
             </Box>
           )}
-           {isAutopopulating && (
+          {isAutopopulating && (
             <Box sx={{
               display: 'flex',
               alignItems: 'center',

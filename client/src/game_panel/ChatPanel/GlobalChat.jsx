@@ -4,11 +4,11 @@ import { FixedSizeList as VirtualizedList } from 'react-window';
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
-import { 
-  Skeleton, 
-  Box, 
-  ButtonBase, 
-  CircularProgress, 
+import {
+  Skeleton,
+  Box,
+  ButtonBase,
+  CircularProgress,
   Fade,
   Typography,
   Tooltip
@@ -31,15 +31,15 @@ const safeParseJSON = (jsonString, defaultValue = null) => {
 // Enhanced emoji wrapping with caching
 const createEmojiWrapper = (() => {
   const cache = new Map();
-  
+
   return (message, emojis, keyPrefix = '') => {
     if (!message || typeof message !== 'string') return null;
-    
+
     const cacheKey = `${keyPrefix}-${message}`;
     if (cache.has(cacheKey)) {
       return cache.get(cacheKey);
     }
-    
+
     const validEmojis = Array.isArray(emojis) ? emojis : [];
     const result = message.split(/(:\w+:)/g).map((part, i) => {
       if (part.startsWith(':') && part.endsWith(':')) {
@@ -47,33 +47,33 @@ const createEmojiWrapper = (() => {
         if (emojiObj) {
           const { url, alt } = emojiObj;
           return (
-            <img 
-              key={`${keyPrefix}-${i}-emoji-${part}`} 
-              src={url} 
-              alt={alt} 
-              className="emoji" 
-              style={{ 
-                width: '20px', 
-                height: '20px', 
-                verticalAlign: 'middle', 
+            <img
+              key={`${keyPrefix}-${i}-emoji-${part}`}
+              src={url}
+              alt={alt}
+              className="emoji"
+              style={{
+                width: '20px',
+                height: '20px',
+                verticalAlign: 'middle',
                 margin: '0 2px',
                 objectFit: 'contain'
               }}
-              // loading="lazy"
+            // loading="lazy"
             />
           );
         }
       }
       return part;
     });
-    
+
     // Cache with size limit
     if (cache.size > 100) {
       const firstKey = cache.keys().next().value;
       cache.delete(firstKey);
     }
     cache.set(cacheKey, result);
-    
+
     return result;
   };
 })();
@@ -96,14 +96,14 @@ const ChatMessageItem = React.memo(({
   const { wrappedMessage, wrappedReplyMessage, gifContent, replyGifContent } = useMemo(() => {
     const msgKey = `msg-${chat.id || chat.senderId}-${chat.time}`;
     const replyKey = `reply-${chat.id || chat.senderId}-${chat.time}`;
-    
+
     return {
-      wrappedMessage: chat.messageType === 'gif' ? null : 
+      wrappedMessage: chat.messageType === 'gif' ? null :
         createEmojiWrapper(chat.message, emojis, msgKey),
       wrappedReplyMessage: (!chat.replyTo || chat.replyTo.messageType === 'gif') ? null :
         createEmojiWrapper(chat.replyTo.message, emojis, replyKey),
       gifContent: chat.messageType === 'gif' ? safeParseJSON(chat.message) : null,
-      replyGifContent: chat.replyTo?.messageType === 'gif' ? 
+      replyGifContent: chat.replyTo?.messageType === 'gif' ?
         safeParseJSON(chat.replyTo.message) : null
     };
   }, [chat.id, chat.senderId, chat.time, chat.message, chat.messageType, chat.replyTo, emojis]);
@@ -141,16 +141,16 @@ const ChatMessageItem = React.memo(({
     background: '#2f2f2f',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-    border: isSelected 
-      ? '2px solidrgb(255, 0, 21)' 
-      : effectiveIsDarkMode 
-        ? '1px solid rgba(255, 255, 255, 0.1)' 
+    border: isSelected
+      ? '2px solidrgb(255, 0, 21)'
+      : effectiveIsDarkMode
+        ? '1px solid rgba(255, 255, 255, 0.1)'
         : '1px solid rgba(0, 0, 0, 0.05)',
     borderRadius: '12px',
-    boxShadow: isSelected 
-      ? '0 8px 32px rgba(255, 71, 87, 0.3), 0 0 0 1px rgba(255, 0, 21, 0.2)' 
-      : effectiveIsDarkMode 
-        ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+    boxShadow: isSelected
+      ? '0 8px 32px rgba(255, 71, 87, 0.3), 0 0 0 1px rgba(255, 0, 21, 0.2)'
+      : effectiveIsDarkMode
+        ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
         : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: isPending ? 0.7 : 1,
@@ -175,16 +175,15 @@ const ChatMessageItem = React.memo(({
   return (
     <div style={style}>
       <Box
-        className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${
-          chat.sender === 'SYSTEM' && chat.message?.includes('debt') ? 'special-message-rent' : ''
-        } ${isPending ? 'pending-message' : ''} ${isSelected ? 'selected-message' : ''}`}
+        className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${chat.sender === 'SYSTEM' && chat.message?.includes('debt') ? 'special-message-rent' : ''
+          } ${isPending ? 'pending-message' : ''} ${isSelected ? 'selected-message' : ''}`}
         onClick={handleItemClick}
         sx={{
           position: 'relative',
           cursor: 'pointer',
           mb: 2,
           transition: 'transform 0.2s ease',
-      
+
           ...specialMessageOverlay,
         }}
         role="button"
@@ -192,10 +191,10 @@ const ChatMessageItem = React.memo(({
         onKeyDown={(e) => e.key === 'Enter' && handleItemClick(e)}
       >
         {/* Reply Section with enhanced glassmorphism */}
-        {chat.replyTo?.message && (
+        {(chat.replyTo && (chat.replyTo.message || chat.replyTo.messageType === 'gif')) && (
           <Fade in timeout={300}>
-            <Box className="reply-to" sx={{ 
-              mb: 1, 
+            <Box className="reply-to" sx={{
+              mb: 1,
               position: 'relative',
               '&::before': {
                 content: '""',
@@ -206,18 +205,18 @@ const ChatMessageItem = React.memo(({
                 height: 30,
               }
             }}>
-              <Tooltip 
-                title={`Reply to ${chat.replyTo.username}`} 
+              <Tooltip
+                title={`Reply to ${chat.replyTo.username}`}
                 arrow
                 placement="top"
-                
+
               >
                 <ButtonBase
                   className="chat-player"
                   onClick={handleReplyAvatarClick}
-                 
+
                 >
-                    <div className="reply-border" style={{
+                  <div className="reply-border" style={{
                     borderColor: 'rgba(255, 0, 21, 0.3)',
                     borderWidth: '2px',
                     borderStyle: 'solid solid solid solid',
@@ -236,10 +235,10 @@ const ChatMessageItem = React.memo(({
                   />
                 </ButtonBase>
               </Tooltip>
-              <Typography 
-                variant="caption" 
+              <Typography
+                variant="caption"
                 className="reply-sender sender-name"
-                sx={{ 
+                sx={{
                   fontWeight: 700,
                   color: '#ff4757',
                   textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
@@ -247,10 +246,10 @@ const ChatMessageItem = React.memo(({
               >
                 {chat.replyTo.username}
               </Typography>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 className="reply-message chat-text"
-                sx={{ 
+                sx={{
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -260,12 +259,12 @@ const ChatMessageItem = React.memo(({
                 }}
               >
                 {replyGifContent?.content ? (
-                  <img 
-                    src={replyGifContent.content} 
-                    alt="GIF reply" 
-                    style={{ 
-                      maxHeight: '60px', 
-                      maxWidth: '100px', 
+                  <img
+                    src={replyGifContent.content}
+                    alt="GIF reply"
+                    style={{
+                      maxHeight: '60px',
+                      maxWidth: '100px',
                       borderRadius: '8px',
                       objectFit: 'cover',
                       border: '2px solid rgba(255, 255, 255, 0.1)',
@@ -281,16 +280,16 @@ const ChatMessageItem = React.memo(({
 
         {/* Main Message Content */}
         <div className="chat-content">
-          <Tooltip 
-            title={`View ${chat.sender}'s profile`} 
+          <Tooltip
+            title={`View ${chat.sender}'s profile`}
             arrow
             placement="top"
-            
+
           >
             <ButtonBase
               className="chat-player"
               onClick={handleAvatarClick}
-              sx={{ 
+              sx={{
                 zIndex: 1,
                 '&:active': {
                   transform: 'scale(0.95)',
@@ -312,10 +311,10 @@ const ChatMessageItem = React.memo(({
           </Tooltip>
 
           <Box className="chat-msg" sx={messageStyle}>
-            <Typography 
-              variant="subtitle2" 
+            <Typography
+              variant="subtitle2"
               className="sender-name"
-              sx={{ 
+              sx={{
                 fontWeight: 700,
                 background: 'linear-gradient(135deg,rgb(255, 0, 21),rgb(255, 0, 25))',
                 backgroundClip: 'text',
@@ -328,12 +327,12 @@ const ChatMessageItem = React.memo(({
             >
               {chat.sender}
             </Typography>
-            
-            <Typography 
-              variant="body2" 
+
+            <Typography
+              variant="body2"
               className="chat-text"
               component="div"
-              sx={{ 
+              sx={{
                 wordBreak: 'break-word',
                 lineHeight: 1.5,
                 color: effectiveIsDarkMode ? '#e1e5e9' : '#2c3e50',
@@ -341,8 +340,8 @@ const ChatMessageItem = React.memo(({
             >
               {isPending ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={16} color='error'/>
-                  <Typography variant="caption" sx={{ 
+                  <CircularProgress size={16} color='error' />
+                  <Typography variant="caption" sx={{
                     opacity: 0.7,
                     fontStyle: 'italic',
                   }}>
@@ -352,23 +351,23 @@ const ChatMessageItem = React.memo(({
               ) : gifContent?.content ? (
                 <Box sx={{ position: 'relative' }}>
                   {!imageLoaded && !imageError && (
-                    <Skeleton 
-                      variant="rectangular" 
-                      width={200} 
-                      height={150} 
-                      sx={{ 
+                    <Skeleton
+                      variant="rectangular"
+                      width={200}
+                      height={150}
+                      sx={{
                         borderRadius: '12px',
                         bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
                       }}
                     />
                   )}
                   {!imageError && (
-                    <img 
-                      src={gifContent.content} 
-                      alt="GIF message" 
-                      style={{ 
-                        maxHeight: '150px', 
-                        maxWidth: '100%', 
+                    <img
+                      src={gifContent.content}
+                      alt="GIF message"
+                      style={{
+                        maxHeight: '150px',
+                        maxWidth: '100%',
                         borderRadius: '12px',
                         display: imageLoaded ? 'block' : 'none',
                         objectFit: 'cover',
@@ -380,8 +379,8 @@ const ChatMessageItem = React.memo(({
                     />
                   )}
                   {imageError && (
-                    <Box sx={{ 
-                      p: 2, 
+                    <Box sx={{
+                      p: 2,
                       background: 'linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05))',
                       borderRadius: '12px',
                       textAlign: 'center',
@@ -401,23 +400,23 @@ const ChatMessageItem = React.memo(({
 
           {/* Enhanced timestamp with modern styling */}
           <Box className="chat-time" sx={{ position: 'absolute', right: '10px' }}>
-           
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '0.65rem',
-                  opacity: 0.6,
-                  color: effectiveIsDarkMode ? '#a0a6ab' : '#6c757d',
-                 
-                  display: 'inline-block',
-                  cursor: 'pointer',
-                  
-                }}
-              >
-                {typeof chat.time === 'string' || typeof chat.time === 'number' 
-                  ? chat.time 
-                  : ''}
-              </Typography>
+
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: '0.65rem',
+                opacity: 0.6,
+                color: effectiveIsDarkMode ? '#a0a6ab' : '#6c757d',
+
+                display: 'inline-block',
+                cursor: 'pointer',
+
+              }}
+            >
+              {typeof chat.time === 'string' || typeof chat.time === 'number'
+                ? chat.time
+                : ''}
+            </Typography>
           </Box>
         </div>
       </Box>
@@ -449,8 +448,8 @@ function GlobalChatComponent(props) {
 
   // Enhanced state management
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : reduxIsDarkMode;
-  const baseChatList = Array.isArray(propGlobalChatList) && propGlobalChatList.length > 0 
-    ? propGlobalChatList 
+  const baseChatList = Array.isArray(propGlobalChatList) && propGlobalChatList.length > 0
+    ? propGlobalChatList
     : Array.isArray(reduxGlobalChatList) ? reduxGlobalChatList : [];
 
   const [chatList, setChatList] = useState(() => baseChatList);
@@ -493,7 +492,7 @@ function GlobalChatComponent(props) {
     if (autoScrollTimeoutRef.current) {
       clearTimeout(autoScrollTimeoutRef.current);
     }
-    
+
     autoScrollTimeoutRef.current = setTimeout(() => {
       if (isVirtualized && virtualListRef.current) {
         virtualListRef.current.scrollToItem(uniqueMessagesToRender.length - 1, 'end');
@@ -505,14 +504,14 @@ function GlobalChatComponent(props) {
 
   // Enhanced scroll position detection
   const evaluateUserPosition = useCallback(() => {
-    const element = isVirtualized ? virtualListRef.current?.props?.children?.ref?.current 
+    const element = isVirtualized ? virtualListRef.current?.props?.children?.ref?.current
       : chatBoxRef.current;
-    
+
     if (!element) return;
-    
+
     const scrollDiff = element.scrollHeight - (element.scrollTop + element.clientHeight);
     const currentlyAtBottom = scrollDiff < 100;
-    
+
     if (userIsAtBottom !== currentlyAtBottom) {
       setUserIsAtBottom(currentlyAtBottom);
     }
@@ -546,7 +545,7 @@ function GlobalChatComponent(props) {
         if (!showTooltip) setShowTooltip(true);
       }
     }
-    
+
     prevGlobalChatListLength.current = newLen;
   }, [baseChatList, hasScrolledOnce, userIsAtBottom, reduxUser?._id, scrollToBottom, newMessages, showTooltip]);
 
@@ -563,25 +562,32 @@ function GlobalChatComponent(props) {
   }, []);
 
   const handleMessageClick = useCallback((message) => {
-    const isCurrentlySelected = selectedMessage?.senderId === message.senderId && 
-      selectedMessage?.time === message.time;
+    // Create a more unique identifier for each message
+    const messageId = message.id || `${message.senderId}-${message.time}-${message.message?.substring(0, 20)}`;
+    const selectedMessageId = selectedMessage?.id ||
+      `${selectedMessage?.senderId}-${selectedMessage?.time}-${selectedMessage?.message?.substring(0, 20)}`;
+
+    const isCurrentlySelected = selectedMessageId === messageId;
 
     if (isCurrentlySelected) {
       setSelectedMessage({});
     } else {
+      // Include a unique ID in the selected message
       setSelectedMessage({
+        id: messageId, // ✅ ADD: Unique identifier
         sender: message.sender,
+        senderId: message.senderId,
+        username: message.sender || message.username,
         rank: message.rank,
-        username: message.sender,
         accessory: message.accessory,
         elite: message.elite,
-        senderId: message.senderId,
         avatar: message.avatar,
         message: message.message,
         messageType: message.messageType,
-        replyTo: message.replyTo,
         time: message.time,
+        created_at: message.created_at || new Date().toISOString(),
       });
+
     }
   }, [selectedMessage, setSelectedMessage]);
 
@@ -594,11 +600,15 @@ function GlobalChatComponent(props) {
   // Virtualized list item renderer
   const VirtualizedMessageItem = useCallback(({ index, style }) => {
     const chat = uniqueMessagesToRender[index];
-    const isPending = pendingMessages.some(p => 
+    const messageId = chat.id || `${chat.senderId}-${chat.time}-${chat.message?.substring(0, 20)}`;
+    const selectedMessageId = selectedMessage?.id ||
+      `${selectedMessage?.senderId}-${selectedMessage?.time}-${selectedMessage?.message?.substring(0, 20)}`;
+
+    const isPending = pendingMessages.some(p =>
       p.time === chat.time && p.senderId === chat.senderId
     );
-    const isSelected = selectedMessage?.senderId === chat.senderId && 
-      selectedMessage?.time === chat.time;
+    const isSelected = selectedMessageId === messageId;
+
 
     return (
       <ChatMessageItem
@@ -683,12 +693,12 @@ function GlobalChatComponent(props) {
 
       {/* Player Modal */}
       {showPlayerModal && (
-        <Suspense 
+        <Suspense
           fallback={
             <Box sx={{
-              position: 'fixed', 
-              top: '50%', 
-              left: '50%', 
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
               transform: 'translate(-50%, -50%)',
               zIndex: 9999,
               background: 'rgba(0, 0, 0, 0.8)',
@@ -726,7 +736,7 @@ function GlobalChatComponent(props) {
         ) : (
           <Box
             ref={chatBoxRef}
-            sx={{ 
+            sx={{
               height: '100%',
               overflowY: 'auto',
               p: 2,
@@ -749,11 +759,15 @@ function GlobalChatComponent(props) {
           >
             {uniqueMessagesToRender.map((chat, index) => {
               const key = chat.id || `chat-${chat.senderId}-${chat.time}-${index}`;
-              const isPending = pendingMessages.some(p => 
+              const messageId = chat.id || `${chat.senderId}-${chat.time}-${chat.message?.substring(0, 20)}`;
+              const selectedMessageId = selectedMessage?.id ||
+                `${selectedMessage?.senderId}-${selectedMessage?.time}-${selectedMessage?.message?.substring(0, 20)}`;
+
+              const isPending = pendingMessages.some(p =>
                 p.time === chat.time && p.senderId === chat.senderId
               );
-              const isSelected = selectedMessage?.senderId === chat.senderId && 
-                selectedMessage?.time === chat.time;
+              const isSelected = selectedMessageId === messageId;
+
 
               return (
                 <ChatMessageItem
@@ -781,35 +795,35 @@ function GlobalChatComponent(props) {
                 gap: 2,
                 p: 2,
                 borderRadius: '16px',
-                background: effectiveIsDarkMode 
+                background: effectiveIsDarkMode
                   ? 'linear-gradient(135deg, rgba(30, 30, 35, 0.4), rgba(20, 20, 25, 0.3))'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(250, 250, 250, 0.4))',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid',
                 borderColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
               }}>
-                <Skeleton 
-                  variant="circular" 
-                  width={50} 
-                  height={50} 
+                <Skeleton
+                  variant="circular"
+                  width={50}
+                  height={50}
                   sx={{
                     bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
                   }}
                 />
                 <Box sx={{ flex: 1 }}>
-                  <Skeleton 
-                    variant="text" 
-                    width="30%" 
-                    height={20} 
-                    sx={{ 
+                  <Skeleton
+                    variant="text"
+                    width="30%"
+                    height={20}
+                    sx={{
                       mb: 1,
                       bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    }} 
+                    }}
                   />
-                  <Skeleton 
-                    variant="text" 
-                    width="70%" 
-                    height={16} 
+                  <Skeleton
+                    variant="text"
+                    width="70%"
+                    height={16}
                     sx={{
                       bgcolor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
                     }}

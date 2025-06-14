@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Dropzone from './AvatarDropzone';
-import uniqid from 'uniqid';
+import uploadAvatarToPinata from '../../../actions/uploadAvatarToPinata';
 
 function Upload(props) {
   const {
@@ -13,6 +13,7 @@ function Upload(props) {
     elite,
   } = props;
 
+  const dispatch = useDispatch();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -24,42 +25,31 @@ function Upload(props) {
       setFile(file);
       uploadFiles(file);
     },
-    [], // No external dependencies besides uploadFiles
+    [],
   );
 
-  // Upload the file(s)
+  // UPDATED: Upload the file using Pinata
   const uploadFiles = useCallback(async (file) => {
     setUploadProgress({});
     setUploading(true);
+    
     try {
-      await Promise.all([prepareFormData(file)]);
+      // Upload to Pinata and get URL
+      const imageUrl = await dispatch(uploadAvatarToPinata(file));
+      
+      // Set the Pinata URL (not base64 data!)
+      setImageFilename(imageUrl);
       setSuccessfullUploaded(true);
-      setUploading(false);
+      
+      console.log('✅ Avatar upload completed:', imageUrl);
+      
     } catch (err) {
-      console.error('Error uploading files:', err);
-      setSuccessfullUploaded(true); // Still sets to true despite error; consider changing if unintended
+      console.error('❌ Avatar upload failed:', err);
+      setSuccessfullUploaded(false);
+    } finally {
       setUploading(false);
     }
-  }, []);
-
-  // Prepare FormData (returns a promise)
-  const prepareFormData = (file) => {
-    return new Promise((resolve, reject) => {
-      try {
-        const file_ext = file.name.split('.').pop();
-        const filename = uniqid('IMG_') + '.' + file_ext;
-
-        const formData = new FormData();
-        formData.append('file', file, filename);
-
-        // Resolve with formData and filename for potential upload
-        resolve({ formData, filename });
-      } catch (error) {
-        console.error('Error preparing FormData:', error);
-        reject(error);
-      }
-    });
-  };
+  }, [dispatch, setImageFilename]);
 
   return (
     <div className="Upload">
@@ -67,7 +57,7 @@ function Upload(props) {
         <div style={{ margin: '20px auto auto auto' }}>
           <Dropzone
             onFileAdded={onFileAdded}
-            disabled={uploading && successfullUploaded} // Consider logic: should be || if disabling during either state
+            disabled={uploading}
             darkMode={darkMode}
             imageUrl={avatar}
             setImageFilename={setImageFilename}
@@ -77,6 +67,16 @@ function Upload(props) {
             username={username}
             avatar={avatar}
           />
+          {uploading && (
+            <div style={{ textAlign: 'center', marginTop: '10px' }}>
+              <p>Uploading avatar...</p>
+            </div>
+          )}
+          {successfullUploaded && (
+            <div style={{ textAlign: 'center', marginTop: '10px', color: 'green' }}>
+              <p>✅ Avatar uploaded successfully!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

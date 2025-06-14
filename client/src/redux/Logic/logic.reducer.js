@@ -53,6 +53,7 @@ import {
   APPEND_NEW_CANDLE,
   TRANSACTION_CANDLES_ERROR,
   SET_HIGHLIGHTED_ROOMS,
+  UPDATE_SINGLE_ROOM,
   CLEAR_HIGHLIGHTED_ROOMS
 } from '../types';
 
@@ -416,6 +417,17 @@ export default function (state = initialState, action) {
       return {
         ...state,
         roomList,
+      };
+
+    case UPDATE_SINGLE_ROOM:
+      console.log('Updating single room:', action.payload);
+      return {
+        ...state,
+        roomList: state.roomList.map(room =>
+          room._id === action.payload._id
+            ? { ...room, ...action.payload }
+            : room
+        )
       };
     case HISTORY_LOADED:
       return {

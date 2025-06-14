@@ -13,11 +13,9 @@ import {
   Close as CloseIcon, Warning as WarningIcon, Star as StarIcon, Code as CodeIcon,
   Support as SupportIcon, Percent as PercentIcon, AccountBalanceWallet as WalletIcon,
   AutoAwesome as SparkleIcon, Bolt as BoltIcon, Shield as ShieldIcon,
-  CheckCircle as CheckCircleIcon, Cancel as CancelIcon
+  CheckCircle as CheckCircleIcon, Cancel as CancelIcon, Verified as VerifiedIcon
 } from '@mui/icons-material';
-import Lottie from 'react-lottie';
-import verified from '../LottieAnimations/verified.json';
-
+import { useTheme } from '@mui/material/styles';
 const themeColors = {
   backgroundPrimary: '#2a2a2a',
   backgroundSecondary: '#3a3a3a',
@@ -62,10 +60,10 @@ function EliteSubscriptionModal({
 }) {
   const dispatch = useDispatch();
   const { user: privyUser } = usePrivy();
-  
+
   // Get account from Redux state as fallback
   const reduxAccount = useSelector(state => state.logic?.account);
-  
+
   const numericWalletBalance = parseFloat(walletBalance);
   const [loading, setLoading] = useState({ red: false, black: false, cancel: false });
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
@@ -94,10 +92,10 @@ function EliteSubscriptionModal({
       console.error('Insufficient balance for subscription');
       return;
     }
-    
+
     // Enhanced account creation with multiple fallbacks
     let account = null;
-    
+
     // Method 1: Try creating from Privy user
     if (privyUser?.wallet?.address) {
       try {
@@ -107,13 +105,13 @@ function EliteSubscriptionModal({
         console.error('Failed to create account from Privy user:', error);
       }
     }
-    
+
     // Method 2: Try using Redux account
     if (!account && reduxAccount?.publicKey) {
       account = reduxAccount;
       console.log('Using Redux account:', account);
     }
-    
+
     // Method 3: Try getting from connected wallet directly
     if (!account && window.solana?.publicKey) {
       try {
@@ -125,7 +123,7 @@ function EliteSubscriptionModal({
         console.error('Failed to create account from window.solana:', error);
       }
     }
-    
+
     // Method 4: Try connecting wallet if not connected
     if (!account && window.solana) {
       try {
@@ -133,7 +131,7 @@ function EliteSubscriptionModal({
           console.log('Wallet not connected, attempting to connect...');
           await window.solana.connect();
         }
-        
+
         if (window.solana.publicKey) {
           account = {
             publicKey: window.solana.publicKey
@@ -153,7 +151,7 @@ function EliteSubscriptionModal({
         windowSolana: !!window.solana?.publicKey,
         walletConnected: window.solana?.isConnected
       });
-      
+
       // Show user-friendly error
       dispatch({
         type: 'MSG_ERROR',
@@ -169,7 +167,7 @@ function EliteSubscriptionModal({
     // });
 
     setLoading((prev) => ({ ...prev, [type]: true }));
-    
+
     try {
       // Use sendSolDeposit for blockchain transaction with elite subscription info
       const solResult = await sendSolDeposit(
@@ -200,7 +198,7 @@ function EliteSubscriptionModal({
         {
           subscriptionType: type,
           subscriptionTier: type === 'red' ? 'Red Elite' : 'Black Elite',
-          features: type === 'red' 
+          features: type === 'red'
             ? ['150 Game Credits per month', '24/7 Support']
             : ['800 Game Credits per month', 'Developer Access', '50% Fee Reduction', 'Priority Support'],
           monthlyPrice: subscriptionAmounts[type]
@@ -209,10 +207,10 @@ function EliteSubscriptionModal({
 
       if (solResult.success) {
         // Extract transaction signature from the result
-        const signature = solResult.result?.txtHash || 
-                         solResult.result?.signature || 
-                         solResult.result?.transactionSignature;
-        
+        const signature = solResult.result?.txtHash ||
+          solResult.result?.signature ||
+          solResult.result?.transactionSignature;
+
         if (signature) {
           // If SOL transaction succeeds, verify with backend
           const backendResult = await dispatch(purchaseEliteSubscription(type, signature));
@@ -263,7 +261,7 @@ function EliteSubscriptionModal({
   };
 
   const cardHeaderBaseSx = { color: themeColors.textPrimary, p: 1.5, textAlign: 'center' };
-  
+
   const planButtonBaseSx = (mainColor, hoverColor, textColor = themeColors.textPrimary) => ({
     py: 1, fontSize: '0.8rem', fontWeight: 'bold', borderRadius: 1,
     bgcolor: mainColor, color: textColor,
@@ -279,10 +277,10 @@ function EliteSubscriptionModal({
     <>
       <Modal open={open} onClose={onClose} sx={{ zIndex: 1300 }} BackdropProps={{ style: { backgroundColor: themeColors.modalBackdrop } }}>
         <Box sx={{
-            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            width: { xs: '90vw', sm: '600px', md: '680px' }, maxHeight: '90vh', overflowY: 'auto',
-            borderRadius: 2.5, bgcolor: themeColors.backgroundPrimary, outline: 'none',
-            border: `1px solid ${themeColors.borderColor}`, boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: { xs: '90vw', sm: '600px', md: '680px' }, maxHeight: '90vh', overflowY: 'auto',
+          borderRadius: 2.5, bgcolor: themeColors.backgroundPrimary, outline: 'none',
+          border: `1px solid ${themeColors.borderColor}`, boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
         }}>
           {/* Header with banner */}
           <Box sx={{ position: 'relative' }}>
@@ -293,14 +291,14 @@ function EliteSubscriptionModal({
               sx={{ height: 120 }}
             />
             <Button onClick={onClose} sx={{
-                position: 'absolute', top: 8, right: 8, minWidth: 'auto', p: 0.75,
-                bgcolor: 'rgba(0,0,0,0.5)', color: 'white',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }, borderRadius: '50%',
+              position: 'absolute', top: 8, right: 8, minWidth: 'auto', p: 0.75,
+              bgcolor: 'rgba(0,0,0,0.5)', color: 'white',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }, borderRadius: '50%',
             }}> <CloseIcon fontSize="small" /> </Button>
           </Box>
 
           {/* Title Section */}
-          <Box sx={{ background: themeColors.headerBackground, color: themeColors.textPrimary, p: {xs: 1.5, md: 2} }}>
+          <Box sx={{ background: themeColors.headerBackground, color: themeColors.textPrimary, p: { xs: 1.5, md: 2 } }}>
             <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.75} sx={{ mb: 1 }}>
               <SparkleIcon sx={{ fontSize: '24px', color: themeColors.accentRedPrimary }} />
               <Typography variant="h6" sx={{ fontWeight: 'bold', color: themeColors.textPrimary, fontSize: '1.1rem' }}>
@@ -312,7 +310,7 @@ function EliteSubscriptionModal({
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: themeColors.backgroundSecondary, borderRadius: 1.5, p: 1, border: `1px solid ${themeColors.borderColor}` }}>
               <Avatar sx={{ bgcolor: themeColors.accentRedPrimary, color: themeColors.textPrimary, mr: 1, width: 30, height: 30 }}>
-                <WalletIcon sx={{fontSize: '1rem'}}/>
+                <WalletIcon sx={{ fontSize: '1rem' }} />
               </Avatar>
               <Box>
                 <Typography variant="caption" sx={{ opacity: 0.7, fontSize: '0.7rem', color: themeColors.textSecondary }}>Wallet Balance</Typography>
@@ -321,7 +319,7 @@ function EliteSubscriptionModal({
             </Box>
           </Box>
 
-          <Box sx={{ p: {xs: 1.5, md: 2} }}>
+          <Box sx={{ p: { xs: 1.5, md: 2 } }}>
             <Grid container spacing={2}>
               {/* Red Elite Card */}
               <Grid item xs={12} md={6}>
@@ -329,17 +327,20 @@ function EliteSubscriptionModal({
                   {user?.elite === 'red' && <Chip label="CURRENT" size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: themeColors.redPlan.main, color: themeColors.redPlan.contrastText, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, height: '18px' }} />}
                   <Box sx={{ ...cardHeaderBaseSx, background: themeColors.redPlan.headerGradient }}>
                     <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'hue-rotate(132deg)' }}>
-                      <Lottie
-                        options={{
-                          loop: !isLowGraphics,
-                          autoplay: !isLowGraphics,
-                          animationData: verified,
+                      <VerifiedIcon
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          transform: 'translate(25%, -25%)', // Adjust position
+                          fontSize: '1.2rem', // Adjust size
+                          color: '#ff0000', // Example: gray for black elite, green for red elite
+                          backgroundColor: 'white', // Give it a background to stand out
+                          borderRadius: '50%', // Make it circular
                         }}
-                        width={40}
-                        height={40}
                       />
                     </Box>
-                    <Typography variant="h6" sx={{fontSize: '1rem', fontWeight: 'bold'}}>Red Elite</Typography>
+                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Red Elite</Typography>
                   </Box>
                   <CardContent sx={{ p: 1.5, flexGrow: 1 }}>
                     <Box sx={{ textAlign: 'center', mb: 2 }}>
@@ -362,10 +363,10 @@ function EliteSubscriptionModal({
                     </List>
                   </CardContent>
                   <CardActions sx={{ p: 1.5, pt: 0, mt: 'auto' }}>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
-                      onClick={() => handlePurchaseSubscription('red')} 
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => handlePurchaseSubscription('red')}
                       disabled={loading.red || !sufficientBalance.red || user?.elite === 'red'}
                       sx={planButtonBaseSx(themeColors.redPlan.main, themeColors.redPlan.lightHover, themeColors.redPlan.contrastText)}
                     >
@@ -380,11 +381,11 @@ function EliteSubscriptionModal({
                   </CardActions>
                   {user?.elite === 'red' && (
                     <Box sx={{ px: 1.5, pb: 1 }}>
-                      <Button 
-                        fullWidth 
-                        variant="text" 
-                        size="small" 
-                        onClick={openCancelConfirmation} 
+                      <Button
+                        fullWidth
+                        variant="text"
+                        size="small"
+                        onClick={openCancelConfirmation}
                         startIcon={<CancelIcon />}
                         sx={{ color: themeColors.redPlan.lightHover, fontWeight: '500', fontSize: '0.75rem', '&:hover': { bgcolor: themeColors.redPlan.featureBg } }}
                       >
@@ -398,21 +399,24 @@ function EliteSubscriptionModal({
               {/* Black Elite Card */}
               <Grid item xs={12} md={6}>
                 <Card sx={{ ...cardBaseSx, bgcolor: themeColors.blackPlan.cardBg, borderColor: user?.elite === 'black' ? themeColors.blackPlan.main : themeColors.borderColor }}>
-                  {(!user?.elite || user?.elite === 'red') && <Chip icon={<StarIcon sx={{fontSize: '0.8rem !important'}}/>} label="POPULAR" size="small" sx={{ position: 'absolute', top: 8, left: 8, bgcolor: themeColors.chipPopularBg, color: themeColors.textPrimary, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, '& .MuiChip-icon': { color: themeColors.textPrimary, ml: '3px', height: '18px' } }} />}
+                  {(!user?.elite || user?.elite === 'red') && <Chip icon={<StarIcon sx={{ fontSize: '0.8rem !important' }} />} label="POPULAR" size="small" sx={{ position: 'absolute', top: 8, left: 8, bgcolor: themeColors.chipPopularBg, color: themeColors.textPrimary, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, '& .MuiChip-icon': { color: themeColors.textPrimary, ml: '3px', height: '18px' } }} />}
                   {user?.elite === 'black' && <Chip label="CURRENT" size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: themeColors.blackPlan.main, color: themeColors.blackPlan.contrastText, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, height: '18px' }} />}
                   <Box sx={{ ...cardHeaderBaseSx, background: themeColors.blackPlan.headerBg }}>
                     <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'grayscale(1)' }}>
-                      <Lottie
-                        options={{
-                          loop: !isLowGraphics,
-                          autoplay: !isLowGraphics,
-                          animationData: verified,
+                      <VerifiedIcon
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          transform: 'translate(25%, -25%)', // Adjust position
+                          fontSize: '1.2rem', // Adjust size
+                          color: '#ff0000', // Example: gray for black elite, green for red elite
+                          backgroundColor: '#000', // Give it a background to stand out
+                          borderRadius: '50%', // Make it circular
                         }}
-                        width={40}
-                        height={40}
                       />
                     </Box>
-                    <Typography variant="h6" sx={{fontSize: '1rem', fontWeight: 'bold', color: themeColors.blackPlan.headerText }}>Black Elite</Typography>
+                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold', color: themeColors.blackPlan.headerText }}>Black Elite</Typography>
                   </Box>
                   <CardContent sx={{ p: 1.5, flexGrow: 1 }}>
                     <Box sx={{ textAlign: 'center', mb: 2 }}>
@@ -441,15 +445,15 @@ function EliteSubscriptionModal({
                     </List>
                   </CardContent>
                   <CardActions sx={{ p: 1.5, pt: 0, mt: 'auto' }}>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
-                      onClick={() => handlePurchaseSubscription('black')} 
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => handlePurchaseSubscription('black')}
                       disabled={loading.black || !sufficientBalance.black || user?.elite === 'black'}
                       sx={planButtonBaseSx(themeColors.blackPlan.main, themeColors.blackPlan.lightHover, themeColors.blackPlan.contrastText)}
                     >
                       {loading.black ? (
-                        <CircularProgress size={18} color="error"/>
+                        <CircularProgress size={18} color="error" />
                       ) : !sufficientBalance.black ? (
                         'Not Enough Balance'
                       ) : (
@@ -459,11 +463,11 @@ function EliteSubscriptionModal({
                   </CardActions>
                   {user?.elite === 'black' && (
                     <Box sx={{ px: 1.5, pb: 1 }}>
-                      <Button 
-                        fullWidth 
-                        variant="text" 
-                        size="small" 
-                        onClick={openCancelConfirmation} 
+                      <Button
+                        fullWidth
+                        variant="text"
+                        size="small"
+                        onClick={openCancelConfirmation}
                         startIcon={<CancelIcon />}
                         sx={{ color: themeColors.blackPlan.lightHover, fontWeight: '500', fontSize: '0.75rem', '&:hover': { bgcolor: themeColors.blackPlan.featureBg } }}
                       >
@@ -486,7 +490,7 @@ function EliteSubscriptionModal({
                   <Typography variant="body2" sx={{ color: themeColors.textSecondary, fontSize: '0.75rem' }}>Powered by Solana</Typography>
                 </Box>
               </Stack>
-              <Typography variant="caption" sx={{ color: themeColors.textSecondary, lineHeight: 1.4, fontSize: '0.75rem', display:'block' }}>
+              <Typography variant="caption" sx={{ color: themeColors.textSecondary, lineHeight: 1.4, fontSize: '0.75rem', display: 'block' }}>
                 Pay directly from your Solana wallet. One-time fee, manually renewed.
               </Typography>
             </Box>
@@ -500,21 +504,21 @@ function EliteSubscriptionModal({
           <Avatar sx={{ bgcolor: themeColors.accentRedLight, color: themeColors.accentRedPrimary, width: 44, height: 44, mx: 'auto', mb: 1 }}>
             <WarningIcon sx={{ fontSize: '22px' }} />
           </Avatar>
-          <Typography variant="h6" fontWeight="bold" sx={{fontSize: '1.05rem'}}>Cancel Elite Subscription?</Typography>
+          <Typography variant="h6" fontWeight="bold" sx={{ fontSize: '1.05rem' }}>Cancel Elite Subscription?</Typography>
           <Typography variant="body2" sx={{ color: themeColors.textSecondary, fontSize: '0.8rem' }}>This action is irreversible.</Typography>
         </DialogTitle>
-        <DialogContent sx={{ px: {xs:1.5, md:2}, pb: 1.5 }}>
-          <Alert 
-            severity="warning" 
-            icon={<WarningIcon sx={{ color: themeColors.accentRedPrimary, fontSize: '1.2rem' }}/>} 
-            sx={{ 
-              mb: 1.5, 
-              bgcolor: themeColors.accentRedLight, 
-              border: `1px solid ${themeColors.accentRedBorder}66`, 
-              borderRadius: 1, 
-              color: themeColors.textPrimary, 
-              p:1.5, 
-              '& .MuiAlert-icon': {alignSelf: 'center', mr: 1} 
+        <DialogContent sx={{ px: { xs: 1.5, md: 2 }, pb: 1.5 }}>
+          <Alert
+            severity="warning"
+            icon={<WarningIcon sx={{ color: themeColors.accentRedPrimary, fontSize: '1.2rem' }} />}
+            sx={{
+              mb: 1.5,
+              bgcolor: themeColors.accentRedLight,
+              border: `1px solid ${themeColors.accentRedBorder}66`,
+              borderRadius: 1,
+              color: themeColors.textPrimary,
+              p: 1.5,
+              '& .MuiAlert-icon': { alignSelf: 'center', mr: 1 }
             }}
           >
             <AlertTitle sx={{ fontSize: '0.85rem', mb: 0.5, fontWeight: 'bold' }}>
@@ -546,29 +550,29 @@ function EliteSubscriptionModal({
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 1.5, gap: 1, justifyContent: 'center' }}>
-          <Button 
-            onClick={closeCancelConfirmation} 
-            variant="outlined" 
-            size="small" 
-            sx={{ 
-              color: themeColors.textSecondary, 
-              borderColor: themeColors.borderColor, 
-              fontSize: '0.75rem', 
-              '&:hover': { borderColor: themeColors.textPrimary, bgcolor: 'rgba(255,255,255,0.05)' } 
+          <Button
+            onClick={closeCancelConfirmation}
+            variant="outlined"
+            size="small"
+            sx={{
+              color: themeColors.textSecondary,
+              borderColor: themeColors.borderColor,
+              fontSize: '0.75rem',
+              '&:hover': { borderColor: themeColors.textPrimary, bgcolor: 'rgba(255,255,255,0.05)' }
             }}
           >
             Keep Subscription
           </Button>
-          <Button 
-            onClick={handleCancelSubscription} 
-            disabled={loading.cancel} 
-            variant="contained" 
+          <Button
+            onClick={handleCancelSubscription}
+            disabled={loading.cancel}
+            variant="contained"
             size="small"
-            sx={{ 
-              bgcolor: themeColors.accentRedPrimary, 
-              color: themeColors.textPrimary, 
-              fontSize: '0.75rem', 
-              '&:hover': { bgcolor: themeColors.accentRedSecondary } 
+            sx={{
+              bgcolor: themeColors.accentRedPrimary,
+              color: themeColors.textPrimary,
+              fontSize: '0.75rem',
+              '&:hover': { bgcolor: themeColors.accentRedSecondary }
             }}
           >
             {loading.cancel ? <CircularProgress size={16} color="inherit" /> : 'Confirm Cancellation'}

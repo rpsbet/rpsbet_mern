@@ -29,18 +29,12 @@ import {
   faMoneyBillWave,
 } from '@fortawesome/free-solid-svg-icons';
 import InfoIcon from '@mui/icons-material/Info';
-
-import Lottie from 'react-lottie';
-import spinningIcon from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
 
 // Redux
 import { useSelector, useDispatch } from 'react-redux';
 import {
   offerLoan,
-  acCalculateRemainingLoans,
-  addNewTransaction,
-  acQueryLoan,
   emitLoanOffer,
   cancelledOffer,
   reconsiderOffer,

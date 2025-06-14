@@ -5,36 +5,30 @@ import {
   changePasswordAndAvatar,
   changeUserName,
   changeLink,
-  setDarkMode,
   setNotificationsAllowed,
-  toggleMute,
   toggleGameSounds,
-  toggleNotificationSounds,
   toggleLowGraphics,
-  toggleMusic,
-  checkAndAddWalletAddress,
   disconnectWalletAddress
 } from '../../redux/Auth/user.actions';
 import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
-import { 
-  Modal, 
-  Box, 
-  Button, 
-  Tabs, 
-  Tab, 
-  IconButton, 
-  Typography, 
-  Paper, 
+import {
+  Modal,
+  Box,
+  Button,
+  Tabs,
+  Tab,
+  IconButton,
+  Typography,
+  Paper,
   Switch,
   TextField,
   Grid,
   Chip,
-  Divider,
   Alert,
   CircularProgress,
   FormControlLabel
 } from '@mui/material';
-import { 
+import {
   Close as CloseIcon,
   FileCopy as FileCopyIcon,
   Link as LinkIcon,
@@ -47,7 +41,7 @@ import axios from '../../util/Api';
 const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
-  
+
   // Redux state
   const user = useSelector(state => state.auth.user);
   const isDarkMode = useSelector(state => state.auth.isDarkMode);
@@ -61,20 +55,20 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
 
   const [activeTab, setActiveTab] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Profile state
   const [profileData, setProfileData] = useState({
     username: user?.username || '',
     bio: user?.bio || '',
     avatar: user?.avatar || ''
   });
-  
+
   // Password change state
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   // API Keys state
   const [apiKeys, setApiKeys] = useState([]);
   const [loadingApiKeys, setLoadingApiKeys] = useState(false);
@@ -82,7 +76,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const [newKeyData, setNewKeyData] = useState({
     name: '',
     permissions: [],
-    rateLimit: { requestsPerHour: 100, requestsPerDay: 1000 }
+    rateLimit: { requestsPerHour: 10, requestsPerDay: 100 }
   });
   const [generatedKey, setGeneratedKey] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -133,30 +127,122 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
     setActiveTab(newValue);
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      // Check if file is an image
-      if (!file.type.startsWith('image/')) {
-        dispatch(errorMsgBar('Please select an image file'));
-        return;
-      }
-      
-      // Check file size (limit to 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        dispatch(errorMsgBar('File size must be less than 5MB'));
-        return;
+    if (!file) return;
+
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      dispatch(errorMsgBar('Please select an image file'));
+      return;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      dispatch(errorMsgBar('File size must be less than 5MB'));
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // FIXED: Upload to Pinata instead of converting to base64
+      const avatarUrl = await uploadAvatarToPinata(file);
+
+      // Set the Pinata URL (not base64 data!)
+      setProfileData({
+        ...profileData,
+        avatar: avatarUrl
+      });
+
+      dispatch(successMsgBar('Avatar uploaded successfully!'));
+
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      dispatch(errorMsgBar('Failed to upload avatar. Please try again.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const uploadAvatarToPinata = async (file) => {
+    // Resize avatar to optimal size
+    const resizeAvatar = (file) => {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target.result;
+        };
+
+        img.onload = () => {
+          // Avatar-specific sizing (square, 200x200)
+          const maxSize = 200;
+          let width = img.width;
+          let height = img.height;
+
+          // Make it square by cropping to center
+          const size = Math.min(width, height);
+          const x = (width - size) / 2;
+          const y = (height - size) / 2;
+
+          canvas.width = maxSize;
+          canvas.height = maxSize;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // Draw cropped and resized image
+          ctx.drawImage(img, x, y, size, size, 0, 0, maxSize, maxSize);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject('Failed to generate avatar blob.');
+            }
+          }, 'image/webp', 0.8); // Use WebP for better compression
+        };
+
+        img.onerror = (error) => {
+          reject('Error processing avatar: ' + error);
+        };
+
+        reader.readAsDataURL(file);
+      });
+    };
+
+    try {
+
+      // Resize the avatar
+      const resizedBlob = await resizeAvatar(file);
+
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('file', resizedBlob, 'avatar.webp');
+
+      // Use your existing Pinata upload endpoint
+      const response = await axios.post('/game/upload-to-pinata', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status !== 200) {
+        throw new Error('Failed to upload avatar to Pinata.');
       }
 
-      // Create FileReader to convert to base64
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileData({
-          ...profileData,
-          avatar: e.target.result
-        });
-      };
-      reader.readAsDataURL(file);
+      const { success, imageUrl, message } = response.data;
+      if (!success || !imageUrl) {
+        throw new Error(message || 'Avatar upload failed, no imageUrl received.');
+      }
+
+      return imageUrl;
+
+    } catch (error) {
+      console.error('❌ Avatar upload error:', error);
+      throw new Error('Failed to upload avatar: ' + error.message);
     }
   };
 
@@ -209,7 +295,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       dispatch(errorMsgBar('Password confirmation does not match'));
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
       dispatch(errorMsgBar('Password must be at least 6 characters'));
       return;
@@ -235,7 +321,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       dispatch(errorMsgBar('Please enter a key name'));
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const response = await axios.post('/api-keys/generate', {
@@ -247,10 +333,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       if (response.data.success) {
         setGeneratedKey(response.data.apiKey);
         setShowNewKeyDialog(false);
-        setNewKeyData({ 
-          name: '', 
-          permissions: [], 
-          rateLimit: { requestsPerHour: 100, requestsPerDay: 1000 } 
+        setNewKeyData({
+          name: '',
+          permissions: [],
+          rateLimit: { requestsPerHour: 100, requestsPerDay: 1000 }
         });
         dispatch(successMsgBar('API key generated successfully!'));
         fetchApiKeys(); // Refresh the list
@@ -288,7 +374,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
     const newPermissions = newKeyData.permissions.includes(permission)
       ? newKeyData.permissions.filter(p => p !== permission)
       : [...newKeyData.permissions, permission];
-    setNewKeyData({...newKeyData, permissions: newPermissions});
+    setNewKeyData({ ...newKeyData, permissions: newPermissions });
   };
 
   const handleDisconnectWallet = (walletAddress) => {
@@ -318,7 +404,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
         accept="image/*"
         style={{ display: 'none' }}
       />
-      
+
       <Modal open={modalIsOpen || false} onClose={closeModal}>
         <Box
           sx={{
@@ -378,49 +464,50 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
 
             {/* Tabs */}
             <Tabs
-  value={activeTab}
-  onChange={handleTabChange}
-  textColor="inherit"
-  variant="scrollable"
-  scrollButtons="auto"
-  allowScrollButtonsMobile
-  sx={{
-    // hide the *first* scroll button (backward arrow)
-    '& .MuiTabScrollButton-root:first-of-type': {
-      display: 'none',
-    },
+              value={activeTab}
+              onChange={handleTabChange}
+              textColor="inherit"
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                // hide the *first* scroll button (backward arrow)
+                '& .MuiTabScrollButton-root:first-of-type': {
+                  display: 'none',
+                },
 
-    '& .MuiTabs-indicator': {
-      backgroundColor: '#ff0000',
-      height: '3px',
-    },
-    '& .MuiTab-root': {
-      fontSize: '1rem',
-      fontWeight: 500,
-      color: isDarkMode ? '#ccc' : '#555',
-      px: 2,
-      '&.Mui-selected': {
-        color: '#ff0000',
-      },
-    },
-  }}
->
-  {tabs.map((tab) => (
-    <Tab
-      key={tab.value}
-      value={tab.value}
-      label={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <span>{tab.icon}</span>
-          {tab.label}
-        </Box>
-      }
-    />
-  ))}
-</Tabs>
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#ff0000',
+                  height: '3px',
+                },
+                '& .MuiTab-root': {
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  color: isDarkMode ? '#ccc' : '#555',
+                  px: 2,
+                  '&.Mui-selected': {
+                    color: '#ff0000',
+                  },
+                },
+              }}
+            >
+              {tabs.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span>{tab.icon}</span>
+                      {tab.label}
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
 
             {/* Content */}
             <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+
               {/* Profile Tab */}
               {activeTab === 0 && (
                 <Grid container spacing={3}>
@@ -435,6 +522,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         color: isDarkMode ? '#fff' : '#333',
                       }}
                     >
+                      {/* UPDATED: Avatar display with loading state and error handling */}
                       <Box
                         sx={{
                           width: 120,
@@ -446,20 +534,69 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           justifyContent: 'center',
                           margin: '0 auto 16px',
                           fontSize: '48px',
-                          color: 'white'
+                          color: 'white',
+                          overflow: 'hidden',
+                          position: 'relative'
                         }}
                       >
                         {profileData.avatar ? (
-                          <img src={profileData.avatar} alt="Avatar" style={{
+                          <img
+                            src={profileData.avatar}
+                            alt="Avatar"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                            onError={(e) => {
+                              // Fallback if image fails to load
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+
+                        {/* Fallback display */}
+                        <Box
+                          sx={{
+                            position: profileData.avatar ? 'absolute' : 'static',
+                            top: 0,
+                            left: 0,
                             width: '100%',
                             height: '100%',
+                            display: profileData.avatar ? 'none' : 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#ff3030',
                             borderRadius: '50%',
-                            objectFit: 'cover'
-                          }} />
-                        ) : (
-                          '👤'
+                            fontSize: '48px',
+                            color: 'white'
+                          }}
+                        >
+                          {profileData.username ? profileData.username.charAt(0).toUpperCase() : '👤'}
+                        </Box>
+
+                        {/* Loading indicator */}
+                        {isLoading && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              borderRadius: '50%'
+                            }}
+                          >
+                            <CircularProgress color="error" size={30} />
+                          </Box>
                         )}
                       </Box>
+
                       <Typography variant="h6" sx={{ mb: 1, color: isDarkMode ? '#fff' : '#333' }}>
                         {profileData.username}
                       </Typography>
@@ -471,26 +608,47 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           mb: 2
                         }}
                       />
+
+                      {/* UPDATED: Upload button with better loading state */}
                       <Button
                         variant="outlined"
                         color="error"
                         fullWidth
-                        startIcon={<span>📁</span>}
+                        startIcon={isLoading ? <CircularProgress size={20} color="error" /> : <span>📁</span>}
                         onClick={triggerFileUpload}
+                        disabled={isLoading}
                         sx={{
                           color: '#ff0000',
                           borderColor: '#ff0000',
                           '&:hover': {
                             backgroundColor: 'rgba(255, 0, 0, 0.1)',
                             borderColor: '#ff0000',
+                          },
+                          '&:disabled': {
+                            opacity: 0.6,
+                            cursor: 'not-allowed'
                           }
                         }}
                       >
-                        Upload Avatar
+                        {isLoading ? 'Uploading...' : 'Upload Avatar'}
                       </Button>
+
+                      {/* NEW: Upload progress/status indicator */}
+                      {isLoading && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            mt: 1,
+                            color: isDarkMode ? '#ccc' : '#666'
+                          }}
+                        >
+                          Processing sexiness...
+                        </Typography>
+                      )}
                     </Paper>
                   </Grid>
-                  
+
                   <Grid item xs={12} md={8}>
                     <Paper
                       elevation={1}
@@ -510,7 +668,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                             fullWidth
                             label="Username"
                             value={profileData.username}
-                            onChange={(e) => setProfileData({...profileData, username: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
                             variant="outlined"
                             sx={{
                               '& .MuiOutlinedInput-root': {
@@ -540,7 +698,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                             fullWidth
                             label="Bio"
                             value={profileData.bio}
-                            onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                            onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                             variant="outlined"
                             multiline
                             rows={3}
@@ -611,6 +769,8 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           />
                         </Grid>
                       </Grid>
+
+                      {/* UPDATED: Save button with better loading state */}
                       <Button
                         onClick={handleSaveProfile}
                         disabled={isLoading}
@@ -621,6 +781,19 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </Button>
+
+                      {/* NEW: Avatar format info */}
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          mt: 2,
+                          color: isDarkMode ? '#aaa' : '#777',
+                          fontStyle: 'italic'
+                        }}
+                      >
+                        🔥 Dammm where did you get that (that beauty)!
+                      </Typography>
                     </Paper>
                   </Grid>
                 </Grid>
@@ -872,7 +1045,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                     <Typography variant="body1">
                       <strong>🚀 Streamlined API v1.0.0</strong>
                     </Typography>
-                    Create complete game experiences with a single endpoint! React generation, image creation, 
+                    Create complete game experiences with a single endpoint! React generation, image creation,
                     and blockchain deposits are now unified. All games require SOL deposits and private keys for automated transactions.
                   </Alert>
 
@@ -911,7 +1084,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
 
                     {loadingApiKeys ? (
                       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                        <CircularProgress color='error'/>
+                        <CircularProgress color='error' />
                       </Box>
                     ) : apiKeys.length === 0 ? (
                       <Box sx={{ textAlign: 'center', p: 3 }}>
@@ -962,7 +1135,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                               {expandedKey === key.id ? '▼' : '▶'}
                             </Typography>
                           </Box>
-                          
+
                           {expandedKey === key.id && (
                             <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
                               <Grid container spacing={2}>
@@ -1004,16 +1177,16 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                         'extract_room_info': 'Extract Info (Legacy - now automatic)',
                                         'generate_image': 'Generate Images (Legacy - now optional in create_room)'
                                       };
-                                      
+
                                       const isLegacy = ['generate_react', 'extract_room_info', 'generate_image'].includes(permission);
-                                      
+
                                       return (
                                         <Chip
                                           key={permission}
                                           label={permissionLabels[permission] || permission.replace('_', ' ')}
                                           size="small"
                                           variant="outlined"
-                                          sx={{ 
+                                          sx={{
                                             borderColor: isLegacy ? '#ff9800' : '#ff0000',
                                             color: isLegacy ? '#ff9800' : (isDarkMode ? '#fff' : '#333'),
                                             backgroundColor: isLegacy ? 'rgba(255, 152, 0, 0.1)' : 'transparent'
@@ -1032,7 +1205,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                 </Grid>
                                 <Grid item xs={12}>
                                   <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
-                                    Rate Limits: {key.rateLimit?.requestsPerHour || 100}/hour, {key.rateLimit?.requestsPerDay || 1000}/day
+                                    Rate Limits: {key.rateLimit?.requestsPerHour || 10}/hour, {key.rateLimit?.requestsPerDay || 100}/day
                                   </Typography>
                                   <Button
                                     onClick={() => handleRevokeKey(key.keyId)}
@@ -1081,11 +1254,11 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         <Alert severity="success" sx={{ mb: 2, fontSize: '0.85rem' }}>
                           <strong>New:</strong> Single endpoint for complete game creation with mandatory blockchain deposits!
                         </Alert>
-                        <Button 
-                          variant="outlined" 
-                          color="error" 
-                          fullWidth 
-                          sx={{ 
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          fullWidth
+                          sx={{
                             mb: 1,
                             color: '#ff0000',
                             borderColor: '#ff0000',
@@ -1190,7 +1363,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                 </Box>
                                 <Chip label="Primary" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
                               </Box>
-                              
+
                               <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
                                 ✅ What's Included:
                               </Typography>
@@ -1201,7 +1374,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                                 <Chip label="🔐 Private Key Signing" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
                                 <Chip label="📊 Auto Info Extraction" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
                               </Box>
-                              
+
                               <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
                                 🔧 Required Fields:
                               </Typography>
@@ -1210,7 +1383,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                               </Typography>
                             </Box>
                           </Grid>
-                          
+
                           <Grid item xs={12} md={6}>
                             <Box
                               sx={{
@@ -1230,11 +1403,11 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                             </Box>
                           </Grid>
                         </Grid>
-                        
+
                         <Alert severity="info" sx={{ mt: 3 }}>
                           <Typography variant="body2">
-                            <strong>Migration Complete:</strong> Legacy endpoints (generate-react, extract-room-info, etc.) have been 
-                            consolidated into create-room. Existing API keys with old permissions will continue to work but we recommend 
+                            <strong>Migration Complete:</strong> Legacy endpoints (generate-react, extract-room-info, etc.) have been
+                            consolidated into create-room. Existing API keys with old permissions will continue to work but we recommend
                             generating new keys with create_room permission.
                           </Typography>
                         </Alert>
@@ -1270,7 +1443,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           }}
                         >
                           <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: isDarkMode ? '#e6e6e6' : '#2d3748' }}>
-{`curl -X POST "https://catsino.fun/api/public-api/create-room" \\
+                            {`curl -X POST "https://catsino.fun/api/public-api/create-room" \\
   -H "X-API-Key: your_api_key_here" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1284,7 +1457,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         </Box>
                         <Alert severity="warning" sx={{ mt: 2 }}>
                           <Typography variant="body2">
-                            <strong>Security:</strong> Never expose private keys in client-side code. 
+                            <strong>Security:</strong> Never expose private keys in client-side code.
                             Use this API only from secure server environments.
                           </Typography>
                         </Alert>
@@ -1340,8 +1513,8 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 type="password"
                 label="New Password"
                 value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                sx={{ 
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
@@ -1369,8 +1542,8 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 type="password"
                 label="Confirm Password"
                 value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                sx={{ 
+                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                sx={{
                   mb: 3,
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
@@ -1468,15 +1641,15 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                   You need Elite membership to access the Game Creation API. Visit the store to upgrade your account.
                 </Alert>
               )}
-              
+
               <TextField
                 fullWidth
                 label="Key Name"
                 value={newKeyData.name}
-                onChange={(e) => setNewKeyData({...newKeyData, name: e.target.value})}
+                onChange={(e) => setNewKeyData({ ...newKeyData, name: e.target.value })}
                 placeholder="e.g., Production API, Development Key"
                 disabled={!user?.elite}
-                sx={{ 
+                sx={{
                   mb: 3,
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
@@ -1499,20 +1672,20 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                   }
                 }}
               />
-              
+
               <Typography variant="body1" sx={{ mb: 2, color: isDarkMode ? '#fff' : '#333' }}>
                 API Permissions
               </Typography>
-            
-              
+
+
               <Grid container spacing={1} sx={{ mb: 3 }}>
                 <Grid item xs={12}>
                   <Paper
                     elevation={0}
                     sx={{
                       p: 3,
-                      border: newKeyData.permissions.includes('create_room') 
-                        ? '2px solid #ff0000' 
+                      border: newKeyData.permissions.includes('create_room')
+                        ? '2px solid #ff0000'
                         : '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
                       backgroundColor: newKeyData.permissions.includes('create_room')
@@ -1547,7 +1720,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                           <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 2 }}>
                             Everything you need to create complete game experiences with a single API call
                           </Typography>
-                          
+
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                             <Chip label="⚛️ React Generation" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
                             <Chip label="🎨 AI Images" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
@@ -1622,12 +1795,12 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
                 ✅ API Key Generated Successfully
               </Typography>
-              
+
               <Alert severity="warning" sx={{ mb: 3 }}>
-                <strong>⚠️ Important:</strong> This is the only time you'll see the full API key. 
+                <strong>⚠️ Important:</strong> This is the only time you'll see the full API key.
                 Copy it now and store it securely.
               </Alert>
-              
+
               <Typography variant="body2" sx={{ mb: 1, color: isDarkMode ? '#ccc' : '#666' }}>
                 Your API Key
               </Typography>
@@ -1638,8 +1811,8 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                   variant="outlined"
                   InputProps={{
                     readOnly: true,
-                    style: { 
-                      fontFamily: 'monospace', 
+                    style: {
+                      fontFamily: 'monospace',
                       fontSize: '12px',
                       color: isDarkMode ? '#fff' : '#333'
                     }

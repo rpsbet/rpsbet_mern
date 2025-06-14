@@ -27,36 +27,30 @@ import {
   IconButton,
   Card,
   CardContent,
-  Divider,
   Grid,
-  TableContainer,
-  TableHead,
   useTheme,
   useMediaQuery,
   Stack,
-  Badge,
   Avatar,
 } from '@mui/material';
-import Lottie from 'react-lottie';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMoneyCheckAlt,
   faThumbsUp,
-  faThumbsDown,
   faSearch,
   faFilter,
   faSortAmountDown,
   faSortAmountUp,
-  faArrowRight,
   faLock,
+  faFistRaised,
 } from '@fortawesome/free-solid-svg-icons';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { Info, Close, Settings, Refresh, Tune, MonetizationOn } from '@mui/icons-material';
+import { Info, Close, } from '@mui/icons-material';
 
 import {
   getMyGames,
   editPayout,
-  setGameMode,
   addNewTransaction,
   getRoomList,
   endGame,
@@ -65,13 +59,10 @@ import {
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { getRank } from '../../util/getRank';
 import { convertToCurrency } from '../../util/conversion';
-import { confirmModalCreate } from '../modal/ConfirmAlerts';
 
 import CoHostModal from '../modal/CoHostModal';
 import SettingsRef from '../../components/SettingsRef';
-import Battle from '../icons/Battle';
-import pressHold from '../LottieAnimations/pressHold.json';
-import animationData from '../LottieAnimations/add';
+
 
 function MyGamesTable() {
   const dispatch = useDispatch();
@@ -471,19 +462,6 @@ function MyGamesTable() {
     balance,
   ]);
 
-  // ---------- Lottie config ----------
-  const defaultOptions = {
-    loop: !isLowGraphics,
-    autoplay: !isLowGraphics,
-    animationData,
-    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
-  };
-  const pressHoldOptions = {
-    loop: !isLowGraphics,
-    autoplay: !isLowGraphics,
-    animationData: pressHold,
-  };
-
   // ---------- Render ----------
   return (
     <Paper
@@ -501,7 +479,7 @@ function MyGamesTable() {
       <Box
         sx={{
           p: 2,
-          background:'#1e1e1e',
+          background: '#1e1e1e',
           borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
         }}
       >
@@ -555,7 +533,7 @@ function MyGamesTable() {
                   </InputAdornment>
                 ),
               }}
-             
+
             />
           </Grid>
         </Grid>
@@ -597,7 +575,6 @@ function MyGamesTable() {
                   backgroundColor: isDarkMode ? 'rgba(46, 46, 46, 0.5)' : 'rgba(250, 250, 255, 0.5)',
                 }}
               >
-                <Lottie options={defaultOptions} height={100} width={100} />
                 <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
                   No Games Found
                 </Typography>
@@ -609,7 +586,7 @@ function MyGamesTable() {
                   color="error"
                   sx={{ mt: 2 }}
                   onClick={() => { navigate('/create'); }}
-                  >
+                >
                   Create New Game
                 </Button>
               </Card>
@@ -748,7 +725,7 @@ function MyGamesTable() {
                                 <Tooltip title="Battles">
                                   <Chip
                                     size="small"
-                                    icon={<Battle width="12px" />}
+                                    icon={<FontAwesomeIcon icon={faFistRaised} style={{ fontSize: 12 }} />} 
                                     label={row.battles || 0}
                                     variant="outlined"
                                   />
@@ -759,7 +736,6 @@ function MyGamesTable() {
                             {/* Actions */}
                             <Grid item xs={6} sm={1}>
                               <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                                {row.game_type.short_name === 'Custom' && (
                                   <Tooltip title="Game Settings">
                                     <IconButton
                                       size="small"
@@ -774,7 +750,6 @@ function MyGamesTable() {
                                       <AutoAwesomeIcon fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
-                                )}
                                 {row.status === 'finished' ? (
                                   <>
                                   </>
@@ -857,7 +832,7 @@ function MyGamesTable() {
                                               s
                                             </Box>
                                           </Box>
-                                          <Lottie options={pressHoldOptions} height={40} width={40} />
+
                                         </>
                                       ) : (
                                         'RUG'
@@ -940,7 +915,7 @@ function MyGamesTable() {
           selectedRow={selectedRow}
           balance={balance}
           user={user}
-          togglePopup={() => {}}
+          togglePopup={() => { }}
           handleClose={handleCloseCoHostModal}
           handleSendCoHost={handleSendCoHost}
           handleCoHostAmountChange={handleCoHostAmountChange}

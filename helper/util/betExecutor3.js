@@ -590,10 +590,6 @@ const addToQueue = async (req, bot = false) => {
         };
       }
 
-      // Setup for game processing
-      const commission = roomInfo['tax'] + tax.value;
-
-      // Create game log
       const newGameLog = new GameLog({
         room: roomInfo._id,
         creator: roomInfo.creator._id,
@@ -602,7 +598,6 @@ const addToQueue = async (req, bot = false) => {
         bet_amount: req.body.bet_amount,
       });
 
-      // Setup transactions
       newTransactionC = new GameTransaction({
         user: roomInfo['creator'],
         amount: 0,
@@ -691,7 +686,6 @@ const addToQueue = async (req, bot = false) => {
         } catch (error) {
           throw new Error('Invalid Solana wallet address');
         }
-        console.log(`Processing winnings for user ${user._id} in room ${req.body._id} with amount ${newTransactionAmount}`);
         // Create a pending GameTransaction for the winnings
         const newGameTransaction = new GameTransaction({
           user: user._id,

@@ -35,7 +35,8 @@ import {
   differenceInDays,
   isValid,
 } from 'date-fns';
-import Battle from '../icons/Battle';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFistRaised } from '@fortawesome/free-solid-svg-icons';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import PlayerModal from '../modal/PlayerModal';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -106,13 +107,13 @@ function OpenGamesTable(props) {
     }
     // Apply search filter if gameTypeSearch is not empty
     if (gameTypeSearch) {
-        const lowerCaseSearch = gameTypeSearch.toLowerCase();
-        filtered = filtered.filter(room => {
-            const roomGameTypes = Array.isArray(room.game_type) ? room.game_type : [room.game_type];
-            return roomGameTypes.some(type => type.toLowerCase().includes(lowerCaseSearch)) ||
-                   room.name.toLowerCase().includes(lowerCaseSearch) ||
-                   room.description.toLowerCase().includes(lowerCaseSearch);
-        });
+      const lowerCaseSearch = gameTypeSearch.toLowerCase();
+      filtered = filtered.filter(room => {
+        const roomGameTypes = Array.isArray(room.game_type) ? room.game_type : [room.game_type];
+        return roomGameTypes.some(type => type.toLowerCase().includes(lowerCaseSearch)) ||
+          room.name.toLowerCase().includes(lowerCaseSearch) ||
+          room.description.toLowerCase().includes(lowerCaseSearch);
+      });
     }
 
     return filtered;
@@ -133,8 +134,23 @@ function OpenGamesTable(props) {
     dispatch(getTopGameTypes());
   }, [dispatch]);
 
-  // Removed the problematic useEffect that was updating localRoomList and roomList in a loop
-  // The highlighting logic is now within processedRoomList useMemo.
+  const handleRoomActionUpdated = (data) => {
+    console.log('Room action updated:', data);
+    dispatch({
+      type: 'UPDATE_SINGLE_ROOM',
+      payload: {
+        _id: data.roomId,
+        likes: data.likes,
+        dislikes: data.dislikes,
+        views: data.views
+      }
+    });
+  };
+
+  if (window.socketClient && window.socketClient.socket) {
+      // Add the event listener
+      window.socketClient.socket.on('ROOM_ACTION_UPDATED', handleRoomActionUpdated);
+    }
 
   const handleChangePage = useCallback((event, newPage) => {
     setPage(newPage);
@@ -144,13 +160,6 @@ function OpenGamesTable(props) {
     setSelectedGameType(gameType);
     setPage(1); // Reset pagination when changing filter
     setGameTypeSearch(''); // Clear search when changing main game type filter
-
-    // Fetch rooms for the selected game type if it's not 'All'
-    // If 'All' is selected, your initial `getRoomList({ game_type: 'All' })` should cover it.
-    // However, if you want to explicitly re-fetch, you can.
-    // For now, `roomList` (from Redux) will update and trigger `processedRoomList` & `displayedRooms` recalculation.
-    // This dispatch might be redundant if the initial fetch gets all, and subsequent filters are client-side.
-    // If your backend endpoint truly filters by game_type, then keep this.
     dispatch(getRoomList({ game_type: gameType }));
   }, [dispatch]);
 
@@ -302,45 +311,45 @@ function OpenGamesTable(props) {
             />
           ))}
 
-            {/* Search Input */}
-            <TextField
-                value={gameTypeSearch}
-                onChange={handleGameTypeSearchChange}
-                placeholder="Search rooms..."
-                variant="outlined"
-                size="small"
-                sx={{
-                    ml: { xs: 0, sm: 2 },
-                    minWidth: { xs: '150px', sm: '200px' },
-                    flexShrink: 0,
-                    '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        backgroundColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                        '& fieldset': {
-                            borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                        },
-                        '&:hover fieldset': {
-                            borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                        },
-                        '&.Mui-focused fieldset': {
-                            borderColor: theme.palette.error.main,
-                        },
-                    },
-                    '& .MuiInputBase-input': {
-                        color: effectiveIsDarkMode ? '#fff' : '#000',
-                    },
-                    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
-                        color: effectiveIsDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-                    },
-                }}
-                InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <SearchIcon />
-                        </InputAdornment>
-                    ),
-                }}
-            />
+          {/* Search Input */}
+          <TextField
+            value={gameTypeSearch}
+            onChange={handleGameTypeSearchChange}
+            placeholder="Search rooms..."
+            variant="outlined"
+            size="small"
+            sx={{
+              ml: { xs: 0, sm: 2 },
+              minWidth: { xs: '150px', sm: '200px' },
+              flexShrink: 0,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                backgroundColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                '& fieldset': {
+                  borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                },
+                '&:hover fieldset': {
+                  borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme.palette.error.main,
+                },
+              },
+              '& .MuiInputBase-input': {
+                color: effectiveIsDarkMode ? '#fff' : '#000',
+              },
+              '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+                color: effectiveIsDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
         </Box>
 
         {/* Games Display */}
@@ -382,7 +391,7 @@ function OpenGamesTable(props) {
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                         <Box sx={{ display: 'flex' }}>
-                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px'} } />
+                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
                           <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', ml: -1 }} />
                         </Box>
                         <Skeleton variant="circular" width={44} height={44} />
@@ -599,8 +608,8 @@ function OpenGamesTable(props) {
                             >
                               <Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: '0.5px' }}>
                                 {Array.isArray(row.game_type)
-                                    ? row.game_type.map(type => type.toUpperCase()).join(', ')
-                                    : (row.game_type ? row.game_type.toUpperCase() : 'N/A')}
+                                  ? row.game_type.map(type => type.toUpperCase()).join(', ')
+                                  : (row.game_type ? String(row.game_type).toUpperCase() : 'N/A')}
                               </Typography>
                             </Box>
                           </Box>
@@ -672,7 +681,7 @@ function OpenGamesTable(props) {
                                   : '1px solid rgba(0,0,0,0.08)',
                               }}
                             >
-                              <Battle sx={{ fontSize: 20, opacity: 0.8 }} />
+                              <FontAwesomeIcon icon={faFistRaised} style={{ fontSize: 20, color: effectiveIsDarkMode ? '#ff0000' : '#000' }} />
                             </Box>
 
                             {row.joiners?.length > 0 && (

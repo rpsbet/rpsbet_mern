@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import Lottie from 'react-lottie';
+
 import { motion } from 'framer-motion';
-import cat from '../game_panel/LottieAnimations/blob.json';
+
 import { useSelector } from 'react-redux';
 
 function LoadingComponent() {
@@ -20,21 +20,7 @@ function LoadingComponent() {
         p: 8 // Or a specific width
       }}
     >
-      {/* Cat Lottie Animation */}
-      {!isLowGraphics && (
-      <Box sx={{ filter: 'invert(1) scale(-1)', width: '120px', height: '120px' }}>
-        <Lottie
-          options={{
-            loop: isLowGraphics ? false : true,
-            autoplay: isLowGraphics ? false : true,
-            animationData: cat,
-            rendererSettings: {
-              preserveAspectRatio: 'xMidYMid slice'
-            }
-          }}
-        />
-      </Box>
-      )}
+   
 
       {/* Loading Text */}
       <Typography

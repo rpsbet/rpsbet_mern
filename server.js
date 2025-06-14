@@ -22,9 +22,10 @@ const interestCron = require('./helper/util/interestCron.js');
 
 const app = express();
 
+
 // -------------------- Redis Client Setup --------------------
 const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379', // Use env variable or default
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
@@ -49,21 +50,9 @@ const server = app.listen(PORT, () => {
 });
 
 // -------------------- Socket.io Setup --------------------
-const io = socketController.socketio(server, {
-  cors: {
-    origin: [
-      'http://localhost:3000', // Development
-      'https://catsino.fun',   // Production
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
-  },
-  allowEIO3: true, // Allow Engine.IO v3 clients
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  upgradeTimeout: 30000,
-  maxHttpBufferSize: 1e6, // 1MB
-});
+// Pass the server instance AND the redisClient instance to your socket controller.
+// Your socketController will now be responsible for configuring cors, transports, etc.
+const io = socketController.socketio(server, redisClient); // <--- MODIFIED LINE
 
 setTimeout(() => callCronJob.callCronJobs(io), 500);
 setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
@@ -81,19 +70,14 @@ app.use((req, res, next) => {
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'http://localhost:3000',
+      'http://localhost:3000', 
       'https://catsino.fun',
-      // Add your external API domains here if needed
-      // 'https://your-external-app.com'
     ];
-
-    // Allow requests with no origin (mobile apps, server-to-server, etc.)
+    
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      // For public API, you might want to allow all origins for specific routes
-      // This will be handled by route-specific CORS if needed
-      callback(null, true); // Changed to allow all for API access
+      callback(null, true); 
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -134,8 +118,7 @@ const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       maxPoolSize: 20,
-      serverSelectionTimeoutMS: 5000,
-      writeConcern: { w: 1, j: false },
+      serverSelectionTimeoutMS: 5000, 
     });
     console.log('*** MongoDB connected');
   } catch (error) {
@@ -272,11 +255,11 @@ if (process.env.NODE_ENV === 'production') {
 // Enhanced error handling for API routes
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-
+  
   // API routes get JSON error responses
   if (req.path.startsWith('/api/')) {
     const isDevelopment = process.env.NODE_ENV === 'development';
-
+    
     res.status(err.status || 500).json({
       success: false,
       error: err.message || 'Internal server error',
