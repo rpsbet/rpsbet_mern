@@ -567,7 +567,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       room: newRoom._id,
       creator: req.user._id,
       joined_user: req.user._id,
-      game_type: classifiedGameTypes[0],
       bet_amount: amountAfterFee,
       hosts: [hostObj],
       game_result: -3000,
