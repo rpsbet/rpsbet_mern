@@ -166,17 +166,10 @@ const Comments = ({ roomId }) => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          mt: 2,
-          background: 'rgba(30, 30, 30, 0.3)', // Glassmorphism semi-transparent background
-          backdropFilter: 'blur(15px)', // Blur effect
-          WebkitBackdropFilter: 'blur(15px)', // Safari support
-          border: '1px solid rgba(255, 255, 255, 0.1)', // Subtle border
-          borderRadius: '0.3em', // Original border radius
-          p: '20px', // Original padding
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)', // Depth shadow
-          '@supports not (backdrop-filter: blur(15px))': {
-            background: 'rgba(30, 30, 30, 0.6)', // Fallback
-          },
+          padding: '16px',
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
         {showPlayerModal && (
@@ -188,7 +181,7 @@ const Comments = ({ roomId }) => {
         )}
 
         <Typography
-          variant="h6"
+          variant="body1"
           sx={{
             fontWeight: 600,
             color: '#ffffff',
@@ -196,29 +189,30 @@ const Comments = ({ roomId }) => {
             display: 'flex',
             alignItems: 'center',
             gap: 1,
+            fontSize: '0.9rem',
           }}
         >
-          <FontAwesomeIcon icon={faPenSquare} />
+          <FontAwesomeIcon icon={faPenSquare} style={{ fontSize: '14px' }} />
           Share Your Feedback
         </Typography>
 
         {loading ? (
-          <LinearProgress color="error" />
+          <LinearProgress color="error" sx={{ height: 2, borderRadius: 1 }} />
         ) : (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 2 }}>
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                gap: 1,
                 alignItems: 'flex-start',
-                mb: 2,
+                mb: 1,
               }}
             >
               <TextField
-                color="error"
-                label="Share your thoughts or suggestions!"
-                variant="filled"
+                label="Share your thoughts..."
+                variant="outlined"
                 fullWidth
+                size="small"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => {
@@ -227,35 +221,69 @@ const Comments = ({ roomId }) => {
                     handleCommentSubmit();
                   }
                 }}
-               
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#ff0000',
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.85rem',
+                  },
+                }}
               />
               <Button
                 onClick={handleCommentSubmit}
                 variant="contained"
-                startIcon={<FontAwesomeIcon icon={faPenSquare} />}
                 color="error"
+                size="small"
                 sx={{
                   textTransform: 'none',
-                  borderRadius: 1,
+                  minWidth: 'auto',
+                  px: 2,
+                  py: 1,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
                   '&:hover': {
-                    background: '#FF0000',
-                    boxShadow: '0 4px 16px rgba(211, 47, 47, 0.3)',
+                    backgroundColor: '#d32f2f',
                   },
                 }}
               >
-                <Typography variant="button">Post</Typography>
+                Post
               </Button>
             </Box>
-            <FormHelperText sx={{ color: '#e0e0e0', mb: 2 }}>
-              Hosts can use our AI tools to improve their games based your feedback!
-            </FormHelperText>
-            <Typography variant="body2" sx={{ color: '#b0b0b0', fontStyle: 'italic' }}>
-              Example prompts:
-              <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
-                <li>"Could we add more levels?"</li>
-                <li>"The UI is great, but the text is hard to read."</li>
-                <li>"Can we reduce the odds and increase multipliers?"</li>
-              </ul>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '0.7rem',
+                display: 'block',
+                mb: 1,
+              }}
+            >
+              Hosts can use our AI tools to improve their games based on your feedback!
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '0.65rem',
+                fontStyle: 'italic',
+              }}
+            >
+              Example: "Could we add more levels?" or "Can we reduce the odds?"
             </Typography>
           </Box>
         )}
@@ -263,23 +291,33 @@ const Comments = ({ roomId }) => {
         {loading ? (
           <Box>
             {[...Array(3)].map((_, index) => (
-              <Skeleton
+              <Box
                 key={index}
-                variant="rectangular"
-                width="100%"
-                height={50}
-                sx={{ mb: 1, borderRadius: 1 }}
-              />
+                sx={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  mb: 1,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Skeleton variant="circular" width={24} height={24} />
+                  <Skeleton variant="text" width="60%" height={16} />
+                </Box>
+                <Skeleton variant="text" width="80%" height={14} sx={{ mt: 0.5 }} />
+              </Box>
             ))}
           </Box>
         ) : comments.length === 0 ? (
           <Typography
-            variant="body1"
+            variant="body2"
             sx={{
               textAlign: 'center',
               mt: 2,
-              fontSize: '16px',
-              color: '#999',
+              fontSize: '0.8rem',
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontStyle: 'italic',
             }}
           >
             Be the first to share your feedback!
@@ -291,19 +329,18 @@ const Comments = ({ roomId }) => {
               sx={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                mb: 2,
-                p: 2,
-                bgcolor: 'rgba(255, 255, 255, 0.05)', // Glassmorphic comment background
-                borderRadius: 1,
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transition: 'all 0.3s ease',
+                mb: 1,
+                padding: '8px 12px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.03)',
                 },
               }}
             >
-              <Box sx={{ mr: 2 }}>
+              <Box sx={{ mr: 1.5 }}>
                 <Tooltip title={comment.user.username}>
                   <Box
                     component="a"
@@ -321,30 +358,55 @@ const Comments = ({ roomId }) => {
                       alt=""
                       darkMode={isDarkMode}
                       className="avatar"
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
                     />
                   </Box>
                 </Tooltip>
               </Box>
-              <Box sx={{ flexGrow: 1 }}>
+              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                 <Box
-                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 0.5,
+                  }}
                 >
                   <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 'bold', fontSize: '0.8em', color: '#ffffff' }}
+                    variant="caption"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      color: '#ffffff',
+                    }}
                   >
                     {comment.user.username}
                   </Typography>
                   <Typography
                     variant="caption"
-                    sx={{ fontSize: '0.6em', color: 'rgba(255, 255, 255, 0.7)' }}
+                    sx={{
+                      fontSize: '0.65rem',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    }}
                   >
-  {comment.created_at ? formatDistanceToNow(parseISO(comment.created_at), { addSuffix: true }) : 'N/A'}
-
-
+                    {comment.created_at
+                      ? formatDistanceToNow(parseISO(comment.created_at), { addSuffix: true })
+                      : 'N/A'}
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em', color: '#e0e0e0' }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: 1.3,
+                    wordBreak: 'break-word',
+                  }}
+                >
                   {comment.content}
                 </Typography>
               </Box>
@@ -352,15 +414,18 @@ const Comments = ({ roomId }) => {
                 <IconButton
                   onClick={() => handleDeleteComment(comment._id)}
                   aria-label="delete"
+                  size="small"
                   sx={{
                     ml: 1,
                     color: '#ff0000',
+                    width: 24,
+                    height: 24,
                     '&:hover': {
-                      background: 'rgba(255, 77, 77, 0.1)',
+                      background: 'rgba(255, 0, 0, 0.1)',
                     },
                   }}
                 >
-                  <DeleteIcon sx={{ fontSize: '18px' }} />
+                  <DeleteIcon sx={{ fontSize: '14px' }} />
                 </IconButton>
               )}
             </Box>

@@ -23,6 +23,7 @@ function GameMainRoute() {
   const params = useParams();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
 
   useEffect(() => {
     setIsLoading(true);
@@ -33,6 +34,14 @@ function GameMainRoute() {
     return () => setIsLoading(true);
   }, [dispatch, location.pathname]);
 
+  // CREATE MAINPAGE WRAPPER COMPONENT
+  const MainPageWrapper = () => (
+    <MainPage 
+      selectedMobileTab={selectedMobileTab} 
+      setSelectedMobileTab={setSelectedMobileTab} 
+    />
+  );
+
   return (
     <Box
       sx={{
@@ -41,6 +50,7 @@ function GameMainRoute() {
         height: '100vh',
       }}
     >
+      {/* Loading bar */}
       {isLoading && (
         <Box
           sx={{
@@ -69,6 +79,7 @@ function GameMainRoute() {
         </Box>
       )}
 
+      {/* Chat sidebar for desktop */}
       {isDrawerOpen && !isMobile && (
         <Box
           sx={{
@@ -97,8 +108,12 @@ function GameMainRoute() {
         </Box>
       )}
 
+      {/* Main content area */}
       <Box sx={{ overflowY: 'auto' }}>
-        <SiteWrapper>
+        <SiteWrapper
+          selectedMobileTab={selectedMobileTab}
+          setSelectedMobileTab={setSelectedMobileTab}
+        >
           <Routes>
             <Route
               path="create/:game_type_name"
@@ -140,11 +155,12 @@ function GameMainRoute() {
                 </Suspense>
               }
             />
+            {/* UPDATED ROUTES */}
             <Route
               path="portfolio"
               element={
                 <Suspense fallback={<LoadingComponent />}>
-                  <MainPage />
+                  <MainPageWrapper />
                 </Suspense>
               }
             />
@@ -160,7 +176,7 @@ function GameMainRoute() {
               path="/"
               element={
                 <Suspense fallback={<LoadingComponent />}>
-                  <MainPage />
+                  <MainPageWrapper />
                 </Suspense>
               }
             />

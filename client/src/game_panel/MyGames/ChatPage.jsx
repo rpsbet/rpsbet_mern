@@ -16,17 +16,9 @@ import {
   faPaperPlane,
   faImage,
   faFileAlt,
-  faMicrophone,
+  faSmile,
+  faEllipsisV,
 } from '@fortawesome/free-solid-svg-icons';
-import { 
-  InsertEmoticon,
-  MoreVert as MoreVertIcon,
-  Attachment as AttachmentIcon,
-  Send as SendIcon,
-  Image as ImageIcon,
-  Mic as MicIcon,
-  Stop as StopIcon,
-} from '@mui/icons-material';
 
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
@@ -39,7 +31,6 @@ const ChatPanel = React.lazy(() => import('../ChatPanel/ChatPanel'));
 
 import {
   Button,
-  InputAdornment,
   Popover,
   Typography,
   Drawer,
@@ -50,13 +41,10 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  Divider,
   Chip,
   Fade,
   Tooltip,
-  Badge,
   Paper,
-  LinearProgress,
   useTheme,
   alpha,
 } from '@mui/material';
@@ -73,91 +61,30 @@ const CONFIG = {
   DEBOUNCE_DELAY: 300,
 };
 
-const EMOJI_CATEGORIES = {
-  RECENT: '🕒',
-  SMILEYS: '😀',
-  PEOPLE: '👤',
-  ANIMALS: '🐶',
-  FOOD: '🍎',
-  ACTIVITIES: '⚽',
-  TRAVEL: '🚗',
-  OBJECTS: '💡',
-  SYMBOLS: '❤️',
-  FLAGS: '🏁',
-};
-
 const EMOJI_DATA = [
-  // Smileys & Emotion
   '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃',
   '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙',
   '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔',
-  '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
-  '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧',
-  '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐',
-  
-  // People & Body
   '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞',
-  '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍',
-  '👎', '👊', '✊', '🤛', '🤜', '👏', '🙌', '👐', '🤝', '🙏',
-  
-  // Animals & Nature
-  '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
-  '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒',
-  
-  // Food & Drink
-  '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈',
-  '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦',
-  
-  // Activities & Sports
-  '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱',
-  '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳',
-  
-  // Travel & Places
-  '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐',
-  '🛻', '🚚', '🚛', '🚜', '🏍️', '🛵', '🚲', '🛴', '🛹', '🛼',
-  
-  // Objects
-  '💡', '🔦', '🕯️', '🪔', '🧯', '🛢️', '💸', '💰', '💴', '💵',
-  '💶', '💷', '🪙', '💳', '💎', '⚖️', '🪜', '🧰', '🪛', '🔧',
-  
-  // Symbols
+  '👍', '👎', '👊', '✊', '🤛', '🤜', '👏', '🙌', '👐', '🤝',
   '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
-  '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️',
+  '🔥', '⭐', '✨', '💫', '🌟', '💯', '🎉', '🎊', '🎈', '🎁',
 ];
 
-// Enhanced emoji picker component
+// Compact emoji picker component
 const EmojiPicker = memo(({ onSelectEmoji, onClose, anchorEl, open }) => {
-  const [selectedCategory, setSelectedCategory] = useState('SMILEYS');
-  const [searchTerm, setSearchTerm] = useState('');
   const [recentEmojis, setRecentEmojis] = useState(() => {
     const stored = localStorage.getItem('recentEmojis');
     return stored ? JSON.parse(stored) : [];
   });
 
-  const filteredEmojis = useMemo(() => {
-    if (searchTerm) {
-      // Simple search - in production, you'd want emoji names/keywords
-      return EMOJI_DATA.filter(emoji => 
-        emoji.includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (selectedCategory === 'RECENT') {
-      return recentEmojis;
-    }
-    
-    // In production, categorize emojis properly
-    return EMOJI_DATA;
-  }, [searchTerm, selectedCategory, recentEmojis]);
-
   const handleEmojiSelect = useCallback((emoji) => {
-    // Add to recent emojis
     const newRecent = [emoji, ...recentEmojis.filter(e => e !== emoji)].slice(0, 20);
     setRecentEmojis(newRecent);
     localStorage.setItem('recentEmojis', JSON.stringify(newRecent));
-    
     onSelectEmoji(emoji);
-  }, [onSelectEmoji, recentEmojis]);
+    onClose();
+  }, [onSelectEmoji, recentEmojis, onClose]);
 
   return (
     <Popover
@@ -168,84 +95,83 @@ const EmojiPicker = memo(({ onSelectEmoji, onClose, anchorEl, open }) => {
       transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       PaperProps={{
         sx: {
-          width: 350,
-          height: 400,
-          borderRadius: '16px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          width: 280,
+          maxHeight: 240,
           overflow: 'hidden',
-          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.2)',
         },
       }}
     >
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Search */}
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Search emojis..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-            color='error'
-          />
-        </Box>
-
-        {/* Categories */}
+      <Box sx={{ p: 1 }}>
+        {recentEmojis.length > 0 && (
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.7rem', px: 1 }}>
+              Recent
+            </Typography>
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(8, 1fr)', 
+              gap: 0.5,
+              mt: 0.5,
+              mb: 1,
+            }}>
+              {recentEmojis.slice(0, 8).map((emoji, index) => (
+                <Button
+                  key={`recent-${emoji}-${index}`}
+                  variant="text"
+                  onClick={() => handleEmojiSelect(emoji)}
+                  sx={{
+                    minWidth: '28px',
+                    height: '28px',
+                    fontSize: '1rem',
+                    borderRadius: '4px',
+                    p: 0,
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 0, 0, 0.1)',
+                    },
+                  }}
+                >
+                  {emoji}
+                </Button>
+              ))}
+            </Box>
+          </Box>
+        )}
+        
         <Box sx={{ 
-          display: 'flex', 
-          p: 1, 
-          borderBottom: '1px solid', 
-          borderColor: 'divider',
-          overflowX: 'auto',
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(8, 1fr)', 
+          gap: 0.5,
+          maxHeight: 160,
+          overflowY: 'auto',
+          '&::-webkit-scrollbar': { width: '4px' },
+          '&::-webkit-scrollbar-thumb': { 
+            background: 'rgba(255, 255, 255, 0.2)', 
+            borderRadius: '2px' 
+          },
         }}>
-          {Object.entries(EMOJI_CATEGORIES).map(([category, icon]) => (
-            <IconButton
-              key={category}
-              size="small"
-              onClick={() => setSelectedCategory(category)}
+          {EMOJI_DATA.map((emoji, index) => (
+            <Button
+              key={`emoji-${emoji}-${index}`}
+              variant="text"
+              onClick={() => handleEmojiSelect(emoji)}
               sx={{
-                minWidth: '40px',
-                bgcolor: selectedCategory === category ? '#ff0000' : 'transparent',
-                color: selectedCategory === category ? 'primary.contrastText' : 'text.secondary',
+                minWidth: '28px',
+                height: '28px',
+                fontSize: '1rem',
+                borderRadius: '4px',
+                p: 0,
                 '&:hover': {
-                  bgcolor: selectedCategory === category ? '#ff00000' : '#ff000033',
+                  bgcolor: 'rgba(255, 0, 0, 0.1)',
                 },
               }}
             >
-              {icon}
-            </IconButton>
-          ))}
-        </Box>
-
-        {/* Emoji Grid */}
-        <Box sx={{ 
-          flex: 1, 
-          p: 1, 
-          overflowY: 'auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(8, 1fr)',
-          gap: 1,
-        }}>
-          {filteredEmojis.map((emoji, index) => (
-            <Tooltip key={`${emoji}-${index}`} title={emoji} arrow>
-              <Button
-                variant="text"
-                onClick={() => handleEmojiSelect(emoji)}
-                sx={{
-                  minWidth: '36px',
-                  height: '36px',
-                  fontSize: '1.2rem',
-                  borderRadius: '8px',
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                    transform: 'scale(1.1)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {emoji}
-              </Button>
-            </Tooltip>
+              {emoji}
+            </Button>
           ))}
         </Box>
       </Box>
@@ -253,18 +179,15 @@ const EmojiPicker = memo(({ onSelectEmoji, onClose, anchorEl, open }) => {
   );
 });
 
-// Enhanced message item with rich features
+// Compact message item
 const ChatMessageItem = memo(({ 
   messageData, 
   currentUserId, 
   onOpenPlayerModal, 
-  chatPartnerUserId,
   isConsecutive = false,
   showTimestamp = true,
 }) => {
-  const theme = useTheme();
   const isMyMessage = messageData.from === currentUserId;
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [showFullTimestamp, setShowFullTimestamp] = useState(false);
 
   const handleAvatarClick = useCallback(() => {
@@ -286,174 +209,95 @@ const ChatMessageItem = memo(({
       : date.toLocaleDateString();
   }, [showFullTimestamp]);
 
-  // Enhanced message content rendering
-  const renderMessageContent = () => {
-    const { message, messageType } = messageData;
-    
-    if (messageType === 'image') {
-      return (
-        <Box sx={{ position: 'relative', maxWidth: '300px' }}>
-          {!imageLoaded && (
-            <Skeleton variant="rectangular" width="100%" height={200} sx={{ borderRadius: '12px' }} />
-          )}
-          <Box
-            component="img"
-            src={message}
-            alt="Shared image"
-            onLoad={() => setImageLoaded(true)}
-            sx={{
-              maxWidth: '100%',
-              borderRadius: '12px',
-              display: imageLoaded ? 'block' : 'none',
-              cursor: 'pointer',
-            }}
-            onClick={() => {/* Handle image modal */}}
-          />
-        </Box>
-      );
-    }
-    
-    if (messageType === 'file') {
-      const fileData = JSON.parse(message);
-      return (
-        <Paper sx={{ 
-          p: 2, 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          bgcolor: 'action.hover',
-          cursor: 'pointer',
-        }}>
-          <FontAwesomeIcon icon={faFileAlt} />
-          <Typography variant="body2">{fileData.name}</Typography>
-        </Paper>
-      );
-    }
-    
-    // Regular text message with emoji support
-    return (
-      <Typography 
-        variant="body1" 
-        sx={{ 
-          wordBreak: 'break-word',
-          whiteSpace: 'pre-wrap',
-          lineHeight: 1.4,
-        }}
-      >
-        {message}
-      </Typography>
-    );
-  };
-
   return (
-    <Fade in timeout={200}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: isMyMessage ? 'flex-end' : 'flex-start',
+        mb: isConsecutive ? 0.5 : 1.5,
+        mx: 1.5,
+      }}
+    >
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: isMyMessage ? 'flex-end' : 'flex-start',
-          mb: isConsecutive ? 0.5 : 2,
-          mx: 2,
+          flexDirection: isMyMessage ? 'row-reverse' : 'row',
+          alignItems: 'flex-end',
+          gap: 1,
+          maxWidth: '70%',
         }}
       >
-        {/* Message bubble */}
+        {!isConsecutive && (
+          <IconButton onClick={handleAvatarClick} size="small" sx={{ p: 0 }}>
+            <Suspense fallback={<Skeleton variant="circular" width={28} height={28} />}>
+              <Avatar
+                src={messageData.avatar}
+                username={messageData.senderName}
+                user_id={messageData.from}
+                style={{ width: 28, height: 28 }}
+              />
+            </Suspense>
+          </IconButton>
+        )}
+
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: isMyMessage ? 'row-reverse' : 'row',
-            alignItems: 'flex-end',
-            gap: 1,
-            maxWidth: '70%',
+            padding: '8px 12px',
+            borderRadius: '12px',
+            background: isMyMessage 
+              ? '#ff0000'
+              : 'rgba(255, 255, 255, 0.05)',
+            color: isMyMessage ? '#fff' : 'rgba(255, 255, 255, 0.9)',
+            maxWidth: '100%',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            fontSize: '0.8rem',
+            lineHeight: 1.4,
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
           }}
         >
-          {/* Avatar (only show if not consecutive) */}
-          {!isConsecutive && (
-            <Tooltip title={`View ${isMyMessage ? 'your' : messageData.senderName || 'user'} profile`}>
-              <IconButton onClick={handleAvatarClick} size="small">
-                <Suspense fallback={<Skeleton variant="circular" width={32} height={32} />}>
-                  <Avatar
-                    src={messageData.avatar}
-                    username={messageData.senderName}
-                    user_id={messageData.from}
-                    style={{ width: 32, height: 32 }}
-                  />
-                </Suspense>
-              </IconButton>
-            </Tooltip>
-          )}
-
-          {/* Message content */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 1.5,
-              borderRadius: '18px',
-              bgcolor: isMyMessage 
-                ? '#ff0000'
-                : alpha(theme.palette.background.paper, 0.8),
-              color: isMyMessage 
-                ? theme.palette.primary.contrastText 
-                : theme.palette.text.primary,
-              maxWidth: '100%',
-              position: 'relative',
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                transform: 'translateY(-1px)',
-                // boxShadow: isMyMessage 
-                //   ? `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`
-                //   : `0 6px 16px ${alpha(theme.palette.grey[500], 0.15)}`,
-              },
-            }}
-          >
-            {renderMessageContent()}
-            
-            {/* Message status indicators */}
-            {isMyMessage && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'flex-end', 
-                mt: 0.5,
-                opacity: 0.7,
-              }}>
-                <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
-                  {messageData.is_read ? '✓✓' : '✓'}
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Box>
-
-        {/* Timestamp */}
-        {showTimestamp && (
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            onClick={() => setShowFullTimestamp(!showFullTimestamp)}
-            sx={{ 
+          {messageData.message}
+          
+          {isMyMessage && (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
               mt: 0.5,
-              cursor: 'pointer',
-              fontSize: '0.7rem',
-              opacity: 0.6,
-              '&:hover': { opacity: 1 },
-              transition: 'opacity 0.2s ease',
-            }}
-          >
-            {formatTimestamp(messageData.created_at || messageData.timestamp)}
-          </Typography>
-        )}
+              opacity: 0.7,
+            }}>
+              <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>
+                {messageData.is_read ? '✓✓' : '✓'}
+              </Typography>
+            </Box>
+          )}
+        </Box>
       </Box>
-    </Fade>
+
+      {showTimestamp && (
+        <Typography 
+          variant="caption" 
+          color="text.secondary"
+          onClick={() => setShowFullTimestamp(!showFullTimestamp)}
+          sx={{ 
+            mt: 0.25,
+            cursor: 'pointer',
+            fontSize: '0.65rem',
+            opacity: 0.6,
+            '&:hover': { opacity: 1 },
+          }}
+        >
+          {formatTimestamp(messageData.created_at || messageData.timestamp)}
+        </Typography>
+      )}
+    </Box>
   );
 });
 
-// Enhanced chat log display with virtual scrolling for performance
+// Compact chat log display
 const ChatLogDisplay = memo(({
   chatLogs,
   currentUserId,
-  chatPartnerUserId,
   onOpenPlayerModal,
   isFetchingOlderMessages,
   isLoadingRoom,
@@ -461,15 +305,12 @@ const ChatLogDisplay = memo(({
   onScroll,
   typingIndicator,
 }) => {
-  const theme = useTheme();
-
-  // Group consecutive messages from same sender
   const groupedMessages = useMemo(() => {
     return chatLogs.reduce((groups, message, index) => {
       const prevMessage = chatLogs[index - 1];
       const isConsecutive = prevMessage && 
         prevMessage.from === message.from && 
-        (new Date(message.created_at) - new Date(prevMessage.created_at)) < 300000; // 5 minutes
+        (new Date(message.created_at) - new Date(prevMessage.created_at)) < 300000;
       
       groups.push({ ...message, isConsecutive });
       return groups;
@@ -486,18 +327,18 @@ const ChatLogDisplay = memo(({
               display: 'flex',
               flexDirection: index % 2 === 0 ? 'row-reverse' : 'row',
               alignItems: 'flex-end',
-              mb: 2,
+              mb: 1.5,
               gap: 1,
             }}
           >
-            <Skeleton variant="circular" width={32} height={32} />
+            <Skeleton variant="circular" width={28} height={28} />
             <Box sx={{ flex: 1, maxWidth: '70%' }}>
               <Skeleton 
                 variant="rectangular" 
-                height={Math.random() * 40 + 40} 
-                sx={{ borderRadius: '18px', mb: 0.5 }} 
+                height={Math.random() * 30 + 30} 
+                sx={{ borderRadius: '12px', mb: 0.25 }} 
               />
-              <Skeleton variant="text" width="30%" height={12} />
+              <Skeleton variant="text" width="25%" height={10} />
             </Box>
           </Box>
         ))}
@@ -512,54 +353,35 @@ const ChatLogDisplay = memo(({
       sx={{
         flex: 1,
         overflowY: 'auto',
-        overflowX: 'hidden',
-        position: 'relative',
-        background: `linear-gradient(to bottom, 
-          #1e1e1e, 
-          ${alpha(theme.palette.background.default, 0.9)}
-        )`,
-        '&::-webkit-scrollbar': {
-          width: '6px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: alpha(theme.palette.divider, 0.1),
-          borderRadius: '3px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: alpha(theme.palette.primary.main, 0.6),
-          borderRadius: '3px',
-          '&:hover': {
-            background: alpha(theme.palette.primary.main, 0.8),
-          },
+        background: 'rgba(255, 255, 255, 0.01)',
+        '&::-webkit-scrollbar': { width: '4px' },
+        '&::-webkit-scrollbar-thumb': { 
+          background: 'rgba(255, 255, 255, 0.2)', 
+          borderRadius: '2px' 
         },
       }}
     >
-      {/* Loading indicator for older messages */}
       {isFetchingOlderMessages && (
         <Box sx={{ 
-          position: 'sticky', 
-          top: 0, 
-          zIndex: 1,
-          bgcolor: alpha(theme.palette.background.default, 0.9),
-          backdropFilter: 'blur(10px)',
-          p: 2,
-          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 1,
+          p: 1,
         }}>
-          <CircularProgress size={24} color="error" />
-          <Typography variant="caption" sx={{ ml: 1 }}>
-            Loading older messages...
+          <CircularProgress size={16} color="error" />
+          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+            Loading...
           </Typography>
         </Box>
       )}
 
-      {/* Messages */}
-      <Box sx={{ py: 2 }}>
+      <Box sx={{ py: 1 }}>
         {groupedMessages.map((message, index) => (
           <ChatMessageItem
             key={message._id || message.timestamp || index}
             messageData={message}
             currentUserId={currentUserId}
-            chatPartnerUserId={chatPartnerUserId}
             onOpenPlayerModal={onOpenPlayerModal}
             isConsecutive={message.isConsecutive}
             showTimestamp={!message.isConsecutive || index === groupedMessages.length - 1}
@@ -567,40 +389,27 @@ const ChatLogDisplay = memo(({
         ))}
       </Box>
 
-      {/* Typing indicator */}
       {typingIndicator && (
         <Box sx={{ 
           display: 'flex', 
           alignItems: 'center',
           gap: 1,
-          p: 2,
+          p: 1.5,
           opacity: 0.7,
         }}>
-          <Skeleton variant="circular" width={24} height={24} />
+          <Skeleton variant="circular" width={20} height={20} />
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Box sx={{ 
-              width: 6, 
-              height: 6, 
-              borderRadius: '50%', 
-              bgcolor: 'primary.main',
-              animation: 'pulse 1.4s ease-in-out infinite',
-            }} />
-            <Box sx={{ 
-              width: 6, 
-              height: 6, 
-              borderRadius: '50%', 
-              bgcolor: 'primary.main',
-              animation: 'pulse 1.4s ease-in-out 0.2s infinite',
-            }} />
-            <Box sx={{ 
-              width: 6, 
-              height: 6, 
-              borderRadius: '50%', 
-              bgcolor: 'primary.main',
-              animation: 'pulse 1.4s ease-in-out 0.4s infinite',
-            }} />
+            {[0, 1, 2].map((i) => (
+              <Box key={i} sx={{ 
+                width: 4, 
+                height: 4, 
+                borderRadius: '50%', 
+                bgcolor: '#ff0000',
+                animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`,
+              }} />
+            ))}
           </Box>
-          <Typography variant="caption">
+          <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
             {typingIndicator.username} is typing...
           </Typography>
         </Box>
@@ -609,21 +418,17 @@ const ChatLogDisplay = memo(({
   );
 });
 
-// Enhanced chat header with more features
+// Compact chat header
 const ChatHeader = memo(({
-  isDrawerOpen,
   onNavigateBack,
   onOpenPlayerModal,
   chatPartnerUserId,
   chatPartnerAvatar,
-  chatPartnerRank,
   chatPartnerUsername,
   chatPartnerAccessory,
   chatPartnerElite,
   isOnline,
-  lastSeen,
 }) => {
-  const theme = useTheme();
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   const handleUserClick = useCallback(() => {
@@ -641,117 +446,111 @@ const ChatHeader = memo(({
   }, []);
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        borderRadius: '0',
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'rgba(255, 255, 255, 0.02)',
       }}
     >
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        p: 2,
-        gap: 2,
-      }}>
-        {/* Back button */}
-        <Tooltip title="Go back" arrow>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={onNavigateBack}
-            startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
-            sx={{ 
-              borderRadius: '12px',
-              textTransform: 'none',
-            }}
-          >
-            Back
-          </Button>
-        </Tooltip>
+      {/* Back button */}
+      <IconButton
+        onClick={onNavigateBack}
+        size="small"
+        sx={{
+          color: 'rgba(255, 255, 255, 0.7)',
+          '&:hover': { color: '#fff' },
+        }}
+      >
+        <FontAwesomeIcon icon={faArrowLeft} style={{ fontSize: '14px' }} />
+      </IconButton>
 
-        {/* Chat partner info */}
-        {chatPartnerUsername && (
-          <Box
-            onClick={handleUserClick}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              flex: 1,
-              cursor: 'pointer',
-              p: 1,
-              borderRadius: '12px',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                bgcolor: alpha(theme.palette.action.hover, 0.1),
-              },
-            }}
-          >
-          
-              <Suspense fallback={<Skeleton variant="circular" width={48} height={48} />}>
-                <Avatar
-                  src={chatPartnerAvatar}
-                  rank={chatPartnerRank}
-                  username={chatPartnerUsername}
-                  accessory={chatPartnerAccessory}
-                  elite={chatPartnerElite}
-                  user_id={chatPartnerUserId}
-                  style={{ width: 48, height: 48 }}
-                />
-              </Suspense>
-            
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0 }}>
-                {chatPartnerUsername}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {isOnline ? 'Online' : `Last seen ${lastSeen}`}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Menu button */}
-        <Tooltip title="Chat options" arrow>
-          <IconButton onClick={handleMenuOpen} sx={{ borderRadius: '12px' }}>
-            <MoreVertIcon />
-          </IconButton>
-        </Tooltip>
-
-        {/* Options menu */}
-        <Menu
-          anchorEl={menuAnchorEl}
-          open={Boolean(menuAnchorEl)}
-          onClose={handleMenuClose}
-          PaperProps={{
-            sx: { borderRadius: '12px', minWidth: 200 }
+      {/* Chat partner info */}
+      {chatPartnerUsername && (
+        <Box
+          onClick={handleUserClick}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            flex: 1,
+            cursor: 'pointer',
+            mx: 2,
+            '&:hover': {
+              opacity: 0.8,
+            },
           }}
         >
-          <MenuItem onClick={handleMenuClose}>
-            <Typography>View Profile</Typography>
-          </MenuItem>
-          {/* <MenuItem onClick={handleMenuClose}>
-            <Typography>Mute Notifications</Typography>
-          </MenuItem>
-          <MenuItem onClick={handleMenuClose}>
-            <Typography>Clear Chat History</Typography>
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
-            <Typography>Block User</Typography>
-          </MenuItem> */}
-        </Menu>
-      </Box>
-    </Paper>
+          <Suspense fallback={<Skeleton variant="circular" width={36} height={36} />}>
+            <Avatar
+              src={chatPartnerAvatar}
+              username={chatPartnerUsername}
+              accessory={chatPartnerAccessory}
+              elite={chatPartnerElite}
+              user_id={chatPartnerUserId}
+              style={{ width: 36, height: 36 }}
+            />
+          </Suspense>
+          
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+              {chatPartnerUsername}
+            </Typography>
+            <Typography variant="caption" sx={{ 
+              color: isOnline ? '#4caf50' : 'rgba(255, 255, 255, 0.6)', 
+              fontSize: '0.7rem' 
+            }}>
+              {isOnline ? 'Online' : 'Offline'}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      {/* Menu button */}
+      <IconButton 
+        onClick={handleMenuOpen} 
+        size="small"
+        sx={{
+          color: 'rgba(255, 255, 255, 0.7)',
+          '&:hover': { color: '#fff' },
+        }}
+      >
+        <FontAwesomeIcon icon={faEllipsisV} style={{ fontSize: '14px' }} />
+      </IconButton>
+
+      {/* Options menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            background: 'rgba(255, 255, 255, 0.02)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            minWidth: 150,
+            '& .MuiMenuItem-root': {
+              fontSize: '0.8rem',
+              py: 0.75,
+              color: '#fff',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 0, 0, 0.1)',
+              },
+            },
+          }
+        }}
+      >
+        <MenuItem onClick={handleUserClick}>View Profile</MenuItem>
+      </Menu>
+    </Box>
   );
 });
 
-// Enhanced input area with rich features
+// Compact input area
 const ChatInputArea = memo(({
   text,
   onTextChange,
@@ -759,22 +558,11 @@ const ChatInputArea = memo(({
   onKeyDown,
   disabled = false,
   placeholder = "Type a message...",
-  onFileUpload,
-  onVoiceRecord,
-  isRecording = false,
 }) => {
-  const theme = useTheme();
   const [emojiAnchorEl, setEmojiAnchorEl] = useState(null);
-  const [attachmentAnchorEl, setAttachmentAnchorEl] = useState(null);
-  const fileInputRef = useRef(null);
-  const imageInputRef = useRef(null);
 
   const handleEmojiToggle = useCallback((event) => {
     setEmojiAnchorEl(prev => prev ? null : event.currentTarget);
-  }, []);
-
-  const handleAttachmentToggle = useCallback((event) => {
-    setAttachmentAnchorEl(prev => prev ? null : event.currentTarget);
   }, []);
 
   const handleSend = useCallback(() => {
@@ -783,183 +571,90 @@ const ChatInputArea = memo(({
     }
   }, [text, disabled, onSendMessage]);
 
-  const handleFileSelect = useCallback((event) => {
-    const file = event.target.files[0];
-    if (file && onFileUpload) {
-      onFileUpload(file);
-    }
-    setAttachmentAnchorEl(null);
-  }, [onFileUpload]);
-
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 10,
-        bgcolor: alpha(theme.palette.background.paper, 0.9),
-        backdropFilter: 'blur(20px)',
-        borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        padding: '12px 16px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'rgba(255, 255, 255, 0.02)',
       }}
     >
-      <Box sx={{ p: 2 }}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          bgcolor: alpha(theme.palette.background.default, 0.5),
-          borderRadius: '8px',
-          border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-          transition: 'all 0.2s ease',
-          '&:focus-within': {
-            borderColor: '#ff0000',
-            boxShadow: `0 0 0 2px #ff0000}`,
-          },
-        }}>
-          {/* Attachment button */}
-          <Tooltip title="Attach file" arrow>
-            {/* <IconButton
-              onClick={handleAttachmentToggle}
-              disabled={disabled}
-              sx={{ 
-                m: 1,
-                color: 'text.secondary',
-                '&:hover': { color: 'primary.main' },
-              }}
-            >
-              <AttachmentIcon />
-            </IconButton> */}
-          </Tooltip>
-
-          {/* Text input */}
-          <TextField
-            multiline
-            maxRows={4}
-            fullWidth
-            variant="standard"
-            placeholder={placeholder}
-            value={text}
-            onChange={(e) => onTextChange(e.target.value)}
-            onKeyDown={onKeyDown}
-            disabled={disabled}
-            InputProps={{
-              disableUnderline: true,
-              sx: {
-                px: 1,
-                py: 1.5,
-                fontSize: '0.95rem',
-                lineHeight: 1.5,
-              },
-            }}
-            sx={{
-              '& .MuiInputBase-input': {
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '8px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        px: 1,
+        '&:focus-within': {
+          borderColor: '#ff0000',
+        },
+      }}>
+        <TextField
+          multiline
+          maxRows={3}
+          fullWidth
+          variant="standard"
+          placeholder={placeholder}
+          value={text}
+          onChange={(e) => onTextChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          disabled={disabled}
+          InputProps={{
+            disableUnderline: true,
+            sx: {
+              fontSize: '0.8rem',
+              color: '#fff',
+              '& textarea': {
                 '&::placeholder': {
-                  color: alpha(theme.palette.text.secondary, 0.7),
+                  color: 'rgba(255, 255, 255, 0.5)',
                   opacity: 1,
                 },
               },
+            },
+          }}
+          sx={{ py: 1 }}
+        />
+
+        {/* Character count */}
+        {text.length > CONFIG.MAX_MESSAGE_LENGTH * 0.8 && (
+          <Typography
+            variant="caption"
+            color={text.length >= CONFIG.MAX_MESSAGE_LENGTH ? "error" : "text.secondary"}
+            sx={{ fontSize: '0.65rem', minWidth: 'fit-content' }}
+          >
+            {text.length}/{CONFIG.MAX_MESSAGE_LENGTH}
+          </Typography>
+        )}
+
+        {/* Emoji button */}
+        <IconButton
+          onClick={handleEmojiToggle}
+          disabled={disabled}
+          size="small"
+          sx={{ 
+            color: 'rgba(255, 255, 255, 0.7)',
+            '&:hover': { color: '#fff' },
+          }}
+        >
+          <FontAwesomeIcon icon={faSmile} style={{ fontSize: '14px' }} />
+        </IconButton>
+
+        {/* Send button */}
+        {text.trim() && (
+          <IconButton
+            onClick={handleSend}
+            disabled={disabled || !text.trim()}
+            size="small"
+            sx={{
+              color: '#ff0000',
+              '&:hover': { bgcolor: 'rgba(255, 0, 0, 0.1)' },
+              '&:disabled': { color: 'rgba(255, 255, 255, 0.3)' },
             }}
-          />
-
-          {/* Character count (when approaching limit) */}
-          {text.length > CONFIG.MAX_MESSAGE_LENGTH * 0.8 && (
-            <Typography
-              variant="caption"
-              color={text.length >= CONFIG.MAX_MESSAGE_LENGTH ? "error" : "text.secondary"}
-              sx={{ 
-                position: 'absolute',
-                bottom: '-20px',
-                right: '80px',
-                fontSize: '0.7rem',
-              }}
-            >
-              {text.length}/{CONFIG.MAX_MESSAGE_LENGTH}
-            </Typography>
-          )}
-
-          {/* Emoji button */}
-          <Tooltip title="Add emoji" arrow>
-            <IconButton
-              onClick={handleEmojiToggle}
-              disabled={disabled}
-              sx={{ 
-                color: 'text.secondary',
-                '&:hover': { color: 'error.main' },
-              }}
-            >
-              <InsertEmoticon />
-            </IconButton>
-          </Tooltip>
-
-          {/* Voice/Send button */}
-          {text.trim() ? (
-            <Tooltip title="Send message" arrow>
-              <IconButton
-                onClick={handleSend}
-                disabled={disabled || !text.trim()}
-                color='error'
-                sx={{
-                  m: 1,
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                  },
-                  '&:disabled': {
-                    bgcolor: 'action.disabledBackground',
-                    color: 'action.disabled',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <SendIcon />
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <></>
-            // <Tooltip title={isRecording ? "Stop recording" : "Record voice message"} arrow>
-            //   <IconButton
-            //     onClick={onVoiceRecord}
-            //     disabled={disabled}
-            //     sx={{
-            //       m: 1,
-            //       color: isRecording ? 'error.main' : 'text.secondary',
-            //       '&:hover': { 
-            //         color: isRecording ? 'error.dark' : 'primary.main',
-            //         transform: 'scale(1.05)',
-            //       },
-            //       transition: 'all 0.2s ease',
-            //     }}
-            //   >
-            //     {isRecording ? <StopIcon /> : <MicIcon />}
-            //   </IconButton>
-            // </Tooltip>
-          )}
-        </Box>
-
-        {/* Voice recording indicator */}
-        {isRecording && (
-          <Fade in>
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1, 
-              mt: 1,
-              color: 'error.main',
-            }}>
-              <Box sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                bgcolor: 'error.main',
-                animation: 'pulse 1s ease-in-out infinite',
-              }} />
-              <Typography variant="caption">Recording...</Typography>
-              <LinearProgress 
-                color="error" 
-                sx={{ flex: 1, borderRadius: '4px' }}
-              />
-            </Box>
-          </Fade>
+          >
+            <FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: '14px' }} />
+          </IconButton>
         )}
       </Box>
 
@@ -972,60 +667,23 @@ const ChatInputArea = memo(({
           onTextChange(text + emoji);
         }}
       />
-
-      {/* Attachment Menu */}
-      <Menu
-        anchorEl={attachmentAnchorEl}
-        open={Boolean(attachmentAnchorEl)}
-        onClose={() => setAttachmentAnchorEl(null)}
-        PaperProps={{
-          sx: { borderRadius: '12px', minWidth: 180 }
-        }}
-      >
-        <MenuItem onClick={() => imageInputRef.current?.click()}>
-          <ImageIcon sx={{ mr: 1 }} />
-          <Typography>Photo</Typography>
-        </MenuItem>
-        <MenuItem onClick={() => fileInputRef.current?.click()}>
-          <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: 8 }} />
-          <Typography>Document</Typography>
-        </MenuItem>
-      </Menu>
-
-      {/* Hidden file inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        hidden
-        onChange={handleFileSelect}
-        accept=".pdf,.doc,.docx,.txt,.zip"
-      />
-      <input
-        ref={imageInputRef}
-        type="file"
-        hidden
-        onChange={handleFileSelect}
-        accept="image/*"
-      />
-    </Paper>
+    </Box>
   );
 });
 
-// Main ChatPage component with enhanced features
+// Main ChatPage component
 function ChatPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id: routeId } = useParams();
-  const theme = useTheme();
 
-  // Enhanced Redux state selection with memoization
+  // Redux state selection
   const {
     currentUser,
     socket,
     isAuthenticated,
     chatPartnerUserId,
     chatPartnerAvatar,
-    chatPartnerRank,
     chatPartnerAccessory,
     chatPartnerElite,
     chatPartnerUsername,
@@ -1044,7 +702,6 @@ function ChatPage() {
       isAuthenticated: state.auth.isAuthenticated,
       chatPartnerUserId: state.logic.chatRoomInfo.user_id,
       chatPartnerAvatar: state.logic.chatRoomInfo.avatar,
-      chatPartnerRank: state.logic.chatRoomInfo.rank,
       chatPartnerAccessory: state.logic.chatRoomInfo.accessory,
       chatPartnerElite: state.logic.chatRoomInfo.elite,
       chatPartnerUsername: state.logic.chatRoomInfo.username,
@@ -1059,26 +716,22 @@ function ChatPage() {
     }), [])
   );
 
-  // Enhanced local state
+  // Local state
   const [text, setText] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [isUserAtBottom, setIsUserAtBottom] = useState(true);
   const [typingIndicator, setTypingIndicator] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('connected');
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Refs
   const chatLogPanelRef = useRef(null);
   const oldScrollHeightRef = useRef(0);
   const typingTimeoutRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
 
-  // Memoized theme
+  // Theme
   const customTheme = useMemo(() => getCustomTheme(isDarkMode ? 'dark' : 'light'), [isDarkMode]);
 
-  // Enhanced scroll management with debouncing
+  // Scroll management
   const handleScroll = useCallback((event) => {
     const panel = event.currentTarget;
     const { scrollTop, scrollHeight, clientHeight } = panel;
@@ -1086,26 +739,19 @@ function ChatPage() {
     const atBottom = scrollHeight - (scrollTop + clientHeight) < CONFIG.SCROLL_NEAR_BOTTOM_THRESHOLD;
     setIsUserAtBottom(atBottom);
 
-    // Clear unread count when scrolled to bottom
-    if (atBottom && unreadCount > 0) {
-      setUnreadCount(0);
-    }
-
-    // Load older messages
     if (scrollTop < CONFIG.SCROLL_LOAD_THRESHOLD && hasMoreMessages && !isFetchingOlderMessages) {
       oldScrollHeightRef.current = scrollHeight;
       dispatch(loadOlderChatMessages(routeId));
     }
-  }, [dispatch, routeId, hasMoreMessages, isFetchingOlderMessages, unreadCount]);
+  }, [dispatch, routeId, hasMoreMessages, isFetchingOlderMessages]);
 
-  // Enhanced message sending with optimistic updates
+  // Message sending
   const sendMessage = useCallback(async () => {
     const trimmedText = text.trim();
     if (!trimmedText || !currentUser?._id || !chatPartnerUserId) return;
 
-    const tempId = `temp_${Date.now()}`;
     const chatMessage = {
-      _id: tempId,
+      _id: `temp_${Date.now()}`,
       to: chatPartnerUserId,
       from: currentUser._id,
       message: trimmedText,
@@ -1116,25 +762,15 @@ function ChatPage() {
       temporary: true,
     };
 
-    // Optimistic update
     dispatch(addChatLog(chatMessage));
     setText('');
 
-    // Send via socket
     if (socket) {
-      try {
-        socket.emit('SEND_CHAT', {
-          ...chatMessage,
-          tempId,
-        });
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        // Handle error - remove optimistic update
-      }
+      socket.emit('SEND_CHAT', chatMessage);
     }
   }, [text, currentUser, chatPartnerUserId, dispatch, socket]);
 
-  // Enhanced keyboard handling
+  // Keyboard handling
   const handleKeyDown = useCallback((event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -1153,79 +789,15 @@ function ChatPage() {
         username: currentUser.username,
       });
       
-      // Clear existing timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
       
-      // Set new timeout
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit('TYPING_STOP', { chatId: routeId, userId: currentUser._id });
       }, CONFIG.TYPING_INDICATOR_TIMEOUT);
     }
   }, [sendMessage, socket, currentUser, routeId, text]);
-
-  // File upload handler
-  const handleFileUpload = useCallback(async (file) => {
-    if (!file || !currentUser?._id || !chatPartnerUserId) return;
-
-    try {
-      // In production, upload to your file storage service
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('chatId', routeId);
-
-      // Show upload progress
-      const uploadMessage = {
-        _id: `upload_${Date.now()}`,
-        to: chatPartnerUserId,
-        from: currentUser._id,
-        message: JSON.stringify({ 
-          type: 'file', 
-          name: file.name, 
-          size: file.size,
-          uploading: true,
-        }),
-        messageType: 'file',
-        created_at: new Date().toISOString(),
-        senderName: currentUser.username,
-        avatar: currentUser.avatar,
-      };
-
-      dispatch(addChatLog(uploadMessage));
-
-      // Simulate upload (replace with actual upload logic)
-      setTimeout(() => {
-        const completedMessage = {
-          ...uploadMessage,
-          message: JSON.stringify({
-            type: 'file',
-            name: file.name,
-            url: `https://example.com/files/${file.name}`,
-            size: file.size,
-          }),
-        };
-        
-        if (socket) {
-          socket.emit('SEND_CHAT', completedMessage);
-        }
-      }, 2000);
-
-    } catch (error) {
-      console.error('File upload failed:', error);
-    }
-  }, [currentUser, chatPartnerUserId, routeId, dispatch, socket]);
-
-  // Voice recording handler
-  const handleVoiceRecord = useCallback(() => {
-    if (isRecording) {
-      setIsRecording(false);
-      // Stop recording logic
-    } else {
-      setIsRecording(true);
-      // Start recording logic
-    }
-  }, [isRecording]);
 
   // Socket event handlers
   useEffect(() => {
@@ -1243,32 +815,15 @@ function ChatPage() {
       }
     };
 
-    const handleConnectionStatus = (status) => {
-      setConnectionStatus(status);
-      if (status === 'disconnected') {
-        // Attempt reconnection
-        reconnectTimeoutRef.current = setTimeout(() => {
-          socket.connect();
-        }, 3000);
-      }
-    };
-
     socket.on('TYPING_START', handleTypingStart);
     socket.on('TYPING_STOP', handleTypingStop);
-    socket.on('connect', () => handleConnectionStatus('connected'));
-    socket.on('disconnect', () => handleConnectionStatus('disconnected'));
 
     return () => {
       socket.off('TYPING_START', handleTypingStart);
       socket.off('TYPING_STOP', handleTypingStop);
-      socket.off('connect');
-      socket.off('disconnect');
       
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
       }
     };
   }, [socket, routeId, currentUser?._id]);
@@ -1328,10 +883,10 @@ function ChatPage() {
       alignItems: 'center', 
       justifyContent: 'center',
       flexDirection: 'column',
-      gap: 2,
+      gap: 1,
     }}>
-      <CircularProgress color="primary" />
-      <Typography variant="body2" color="text.secondary">
+      <CircularProgress color="error" size={24} />
+      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
         Loading...
       </Typography>
     </Box>
@@ -1343,28 +898,9 @@ function ChatPage() {
         display: 'flex', 
         flexDirection: 'column', 
         height: '100vh',
-        bgcolor: '#1e1e1e',
-        position: 'relative',
+        background: 'rgba(255, 255, 255, 0.02)',
+        color: '#fff',
       }}>
-        {/* Connection status indicator */}
-        {connectionStatus !== 'connected' && (
-          <Box sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            bgcolor: 'warning.main',
-            color: 'warning.contrastText',
-            textAlign: 'center',
-            py: 1,
-          }}>
-            <Typography variant="body2">
-              {connectionStatus === 'connecting' ? 'Reconnecting...' : 'Connection lost'}
-            </Typography>
-          </Box>
-        )}
-
         {/* Player Modal */}
         {showPlayerModal && selectedPlayerId && (
           <Suspense fallback={<LoadingFallback />}>
@@ -1385,8 +921,9 @@ function ChatPage() {
             sx={{
               '& .MuiDrawer-paper': {
                 width: 280,
-                bgcolor: alpha(theme.palette.background.paper, 0.95),
-                backdropFilter: 'blur(20px)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
               },
             }}
           >
@@ -1404,34 +941,34 @@ function ChatPage() {
           display: 'flex', 
           flex: 1, 
           overflow: 'hidden',
-          position: 'relative',
         }}>
           <Box sx={{
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            background: 'rgba(255, 255, 255, 0.01)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '8px',
+            m: 1,
+            overflow: 'hidden',
           }}>
             {/* Chat Header */}
             <ChatHeader
-              isDrawerOpen={isDrawerOpen}
               onNavigateBack={handleNavigateBack}
               onOpenPlayerModal={handleOpenPlayerModal}
               chatPartnerUserId={chatPartnerUserId}
               chatPartnerAvatar={chatPartnerAvatar}
-              chatPartnerRank={chatPartnerRank}
               chatPartnerUsername={chatPartnerUsername}
               chatPartnerAccessory={chatPartnerAccessory}
               chatPartnerElite={chatPartnerElite}
               isOnline={true} // Add real online status logic
-              lastSeen="5 minutes ago" // Add real last seen logic
             />
 
             {/* Chat Messages */}
             <ChatLogDisplay
               chatLogs={chatLogs}
               currentUserId={currentUser?._id}
-              chatPartnerUserId={chatPartnerUserId}
               onOpenPlayerModal={handleOpenPlayerModal}
               isFetchingOlderMessages={isFetchingOlderMessages}
               isLoadingRoom={isLoadingRoom}
@@ -1448,9 +985,6 @@ function ChatPage() {
               onKeyDown={handleKeyDown}
               disabled={!chatPartnerUserId}
               placeholder={chatPartnerUserId ? "Type a message..." : "Select a chat to start messaging"}
-              onFileUpload={handleFileUpload}
-              onVoiceRecord={handleVoiceRecord}
-              isRecording={isRecording}
             />
           </Box>
         </Box>

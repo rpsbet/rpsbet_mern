@@ -85,7 +85,8 @@ const useMainPageState = () => {
   }));
 };
 
-// Styled components
+
+// Redesigned CreateRoomPanel component with clean, compact design matching HistoryTable
 const CreateRoomPanel = ({
   user,
   aiPrompt,
@@ -102,147 +103,149 @@ const CreateRoomPanel = ({
   };
 
   return (
-    <Box className="create-room-btn-panel">
+    <Box
+      className="create-room-btn-panel"
+      sx={{
+        width: '100%',
+        maxWidth: 'none',
+        padding: { xs: 1, sm: 2 },
+        margin: 0,
+        display: 'flex',
+        justifyContent: 'center',
+      }}
+    >
       <Box
         className="btn-create-room"
         sx={{
-          position: 'relative',
           width: '100%',
-          maxWidth: 400,
-          zIndex: 1,
+          maxWidth: { xs: 'none', sm: 400 },
         }}
       >
-        {/* Header */}
-        <Typography
-          variant="h6"
-          className="title"
+        {/* Clean Header */}
+        <Box
           sx={{
-            mb: 2,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-evenly',
-            gap: 1,
+            justifyContent: 'space-between',
+            mb: 1.5,
+            padding: '8px 16px',
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
           }}
         >
-          {/* <FontAwesomeIcon icon={faHome} /> */}
-          Get Rich 👇😼💵
-
-          <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
-            <Box
-              sx={{
-                width: 22,
-                height: 'auto',
-                float: 'right',
-                transform: 'scale(0.6)',
-              }}
-            >
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            Create Room
+          </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <VerifiedIcon
               sx={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                transform: 'translate(25%, -25%)', // Adjust position
-                fontSize: '1.2rem', // Adjust size
-                color: '#fff', // Example: gray for black elite, green for red elite
-                backgroundColor: '#fff',
-                fill: '#ff0000', // Give it a background to stand out
-                borderRadius: '50%', // Make it circular
+                fontSize: '14px',
+                color: isEliteUser 
+                  ? (user.elite === 'red' ? '#ff0000' : '#e5e5e5')
+                  : '#666',
               }}
             />
-            </Box>
             <Typography
               variant="caption"
               sx={{
                 color: isEliteUser
                   ? (user.elite === 'red' ? '#ff0000' : '#e5e5e5')
-                  : '#ff0000',
-                fontWeight: 'bold',
-                fontSize: '0.7rem',
-                ml: 0.5,
-                mt: 0.5,
-
+                  : '#666',
+                fontWeight: 600,
+                fontSize: '0.65rem',
+                whiteSpace: 'nowrap',
               }}
             >
-              {isEliteUser ? `${user.elite.toUpperCase()} ELITE USER` : 'ELITE USERS ONLY'}
+              {isEliteUser ? `${user.elite.toUpperCase()} ELITE` : 'ELITE ONLY'}
             </Typography>
           </Box>
-        </Typography>
+        </Box>
 
-        {/* AI Prompt Input */}
+        {/* Clean AI Prompt Input */}
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(216, 23, 25, 0.4)', // Increased even more
-            backdropFilter: 'blur(12px)',
-            border: '2px solid rgba(216, 23, 25, 0.7)', // Increased border opacity
-            borderRadius: 2,
-            p: 1,
-            mb: 1.5,
-            transition: 'all 0.3s ease',
-            boxShadow: '0 6px 16px rgba(216, 23, 25, 0.3)', // Stronger shadow
+            padding: '8px 16px',
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            mb: 1,
+            transition: 'all 0.2s ease',
             '&:hover': {
-              background: 'rgba(216, 23, 25, 0.3)', // Much stronger
-              transform: 'translateY(-2px)',
-              borderColor: '#ff0000', // Almost solid border
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 0, 0, 0.2)',
             },
           }}
         >
-          <TextField
-            variant="outlined"
-            placeholder="Create a crash-style game..."
-            value={aiPrompt}
-            onChange={(e) => setAiPrompt(e.target.value)}
-            size="small"
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                background: 'transparent',
-                '& fieldset': { border: 'none' },
-                '&:hover fieldset': { border: 'none' },
-                '&.Mui-focused fieldset': { border: 'none' },
-              },
-              '& .MuiInputBase-input': {
-                color: '#fff',
-                fontWeight: 'bold',
-                '&::placeholder': {
-                  color: 'rgba(216, 23, 25, 0.7)', // More visible placeholder
-                  opacity: 1,
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TextField
+              variant="standard"
+              placeholder="Create a crash-style game..."
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              size="small"
+              fullWidth
+              sx={{
+                '& .MuiInput-underline': {
+                  '&:before': { display: 'none' },
+                  '&:after': { display: 'none' },
                 },
-              },
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Button
-                    variant="contained"
-                    disableElevation
-                    onClick={onPromptSubmit}
-                    sx={{
-                      minWidth: 'auto',
-                      p: 0.75,
-                      background: '#ff0000', // Solid color, 0 opacity/transparency
-                      color: '#fff',
-                      '&:hover': {
-                        background: '#b8141a', // Slightly darker solid red on hover
-                      },
-                    }}
-                  >
-                    <AutoAwesomeIcon />
-                  </Button>
-                </InputAdornment>
-              ),
-            }}
-          />
+                '& .MuiInputBase-input': {
+                  color: '#fff',
+                  fontWeight: 500,
+                  fontSize: '0.875rem',
+                  padding: 0,
+                  '&::placeholder': {
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    opacity: 1,
+                  },
+                },
+              }}
+            />
+            <Button
+              variant="text"
+              onClick={onPromptSubmit}
+              disabled={!aiPrompt.trim()}
+              sx={{
+                minWidth: 'auto',
+                padding: '4px 8px',
+                color: aiPrompt.trim() ? '#ff0000' : '#666',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'rgba(255, 0, 0, 0.1)',
+                },
+                '&:disabled': {
+                  color: '#666',
+                },
+              }}
+            >
+              <AutoAwesomeIcon sx={{ fontSize: '16px' }} />
+            </Button>
+          </Box>
         </Box>
 
-        {/* Suggested Prompts */}
+        {/* Clean Suggested Prompts */}
         <Box
           sx={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: 1,
-            mb: 1.5,
+            gap: 0.75,
+            padding: '8px 16px',
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
           }}
         >
           {SUGGESTED_PROMPTS.map((prompt, index) => (
@@ -250,26 +253,27 @@ const CreateRoomPanel = ({
               key={index}
               label={prompt}
               onClick={() => handleSuggestedPromptClick(prompt)}
+              size="small"
               sx={{
-                background: 'rgba(216, 23, 25, 0.2)', // Increased opacity
-                border: '2px solid rgba(216, 23, 25, 0.4)', // Stronger border
-                color: '#ff0000',
-                fontWeight: 700, // Even bolder
-                fontSize: '0.75rem',
+                height: '24px',
+                fontSize: '0.65rem',
+                fontWeight: 500,
+                backgroundColor: 'transparent',
+                color: 'rgba(255, 255, 255, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                maxWidth: 180,
-                boxShadow: '0 3px 8px rgba(216, 23, 25, 0.2)', // Stronger shadow
+                maxWidth: { xs: '120px', sm: '150px' },
                 '& .MuiChip-label': {
+                  padding: '0 8px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                 },
                 '&:hover': {
-                  background: 'rgba(216, 23, 25, 0.4)', // Much stronger
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 6px 16px rgba(216, 23, 25, 0.3)', // Much stronger shadow
-                  borderColor: 'rgba(216, 23, 25, 0.7)', // Stronger border
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  color: '#ff0000',
+                  border: '1px solid rgba(255, 0, 0, 0.3)',
                 },
               }}
             />
@@ -280,34 +284,11 @@ const CreateRoomPanel = ({
   );
 };
 
-const MobileNavButton = ({ isActive, onClick, icon, label }) => (
-  <Button
-    className={`mobile-tab ${isActive ? 'active' : ''}`}
-    onClick={onClick}
-    sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 0.5,
-      minWidth: 0,
-      flex: 1,
-    }}
-  >
-    {icon}
-    {isActive && (
-      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
-        {label}
-      </Typography>
-    )}
-  </Button>
-);
-
-function MainPage() {
+function MainPage({ selectedMobileTab, setSelectedMobileTab }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Custom hook for Redux state
   const state = useMainPageState();
   const {
     isAuthenticated,
@@ -324,7 +305,6 @@ function MainPage() {
   } = state;
 
   // Local state
-  const [selectedMobileTab, setSelectedMobileTab] = useState(MOBILE_TABS.LIVE_GAMES);
   const [showOpenGame, setShowOpenGame] = useState(0);
   const [selectedGameType, setSelectedGameType] = useState('All');
   const [selectedCreator, setSelectedCreator] = useState('');
@@ -401,22 +381,23 @@ function MainPage() {
   }, [user, dispatch, navigate, aiPrompt]);
 
   const shouldShowCreatePanel =
-    (isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame !== 1) ||
+    (isMobile && selectedMobileTab === 'live_games' && showOpenGame !== 1) ||
     (!isMobile && selectedMainTabIndex === 0);
 
   const shouldShowOpenGames =
     ((!isMobile && selectedMainTabIndex === 0) ||
-      (isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame === 0)) &&
+      (isMobile && selectedMobileTab === 'live_games' && showOpenGame === 0)) &&
     location.pathname !== '/portfolio';
 
   const shouldShowMyGames =
-    selectedMobileTab === MOBILE_TABS.MY_GAMES && showOpenGame === 0;
+    selectedMobileTab === 'my_games' && showOpenGame === 0;
 
   const shouldShowHistory =
-    isMobile && selectedMobileTab === MOBILE_TABS.LIVE_GAMES && showOpenGame === 1;
+    isMobile && selectedMobileTab === 'live_games' && showOpenGame === 1;
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
   const walletData = useSelector(selectWalletBalance);
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -538,63 +519,6 @@ function MainPage() {
 
           <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} />
         </Box>
-
-        {/* Mobile Bottom Navigation */}
-        {isMobile && selectedMobileTab !== MOBILE_TABS.CHAT && (
-          <Box className="mobile-only main-page-nav-button-group">
-            <MobileNavButton
-              isActive={selectedMobileTab === MOBILE_TABS.LIVE_GAMES}
-              onClick={() => setSelectedMobileTab(MOBILE_TABS.LIVE_GAMES)}
-              label="BEAT THE HOUSE"
-              icon={
-                <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-                  <path
-                    stroke={selectedMobileTab === MOBILE_TABS.LIVE_GAMES ? '#fff' : '#8E9297'}
-                    strokeWidth="1.5"
-                    d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
-                  />
-                </svg>
-              }
-            />
-
-            <MobileNavButton
-              isActive={selectedMobileTab === MOBILE_TABS.MY_GAMES}
-              onClick={() => setSelectedMobileTab(MOBILE_TABS.MY_GAMES)}
-              label="YOUR GAMES"
-              icon={
-                <svg width="33" height="32" fill="none" viewBox="0 0 33 32">
-                  <path
-                    stroke={selectedMobileTab === MOBILE_TABS.MY_GAMES ? '#fff' : '#8E9297'}
-                    strokeWidth="1.5"
-                    d="M27.5 27.5c0-2.917-1.159-5.715-3.222-7.778-2.063-2.063-4.86-3.222-7.778-3.222-2.917 0-5.715 1.159-7.778 3.222C6.659 21.785 5.5 24.582 5.5 27.5"
-                  />
-                  <path
-                    fill={selectedMobileTab === MOBILE_TABS.MY_GAMES ? '#fff' : '#8E9297'}
-                    d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v-1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
-                  />
-                </svg>
-              }
-            />
-
-            <MobileNavButton
-              isActive={selectedMobileTab === MOBILE_TABS.CHAT}
-              onClick={() => setSelectedMobileTab(MOBILE_TABS.CHAT)}
-              label="CHAT"
-              icon={
-                <svg width="33" height="32" fill="none" viewBox="0 0 33 32">
-                  <path
-                    stroke={selectedMobileTab === MOBILE_TABS.CHAT ? '#fff' : '#8E9297'}
-                    strokeWidth="1.5"
-                    d="M28 16c0 6.351-5.149 11.5-11.5 11.5-1.407 0-2.754-.253-4-.715-2.75-1.02-4.091 1.378-4.75.965-.685-.43 1.328-2.929.75-3.489C6.342 22.171 5 19.242 5 16 5 9.649 10.149 4.5 16.5 4.5S28 9.649 28 16z"
-                  />
-                  <circle cx="10.5" cy="16" r="2" stroke={selectedMobileTab === MOBILE_TABS.CHAT ? '#fff' : '#8E9297'} strokeWidth="1.5" />
-                  <circle cx="16.5" cy="16" r="2" stroke={selectedMobileTab === MOBILE_TABS.CHAT ? '#fff' : '#8E9297'} strokeWidth="1.5" />
-                  <circle cx="22.5" cy="16" r="2" stroke={selectedMobileTab === MOBILE_TABS.CHAT ? '#fff' : '#8E9297'} strokeWidth="1.5" />
-                </svg>
-              }
-            />
-          </Box>
-        )}
 
         <Footer className="footer" open={isDrawerOpen} />
       </Box>

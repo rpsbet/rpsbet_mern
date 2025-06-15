@@ -15,7 +15,6 @@ import {
   useMediaQuery,
   IconButton,
   Chip,
-  Paper,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { 
@@ -159,12 +158,12 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
   // Render table header
   const renderTableHeader = () => (
     <TableHead>
-      <TableRow sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+      <TableRow>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600, 
           width: '60px',
-          backgroundColor: 'transparent'
+          fontSize: '0.75rem',
         }}>
           RANK
         </TableCell>
@@ -172,27 +171,27 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
           <TableCell
             key={column.key}
             sx={{
-              color: isDarkMode ? '#ccc' : '#666',
+              color: 'rgba(255, 255, 255, 0.6)',
               fontWeight: 600,
               cursor: column.sortable ? 'pointer' : 'default',
               width: column.width,
               textAlign: column.align || 'left',
-              backgroundColor: 'transparent',
+              fontSize: '0.75rem',
               '&:hover': column.sortable ? { 
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' 
+                backgroundColor: 'rgba(255, 255, 255, 0.02)' 
               } : {},
               transition: 'background-color 0.2s',
             }}
             onClick={column.sortable ? () => handleSort(column.key) : undefined}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               {column.label}
               {column.sortable && sortField === column.key && (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   {sortOrder === 'asc' ? (
-                    <TrendingUpIcon sx={{ fontSize: 16, color: '#ff0000' }} />
+                    <TrendingUpIcon sx={{ fontSize: 14, color: '#ff0000' }} />
                   ) : (
-                    <TrendingDownIcon sx={{ fontSize: 16, color: '#ff0000' }} />
+                    <TrendingDownIcon sx={{ fontSize: 14, color: '#ff0000' }} />
                   )}
                 </Box>
               )}
@@ -227,13 +226,13 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
             username={entry.username}
             alt={entry.username}
             darkMode={isDarkMode}
-            style={{ marginRight: 12 }}
+            style={{ marginRight: 12, width: 32, height: 32 }}
           />
           <Box>
             <Typography sx={{ 
-              fontSize: '0.9rem', 
+              fontSize: '0.875rem', 
               fontWeight: 500,
-              color: isDarkMode ? '#fff' : '#333'
+              color: '#fff'
             }}>
               {entry.username}
             </Typography>
@@ -242,12 +241,15 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
                 label="ELITE" 
                 size="small" 
                 sx={{ 
-                  height: 16, 
+                  height: 14, 
                   fontSize: '0.6rem',
                   backgroundColor: '#ffd700',
                   color: '#000',
                   fontWeight: 600,
-                  mt: 0.5
+                  mt: 0.25,
+                  '& .MuiChip-label': {
+                    padding: '0 4px',
+                  },
                 }} 
               />
             )}
@@ -267,7 +269,8 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
               ? (isNegative ? '#ff4444' : '#00ff3a')
               : '#fff',
             fontWeight: column.isProfit ? 600 : 400,
-            textAlign: column.align || 'left'
+            textAlign: column.align || 'left',
+            fontSize: '0.875rem',
           }}
         >
           {column.isProfit && !isNegative && '+'}
@@ -277,7 +280,11 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
     }
 
     return (
-      <Typography sx={{ textAlign: column.align || 'left' }}>
+      <Typography sx={{ 
+        textAlign: column.align || 'left',
+        color: '#fff',
+        fontSize: '0.875rem',
+      }}>
         {value?.toLocaleString() || '0'}
       </Typography>
     );
@@ -291,21 +298,21 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
           key={entry._id} 
           sx={{
             '&:hover': { 
-              backgroundColor: 'rgba(255,255,255,0.05)',
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
             },
             transition: 'background-color 0.2s',
           }}
         >
-          <TableCell sx={{ color: isDarkMode ? '#fff' : '#333' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
+          <TableCell sx={{ color: '#fff' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>
                 {getMedalIcon(index)}
               </Typography>
-              {index < 3 && <TrophyIcon sx={{ fontSize: 16, color: '#ffd700' }} />}
+              {index < 3 && <TrophyIcon sx={{ fontSize: 14, color: '#ffd700' }} />}
             </Box>
           </TableCell>
           {COLUMNS.map((column) => (
-            <TableCell key={column.key} sx={{ color: isDarkMode ? '#fff' : '#333' }}>
+            <TableCell key={column.key} sx={{ color: '#fff' }}>
               {renderCellValue(entry, column)}
             </TableCell>
           ))}
@@ -316,17 +323,17 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
 
   // Loading skeleton
   const renderLoadingSkeleton = () => (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ p: 2 }}>
       {Array.from({ length: 8 }).map((_, index) => (
         <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-          <Skeleton variant="text" width="40px" height={24} />
-          <Skeleton variant="circular" width={40} height={40} />
-          <Skeleton variant="text" width="120px" height={24} />
-          <Skeleton variant="text" width="100px" height={24} />
-          <Skeleton variant="text" width="100px" height={24} />
-          <Skeleton variant="text" width="100px" height={24} />
-          <Skeleton variant="text" width="100px" height={24} />
-          <Skeleton variant="text" width="60px" height={24} />
+          <Skeleton variant="text" width="40px" height={20} />
+          <Skeleton variant="circular" width={32} height={32} />
+          <Skeleton variant="text" width="100px" height={20} />
+          <Skeleton variant="text" width="80px" height={20} />
+          <Skeleton variant="text" width="80px" height={20} />
+          <Skeleton variant="text" width="80px" height={20} />
+          <Skeleton variant="text" width="80px" height={20} />
+          <Skeleton variant="text" width="50px" height={20} />
         </Box>
       ))}
     </Box>
@@ -342,8 +349,7 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
           style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } 
         }}
       >
-        <Paper
-          elevation={24}
+        <Box
           sx={{
             position: 'absolute',
             top: '50%',
@@ -353,27 +359,17 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
             maxWidth: '1200px',
             maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 3,
-            p: { xs: 2, sm: 3, md: 4 },
-            background: isDarkMode 
-              ? 'rgba(30, 30, 30, 0.95)' 
-              : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            boxShadow: `0 8px 32px ${isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)'}`,
-            color: isDarkMode ? '#fff' : '#333',
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            borderRadius: '8px',
+            p: { xs: 2, sm: 3 },
+            background: '#262626',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            color: '#fff',
             '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'transparent',
+              width: '6px',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '4px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: '3px',
             },
           }}
         >
@@ -383,14 +379,14 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              mb: 3,
+              mb: 2,
               pb: 2,
-              borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <TrophyIcon sx={{ fontSize: 28, color: '#ffd700' }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, color: isDarkMode ? '#fff' : '#333' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <TrophyIcon sx={{ fontSize: 24, color: '#ffd700' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#fff', fontSize: '1.25rem' }}>
                 LEADERBOARDS
               </Typography>
               <Chip 
@@ -399,31 +395,43 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
                 sx={{ 
                   backgroundColor: '#ff0000',
                   color: '#fff',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  fontSize: '0.65rem',
+                  height: 20,
+                  '& .MuiChip-label': {
+                    padding: '0 6px',
+                  },
                 }} 
               />
             </Box>
             <IconButton
               onClick={closeModal}
               sx={{
-                color: isDarkMode ? '#fff' : '#333',
-                bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                color: '#fff',
+                width: 32,
+                height: 32,
                 '&:hover': { 
-                  bgcolor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' 
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)' 
                 },
               }}
             >
-              <CloseIcon />
+              <CloseIcon sx={{ fontSize: '18px' }} />
             </IconButton>
           </Box>
 
           {/* Stats Summary */}
           {!loading && sortedLeaderboards.length > 0 && (
-            <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Chip 
                 label={`${sortedLeaderboards.length} Players`} 
                 variant="outlined"
-                sx={{ borderColor: '#ff0000', color: isDarkMode ? '#fff' : '#333' }}
+                size="small"
+                sx={{ 
+                  borderColor: 'rgba(255, 0, 0, 0.3)', 
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  height: 24,
+                }}
               />
               <Chip 
                 label={`Total Wagered: ${convertToCurrency(
@@ -431,25 +439,32 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
                   solPrice
                 )}`}
                 variant="outlined"
-                sx={{ borderColor: '#ff0000', color: isDarkMode ? '#fff' : '#333' }}
+                size="small"
+                sx={{ 
+                  borderColor: 'rgba(255, 0, 0, 0.3)', 
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  height: 24,
+                }}
               />
             </Box>
           )}
 
           {/* Table */}
           {!loading ? (
-            <TableContainer 
+            <Box
               sx={{ 
                 overflowX: 'auto',
-                borderRadius: 2,
-                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                background: 'rgba(255, 255, 255, 0.02)',
               }}
             >
-              <Table sx={{ minWidth: 800 }} stickyHeader>
+              <Table sx={{ minWidth: 800 }}>
                 {renderTableHeader()}
                 {renderTableBody()}
               </Table>
-            </TableContainer>
+            </Box>
           ) : (
             renderLoadingSkeleton()
           )}
@@ -457,13 +472,13 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
           {/* Empty state */}
           {!loading && sortedLeaderboards.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <TrophyIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.3)', mb: 2 }} />
-              <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+              <TrophyIcon sx={{ fontSize: 48, color: 'rgba(255, 255, 255, 0.3)', mb: 2 }} />
+              <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '1rem' }}>
                 No leaderboard data available
               </Typography>
             </Box>
           )}
-        </Paper>
+        </Box>
       </Modal>
 
       {/* Player Modal */}

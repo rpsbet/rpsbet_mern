@@ -22,11 +22,8 @@ import {
   TextField,
   InputAdornment,
   Chip,
-  Paper,
   LinearProgress,
   IconButton,
-  Card,
-  CardContent,
   Grid,
   useTheme,
   useMediaQuery,
@@ -62,7 +59,6 @@ import { convertToCurrency } from '../../util/conversion';
 
 import CoHostModal from '../modal/CoHostModal';
 import SettingsRef from '../../components/SettingsRef';
-
 
 function MyGamesTable() {
   const dispatch = useDispatch();
@@ -464,57 +460,79 @@ function MyGamesTable() {
 
   // ---------- Render ----------
   return (
-    <Paper
-      elevation={3}
+    <Box
       sx={{
-        borderRadius: 0,
+        borderRadius: '8px',
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
         overflow: 'hidden',
-        background: isDarkMode
-          ? 'rgba(34, 34, 34, 0.95)'
-          : 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
       }}
     >
       {/* Header Section */}
       <Box
         sx={{
           p: 2,
-          background: '#1e1e1e',
-          borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={8}>
-            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+            <Typography variant="h6" fontWeight="600" sx={{ mb: 1, color: '#fff', fontSize: '1rem' }}>
               Portfolio
             </Typography>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
               <Chip
                 label="Open"
                 variant={selectedFilter === 'open' ? 'filled' : 'outlined'}
-                color={selectedFilter === 'open' ? 'error' : 'default'}
+                color="error"
+                size="small"
                 onClick={() => handleFilterChange('open')}
+                sx={{
+                  fontSize: '0.75rem',
+                  height: 28,
+                  backgroundColor: selectedFilter === 'open' ? '#ff0000' : 'transparent',
+                  borderColor: 'rgba(255, 0, 0, 0.3)',
+                  color: selectedFilter === 'open' ? '#fff' : '#ff0000',
+                  '&:hover': {
+                    backgroundColor: selectedFilter === 'open' ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                    borderColor: '#ff0000',
+                  },
+                }}
               />
               <Chip
                 label="Finished"
                 variant={selectedFilter === 'finished' ? 'filled' : 'outlined'}
-                color={selectedFilter === 'finished' ? 'error' : 'default'}
+                color="error"
+                size="small"
                 onClick={() => handleFilterChange('finished')}
+                sx={{
+                  fontSize: '0.75rem',
+                  height: 28,
+                  backgroundColor: selectedFilter === 'finished' ? '#ff0000' : 'transparent',
+                  borderColor: 'rgba(255, 0, 0, 0.3)',
+                  color: selectedFilter === 'finished' ? '#fff' : '#ff0000',
+                  '&:hover': {
+                    backgroundColor: selectedFilter === 'finished' ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                    borderColor: '#ff0000',
+                  },
+                }}
               />
               <Chip
                 label={selectedSort === 'desc' ? 'Newest First' : 'Oldest First'}
                 variant="outlined"
-                icon={selectedSort === 'desc' ? <FontAwesomeIcon icon={faSortAmountDown} /> : <FontAwesomeIcon icon={faSortAmountUp} />}
+                size="small"
                 onClick={handleSortChange}
+                sx={{
+                  fontSize: '0.75rem',
+                  height: 28,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  },
+                }}
               />
-              {Object.keys(theme.gameTypes || {}).length > 0 && (
-                <Chip
-                  label={selectedGameType || 'All Games'}
-                  variant="outlined"
-                  icon={<FontAwesomeIcon icon={faFilter} />}
-                  onClick={() => { /* Implement game type filter dropdown */ }}
-                />
-              )}
             </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -529,11 +547,29 @@ function MyGamesTable() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <FontAwesomeIcon icon={faSearch} />
+                    <FontAwesomeIcon icon={faSearch} style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }} />
                   </InputAdornment>
                 ),
               }}
-
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '8px',
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 0, 0, 0.5)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#ff0000',
+                  },
+                  '& fieldset': {
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                  },
+                },
+                '& .MuiInputBase-input': {
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                },
+              }}
             />
           </Grid>
         </Grid>
@@ -546,19 +582,26 @@ function MyGamesTable() {
 
         {/* Loading State */}
         {my_games_loading ? (
-          <Box sx={{ p: 3 }}>
+          <Box sx={{ p: 2 }}>
             {[...Array(5)].map((_, i) => (
               <Box
                 key={i}
                 sx={{
-                  display: 'flex',
-                  gap: 2,
-                  alignItems: 'center',
+                  p: 2,
                   mb: 2,
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                 }}
               >
-                <Skeleton variant="circular" width={40} height={40} />
-                <Skeleton variant="rounded" sx={{ width: '95%', height: 60, borderRadius: 2 }} />
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Skeleton variant="circular" width={32} height={32} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="60%" height={20} sx={{ mb: 0.5 }} />
+                    <Skeleton variant="text" width="40%" height={16} />
+                  </Box>
+                  <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: '4px' }} />
+                </Box>
               </Box>
             ))}
           </Box>
@@ -566,33 +609,38 @@ function MyGamesTable() {
           <Box sx={{ p: 2 }}>
             {/* Empty State */}
             {filteredGames.length === 0 ? (
-              <Card
-                variant="outlined"
+              <Box
                 sx={{
                   textAlign: 'center',
                   p: 4,
-                  borderRadius: 2,
-                  backgroundColor: isDarkMode ? 'rgba(46, 46, 46, 0.5)' : 'rgba(250, 250, 255, 0.5)',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                 }}
               >
-                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                <Typography variant="h6" sx={{ mt: 2, mb: 1, color: '#fff', fontSize: '1rem' }}>
                   No Games Found
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 2, fontSize: '0.875rem' }}>
                   You haven't created any games yet. Start by creating a new game.
                 </Typography>
                 <Button
                   variant="contained"
                   color="error"
-                  sx={{ mt: 2 }}
                   onClick={() => { navigate('/create'); }}
+                  sx={{
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                  }}
                 >
                   Create New Game
                 </Button>
-              </Card>
+              </Box>
             ) : (
               /* Game Cards List */
-              <Grid container spacing={2}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {filteredGames.map((row, idx) => {
                   const rowPress = pressState[row._id] || {};
                   const isClosing = rowPress.closing || false;
@@ -604,291 +652,250 @@ function MyGamesTable() {
                   const bondingProgress = endgameAmount !== 0 ? (bet / endgameAmount) * 100 : 0;
 
                   return (
-                    <Grid item xs={12} key={row._id}>
-                      <Card
-                        sx={{
-                          borderRadius: 2,
-                          transition: 'transform 0.2s, box-shadow 0.2s',
-                          animation: `fadeIn 0.5s ${idx * 0.1}s both`,
-                          cursor: 'pointer',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: 6,
-                          },
-                          backgroundColor: isDarkMode
-                            ? 'rgba(35, 35, 35, 0.8)'
-                            : 'rgba(255, 255, 255, 0.8)',
-                          backdropFilter: 'blur(8px)',
-                          border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                        }}
-                        onClick={() => (window.location.href = `/join/${row._id}`)}
-                      >
-                        <CardContent sx={{ p: 2 }}>
-                          <Grid container spacing={2} alignItems="center">
-                            {/* Game Info */}
-                            <Grid item xs={12} sm={4}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                <Avatar
-                                  sx={{
-                                    width: 48,
-                                    height: 48,
-                                    backgroundColor: isDarkMode ? 'rgba(60, 60, 70, 0.5)' : 'rgba(240, 240, 250, 0.5)',
-                                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                                  }}
-                                  alt={row.name}
-                                  src={row.image}
-                                >
-                                  <img
-                                    src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                                    alt=""
-                                    style={{ width: 20, height: 20 }}
+                    <Box
+                      key={row._id}
+                      sx={{
+                        p: 2,
+                        borderRadius: '8px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                        },
+                      }}
+                      onClick={() => (window.location.href = `/join/${row._id}`)}
+                    >
+                      <Grid container spacing={2} alignItems="center">
+                        {/* Game Info */}
+                        <Grid item xs={12} sm={4}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                              }}
+                              alt={row.name}
+                              src={row.image}
+                            >
+                              <img
+                                src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                                alt=""
+                                style={{ width: 16, height: 16 }}
+                              />
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight="600" noWrap sx={{ color: '#fff', fontSize: '0.875rem' }}>
+                                {row.name}
+                                {row.is_private && (
+                                  <FontAwesomeIcon
+                                    icon={faLock}
+                                    style={{ marginLeft: 6, fontSize: 12, opacity: 0.7 }}
                                   />
-                                </Avatar>
-                                <Box>
-                                  <Typography variant="subtitle1" fontWeight="bold" noWrap>
-                                    {row.name}
-                                    {row.is_private && (
-                                      <FontAwesomeIcon
-                                        icon={faLock}
-                                        style={{ marginLeft: 8, fontSize: 14, opacity: 0.7 }}
-                                      />
-                                    )}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    {row.ticker}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </Grid>
-
-                            {/* Liquidity & Progress */}
-                            <Grid item xs={6} sm={3}>
-                              <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Liquidity / Hardcap
+                                )}
                               </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="body2" fontWeight="medium">
-                                  {convertToCurrency(row.user_bet, solPrice)}
-                                  {row.endgame_type && (
-                                    <Typography component="span" variant="caption" color="text.secondary">
-                                      {' '}/{' '}{convertToCurrency(row.endgame_amount, solPrice)}
-                                    </Typography>
-                                  )}
+                              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem' }}>
+                                {row.ticker}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+
+                        {/* Liquidity & Progress */}
+                        <Grid item xs={6} sm={3}>
+                          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem', mb: 0.5 }}>
+                            Liquidity / Hardcap
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" fontWeight="500" sx={{ color: '#fff', fontSize: '0.8rem' }}>
+                              {convertToCurrency(row.user_bet, solPrice)}
+                              {row.endgame_type && (
+                                <Typography component="span" variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                  {' '}/{' '}{convertToCurrency(row.endgame_amount, solPrice)}
                                 </Typography>
-                              </Box>
-                              <LinearProgress
-                                variant="determinate"
-                                value={bondingProgress}
-                                color='error'
+                              )}
+                            </Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={bondingProgress}
+                            color='error'
+                            sx={{
+                              height: 4,
+                              borderRadius: 2,
+                              mt: 0.5,
+                              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            }}
+                          />
+                        </Grid>
+
+                        {/* Equity */}
+                        <Grid item xs={6} sm={2}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem', mb: 0.5 }}>
+                              Equity
+                            </Typography>
+                            <Tooltip title="Ownership percentage of room">
+                              <Info sx={{ width: 12, height: 12, opacity: 0.7 }} />
+                            </Tooltip>
+                          </Box>
+                          <Chip
+                            label={`${row.share?.toFixed(2)}%`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ 
+                              fontWeight: 500, 
+                              fontSize: '0.7rem',
+                              height: 20,
+                              borderColor: 'rgba(76, 175, 80, 0.5)',
+                              color: '#4caf50',
+                            }}
+                          />
+                        </Grid>
+
+                        {/* Social Stats */}
+                        <Grid item xs={6} sm={2}>
+                          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem', mb: 0.5 }}>
+                            Engagement
+                          </Typography>
+                          <Stack direction="row" spacing={0.5}>
+                            <Tooltip title="Likes">
+                              <Chip
+                                size="small"
+                                label={Array.isArray(row.likes) ? row.likes.length : 0}
+                                variant="outlined"
                                 sx={{
-                                  height: 5,
-                                  borderRadius: 5,
-                                  mt: 0.5,
-                                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                  fontSize: '0.65rem',
+                                  height: 20,
+                                  minWidth: 20,
+                                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                                  color: 'rgba(255, 255, 255, 0.7)',
+                                  '& .MuiChip-label': {
+                                    padding: '0 4px',
+                                  },
                                 }}
                               />
-                            </Grid>
-
-                            {/* Equity */}
-                            <Grid item xs={6} sm={2}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                  Equity
-                                </Typography>
-                                <Tooltip title="Ownership percentage of room">
-                                  <Info sx={{ width: 14, height: 14, opacity: 0.7 }} />
-                                </Tooltip>
-                              </Box>
+                            </Tooltip>
+                            <Tooltip title="Battles">
                               <Chip
-                                label={`${row.share?.toFixed(2)}%`}
-                                color="success"
                                 size="small"
+                                label={row.battles || 0}
                                 variant="outlined"
-                                sx={{ fontWeight: 'medium' }}
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  height: 20,
+                                  minWidth: 20,
+                                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                                  color: 'rgba(255, 255, 255, 0.7)',
+                                  '& .MuiChip-label': {
+                                    padding: '0 4px',
+                                  },
+                                }}
                               />
-                            </Grid>
+                            </Tooltip>
+                          </Stack>
+                        </Grid>
 
-                            {/* Social Stats */}
-                            <Grid item xs={6} sm={2}>
-                              <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Engagement
-                              </Typography>
-                              <Stack direction="row" spacing={1}>
-                                <Tooltip title="Likes">
-                                  <Chip
-                                    size="small"
-                                    icon={<FontAwesomeIcon icon={faThumbsUp} style={{ fontSize: 12 }} />}
-                                    label={Array.isArray(row.likes) ? row.likes.length : 0}
-                                    variant="outlined"
-                                  />
-                                </Tooltip>
-                                <Tooltip title="Battles">
-                                  <Chip
-                                    size="small"
-                                    icon={<FontAwesomeIcon icon={faFistRaised} style={{ fontSize: 12 }} />} 
-                                    label={row.battles || 0}
-                                    variant="outlined"
-                                  />
-                                </Tooltip>
-                              </Stack>
-                            </Grid>
-
-                            {/* Actions */}
-                            <Grid item xs={6} sm={1}>
-                              <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                                  <Tooltip title="Game Settings">
-                                    <IconButton
-                                      size="small"
-                                      onClick={(e) => handleSettingsIconClick(e, row)}
-                                      sx={{
-                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                                        '&:hover': {
-                                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                        },
-                                      }}
-                                    >
-                                      <AutoAwesomeIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                {row.status === 'finished' ? (
-                                  <>
-                                  </>
-                                  // <Button
-                                  //   variant="outlined"
-                                  //   size="small"
-                                  //   startIcon={<Refresh />}
-                                  //   onClick={(e) => {
-                                  //     e.preventDefault();
-                                  //     e.stopPropagation();
-                                  //     // implement recreate
-                                  //   }}
-                                  // >
-                                  //   {isMobile ? '' : 'Recreate'}
-                                  // </Button>
-                                ) : (
-                                  row.coHost && (
-                                    <Button
-                                      variant="outlined"
-                                      color="error"
-                                      size="small"
-                                      disabled={isClosing}
-                                      onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleButtonClick(row.winnings, row._id);
-                                      }}
-                                      onMouseUp={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleButtonRelease(row._id);
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleButtonRelease(row._id);
-                                      }}
-                                      onTouchStart={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleButtonClick(row.winnings, row._id);
-                                      }}
-                                      onTouchEnd={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleButtonRelease(row._id);
-                                      }}
-                                      onTouchCancel={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleButtonRelease(row._id);
-                                      }}
-                                      sx={{
-                                        minWidth: isHolding ? 60 : 'auto',
-                                        transition: 'all 0.2s',
-                                        ...(isHolding && {
-                                          filter: 'hue-rotate(-10deg)',
-                                          transform: 'scale(1.05)',
-                                        }),
-                                        bgcolor: isDarkMode ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 0, 0, 0.05)',
-                                        borderColor: isDarkMode ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 0, 0, 0.3)',
-                                        '&:hover': {
-                                          bgcolor: isDarkMode ? 'rgba(255, 0, 0, 0.2)' : 'rgba(255, 0, 0, 0.1)',
-                                          borderColor: isDarkMode ? 'rgba(255, 0, 0, 0.7)' : 'rgba(255, 0, 0, 0.5)',
-                                        },
-                                      }}
-                                    >
-                                      {isHolding ? (
-                                        <>
-                                          <Box
-                                            component="span"
-                                            sx={{
-                                              position: 'absolute',
-                                              zIndex: 2,
-                                              fontWeight: 'bold',
-                                            }}
-                                          >
-                                            {(timeLeft / 100).toFixed(1)}
-                                            <Box component="span" sx={{ fontSize: 'xx-small', ml: 0.5 }}>
-                                              s
-                                            </Box>
-                                          </Box>
-
-                                        </>
-                                      ) : (
-                                        'RUG'
-                                      )}
-                                    </Button>
-                                  )
-                                )}
-                                {/* {row.coHost && selectedFilter === 'open' && (
-                                  <Tooltip title="Adjust Hard Cap">
-                                    <IconButton
-                                      size="small"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handlePayout(row);
-                                      }}
-                                      sx={{
-                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                                        '&:hover': {
-                                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                        },
-                                      }}
-                                    >
-                                      <MonetizationOn fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                )}
-                                {row.coHost && selectedFilter === 'open' && (
-                                  <Tooltip title="Add Liquidity">
-                                    <IconButton
-                                      size="small"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleCoHost(row);
-                                      }}
-                                      sx={{
-                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                                        '&:hover': {
-                                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                        },
-                                      }}
-                                    >
-                                      <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 14 }} />
-                                    </IconButton>
-                                  </Tooltip>
-                                )} */}
-                              </Stack>
-                            </Grid>
-                          </Grid>
-                        </CardContent>
-                      </Card>
-                    </Grid>
+                        {/* Actions */}
+                        <Grid item xs={6} sm={1}>
+                          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                            <Tooltip title="Game Settings">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleSettingsIconClick(e, row)}
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                  },
+                                }}
+                              >
+                                <AutoAwesomeIcon sx={{ fontSize: '14px' }} />
+                              </IconButton>
+                            </Tooltip>
+                            {row.status === 'finished' ? (
+                              <></>
+                            ) : (
+                              row.coHost && (
+                                <Button
+                                  variant="outlined"
+                                  color="error"
+                                  size="small"
+                                  disabled={isClosing}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleButtonClick(row.winnings, row._id);
+                                  }}
+                                  onMouseUp={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleButtonRelease(row._id);
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleButtonRelease(row._id);
+                                  }}
+                                  onTouchStart={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleButtonClick(row.winnings, row._id);
+                                  }}
+                                  onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleButtonRelease(row._id);
+                                  }}
+                                  onTouchCancel={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleButtonRelease(row._id);
+                                  }}
+                                  sx={{
+                                    minWidth: isHolding ? 50 : 'auto',
+                                    height: 28,
+                                    fontSize: '0.7rem',
+                                    textTransform: 'none',
+                                    px: 1,
+                                    transition: 'all 0.2s',
+                                    ...(isHolding && {
+                                      transform: 'scale(1.05)',
+                                    }),
+                                    borderColor: 'rgba(255, 0, 0, 0.3)',
+                                    color: '#ff0000',
+                                    '&:hover': {
+                                      borderColor: '#ff0000',
+                                      backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                                    },
+                                  }}
+                                >
+                                  {isHolding ? (
+                                    <>
+                                      {(timeLeft / 100).toFixed(1)}
+                                      <Box component="span" sx={{ fontSize: '0.6rem', ml: 0.5 }}>
+                                        s
+                                      </Box>
+                                    </>
+                                  ) : (
+                                    'RUG'
+                                  )}
+                                </Button>
+                              )
+                            )}
+                          </Stack>
+                        </Grid>
+                      </Grid>
+                    </Box>
                   );
                 })}
-              </Grid>
+              </Box>
             )}
           </Box>
         )}
@@ -902,10 +909,9 @@ function MyGamesTable() {
         maxWidth="sm"
         sx={{
           '& .MuiDialog-paper': {
-            borderRadius: 2,
-            background: isDarkMode ? 'rgba(18, 18, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
           },
         }}
       >
@@ -933,10 +939,9 @@ function MyGamesTable() {
         maxWidth="sm"
         sx={{
           '& .MuiDialog-paper': {
-            borderRadius: 2,
-            background: isDarkMode ? 'rgba(18, 18, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
           },
         }}
       >
@@ -945,19 +950,28 @@ function MyGamesTable() {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
-            borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+            color: '#fff',
+            fontSize: '1rem',
+            fontWeight: 600,
           }}
         >
           <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-            <FontAwesomeIcon icon={faMoneyCheckAlt} />
+            <FontAwesomeIcon icon={faMoneyCheckAlt} style={{ fontSize: '16px' }} />
             Adjust Hard Cap
           </Box>
           <IconButton
             onClick={handleClosePayoutModal}
-            sx={{ color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}
+            sx={{ 
+              color: 'rgba(255, 255, 255, 0.6)',
+              width: 32,
+              height: 32,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
           >
-            <Close />
+            <Close sx={{ fontSize: '16px' }} />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
@@ -965,10 +979,10 @@ function MyGamesTable() {
             <Table size="small">
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ borderBottom: 'none', color: 'text.secondary' }}>
+                  <TableCell sx={{ borderBottom: 'none', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
                     Current Payout:
                   </TableCell>
-                  <TableCell sx={{ borderBottom: 'none', color: 'warning.main' }}>
+                  <TableCell sx={{ borderBottom: 'none', color: '#ff9800', fontSize: '0.875rem', fontWeight: 500 }}>
                     {selectedRow && selectedRow.endgame_type
                       ? convertToCurrency(selectedRow.endgame_amount, solPrice)
                       : 'MANUAL'}
@@ -977,7 +991,7 @@ function MyGamesTable() {
               </TableBody>
             </Table>
           </Box>
-          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'medium' }}>
+          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: '#fff', fontSize: '0.875rem' }}>
             Payout Method
           </Typography>
           <RadioGroup
@@ -987,15 +1001,13 @@ function MyGamesTable() {
           >
             <FormControlLabel
               value="manual"
-              control={<Radio color="error" />}
-              label="Manual"
-              sx={{ '& .MuiFormControlLabel-label': { fontWeight: 'medium' } }}
+              control={<Radio color="error" size="small" />}
+              label={<Typography sx={{ fontWeight: 500, fontSize: '0.875rem', color: '#fff' }}>Manual</Typography>}
             />
             <FormControlLabel
               value="automatic"
-              control={<Radio color="error" />}
-              label="Automatic"
-              sx={{ '& .MuiFormControlLabel-label': { fontWeight: 'medium' } }}
+              control={<Radio color="error" size="small" />}
+              label={<Typography sx={{ fontWeight: 500, fontSize: '0.875rem', color: '#fff' }}>Automatic</Typography>}
             />
           </RadioGroup>
           <TextField
@@ -1012,33 +1024,69 @@ function MyGamesTable() {
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 0, 0, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#ff0000',
+                },
+                '& fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.6)',
+                '&.Mui-focused': {
+                  color: '#ff0000',
+                },
+              },
+              '& .MuiInputBase-input': {
+                color: '#fff',
+              },
+              '& .MuiInputAdornment-root': {
+                color: 'rgba(255, 255, 255, 0.6)',
               },
             }}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
           <Button
             variant="contained"
             color="error"
             onClick={handleSendPayout}
             disabled={payoutAmount <= 0 && paymentMethod === 'automatic'}
-            sx={{ borderRadius: 2 }}
+            sx={{ 
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+            }}
           >
             Update
           </Button>
           <Button
             variant="outlined"
-            color="inherit"
             onClick={handleClosePayoutModal}
-            sx={{ borderRadius: 2 }}
+            sx={{ 
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              '&:hover': {
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              },
+            }}
           >
             Cancel
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 }
 

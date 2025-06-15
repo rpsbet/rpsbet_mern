@@ -20,6 +20,7 @@
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.7.4",
+    "html2canvas": "^1.4.1",
     "lightweight-charts": "^4.2.3",
     "lodash": "^4.17.21",
     "matter-js": "^0.20.0",

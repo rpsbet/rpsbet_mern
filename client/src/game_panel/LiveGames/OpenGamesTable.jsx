@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   getRoomList,
   actionRoom,
-  setRoomList, // <--- Consider if this is truly needed for local manipulation
+  setRoomList,
   getTopGameTypes,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
@@ -93,39 +93,46 @@ function OpenGamesTable(props) {
     return currentRooms;
   }, [roomList, highlightedRooms]);
 
-
-  // Use useMemo for displayedRooms to apply game type filtering
   const displayedRooms = useMemo(() => {
     let filtered = processedRoomList; // Start with the processed list (potentially highlighted)
 
     if (selectedGameType !== 'All') {
-      filtered = filtered.filter(room =>
-        Array.isArray(room.game_type)
-          ? room.game_type.some(type => type.toLowerCase() === selectedGameType.toLowerCase())
-          : room.game_type && room.game_type.toLowerCase() === selectedGameType.toLowerCase()
-      );
+      console.log('Filtering by game type:', selectedGameType);
+      filtered = filtered.filter(room => {
+        // Handle null/undefined game_type
+        if (!room.game_type) return false;
+        
+        return Array.isArray(room.game_type)
+          ? room.game_type.some(type => type && typeof type === 'string' && type.toLowerCase() === selectedGameType.toLowerCase())
+          : typeof room.game_type === 'string' && room.game_type.toLowerCase() === selectedGameType.toLowerCase();
+      });
     }
+    
     // Apply search filter if gameTypeSearch is not empty
     if (gameTypeSearch) {
       const lowerCaseSearch = gameTypeSearch.toLowerCase();
       filtered = filtered.filter(room => {
-        const roomGameTypes = Array.isArray(room.game_type) ? room.game_type : [room.game_type];
-        return roomGameTypes.some(type => type.toLowerCase().includes(lowerCaseSearch)) ||
-          room.name.toLowerCase().includes(lowerCaseSearch) ||
-          room.description.toLowerCase().includes(lowerCaseSearch);
+        // Safely handle game_type for search
+        const roomGameTypes = Array.isArray(room.game_type) 
+          ? room.game_type.filter(type => type && typeof type === 'string')
+          : (room.game_type && typeof room.game_type === 'string') ? [room.game_type] : [];
+        
+        const gameTypeMatch = roomGameTypes.some(type => type.toLowerCase().includes(lowerCaseSearch));
+        const nameMatch = room.name && typeof room.name === 'string' && room.name.toLowerCase().includes(lowerCaseSearch);
+        const descriptionMatch = room.description && typeof room.description === 'string' && room.description.toLowerCase().includes(lowerCaseSearch);
+        
+        return gameTypeMatch || nameMatch || descriptionMatch;
       });
     }
 
     return filtered;
-  }, [processedRoomList, selectedGameType, gameTypeSearch]); // Depend on processedRoomList and filters
+}, [processedRoomList, selectedGameType, gameTypeSearch]);
 
   const paginatedRooms = useMemo(() => {
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return displayedRooms.slice(startIndex, endIndex);
   }, [displayedRooms, page, pageSize]);
-
-  // Removed prevRoomListRef as localRoomList is no longer the primary state
 
   useEffect(() => {
     // Initial fetch of all rooms
@@ -241,7 +248,6 @@ function OpenGamesTable(props) {
     return { color: '#03ff3b' }; // Green for withdrawal
   }, []);
 
-
   return (
     <ThemeProvider theme={theme}>
       <>
@@ -296,7 +302,7 @@ function OpenGamesTable(props) {
             <Chip
               key={gameType}
               label={gameType.toUpperCase()}
-              onClick={() => handleGameTypeChipClick(gameType)} // Use handleGameTypeChipClick
+              onClick={() => handleGameTypeChipClick(gameType)}
               color={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'error' : 'default'}
               variant={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'filled' : 'outlined'}
               clickable
@@ -356,7 +362,7 @@ function OpenGamesTable(props) {
         <div className="table main-game-table open-games">
           {effectiveLoading ? (
             <Box sx={{ px: 3 }}>
-              <Grid container spacing={3}>
+              <Grid container spacing={2}>
                 {Array.from({ length: 9 }).map((_, index) => (
                   <Grid
                     item
@@ -367,59 +373,38 @@ function OpenGamesTable(props) {
                     xl={4}
                     key={index}
                   >
-                    <Card
+                    <Box
                       sx={{
-                        p: 3,
-                        borderRadius: '20px',
-                        backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                        border: effectiveIsDarkMode
-                          ? '1px solid rgba(255, 255, 255, 0.08)'
-                          : '1px solid rgba(0, 0, 0, 0.06)',
-                        boxShadow: effectiveIsDarkMode
-                          ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-                          : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
                       }}
                     >
-                      {/* Skeleton structure */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                        <Skeleton variant="rounded" width={52} height={52} sx={{ borderRadius: '12px', mr: 2 }} />
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Skeleton variant="rounded" width={32} height={32} sx={{ borderRadius: '6px', mr: 2 }} />
                         <Box sx={{ flexGrow: 1 }}>
-                          <Skeleton variant="text" width="75%" height={24} sx={{ mb: 1 }} />
-                          <Skeleton variant="text" width="55%" height={16} />
+                          <Skeleton variant="text" width="70%" height={18} sx={{ mb: 0.5 }} />
+                          <Skeleton variant="text" width="50%" height={14} />
                         </Box>
-                        <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: '12px' }} />
+                        <Skeleton variant="rounded" width={60} height={20} sx={{ borderRadius: '4px' }} />
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                        <Box sx={{ display: 'flex' }}>
-                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
-                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', ml: -1 }} />
-                        </Box>
-                        <Skeleton variant="circular" width={44} height={44} />
-                        <Box sx={{ display: 'flex' }}>
-                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', mr: -1 }} />
-                          <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
-                        </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
-                        <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
-                        <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
-                        <Skeleton variant="rounded" width="30%" height={70} sx={{ borderRadius: '16px' }} />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Skeleton variant="text" width="25%" height={16} />
+                        <Skeleton variant="text" width="20%" height={16} />
+                        <Skeleton variant="text" width="15%" height={16} />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ width: '60%' }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Skeleton variant="text" width="25%" height={14} />
-                            <Skeleton variant="text" width="20%" height={14} />
-                          </Box>
-                          <Skeleton variant="rounded" width="100%" height={10} sx={{ borderRadius: '20px' }} />
+                          <Skeleton variant="rounded" width="100%" height={6} sx={{ borderRadius: '3px' }} />
                         </Box>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Skeleton variant="circular" width={28} height={28} />
-                          <Skeleton variant="circular" width={28} height={28} />
-                          <Skeleton variant="circular" width={28} height={28} />
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Skeleton variant="circular" width={24} height={24} />
+                          <Skeleton variant="circular" width={24} height={24} />
+                          <Skeleton variant="circular" width={24} height={24} />
                         </Box>
                       </Box>
-                    </Card>
+                    </Box>
                   </Grid>
                 ))}
               </Grid>
@@ -444,19 +429,13 @@ function OpenGamesTable(props) {
             </Box>
           ) : (
             <Box sx={{ px: 3 }}>
-              <Grid container spacing={3}>
+              <Grid container spacing={2}>
                 {paginatedRooms.map((row, index) => {
                   const progressPercentage = row.endgame_amount
                     ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
                     : 0;
 
-                  // Apply highlighting only if it's explicitly set by Redux
-                  // This is handled by processedRoomList now, so no need for `isFirstItem` here for styling
-                  // unless you want a visual highlight that's independent of the Redux reordering.
-                  // For the sake of matching your original output and assuming `highlightedRooms` is for a visual cue,
-                  // I'll keep the `isFirstItem` logic.
                   const isFirstItem = index === 0 && Array.from(highlightedRooms).includes(row._id);
-
 
                   return (
                     <Grid
@@ -469,174 +448,152 @@ function OpenGamesTable(props) {
                       key={row._id}
                     >
                       <Box
+                        onClick={(event) => {
+                          if (!event.defaultPrevented) {
+                            joinRoom({
+                              id: row._id,
+                              roomStatus: row.status,
+                            });
+                          }
+                        }}
                         sx={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          background: isFirstItem
+                            ? 'linear-gradient(90deg, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.03))'
+                            : 'rgba(255, 255, 255, 0.02)',
+                          border: isFirstItem
+                            ? '1px solid rgba(255, 0, 0, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.05)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
                           position: 'relative',
+                          '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            border: '1px solid rgba(255, 0, 0, 0.2)',
+                          },
                           ...(isFirstItem && {
                             '&::before': {
                               content: '""',
                               position: 'absolute',
-                              top: '-3px',
-                              left: '-3px',
-                              right: '-3px',
-                              bottom: '-3px',
-                              borderRadius: '23px',
-                              background: ' #ff0000',
-                              backgroundSize: '300% 300%',
-                              zIndex: 0,
-                              animation: 'gradientBorder 3s ease-in-out infinite',
-                              boxShadow: '0 0 20px rgba(255, 0, 0, 0.4)',
-                            },
-                            '@keyframes gradientBorder': {
-                              '0%, 100%': { backgroundPosition: '0% 0%' },
-                              '50%': { backgroundPosition: '100% 100%' },
-                            },
-                          }),
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: '2px',
+                              background: 'linear-gradient(90deg, transparent, #ff0000, transparent)',
+                              animation: 'shimmer 2s ease-in-out'
+                            }
+                          })
                         }}
                       >
-                        <Card
-                          onClick={(event) => {
-                            if (!event.defaultPrevented) {
-                              joinRoom({
-                                id: row._id,
-                                roomStatus: row.status,
-                              });
-                            }
-                          }}
-                          sx={{
-                            p: 3,
-                            borderRadius: '20px',
-                            backgroundColor: effectiveIsDarkMode ? '#1a1a1a' : '#ffffff',
-                            border: effectiveIsDarkMode
-                              ? '1px solid rgba(255, 255, 255, 0.08)'
-                              : '1px solid rgba(0, 0, 0, 0.06)',
-                            boxShadow: effectiveIsDarkMode
-                              ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-                              : '0 4px 20px rgba(0, 0, 0, 0.08)',
-                            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            zIndex: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            height: '100%',
-                            '&:hover': {
-                              boxShadow: effectiveIsDarkMode
-                                ? '0 8px 32px rgba(0, 0, 0, 0.4)'
-                                : '0 8px 32px rgba(0, 0, 0, 0.12)',
-                            },
-                          }}
-                        >
-                          {/* Header */}
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                            <Box
-                              sx={{
-                                borderRadius: '12px',
-                                overflow: 'hidden',
-                                mr: 2,
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255,255,255,0.1)'
-                                  : '1px solid rgba(0,0,0,0.08)',
-                                width: 52,
-                                height: 52,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: effectiveIsDarkMode
-                                  ? 'rgba(255,255,255,0.05)'
-                                  : 'rgba(0,0,0,0.02)',
-                              }}
-                            >
-                              <img
-                                src={row.image}
-                                alt={row.name}
-                                style={{ width: 44, height: 44, objectFit: 'cover' }}
-                              />
-                            </Box>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontWeight: 700,
-                                  fontSize: '1.1rem',
-                                  lineHeight: 1.2,
-                                  mb: 0.5,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {row.name}
-                                <Typography
-                                  component="span"
-                                  color="text.secondary"
-                                  sx={{
-                                    ml: 1,
-                                    fontSize: '0.9rem',
-                                    fontWeight: 500,
-                                    opacity: 0.7,
-                                  }}
-                                >
-                                  ({row.ticker})
-                                </Typography>
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                  fontSize: '0.85rem',
-                                  opacity: 0.8,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {row.description.length > 30 ? `${row.description.slice(0, 30)}...` : row.description}
-                              </Typography>
-                            </Box>
-                            <Box
-                              sx={{
-                                ml: 2,
-                                p: '4px 8px',
-                                borderRadius: '8px',
-                                backgroundColor: effectiveIsDarkMode
-                                  ? 'rgba(255,255,255,0.05)'
-                                  : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255,255,255,0.08)'
-                                  : '1px solid rgba(0,0,0,0.05)',
-                              }}
-                            >
-                              <Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: '0.5px' }}>
-                                {Array.isArray(row.game_type)
-                                  ? row.game_type.map(type => type.toUpperCase()).join(', ')
-                                  : (row.game_type ? String(row.game_type).toUpperCase() : 'N/A')}
-                              </Typography>
-                            </Box>
-                          </Box>
-
-                          {/* Battle visualization */}
+                        {/* Header Row */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                           <Box
                             sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              mr: 2,
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'space-around',
-                              mb: 3,
-                              position: 'relative',
+                              justifyContent: 'center',
+                              flexShrink: 0,
                             }}
                           >
-                            {row.hosts?.length > 0 && (
+                            <img
+                              src={row.image}
+                              alt={row.name}
+                              style={{ width: 28, height: 28, objectFit: 'cover' }}
+                            />
+                          </Box>
+                          
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: '0.875rem',
+                                lineHeight: 1.2,
+                                mb: 0.25,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                color: '#fff',
+                              }}
+                            >
+                              {row.name}
+                              <Typography
+                                component="span"
+                                sx={{
+                                  ml: 1,
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  color: 'rgba(255, 255, 255, 0.6)',
+                                }}
+                              >
+                                ({row.ticker})
+                              </Typography>
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '0.7rem',
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                display: 'block',
+                              }}
+                            >
+                              {row.description.length > 40 ? `${row.description.slice(0, 40)}...` : row.description}
+                            </Typography>
+                          </Box>
+
+                          <Chip
+                            label={Array.isArray(row.game_type)
+                              ? row.game_type[0]?.toUpperCase() || 'N/A'
+                              : (row.game_type ? String(row.game_type).toUpperCase() : 'N/A')}
+                            size="small"
+                            sx={{
+                              height: '20px',
+                              fontSize: '0.65rem',
+                              fontWeight: 600,
+                              backgroundColor: 'transparent',
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              '& .MuiChip-label': {
+                                padding: '0 6px',
+                              },
+                            }}
+                          />
+                        </Box>
+
+                        {/* Players and Battle Icon */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 2,
+                          }}
+                        >
+                          {/* Hosts */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {row.hosts?.length > 0 ? (
                               <AvatarGroup
                                 max={2}
                                 sx={{
                                   '& .MuiAvatar-root': {
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: '12px',
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: '6px',
                                     border: 'none',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                    fontSize: '0.7rem',
                                   },
                                   '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                    marginLeft: '-12px',
+                                    marginLeft: '-8px',
                                   },
                                 }}
                               >
@@ -662,41 +619,44 @@ function OpenGamesTable(props) {
                                   />
                                 ))}
                               </AvatarGroup>
+                            ) : (
+                              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem' }}>
+                                No hosts
+                              </Typography>
                             )}
+                          </Box>
 
-                            <Box
-                              sx={{
-                                mx: 2,
-                                width: 44,
-                                height: 44,
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: effectiveIsDarkMode
-                                  ? 'rgba(255,255,255,0.08)'
-                                  : 'rgba(0,0,0,0.06)',
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255,255,255,0.1)'
-                                  : '1px solid rgba(0,0,0,0.08)',
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faFistRaised} style={{ fontSize: 20, color: effectiveIsDarkMode ? '#ff0000' : '#000' }} />
-                            </Box>
+                          {/* Battle Icon */}
+                          <Box
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                              border: '1px solid rgba(255, 0, 0, 0.2)',
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faFistRaised} style={{ fontSize: 12, color: '#ff0000' }} />
+                          </Box>
 
-                            {row.joiners?.length > 0 && (
+                          {/* Joiners */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {row.joiners?.length > 0 ? (
                               <AvatarGroup
                                 max={2}
                                 sx={{
                                   '& .MuiAvatar-root': {
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: '12px',
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: '6px',
                                     border: 'none',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                    fontSize: '0.7rem',
                                   },
                                   '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                    marginLeft: '-12px',
+                                    marginLeft: '-8px',
                                   },
                                 }}
                               >
@@ -722,254 +682,183 @@ function OpenGamesTable(props) {
                                   />
                                 ))}
                               </AvatarGroup>
+                            ) : (
+                              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem' }}>
+                                No joiners
+                              </Typography>
                             )}
                           </Box>
+                        </Box>
 
-                          {/* Stats */}
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
-                            <Box
+                        {/* Stats Row */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                          <Box sx={{ textAlign: 'left' }}>
+                            <Typography
+                              variant="caption"
                               sx={{
-                                flex: 1,
-                                textAlign: 'center',
-                                p: 2,
-                                borderRadius: '16px',
-                                backgroundColor: effectiveIsDarkMode
-                                  ? 'rgba(255,255,255,0.05)'
-                                  : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255,255,255,0.08)'
-                                  : '1px solid rgba(0,0,0,0.05)',
+                                fontSize: '0.65rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                display: 'block',
+                                mb: 0.25,
                               }}
                             >
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{
-                                  fontSize: '0.75rem',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.5px',
-                                  fontWeight: 600,
-                                  display: 'block',
-                                  mb: 0.5,
-                                }}
-                              >
-                                Liquidity
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  ...getColorClass(row.user_bet - row.bet_amount),
-                                  fontWeight: 700,
-                                  fontSize: '0.95rem',
-                                  lineHeight: 1.2,
-                                }}
-                              >
-                                {convertToCurrency(row.user_bet, effectiveSolPrice)}
-                                {row.user_bet !== row.bet_amount && (
-                                  <Box
-                                    component="span"
-                                    sx={{
-                                      fontSize: '0.75rem',
-                                      ml: 0.5,
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 0.25,
-                                    }}
-                                  >
-                                    {row.user_bet > row.bet_amount ? (
-                                      <TrendingUpOutlined sx={{ fontSize: 12 }} />
-                                    ) : (
-                                      <TrendingDownOutlined sx={{ fontSize: 12 }} />
-                                    )}
-                                    {`${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(1)}%`}
-                                  </Box>
-                                )}
-                              </Typography>
-                            </Box>
-
-                            <Box
+                              Liquidity
+                            </Typography>
+                            <Typography
+                              variant="body2"
                               sx={{
-                                flex: 1,
-                                textAlign: 'center',
-                                p: 2,
-                                borderRadius: '16px',
-                                backgroundColor: effectiveIsDarkMode
-                                  ? 'rgba(255,255,255,0.05)'
-                                  : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255,255,255,0.08)'
-                                  : '1px solid rgba(0,0,0,0.05)',
+                                ...getColorClass(row.user_bet - row.bet_amount),
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                lineHeight: 1.2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.25,
                               }}
                             >
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{
-                                  fontSize: '0.75rem',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.5px',
-                                  fontWeight: 600,
-                                  display: 'block',
-                                  mb: 0.5,
-                                }}
-                              >
-                                Battles
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  fontWeight: 700,
-                                  fontSize: '0.95rem',
-                                }}
-                              >
-                                {row.battles}
-                              </Typography>
-                            </Box>
-
-                            <Box
-                              sx={{
-                                flex: 1,
-                                textAlign: 'center',
-                                p: 2,
-                                borderRadius: '16px',
-                                backgroundColor: effectiveIsDarkMode
-                                  ? 'rgba(255,255,255,0.05)'
-                                  : 'rgba(0,0,0,0.03)',
-                                border: effectiveIsDarkMode
-                                  ? '1px solid rgba(255,255,255,0.08)'
-                                  : '1px solid rgba(0,0,0,0.05)',
-                              }}
-                            >
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{
-                                  fontSize: '0.75rem',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.5px',
-                                  fontWeight: 600,
-                                  display: 'block',
-                                  mb: 0.5,
-                                }}
-                              >
-                                Age
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  fontWeight: 700,
-                                  fontSize: '0.95rem',
-                                }}
-                              >
-                                {customFromNow(row.created_at)}
-                              </Typography>
-                            </Box>
+                              {convertToCurrency(row.user_bet, effectiveSolPrice)}
+                              {row.user_bet !== row.bet_amount && (
+                                <>
+                                  {row.user_bet > row.bet_amount ? (
+                                    <TrendingUpOutlined sx={{ fontSize: 10 }} />
+                                  ) : (
+                                    <TrendingDownOutlined sx={{ fontSize: 10 }} />
+                                  )}
+                                </>
+                              )}
+                            </Typography>
                           </Box>
 
-                          {/* Health bar and actions */}
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              mt: 'auto',
-                            }}
-                          >
-                            <Box sx={{ flex: 1, mr: 3 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                  }}
-                                >
-                                  Health
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {(100 - progressPercentage).toFixed(0)}%
-                                </Typography>
-                              </Box>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '0.65rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                display: 'block',
+                                mb: 0.25,
+                              }}
+                            >
+                              Battles
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                color: '#fff',
+                              }}
+                            >
+                              {row.battles}
+                            </Typography>
+                          </Box>
+
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '0.65rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                display: 'block',
+                                mb: 0.25,
+                              }}
+                            >
+                              Age
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                color: '#fff',
+                              }}
+                            >
+                              {customFromNow(row.created_at)}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Health bar and actions */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Box sx={{ flex: 1, mr: 2 }}>
+                            <Box
+                              sx={{
+                                width: '100%',
+                                height: '6px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: '3px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                              }}
+                            >
                               <Box
                                 sx={{
-                                  width: '100%',
-                                  height: '10px',
-                                  backgroundColor: effectiveIsDarkMode
-                                    ? 'rgba(255, 255, 255, 0.1)'
-                                    : 'rgba(0, 0, 0, 0.08)',
-                                  borderRadius: '20px',
-                                  overflow: 'hidden',
-                                  position: 'relative',
+                                  width: `${100 - progressPercentage}%`,
+                                  height: '100%',
+                                  background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
+                                  borderRadius: '3px',
+                                  transition: 'width 0.3s ease',
                                 }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: `${100 - progressPercentage}%`,
-                                    height: '100%',
-                                    background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.9), rgba(253, 181, 0, 1))',
-                                    borderRadius: '20px',
-                                    boxShadow: '0 0 10px rgba(227, 255, 0, 0.3)',
-                                    transition: 'width 0.3s ease',
-                                  }}
-                                />
-                              </Box>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                              <LikeDislikeView
-                                row={row}
-                                user={user}
-                                handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
-                                handleDislike={() => dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))}
-                                handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
                               />
                             </Box>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '0.6rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                mt: 0.25,
+                                display: 'block',
+                              }}
+                            >
+                              Health: {(100 - progressPercentage).toFixed(0)}%
+                            </Typography>
                           </Box>
 
-                          {/* Private room indicator */}
-                          {row.is_private && (
-                            <Tooltip title="A password is required to battle this room." arrow>
-                              <Box
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <LikeDislikeView
+                              row={row}
+                              user={user}
+                              handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
+                              handleDislike={() => dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))}
+                              handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
+                            />
+                          </Box>
+                        </Box>
+
+                        {/* Private room indicator */}
+                        {row.is_private && (
+                          <Tooltip title="A password is required to battle this room." arrow>
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                width: 24,
+                                height: 24,
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                backdropFilter: 'blur(4px)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                              }}
+                            >
+                              <LockOutlined
                                 sx={{
-                                  position: 'absolute',
-                                  top: 16,
-                                  right: 16,
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: '50%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  backgroundColor: effectiveIsDarkMode
-                                    ? 'rgba(0, 0, 0, 0.3)'
-                                    : 'rgba(255, 255, 255, 0.9)',
-                                  backdropFilter: 'blur(8px)',
-                                  border: effectiveIsDarkMode
-                                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                                    : '1px solid rgba(0, 0, 0, 0.08)',
-                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                  fontSize: 12,
+                                  color: 'rgba(255, 255, 255, 0.8)',
                                 }}
-                              >
-                                <LockOutlined
-                                  sx={{
-                                    fontSize: 18,
-                                    color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
-                                  }}
-                                />
-                              </Box>
-                            </Tooltip>
-                          )}
-                        </Card>
+                              />
+                            </Box>
+                          </Tooltip>
+                        )}
                       </Box>
                     </Grid>
                   );
@@ -983,7 +872,7 @@ function OpenGamesTable(props) {
               variant="outlined"
               sx={{
                 '& .MuiPaginationItem-root': {
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   fontWeight: 600,
                   border: effectiveIsDarkMode
                     ? '1px solid rgba(255, 255, 255, 0.1)'

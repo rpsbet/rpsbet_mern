@@ -115,7 +115,6 @@ const PreSummaryPanel = React.memo((props) => {
     const container = scrollContainerRef.current;
     if (container) {
       container.addEventListener('scroll', checkScrollPosition);
-      // Check initial position
       checkScrollPosition();
     }
     return () => {
@@ -141,101 +140,139 @@ const PreSummaryPanel = React.memo((props) => {
     }
   }, []);
 
-  // Memoized LikeDislikeBar component
-  const LikeDislikeBar = React.memo(({ likes = 0, dislikes = 0 }) => {
-    const total = likes + dislikes;
-    const likePercentage = total > 0 ? (likes / total) * 100 : 50;
-    const dislikePercentage = total > 0 ? (dislikes / total) * 100 : 50;
-
+  // Clean DataCard component
+  const DataCard = React.memo(({ icon, label, value, tooltip, warning = false, children = null }) => {
     return (
       <Box
-        className="data-item"
         sx={{
-          minWidth: '200px',
-          px: 3,
-          py: 2.5,
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          minWidth: '140px',
+          padding: '8px 12px',
+          borderRight: '1px solid rgba(255, 255, 255, 0.05)',
           '&:last-child': {
             borderRight: 'none',
           },
         }}
       >
         <Typography
-          variant="subtitle2"
+          variant="caption"
           sx={{
-            mb: 2,
-            fontSize: '0.8rem',
+            fontSize: '0.65rem',
             fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: 'rgba(255, 255, 255, 0.6)',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
+            display: 'block',
+            mb: 0.5,
           }}
         >
-          <FontAwesomeIcon icon={faBalanceScale} style={{ fontSize: '12px' }} />
-          Community Sentiment
+          {label}
+        </Typography>
+        <Tooltip title={tooltip} arrow>
+          <Box
+            sx={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            {children || (
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: warning ? '#ff9800' : '#fff',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                {value}
+              </Typography>
+            )}
+            {warning && (
+              <WarningIcon sx={{ fontSize: 12, color: '#ff9800' }} />
+            )}
+          </Box>
+        </Tooltip>
+      </Box>
+    );
+  });
+
+  // Clean Sentiment component
+  const SentimentCard = React.memo(() => {
+    const likes = roomInfo?.likes?.length || 0;
+    const dislikes = roomInfo?.dislikes?.length || 0;
+    const total = likes + dislikes;
+    const likePercentage = total > 0 ? (likes / total) * 100 : 50;
+
+    return (
+      <Box
+        sx={{
+          minWidth: '160px',
+          padding: '8px 12px',
+          borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            fontSize: '0.65rem',
+            fontWeight: 600,
+            color: 'rgba(255, 255, 255, 0.6)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            display: 'block',
+            mb: 0.5,
+          }}
+        >
+          Sentiment
         </Typography>
         {total === 0 ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography
-              variant="body2"
-              sx={{
-                fontSize: '0.9rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontStyle: 'italic',
-              }}
-            >
-              No votes yet
-            </Typography>
-            <InfoIcon sx={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.4)' }} />
-          </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '0.8rem',
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontStyle: 'italic',
+            }}
+          >
+            No votes
+          </Typography>
         ) : (
-          <Tooltip title={`${likes} likes, ${dislikes} dislikes (Total: ${total} votes)`} arrow>
-            <Box
-              sx={{
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1.5,
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem' }}>
+          <Tooltip title={`${likes} likes, ${dislikes} dislikes`} arrow>
+            <Box sx={{ cursor: 'pointer' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.7rem' }}>
                   {likes} 👍
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#f44336', fontWeight: 600, fontSize: '0.85rem' }}>
+                <Typography variant="caption" sx={{ color: '#f44336', fontWeight: 600, fontSize: '0.7rem' }}>
                   👎 {dislikes}
                 </Typography>
               </Box>
               <Box
                 sx={{
                   width: '100%',
-                  height: 8,
+                  height: 4,
                   display: 'flex',
                   overflow: 'hidden',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   background: 'rgba(255, 255, 255, 0.1)',
-                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2)',
                 }}
               >
                 <Box
                   sx={{
                     width: `${likePercentage}%`,
-                    background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
+                    background: '#4caf50',
                     transition: 'width 0.3s ease',
                     height: '100%',
-                    boxShadow: '0 0 8px rgba(76, 175, 80, 0.4)',
                   }}
                 />
                 <Box
                   sx={{
-                    width: `${dislikePercentage}%`,
-                    background: 'linear-gradient(90deg, #f44336, #ef5350)',
+                    width: `${100 - likePercentage}%`,
+                    background: '#f44336',
                     transition: 'width 0.3s ease',
                     height: '100%',
-                    boxShadow: '0 0 8px rgba(244, 67, 54, 0.4)',
                   }}
                 />
               </Box>
@@ -245,89 +282,6 @@ const PreSummaryPanel = React.memo((props) => {
       </Box>
     );
   });
-
-  // Memoized DataCard component
-  const DataCard = React.memo(({ icon, label, value, tooltip, warning = false, color = null, width = 180, children = null }) => {
-    return (
-      <Box
-        className="data-item"
-        sx={{
-          minWidth: `${width}px`,
-          px: 3,
-          py: 2.5,
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-          },
-          '&:last-child': {
-            borderRight: 'none',
-          },
-        }}
-      >
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mb: 2,
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.7)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <FontAwesomeIcon icon={icon} style={{ fontSize: '12px' }} />
-          {label}
-        </Typography>
-        <Tooltip title={tooltip} placement="top" arrow>
-          <Box
-            sx={{
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            {children || (
-              <Typography
-                variant="body1"
-                sx={{
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  // color: color || '#ffffff',
-                  letterSpacing: '0.3px',
-                }}
-              >
-                {value}
-              </Typography>
-            )}
-            {warning ? (
-              <WarningIcon sx={{ fontSize: 18, color: '#ff9800' }} />
-            ) : (
-              <InfoIcon sx={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.4)' }} />
-            )}
-          </Box>
-        </Tooltip>
-      </Box>
-    );
-  });
-
-  // Memoized scroll indicator calculation
-  const scrollIndicatorStyle = useMemo(() => {
-    if (!scrollContainerRef.current) return { width: '10%', transform: 'translateX(0%)' };
-    
-    const container = scrollContainerRef.current;
-    const widthPercentage = (container.clientWidth / container.scrollWidth) * 100;
-    const transformPercentage = (scrollPosition / container.scrollWidth) * 100 * (container.scrollWidth / container.clientWidth);
-    
-    return {
-      width: `${widthPercentage}%`,
-      transform: `translateX(${transformPercentage}%)`,
-    };
-  }, [scrollPosition]);
 
   const handleCreatorClick = useCallback(() => {
     handleOpenPlayerModal(creator_id);
@@ -355,104 +309,62 @@ const PreSummaryPanel = React.memo((props) => {
         sx={{
           position: 'relative',
           width: '100%',
-          mb: 3,
+          mb: 2,
           overflow: 'hidden',
         }}
       >
-        {/* Left scroll button */}
+        {/* Scroll buttons */}
         {showLeftArrow && (
           <IconButton
             onClick={() => handleScroll('left')}
             sx={{
               position: 'absolute',
-              left: 8,
+              left: 4,
               top: '50%',
               transform: 'translateY(-50%)',
-              zIndex: 20,
-              bgcolor: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(10px)',
+              zIndex: 10,
+              width: 28,
+              height: 28,
+              bgcolor: 'rgba(0, 0, 0, 0.6)',
               color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
               '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.9)',
-                transform: 'translateY(-50%) scale(1.05)',
+                bgcolor: 'rgba(0, 0, 0, 0.8)',
               },
-              width: 44,
-              height: 44,
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
-              transition: 'all 0.2s ease',
             }}
           >
-            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: '16px' }} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: '12px' }} />
           </IconButton>
         )}
 
-        {/* Right scroll button */}
         {showRightArrow && (
           <IconButton
             onClick={() => handleScroll('right')}
             sx={{
               position: 'absolute',
-              right: 8,
+              right: 4,
               top: '50%',
               transform: 'translateY(-50%)',
-              zIndex: 20,
-              bgcolor: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(10px)',
+              zIndex: 10,
+              width: 28,
+              height: 28,
+              bgcolor: 'rgba(0, 0, 0, 0.6)',
               color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
               '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.9)',
-                transform: 'translateY(-50%) scale(1.05)',
+                bgcolor: 'rgba(0, 0, 0, 0.8)',
               },
-              width: 44,
-              height: 44,
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
-              transition: 'all 0.2s ease',
             }}
           >
-            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '16px' }} />
+            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '12px' }} />
           </IconButton>
         )}
 
-        {/* Scroll indicator */}
+        {/* Main container */}
         <Box
           sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            bgcolor: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
             overflow: 'hidden',
-            zIndex: 10,
-          }}
-        >
-          <Box
-            sx={{
-              height: '100%',
-              bgcolor: '#f44336',
-              transition: 'transform 0.1s ease-out',
-              boxShadow: '0 0 8px rgba(244, 67, 54, 0.6)',
-              ...scrollIndicatorStyle,
-            }}
-          />
-        </Box>
-
-        {/* Main scroll container */}
-        <Paper
-          elevation={0}
-          sx={{
-            background: 'rgba(0, 0, 0, 0.15)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '24px 24px 0 0',
-            overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-            '@supports not (backdrop-filter: blur(20px))': {
-              background: 'rgba(0, 0, 0, 0.35)',
-            },
           }}
         >
           <Box
@@ -461,72 +373,94 @@ const PreSummaryPanel = React.memo((props) => {
               display: 'flex',
               overflowX: 'auto',
               '&::-webkit-scrollbar': {
-                height: '6px',
+                height: '4px',
               },
-             
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '2px',
+              },
             }}
           >
-            {/* ROOM NAME */}
-            <DataCard
-              icon={faCat}
-              label="Token Details"
-              tooltip="Room name and associated ticker symbol"
-              width={220}
+            {/* Token Details */}
+            <Box
+              sx={{
+                minWidth: '180px',
+                padding: '8px 12px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+              }}
             >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'block',
+                  mb: 0.5,
+                }}
+              >
+                Token
+              </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#ffffff' }}>
                   {roomInfo?.name}
                 </Typography>
                 <Chip
                   label={`$${roomInfo?.ticker}`}
                   size="small"
                   sx={{
-                    backgroundColor: '#f44336',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                    color: '#ff0000',
                     fontWeight: 600,
-                    fontSize: '0.7rem',
-                    height: 20,
+                    fontSize: '0.6rem',
+                    height: 16,
                     alignSelf: 'flex-start',
+                    border: '1px solid rgba(255, 0, 0, 0.3)',
+                    '& .MuiChip-label': {
+                      padding: '0 4px',
+                    },
                   }}
                 />
               </Box>
-            </DataCard>
+            </Box>
 
-            {/* LIQUIDITY */}
+            {/* Liquidity */}
             <DataCard
-              icon={faWater}
-              label="Liquidity Pool"
+              label="Liquidity"
               value={memoizedValues.liquidityValue}
               tooltip={memoizedValues.liquidityTooltip}
               warning={isLowBankroll}
-              color={isLowBankroll ? '#f44336' : '#2196f3'}
-              width={180}
             />
 
-            {/* HOST PROFIT */}
-            {/* <DataCard
-              icon={faBalanceScale}
-              label="Host Performance"
-              value={memoizedValues.netProfit}
-              tooltip="Net profit: Current bankroll - Initial bankroll"
-              warning={!isLowProfit}
-              color={isLowProfit ? '#4caf50' : '#f44336'}
-              width={200}
-            /> */}
-
-            {/* TAX */}
-            <DataCard
-              icon={faPercentage}
-              label="Fee Structure"
-              tooltip="Host's fees on winnings"
-              warning={isHighCommission}
-              width={160}
+            {/* Tax */}
+            <Box
+              sx={{
+                minWidth: '120px',
+                padding: '8px 12px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+              }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'block',
+                  mb: 0.5,
+                }}
+              >
+                Fee
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Typography
-                  variant="body1"
+                  variant="body2"
                   sx={{
-                    fontSize: '1rem',
+                    fontSize: '0.8rem',
                     fontWeight: 600,
                     color: isHighCommission ? '#ff9800' : '#ffffff',
                   }}
@@ -538,25 +472,44 @@ const PreSummaryPanel = React.memo((props) => {
                     label="HIGH"
                     size="small"
                     sx={{
-                      backgroundColor: '#ff9800',
-                      color: '#000',
-                      fontWeight: 700,
-                      fontSize: '0.6rem',
-                      height: 18,
+                      backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                      color: '#ff9800',
+                      fontWeight: 600,
+                      fontSize: '0.55rem',
+                      height: 14,
+                      border: '1px solid rgba(255, 152, 0, 0.3)',
+                      '& .MuiChip-label': {
+                        padding: '0 3px',
+                      },
                     }}
                   />
                 )}
               </Box>
-            </DataCard>
+            </Box>
 
-            {/* HEALTH */}
-            <DataCard
-              icon={faHandHoldingUsd}
-              label="Token Health"
-              tooltip="Room health percentage. At 0%, the game ends and converts to a tradeable token"
-              width={180}
+            {/* Health */}
+            <Box
+              sx={{
+                minWidth: '140px',
+                padding: '8px 12px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+              }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'block',
+                  mb: 0.5,
+                }}
+              >
+                Health
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Box position="relative" display="inline-flex">
                   <CircularProgress
                     variant="determinate"
@@ -568,8 +521,8 @@ const PreSummaryPanel = React.memo((props) => {
                           ? '#ff9800' 
                           : '#f44336',
                     }}
-                    size={40}
-                    thickness={5}
+                    size={24}
+                    thickness={6}
                   />
                   <Box
                     sx={{
@@ -586,7 +539,7 @@ const PreSummaryPanel = React.memo((props) => {
                     <Typography
                       variant="caption"
                       sx={{
-                        fontSize: '0.7rem',
+                        fontSize: '0.55rem',
                         fontWeight: 700,
                         color: '#ffffff',
                       }}
@@ -595,59 +548,66 @@ const PreSummaryPanel = React.memo((props) => {
                     </Typography>
                   </Box>
                 </Box>
-                <Chip
-                  label={
-                    memoizedValues.healthPercentage > 70 
-                      ? 'Excellent' 
-                      : memoizedValues.healthPercentage > 40 
-                        ? 'Moderate' 
-                        : 'Critical'
-                  }
-                  size="small"
+                <Typography
+                  variant="caption"
                   sx={{
-                    backgroundColor: memoizedValues.healthPercentage > 70 
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    color: memoizedValues.healthPercentage > 70 
                       ? '#4caf50' 
                       : memoizedValues.healthPercentage > 40 
                         ? '#ff9800' 
                         : '#f44336',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    fontSize: '0.7rem',
                   }}
-                />
+                >
+                  {memoizedValues.healthPercentage > 70 
+                    ? 'Good' 
+                    : memoizedValues.healthPercentage > 40 
+                      ? 'OK' 
+                      : 'Low'}
+                </Typography>
               </Box>
-            </DataCard>
+            </Box>
 
-            {/* BATTLES */}
+            {/* Battles */}
             <DataCard
-              icon={faShieldAlt}
-              label="Battle Count"
+              label="Battles"
               value={battles}
               tooltip="Total number of battles conducted in this room"
-              color="#9c27b0"
-              width={160}
             />
 
-            {/* LIKES / DISLIKES */}
-            <LikeDislikeBar likes={roomInfo?.likes?.length || 0} dislikes={roomInfo?.dislikes?.length || 0} />
+            {/* Sentiment */}
+            <SentimentCard />
 
-            {/* STAKING REWARDS */}
+            {/* Staking Rewards */}
             <DataCard
-              icon={faCoins}
-              label="Staking Rewards"
+              label="Rewards"
               value={memoizedValues.stakingRewards}
               tooltip="Rewards distributed every 3 hours at 0.0001% of bankroll for public rooms"
-              color="#00bcd4"
-              width={200}
             />
 
-            {/* CREATOR */}
-            <DataCard
-              icon={faUser}
-              label="Room Creator"
-              tooltip="Profile of the user who created this room"
-              width={180}
+            {/* Creator */}
+            <Box
+              sx={{
+                minWidth: '120px',
+                padding: '8px 12px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+              }}
             >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'block',
+                  mb: 0.5,
+                }}
+              >
+                Creator
+              </Typography>
               <Box 
                 onClick={handleCreatorClick} 
                 sx={{ 
@@ -668,66 +628,75 @@ const PreSummaryPanel = React.memo((props) => {
                   alt=""
                   darkMode={isDarkMode}
                   sx={{
-                    width: 44,
-                    height: 44,
-                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    width: 28,
+                    height: 28,
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                   }}
                 />
               </Box>
-            </DataCard>
+            </Box>
 
-            {/* STATUS */}
-            <DataCard
-              icon={faInfoCircle}
-              label="Room Status"
-              tooltip="Current operational status of the room"
-              width={160}
+            {/* Status */}
+            <Box
+              sx={{
+                minWidth: '100px',
+                padding: '8px 12px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+              }}
             >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'block',
+                  mb: 0.5,
+                }}
+              >
+                Status
+              </Typography>
               <Chip
                 label={status}
                 size="small"
                 sx={{
                   backgroundColor: getStatusColor(status),
                   color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  fontSize: '0.6rem',
+                  height: 16,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
+                  '& .MuiChip-label': {
+                    padding: '0 4px',
+                  },
                 }}
               />
-            </DataCard>
+            </Box>
 
-            {/* CREATED */}
+            {/* Created */}
             <DataCard
-              icon={faCalendarAlt}
-              label="Created Date"
+              label="Created"
               value={memoizedValues.createdDate}
               tooltip="Timestamp of when the room was created"
-              color="#795548"
-              width={180}
             />
 
-            {/* GAME TYPE */}
+            {/* Game Type */}
             <DataCard
-              icon={faRobot}
-              label="Game Mode"
+              label="Type"
               value={roomInfo?.game_type}
               tooltip="Type of game mechanism used in this room"
-              color="#673ab7"
-              width={160}
             />
 
-            {/* ROOM ID */}
+            {/* Room ID */}
             <DataCard
-              icon={faSortNumericUp}
-              label="Room ID"
+              label="ID"
               value={roomInfo?.room_name}
               tooltip="Unique identifier for this room"
-              color="#607d8b"
-              width={160}
             />
           </Box>
-        </Paper>
+        </Box>
       </Box>
     </ThemeProvider>
   );

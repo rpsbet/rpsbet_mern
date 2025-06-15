@@ -43,16 +43,15 @@ export default function BetAmountInput(props) {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 2, // Consistent spacing between elements
+          gap: 1,
           width: '100%',
-          maxWidth: 400, // Reasonable maximum width
-          margin: '0 auto', // Center the component
+          maxWidth: 400,
+          margin: '0 auto',
         }}
       >
         <TextField
-          color="error"
           type="number"
-          variant="outlined"
+          variant="standard"
           ref={betAmountRef}
           disabled={disabledButtons || false}
           value={localBetAmount}
@@ -63,26 +62,44 @@ export default function BetAmountInput(props) {
             step: '0.01',
             min: '0',
             style: {
-              fontSize: '1.1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#fff',
+              padding: '8px 0',
             },
           }}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start" sx={{ mr: 1, fontWeight: 300}}>
+              <InputAdornment 
+                position="start" 
+                sx={{ 
+                  mr: 1, 
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                }}
+              >
                 SOL
               </InputAdornment>
             ),
           }}
           sx={{
-            '& .MuiFilledInput-root': {
-              backgroundColor: 'rgba(255, 255, 255, 0.09)',
+            '& .MuiInput-underline': {
               '&:before': {
-                borderBottomColor: 'white', // When not focused/hovered
+                borderBottomColor: 'rgba(255, 255, 255, 0.1)',
               },
               '&:hover:not(.Mui-disabled):before': {
-                borderBottomColor: 'white', // Maintain white on hover when not focused
+                borderBottomColor: 'rgba(255, 255, 255, 0.2)',
               },
-
+              '&:after': {
+                borderBottomColor: '#ff0000',
+              },
+            },
+            '& .MuiInputBase-input': {
+              '&::placeholder': {
+                color: 'rgba(255, 255, 255, 0.5)',
+                opacity: 1,
+              },
             },
           }}
         />
@@ -90,7 +107,7 @@ export default function BetAmountInput(props) {
         <Box
           sx={{
             display: 'flex',
-            gap: 1, // Consistent spacing between buttons
+            gap: 0.75,
             justifyContent: 'space-between',
           }}
         >
@@ -101,17 +118,28 @@ export default function BetAmountInput(props) {
           ].map((btn) => (
             <Button
               key={btn.label}
-              variant="outlined"
-              color="error"
+              variant="text"
               onClick={btn.onClick}
-              disableElevation
               disabled={disabledButtons || false}
               sx={{
                 flex: 1,
-                fontSize: '1rem',
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 borderRadius: '4px',
-                textTransform: 'none', // Prevent uppercase transformation
+                textTransform: 'none',
+                color: disabledButtons ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                minHeight: '32px',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  color: '#ff0000',
+                  border: '1px solid rgba(255, 0, 0, 0.3)',
+                },
+                '&:disabled': {
+                  color: 'rgba(255, 255, 255, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                },
               }}
             >
               {btn.label}

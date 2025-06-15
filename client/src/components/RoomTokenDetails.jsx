@@ -8,17 +8,12 @@ import {
     Box,
     Typography,
     Link,
-    Card,
-    CardHeader,
-    CardContent,
-    CardMedia,
     Divider,
     Chip,
     Stack,
     LinearProgress,
     IconButton,
     Tooltip,
-    Grid
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
@@ -62,123 +57,103 @@ const RoomTokenDetails = ({
 
     // Get health status text
     const getHealthStatus = (health) => {
-        if (health > 70) return 'Excellent';
-        if (health > 40) return 'Moderate';
-        return 'Critical';
+        if (health > 70) return 'Good';
+        if (health > 40) return 'OK';
+        return 'Low';
     };
 
     const healthStatus = getHealthStatus(parseFloat(healthPercentage));
 
     return (
-        <Card
-            elevation={0}
+        <Box
             sx={{
-                mb: 3,
-                background: 'rgba(0, 0, 0, 0.15)',
-                color: '#fff',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                borderRadius: '24px 24px 0 0',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                mb: 2,
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 overflow: 'hidden',
-                '@supports not (backdrop-filter: blur(20px))': {
-                    background: 'rgba(0, 0, 0, 0.35)',
-                },
             }}
         >
             {/* Room Header */}
-            <CardHeader
-                avatar={
+            <Box sx={{ padding: '16px' }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3 }}>
                     <Box
                         sx={{
-                            position: 'relative',
-                            borderRadius: '16px',
+                            borderRadius: '8px',
                             overflow: 'hidden',
-                            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
-                            border: '2px solid rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            flexShrink: 0,
                         }}
                     >
-                        <CardMedia
-                            component="img"
-                            image={roomInfo.image}
+                        <img
+                            src={roomInfo.image}
                             alt={roomInfo.name}
-                            sx={{
-                                width: 72,
-                                height: 72,
+                            style={{
+                                width: 48,
+                                height: 48,
                                 objectFit: 'cover',
-                                transition: 'transform 0.3s ease',
-                                '&:hover': {
-                                    transform: 'scale(1.05)',
-                                },
                             }}
                         />
                     </Box>
-                }
-                title={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                    
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                            <Typography 
+                                variant="h6" 
+                                sx={{ 
+                                    fontWeight: 700,
+                                    fontSize: '1.1rem',
+                                    color: '#fff',
+                                }}
+                            >
+                                {roomInfo.name}
+                            </Typography>
+                            <Chip 
+                                size="small" 
+                                label={roomInfo.ticker} 
+                                sx={{
+                                    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                                    color: '#ff0000',
+                                    fontWeight: 600,
+                                    fontSize: '0.65rem',
+                                    height: '20px',
+                                    border: '1px solid rgba(255, 0, 0, 0.3)',
+                                    '& .MuiChip-label': {
+                                        padding: '0 6px',
+                                    },
+                                }}
+                            />
+                        </Box>
                         <Typography 
-                            variant="h5" 
-                            sx={{ 
-                                fontWeight: 800,
-                                fontSize: '1.4rem',
-                                letterSpacing: '0.3px',
+                            variant="body2" 
+                            sx={{
+                                color: 'rgba(255,255,255,0.7)',
+                                fontSize: '0.8rem',
+                                lineHeight: 1.4,
                             }}
                         >
-                            {roomInfo.name}
+                            {roomInfo.description}
                         </Typography>
-                        <Chip 
-                            size="small" 
-                            label={roomInfo.ticker} 
-                            sx={{
-                                backgroundColor: '#f44336',
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                fontSize: '0.75rem',
-                                letterSpacing: '0.5px',
-                                border: '1px solid rgba(244, 67, 54, 0.3)',
-                                boxShadow: '0 2px 8px rgba(244, 67, 54, 0.3)',
-                            }}
-                        />
                     </Box>
-                }
-                subheader={
-                    <Typography 
-                        variant="body1" 
-                        sx={{
-                            color: 'rgba(255,255,255,0.8)',
-                            fontSize: '0.95rem',
-                            lineHeight: 1.5,
-                            mt: 0.5,
-                        }}
-                    >
-                        {roomInfo.description}
-                    </Typography>
-                }
-                sx={{ 
-                    pb: 2,
-                    pt: 3,
-                    px: 3,
-                }}
-            />
+                </Box>
 
-            <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
                 {/* Social Links */}
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 3 }}>
                     <Typography 
-                        variant="subtitle2" 
+                        variant="caption" 
                         sx={{ 
-                            fontWeight: 700,
-                            mb: 2,
-                            color: 'rgba(255,255,255,0.9)',
-                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            mb: 1,
+                            color: 'rgba(255,255,255,0.6)',
+                            fontSize: '0.7rem',
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px',
+                            display: 'block',
                         }}
                     >
                         Links
                     </Typography>
-                    <Stack direction="row" spacing={2}>
+                    <Stack direction="row" spacing={1}>
                         {roomInfo.x_link && (
                             <Tooltip title="Twitter/X" arrow>
                                 <IconButton 
@@ -186,22 +161,21 @@ const RoomTokenDetails = ({
                                     href={roomInfo.x_link}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    size="small"
                                     sx={{ 
                                         color: '#fff',
-                                        backgroundColor: 'rgba(255,255,255,0.08)',
+                                        backgroundColor: 'rgba(255,255,255,0.05)',
                                         border: '1px solid rgba(255,255,255,0.1)',
-                                        width: 44,
-                                        height: 44,
-                                        transition: 'all 0.3s ease',
+                                        width: 32,
+                                        height: 32,
+                                        transition: 'all 0.2s ease',
                                         '&:hover': { 
                                             backgroundColor: 'rgba(29, 161, 242, 0.2)',
                                             borderColor: '#1da1f2',
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 20px rgba(29, 161, 242, 0.3)',
                                         }
                                     }}
                                 >
-                                    <FontAwesomeIcon icon={faXTwitter} style={{ fontSize: '18px' }} />
+                                    <FontAwesomeIcon icon={faXTwitter} style={{ fontSize: '12px' }} />
                                 </IconButton>
                             </Tooltip>
                         )}
@@ -213,22 +187,21 @@ const RoomTokenDetails = ({
                                     href={roomInfo.website_link}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    size="small"
                                     sx={{ 
                                         color: '#fff',
-                                        backgroundColor: 'rgba(255,255,255,0.08)',
+                                        backgroundColor: 'rgba(255,255,255,0.05)',
                                         border: '1px solid rgba(255,255,255,0.1)',
-                                        width: 44,
-                                        height: 44,
-                                        transition: 'all 0.3s ease',
+                                        width: 32,
+                                        height: 32,
+                                        transition: 'all 0.2s ease',
                                         '&:hover': { 
                                             backgroundColor: 'rgba(76, 175, 80, 0.2)',
                                             borderColor: '#4caf50',
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 20px rgba(76, 175, 80, 0.3)',
                                         }
                                     }}
                                 >
-                                    <FontAwesomeIcon icon={faGlobe} style={{ fontSize: '18px' }} />
+                                    <FontAwesomeIcon icon={faGlobe} style={{ fontSize: '12px' }} />
                                 </IconButton>
                             </Tooltip>
                         )}
@@ -240,22 +213,21 @@ const RoomTokenDetails = ({
                                     href={roomInfo.telegram_link}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    size="small"
                                     sx={{ 
                                         color: '#fff',
-                                        backgroundColor: 'rgba(255,255,255,0.08)',
+                                        backgroundColor: 'rgba(255,255,255,0.05)',
                                         border: '1px solid rgba(255,255,255,0.1)',
-                                        width: 44,
-                                        height: 44,
-                                        transition: 'all 0.3s ease',
+                                        width: 32,
+                                        height: 32,
+                                        transition: 'all 0.2s ease',
                                         '&:hover': { 
                                             backgroundColor: 'rgba(33, 150, 243, 0.2)',
                                             borderColor: '#2196f3',
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 20px rgba(33, 150, 243, 0.3)',
                                         }
                                     }}
                                 >
-                                    <FontAwesomeIcon icon={faTelegram} style={{ fontSize: '18px' }} />
+                                    <FontAwesomeIcon icon={faTelegram} style={{ fontSize: '12px' }} />
                                 </IconButton>
                             </Tooltip>
                         )}
@@ -263,45 +235,37 @@ const RoomTokenDetails = ({
                 </Box>
 
                 {/* Health Meter */}
-                <Box 
-                    sx={{ 
-                        mb: 4,
-                        p: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                    }}
-                >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ mb: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                         <Typography 
-                            variant="subtitle1" 
+                            variant="caption" 
                             sx={{ 
-                                fontWeight: 700,
-                                fontSize: '1rem',
-                                letterSpacing: '0.3px',
+                                fontWeight: 600,
+                                fontSize: '0.7rem',
+                                color: 'rgba(255,255,255,0.6)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
                             }}
                         >
                             Health
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Chip 
-                                size="small" 
-                                label={healthStatus}
-                                sx={{ 
-                                    backgroundColor: `${healthColor}20`,
-                                    color: healthColor,
-                                    fontWeight: 700,
-                                    fontSize: '0.75rem',
-                                    border: `1px solid ${healthColor}40`,
-                                }}
-                            />
                             <Typography 
-                                variant="h6"
+                                variant="caption"
                                 sx={{ 
-                                    fontWeight: 800,
+                                    fontWeight: 600,
                                     color: healthColor,
-                                    fontSize: '1.1rem',
+                                    fontSize: '0.7rem',
+                                }}
+                            >
+                                {healthStatus}
+                            </Typography>
+                            <Typography 
+                                variant="body2"
+                                sx={{ 
+                                    fontWeight: 700,
+                                    color: healthColor,
+                                    fontSize: '0.8rem',
                                 }}
                             >
                                 {healthPercentage}%
@@ -312,13 +276,12 @@ const RoomTokenDetails = ({
                         variant="determinate"
                         value={parseFloat(healthPercentage)}
                         sx={{
-                            height: 12,
-                            borderRadius: 6,
+                            height: 6,
+                            borderRadius: 3,
                             backgroundColor: 'rgba(255,255,255,0.1)',
                             '& .MuiLinearProgress-bar': {
                                 backgroundColor: healthColor,
-                                borderRadius: 6,
-                                boxShadow: `0 0 12px ${healthColor}40`,
+                                borderRadius: 3,
                             }
                         }}
                     />
@@ -328,12 +291,15 @@ const RoomTokenDetails = ({
                 {hosts && hosts.length > 0 && (
                     <Box>
                         <Typography 
-                            variant="subtitle1" 
+                            variant="caption" 
                             sx={{ 
-                                fontWeight: 700,
-                                mb: 3,
-                                fontSize: '1rem',
-                                letterSpacing: '0.3px',
+                                fontWeight: 600,
+                                mb: 1,
+                                fontSize: '0.7rem',
+                                color: 'rgba(255,255,255,0.6)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                display: 'block',
                             }}
                         >
                             Top Holders ({hosts.length})
@@ -341,11 +307,10 @@ const RoomTokenDetails = ({
                         
                         <Box
                             sx={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                                borderRadius: '16px',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                borderRadius: '6px',
+                                border: '1px solid rgba(255, 255, 255, 0.05)',
                                 overflow: 'hidden',
-                                backdropFilter: 'blur(10px)',
                             }}
                         >
                             {hosts
@@ -354,28 +319,27 @@ const RoomTokenDetails = ({
                                 .map((host, index) => (
                                     <Box key={`host-${index}`}>
                                         {index > 0 && (
-                                            <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)' }} />
+                                            <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
                                         )}
                                         <Box
                                             sx={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
-                                                p: 2.5,
+                                                p: 1.5,
                                                 transition: 'all 0.2s ease',
                                                 '&:hover': {
-                                                    backgroundColor: 'rgba(255,255,255,0.05)',
+                                                    backgroundColor: 'rgba(255,255,255,0.02)',
                                                 }
                                             }}
                                         >
-                                            {/* Rank and Avatar */}
-                                            <Box sx={{ display: 'flex', alignItems: 'center',  }}>
+                                            {/* Rank */}
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                                 <Box
                                                     sx={{
-                                                        width: 32,
-                                                        height: 32,
-                                                        gap: 2,
-                                                        borderRadius: '8px',
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: '4px',
                                                         backgroundColor: index < 3 
                                                             ? index === 0 ? '#ffd700' 
                                                             : index === 1 ? '#c0c0c0' 
@@ -384,44 +348,15 @@ const RoomTokenDetails = ({
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        fontWeight: 700,
-                                                        fontSize: '0.85rem',
+                                                        fontWeight: 600,
+                                                        fontSize: '0.7rem',
                                                         color: index < 3 ? '#000' : '#fff',
                                                     }}
                                                 >
-                                                    #{index + 1}
+                                                    {index + 1}
                                                 </Box>
                                                 
-                                                {/* <Box 
-                                                    onClick={() => handleOpenPlayerModal(host.host)}
-                                                    sx={{ 
-                                                        cursor: 'pointer',
-                                                        transition: 'transform 0.2s ease',
-                                                        '&:hover': {
-                                                            transform: 'scale(1.05)',
-                                                        }
-                                                    }}
-                                                >
-                                                    <Avatar
-                                                        src={host.avatar}
-                                                        user_id={host.host}
-                                                        rank={host.rank}
-                                                        username={host.username}
-                                                        accessory={host.accessory}
-                                                        elite={host.elite}
-                                                        alt=""
-                                                        darkMode={true}
-                                                        sx={{
-                                                            width: 44,
-                                                            height: 44,
-                                                            border: '2px solid rgba(255,255,255,0.1)',
-                                                        }}
-                                                    />
-                                                </Box> */}
-                                            </Box>
-
-                                            {/* Wallet Address */}
-                                            <Box sx={{ flex: 1, }}>
+                                                {/* Wallet Address */}
                                                 <Tooltip title="View on Solscan" arrow>
                                                     <Link
                                                         href={`https://solscan.io/${host.walletAddress}`}
@@ -432,36 +367,35 @@ const RoomTokenDetails = ({
                                                             alignItems: 'center',
                                                             gap: 0.5,
                                                             color: 'rgba(255,255,255,0.7)',
-                                                            fontSize: '0.8rem',
+                                                            fontSize: '0.7rem',
                                                             textDecoration: 'none',
                                                             fontFamily: 'monospace',
-                                                            fontWeight: 600,
-                                                            padding: '4px 8px',
-                                                            borderRadius: '8px',
+                                                            fontWeight: 500,
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
                                                             backgroundColor: 'rgba(255,255,255,0.05)',
                                                             border: '1px solid rgba(255,255,255,0.1)',
                                                             transition: 'all 0.2s ease',
                                                             '&:hover': {
                                                                 backgroundColor: 'rgba(255,255,255,0.1)',
                                                                 color: '#fff',
-                                                                transform: 'scale(1.02)',
                                                             }
                                                         }}
                                                     >
                                                         {formatAddress(host.walletAddress)}
-                                                        <LinkIcon sx={{ fontSize: '14px' }} />
+                                                        <LinkIcon sx={{ fontSize: '10px' }} />
                                                     </Link>
                                                 </Tooltip>
                                             </Box>
 
                                             {/* Share Information */}
-                                            <Box sx={{ textAlign: 'right', }}>
+                                            <Box sx={{ textAlign: 'right' }}>
                                                 <Typography 
-                                                    variant="body1" 
+                                                    variant="body2" 
                                                     sx={{
-                                                        fontWeight: 800,
+                                                        fontWeight: 600,
                                                         color: '#ffa726',
-                                                        fontSize: '1rem',
+                                                        fontSize: '0.75rem',
                                                         mb: 0.25,
                                                     }}
                                                 >
@@ -470,9 +404,9 @@ const RoomTokenDetails = ({
                                                 <Typography 
                                                     variant="caption" 
                                                     sx={{
-                                                        color: 'rgba(255,255,255,0.6)',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 600,
+                                                        color: 'rgba(255,255,255,0.5)',
+                                                        fontSize: '0.65rem',
+                                                        fontWeight: 500,
                                                     }}
                                                 >
                                                     {convertToCurrency((host.share / 100 * roomInfo.user_bet), solPrice)}
@@ -484,8 +418,8 @@ const RoomTokenDetails = ({
                         </Box>
                     </Box>
                 )}
-            </CardContent>
-        </Card>
+            </Box>
+        </Box>
     );
 };
 

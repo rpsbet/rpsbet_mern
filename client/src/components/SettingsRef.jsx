@@ -40,8 +40,8 @@ import {
   CardContent,
   CardActions,
   TableContainer,
+  LinearProgress
 } from '@mui/material';
-import styled from 'styled-components';
 import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
 import { green, yellow, blue, grey } from '@mui/material/colors';
@@ -86,34 +86,7 @@ import {
   faBolt,
 } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
-
-// Glassmorphism style object for reuse
-const glassmorphismStyle = {
-  background: 'rgba(255, 255, 255, 0.1)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-  '@supports not (backdrop-filter: blur(12px))': {
-    background: 'rgba(255, 255, 255, 0.2)',
-  },
-};
-
-const GlassContainer = styled(Box)`
-  background: ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(30, 30, 30, 0.3)' : 'rgba(255, 255, 255, 0.65)'};
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 16px;
-  border: 1px solid ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'};
-  box-shadow: ${({ isDarkMode }) =>
-    isDarkMode
-      ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-      : '0 8px 32px rgba(31, 38, 135, 0.1)'};
-  padding: 24px;
-  transition: all 0.3s ease;
-`;
+import { useAIService } from '../hooks/useAIService';
 
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
@@ -174,7 +147,6 @@ const SettingsRef = ({
   const [streamingStatus, setStreamingStatus] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isAutopopulating, setIsAutopopulating] = useState(false);
-
 
   const chatEndRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -358,7 +330,7 @@ const SettingsRef = ({
             GeneratedApp = componentFactory(
               React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
               Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
-              Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+              Collapse, DialogContent, DialogTitle, LinearProgress, CircularProgress, logEvent, FontAwesomeIcon,
               TableContainer, Table, TableBody, TableHead, TableCell, TableRow,
               faDice, faCoins, faRocket, faChevronDown, faGem, faSpinner, faCogs, faExchangeAlt,
               faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faPlay, faHome, Physics,
@@ -366,7 +338,7 @@ const SettingsRef = ({
               Container, Badge, Snackbar, Alert, DialogContentText, DialogActions, Zoom, Grow,
               faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle,
               faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull,
-              faClock, faBolt, initialProxiedAssets, faQuestionCircle
+              faClock, faBolt, initialProxiedAssets, faQuestionCircle, useAIService,
             );
           } catch (evalError) {
             console.error('[SettingsRef] Error executing component factory:', evalError);
@@ -380,7 +352,8 @@ const SettingsRef = ({
                   ...props,
                   Physics,
                   proxiedAssets: initialProxiedAssets,
-                  logEvent
+                  logEvent,
+                  useAIService
                 })
               );
             }
@@ -592,23 +565,9 @@ const SettingsRef = ({
   };
 
   const triggerAutopopulate = async (generatedGameCode, force = false) => {
-    // Check if fields are already populated (unless forcing)
-    // if (!force) {
-    //   const hasName = rowName && rowName.trim();
-    //   const hasTicker = ticker && ticker.trim();
-    //   const hasImage = image && image.trim();
-    //   const hasDescription = description && description.trim();
-
-    //   if (hasName || hasTicker || hasImage || hasDescription) {
-    //     console.log('[SettingsRef] Skipping auto-populate: Fields already populated');
-    //     return;
-    //   }
-    // }
-
     setIsAutopopulating(true);
 
     try {
-
       const extractedInfo = await autopopulateRoomInfo(
         generatedGameCode,
         onChangeState,
@@ -762,9 +721,9 @@ const SettingsRef = ({
     setProxiedAssets({ images: [], audio: [], theme: {}, background: {} });
   };
 
-  // const logEvent = useCallback((eventType, data) => {
-  //   console.log(`Game Event: ${eventType}`, data);
-  // }, []);
+  const logEvent = useCallback((eventType, data) => {
+    console.log(`Game Event: ${eventType}`, data);
+  }, []);
 
   const loadPhysics = async () => {
     try {
@@ -810,182 +769,37 @@ const SettingsRef = ({
   // If this is for CreateGame (no modal), render as embedded component
   if (!rowName && !room_id) {
     return (
-      <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 2 }}>
+      <Box 
+        sx={{ 
+          mt: 2,
+          p: 2,
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography
             variant="h6"
             sx={{
               display: 'flex',
               alignItems: 'center',
-              fontWeight: 700,
-              color: isDarkMode ? '#fff' : '#000',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+              fontWeight: 600,
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             AI Game Generator
-            <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.5rem', color: 'error.main' }} />
+            <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.25rem', color: '#ff0000' }} />
           </Typography>
-
-          {/* Credits Display */}
-          <Box
-            sx={{
-              ...glassmorphismStyle,
-              p: 2,
-              borderRadius: 2,
-              mb: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000', mb: 0.5 }}>
-              Credit Balance
-            </Typography>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-              <Chip
-                icon={<FontAwesomeIcon icon={faCoins} style={{ color: yellow[700], fontSize: '14px' }} />}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
-                      {localCredits}
-                    </Typography>
-                    <Typography variant="caption">Credits</Typography>
-                  </Box>
-                }
-                sx={{
-                  bgcolor: localCredits < modelCost ? 'rgba(244, 67, 54, 0.15)' : 'rgba(255, 193, 7, 0.15)',
-                  color: localCredits < modelCost ? '#ff1744' : isDarkMode ? '#fff' : '#000',
-                  border: `1px solid ${localCredits < modelCost ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255, 193, 7, 0.5)'}`,
-                  borderRadius: '16px',
-                  height: 32,
-                  '& .MuiChip-icon': {
-                    color: yellow[700],
-                    mr: 0.5
-                  }
-                }}
-              />
-
-              <Chip
-                icon={<FontAwesomeIcon icon={faCog} style={{ color: blue[400], fontSize: '14px' }} />}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
-                      {modelCost}
-                    </Typography>
-                    <Typography variant="caption">Cost per Generation</Typography>
-                  </Box>
-                }
-                sx={{
-                  bgcolor: 'rgba(33, 150, 243, 0.15)',
-                  color: isDarkMode ? '#fff' : '#000',
-                  border: '1px solid rgba(33, 150, 243, 0.5)',
-                  borderRadius: '16px',
-                  height: 32,
-                  '& .MuiChip-icon': {
-                    color: blue[400],
-                    mr: 0.5
-                  }
-                }}
-              />
-            </Box>
-
-            {localCredits < modelCost && (
-              <Alert
-                severity="error"
-                variant="outlined"
-                icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
-                sx={{
-                  mt: 1,
-                  bgcolor: 'rgba(244, 67, 54, 0.1)',
-                  color: '#ff1744',
-                  border: '1px solid rgba(244, 67, 54, 0.5)',
-                  '& .MuiAlert-icon': {
-                    color: '#ff1744'
-                  }
-                }}
-              >
-                Insufficient credits. You need {modelCost - localCredits} more credits to proceed.
-              </Alert>
-            )}
-
-            <Box sx={{ mt: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Credits Available
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  {localCredits}/{modelCost} Required
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: 'rgba(255, 255, 255, 0.1)',
-                  overflow: 'hidden',
-                  position: 'relative',
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    height: '100%',
-                    width: `${Math.min(100, (localCredits / modelCost) * 100)}%`,
-                    bgcolor: localCredits < modelCost ? '#ff1744' : '#4caf50',
-                    borderRadius: 3,
-                    transition: 'width 0.5s ease-in-out',
-                  }}
-                />
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Suggested Prompts */}
-          {isLoadingSuggestions ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
-              <CircularProgress size={20} sx={{ mr: 1 }} color='error' />
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
-                Generating Suggested Prompts...
-              </Typography>
-            </Box>
-          ) : suggestedPrompts.length > 0 ? (
-            <Box sx={{ mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: isDarkMode ? '#fff' : '#000' }}>
-                Suggested Prompts
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {suggestedPrompts.map((prompt, index) => (
-                  <Chip
-                    key={index}
-                    label={prompt}
-                    onClick={() => handleFollowUpPrompt(prompt)}
-                    color={prompt.startsWith('[User Feedback]') ? 'error' : 'warning'}
-                    sx={{
-                      bgcolor: prompt.startsWith('[User Feedback]') ? 'rgba(244, 67, 54, 0.2)' : 'rgba(255, 193, 7, 0.2)',
-                      color: isDarkMode ? '#fff' : '#000',
-                      borderRadius: 2,
-                      '&:hover': {
-                        bgcolor: prompt.startsWith('[User Feedback]') ? 'rgba(244, 67, 54, 0.3)' : 'rgba(255, 193, 7, 0.3)',
-                        cursor: 'pointer',
-                      },
-                    }}
-                    disabled={saving || gameLoading}
-                  />
-                ))}
-              </Box>
-            </Box>
-          ) : null}
-
 
           {/* Chat Interface */}
           {showChat && (
             <Box
               sx={{
-                ...glassmorphismStyle,
-                borderRadius: 2,
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 mb: 2,
                 overflow: 'hidden',
                 display: 'flex',
@@ -999,16 +813,15 @@ const SettingsRef = ({
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  bgcolor: 'rgba(255, 255, 255, 0.05)',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                   p: 1.5,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Avatar sx={{ width: 24, height: 24, fontSize: '0.875rem', mr: 1 }}>
+                  <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', mr: 1 }}>
                     AI
                   </Avatar>
-                  <Typography variant="subtitle2" sx={{ color: isDarkMode ? '#fff' : '#000' }}>
+                  <Typography variant="subtitle2" sx={{ color: '#fff', fontSize: '0.875rem' }}>
                     AI Game Assistant
                   </Typography>
                 </Box>
@@ -1019,11 +832,12 @@ const SettingsRef = ({
                   onClick={resetGame}
                   startIcon={<FontAwesomeIcon icon={faRedo} />}
                   sx={{
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    color: isDarkMode ? '#fff' : '#000',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    fontSize: '0.75rem',
                     '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.1)',
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                      bgcolor: 'rgba(255, 255, 255, 0.05)',
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
                     },
                   }}
                 >
@@ -1038,7 +852,6 @@ const SettingsRef = ({
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 2,
-                  bgcolor: 'rgba(0, 0, 0, 0.05)',
                 }}
               >
                 {chatMessages.length > 0 ? (
@@ -1054,35 +867,34 @@ const SettingsRef = ({
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         {message.type === 'ai' && (
-                          <Avatar sx={{ width: 24, height: 24, fontSize: '0.775rem', mr: 1 }}>
+                          <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem', mr: 1 }}>
                             AI
                           </Avatar>
                         )}
-                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
                           {formatTime(message.timestamp)}
                         </Typography>
                         {message.type === 'user' && (
-                          <Avatar sx={{ width: 24, height: 24, bgcolor: blue[500], fontSize: '0.775rem', ml: 1 }}>
+                          <Avatar sx={{ width: 20, height: 20, bgcolor: blue[500], fontSize: '0.65rem', ml: 1 }}>
                             U
                           </Avatar>
                         )}
                       </Box>
-                      <Paper
+                      <Box
                         sx={{
                           p: 1.5,
-                          bgcolor: message.type === 'user' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                          borderRadius: 2,
-                          border: 'none',
-                          color: isDarkMode ? '#fff' : '#000',
-                          ...glassmorphismStyle,
+                          bgcolor: message.type === 'user' ? 'rgba(33, 150, 243, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                          borderRadius: '8px',
+                          border: `1px solid ${message.type === 'user' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+                          color: '#fff',
                         }}
                       >
-                        <Typography variant="body2">{message.content}</Typography>
-                      </Paper>
+                        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{message.content}</Typography>
+                      </Box>
                     </Box>
                   ))
                 ) : (
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', fontSize: '0.8rem' }}>
                     No messages yet. Start by sending a prompt!
                   </Typography>
                 )}
@@ -1090,36 +902,35 @@ const SettingsRef = ({
                 {processingMessage && (
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-start', maxWidth: '80%' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                      <Avatar sx={{ width: 24, height: 24, fontSize: '0.775rem', mr: 1 }}>
+                      <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem', mr: 1 }}>
                         AI
                       </Avatar>
-                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
                         {formatTime(new Date())}
                       </Typography>
                     </Box>
-                    <Paper
+                    <Box
                       sx={{
                         p: 1.5,
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
-                        borderRadius: 2,
-                        border: 'none',
-                        color: isDarkMode ? '#fff' : '#000',
-                        ...glassmorphismStyle,
-                        minWidth: 250,
+                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        color: '#fff',
+                        minWidth: 200,
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <CircularProgress color='error' size={16} sx={{ mr: 1 }} />
-                        <Typography variant="body2">{processingMessage.content}</Typography>
+                        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{processingMessage.content}</Typography>
                       </Box>
 
                       {isStreaming && streamingProgress > 0 && (
                         <Box sx={{ mt: 1 }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem' }}>
                               Progress
                             </Typography>
-                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem' }}>
                               {streamingProgress.toFixed(0)}%
                             </Typography>
                           </Box>
@@ -1127,7 +938,7 @@ const SettingsRef = ({
                             sx={{
                               height: 4,
                               borderRadius: 2,
-                              bgcolor: 'rgba(255, 255, 255, 0.2)',
+                              bgcolor: 'rgba(255, 255, 255, 0.1)',
                               overflow: 'hidden',
                               position: 'relative',
                             }}
@@ -1139,7 +950,7 @@ const SettingsRef = ({
                                 top: 0,
                                 height: '100%',
                                 width: `${streamingProgress}%`,
-                                bgcolor: '#f50057',
+                                bgcolor: '#ff0000',
                                 borderRadius: 2,
                                 transition: 'width 0.3s ease-in-out',
                               }}
@@ -1147,7 +958,7 @@ const SettingsRef = ({
                           </Box>
                         </Box>
                       )}
-                    </Paper>
+                    </Box>
                   </Box>
                 )}
                 <div ref={chatEndRef} />
@@ -1156,7 +967,14 @@ const SettingsRef = ({
           )}
 
           {/* Prompt Input */}
-          <Box sx={{ ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
+          <Box 
+            sx={{ 
+              p: 2, 
+              borderRadius: '8px',
+              background: '#262626',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+            }}
+          >
             <TextField
               multiline
               rows={3}
@@ -1176,8 +994,8 @@ const SettingsRef = ({
               }
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  color: isDarkMode ? '#fff' : '#000',
-                  borderRadius: 2,
+                  color: '#fff',
+                  borderRadius: '8px',
                 },
               }}
             />
@@ -1191,11 +1009,12 @@ const SettingsRef = ({
                     onClick={() => setShowChat(!showChat)}
                     startIcon={<ChatIcon />}
                     sx={{
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                      color: isDarkMode ? '#fff' : '#000',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      color: '#fff',
+                      fontSize: '0.75rem',
                       '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
                       },
                     }}
                   >
@@ -1210,14 +1029,13 @@ const SettingsRef = ({
                 disabled={loading || saving || gameLoading || localCredits < modelCost}
                 startIcon={loading || saving || gameLoading ? <CircularProgress color='error' size={20} sx={{ color: '#fff' }} /> : <SendIcon />}
                 sx={{
-                  borderRadius: 2,
+                  borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
-                  px: 3,
+                  fontSize: '0.875rem',
+                  px: 2,
                   '&:hover': {
-                    bgcolor: 'linear-gradient(45deg, #f50057, #ff4081)',
-                    transform: 'scale(1.05)',
-                    transition: 'all 0.3s ease',
+                    bgcolor: '#cc0000',
                   },
                   '&:disabled': {
                     bgcolor: grey[700],
@@ -1239,12 +1057,13 @@ const SettingsRef = ({
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: 300,
-                ...glassmorphismStyle,
-                borderRadius: 2,
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
               <CircularProgress color='error' size={60} sx={{ mb: 2 }} />
-              <Typography variant="body1" sx={{ color: isDarkMode ? '#fff' : '#000' }}>
+              <Typography variant="body1" sx={{ color: '#fff', fontSize: '0.875rem' }}>
                 Generating your game...
               </Typography>
             </Box>
@@ -1256,24 +1075,25 @@ const SettingsRef = ({
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: 300,
-                ...glassmorphismStyle,
-                borderRadius: 2,
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 p: 3,
               }}
             >
-              <Typography variant="h6" sx={{ mb: 2, color: '#ff1744' }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#ff0000', fontSize: '1rem' }}>
                 Error
               </Typography>
-              <Typography sx={{ color: isDarkMode ? '#fff' : '#000' }}>{componentError}</Typography>
+              <Typography sx={{ color: '#fff', fontSize: '0.875rem' }}>{componentError}</Typography>
             </Box>
           ) : GameComponent ? (
             <Box
               sx={{
                 width: '100%',
-                borderRadius: 2,
+                borderRadius: '8px',
                 overflow: 'auto',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                ...glassmorphismStyle,
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                background: 'rgba(255, 255, 255, 0.02)',
                 position: 'relative',
               }}
             >
@@ -1283,7 +1103,7 @@ const SettingsRef = ({
                 } catch (error) {
                   setComponentError(`Runtime error: ${error.message}`);
                   return (
-                    <Typography sx={{ color: '#ff1744', p: 2 }}>
+                    <Typography sx={{ color: '#ff0000', p: 2, fontSize: '0.875rem' }}>
                       Failed to render game: {error.message}
                     </Typography>
                   );
@@ -1297,14 +1117,14 @@ const SettingsRef = ({
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: 300,
-                ...glassmorphismStyle,
                 p: 2,
                 textAlign: 'center',
-                borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
                 No game generated yet. Enter a prompt and click Generate.
               </Typography>
             </Box>
@@ -1314,18 +1134,19 @@ const SettingsRef = ({
               display: 'flex',
               alignItems: 'center',
               mb: 2,
-              ...glassmorphismStyle,
               p: 2,
-              borderRadius: 2
+              borderRadius: '8px',
+              background: '#262626',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
             }}>
               <CircularProgress size={20} sx={{ mr: 1 }} color='error' />
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#fff', fontSize: '0.875rem' }}>
                 Auto-populating room information...
               </Typography>
             </Box>
           )}
         </Box>
-      </GlassContainer>
+      </Box>
     );
   }
 
@@ -1349,13 +1170,14 @@ const SettingsRef = ({
             height: isMobile ? '90vh' : '85vh',
             maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 3,
+            borderRadius: '8px',
             p: isMobile ? 2 : 3,
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
             gap: isMobile ? 2 : 3,
             color: '#fff',
-            ...glassmorphismStyle,
+            background: rowName ? '#262626' : 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -1368,16 +1190,15 @@ const SettingsRef = ({
               position: 'absolute',
               top: 8,
               right: 8,
-              minWidth: 40,
-              width: 40,
-              height: 40,
+              minWidth: 32,
+              width: 32,
+              height: 32,
               borderRadius: '50%',
               bgcolor: 'rgba(255, 255, 255, 0.1)',
               color: '#fff',
+              fontSize: '1rem',
               '&:hover': {
                 bgcolor: 'rgba(255, 255, 255, 0.2)',
-                transform: 'scale(1.1)',
-                transition: 'all 0.3s ease',
               },
             }}
           >
@@ -1401,48 +1222,49 @@ const SettingsRef = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                fontWeight: 700,
+                fontWeight: 600,
                 color: '#fff',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                fontSize: isMobile ? '1rem' : '1.25rem',
               }}
             >
               {rowName ? `Updating ${rowName}` : 'AI Game Generator'}
-              <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.5rem', color: 'error.main' }} />
+              <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.25rem', color: '#ff0000' }} />
             </Typography>
 
-            {/* Replace the current credits display with this improved version */}
+            {/* Credits Display */}
             <Box
               sx={{
-                ...glassmorphismStyle,
                 p: 2,
-                borderRadius: 2,
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 mb: 2,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff', mb: 0.5 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff', mb: 0.5, fontSize: '0.875rem' }}>
                 Credit Balance
               </Typography>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                 <Chip
-                  icon={<FontAwesomeIcon icon={faCoins} style={{ color: yellow[700], fontSize: '14px' }} />}
+                  icon={<FontAwesomeIcon icon={faCoins} style={{ color: yellow[700], fontSize: '12px' }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5, fontSize: '0.75rem' }}>
                         {localCredits}
                       </Typography>
-                      <Typography variant="caption">Credits</Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>Credits</Typography>
                     </Box>
                   }
                   sx={{
-                    bgcolor: localCredits < modelCost ? 'rgba(244, 67, 54, 0.15)' : 'rgba(255, 193, 7, 0.15)',
-                    color: localCredits < modelCost ? '#ff1744' : '#fff',
-                    border: `1px solid ${localCredits < modelCost ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255, 193, 7, 0.5)'}`,
-                    borderRadius: '16px',
-                    height: 32,
+                    bgcolor: localCredits < modelCost ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
+                    color: localCredits < modelCost ? '#ff0000' : '#fff',
+                    border: `1px solid ${localCredits < modelCost ? 'rgba(244, 67, 54, 0.3)' : 'rgba(255, 193, 7, 0.3)'}`,
+                    borderRadius: '8px',
+                    height: 28,
                     '& .MuiChip-icon': {
                       color: yellow[700],
                       mr: 0.5
@@ -1451,21 +1273,21 @@ const SettingsRef = ({
                 />
 
                 <Chip
-                  icon={<FontAwesomeIcon icon={faCog} style={{ color: blue[400], fontSize: '14px' }} />}
+                  icon={<FontAwesomeIcon icon={faCog} style={{ color: blue[400], fontSize: '12px' }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5, fontSize: '0.75rem' }}>
                         {modelCost}
                       </Typography>
-                      <Typography variant="caption">Cost per Generation</Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>Cost per Generation</Typography>
                     </Box>
                   }
                   sx={{
-                    bgcolor: 'rgba(33, 150, 243, 0.15)',
+                    bgcolor: 'rgba(33, 150, 243, 0.1)',
                     color: '#fff',
-                    border: '1px solid rgba(33, 150, 243, 0.5)',
-                    borderRadius: '16px',
-                    height: 32,
+                    border: '1px solid rgba(33, 150, 243, 0.3)',
+                    borderRadius: '8px',
+                    height: 28,
                     '& .MuiChip-icon': {
                       color: blue[400],
                       mr: 0.5
@@ -1481,31 +1303,32 @@ const SettingsRef = ({
                   icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
                   sx={{
                     mt: 1,
-                    bgcolor: 'rgba(244, 67, 54, 0.1)',
-                    color: '#ff1744',
-                    border: '1px solid rgba(244, 67, 54, 0.5)',
+                    bgcolor: 'rgba(244, 67, 54, 0.05)',
+                    color: '#ff0000',
+                    border: '1px solid rgba(244, 67, 54, 0.3)',
+                    fontSize: '0.8rem',
                     '& .MuiAlert-icon': {
-                      color: '#ff1744'
+                      color: '#ff0000'
                     }
                   }}
                 >
                   Insufficient credits. You need {modelCost - localCredits} more credits to proceed.
                 </Alert>
               )}
-              {/* Add this as an additional element in the credits box */}
+
               <Box sx={{ mt: 1, mb: localCredits < modelCost ? 0 : 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
                     Credits Available
                   </Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
                     {localCredits}/{modelCost} Required
                   </Typography>
                 </Box>
                 <Box
                   sx={{
-                    height: 6,
-                    borderRadius: 3,
+                    height: 4,
+                    borderRadius: 2,
                     bgcolor: 'rgba(255, 255, 255, 0.1)',
                     overflow: 'hidden',
                     position: 'relative',
@@ -1518,8 +1341,8 @@ const SettingsRef = ({
                       top: 0,
                       height: '100%',
                       width: `${Math.min(100, (localCredits / modelCost) * 100)}%`,
-                      bgcolor: localCredits < modelCost ? '#ff1744' : '#4caf50',
-                      borderRadius: 3,
+                      bgcolor: localCredits < modelCost ? '#ff0000' : '#4caf50',
+                      borderRadius: 2,
                       transition: 'width 0.5s ease-in-out',
                     }}
                   />
@@ -1527,124 +1350,8 @@ const SettingsRef = ({
               </Box>
             </Box>
 
-            {/* <Box sx={{ ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, color: '#fff', display: 'flex', alignItems: 'center' }}>
-                <FontAwesomeIcon icon={faBolt} style={{ marginRight: '8px', color: blue[400] }} />
-                Model Selection
-              </Typography>
-
-              <Grid container spacing={2} sx={{ mb: 1 }}>
-                {models.map((model, index) => {
-                  const isUnlocked = tokenStatus || rank >= model.levelToUnlock;
-                  const isActive = currentModel === model.name;
-                  return (
-                    <Grid item xs={6} key={index}>
-                      <Paper
-                        elevation={isActive ? 8 : 0}
-                        onClick={() => {
-                          if (isUnlocked) {
-                            setSelectedModel(model.name);
-                          }
-                        }}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 2,
-                          cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                          border: isActive ? '2px solid #f50057' : '1px solid rgba(255, 255, 255, 0.2)',
-                          bgcolor: isActive ? 'rgba(245, 0, 87, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                          transition: 'all 0.2s ease-in-out',
-                          '&:hover': isUnlocked ? {
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 6px 12px rgba(0,0,0,0.2)',
-                            bgcolor: isActive ? 'rgba(245, 0, 87, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-                          } : {},
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {isActive && (
-                          <Box sx={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            p: 0.5,
-                            bgcolor: '#f50057',
-                            borderBottomLeftRadius: '12px',
-                          }}>
-                            <FontAwesomeIcon icon={faCheck} style={{ fontSize: '10px', color: '#fff' }} />
-                          </Box>
-                        )}
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Avatar
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              bgcolor: isActive ? '#f50057' : 'rgba(255, 255, 255, 0.2)',
-                              mr: 1,
-                              fontSize: '0.75rem',
-                            }}
-                          >
-                            <AutoAwesomeIcon sx={{ fontSize: '0.8rem', color: 'white' }} /> 
-                          </Avatar>
-                          <Typography variant="subtitle2" sx={{ color: '#fff', fontWeight: 600 }}>
-                            {model.name === 'o3-mini' ? 'O3 Mini' : 'O3'}
-                          </Typography>
-                          {!isUnlocked && (
-                            <Chip
-                              icon={<LockIcon sx={{ fontSize: '12px !important' }} />}
-                              label={`Level ${model.levelToUnlock}+`}
-                              size="small"
-                              sx={{
-                                ml: 'auto',
-                                height: 20,
-                                '& .MuiChip-label': { px: 0.5, fontSize: '0.625rem' },
-                                bgcolor: 'rgba(255, 193, 7, 0.2)',
-                                color: yellow[700],
-                              }}
-                            />
-                          )}
-                        </Box>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Chip
-                            label={`${model.cost} Credits`}
-                            size="small"
-                            sx={{
-                              height: 20,
-                              '& .MuiChip-label': { px: 1, fontSize: '0.675rem' },
-                              bgcolor: 'rgba(255, 255, 255, 0.1)',
-                              color: '#fff',
-                            }}
-                            icon={<FontAwesomeIcon icon={faCoins} style={{ color: yellow[700], fontSize: '10px' }} />}
-                          />
-
-                          {isActive && (
-                            <Chip
-                              label="Active"
-                              size="small"
-                              sx={{
-                                height: 20,
-                                '& .MuiChip-label': { px: 1, fontSize: '0.675rem' },
-                                bgcolor: 'rgba(245, 0, 87, 0.2)',
-                                color: '#f50057',
-                              }}
-                            />
-                          )}
-                        </Box>
-                      </Paper>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-
-              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block' }}>
-                Higher models provide better quality and more complex game implementations
-              </Typography>
-            </Box> */}
-
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff', fontSize: '0.875rem' }}>
                 {chatMessages.length > 0 ? 'Chat with AI' : 'Custom Game Prompt'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1657,11 +1364,12 @@ const SettingsRef = ({
                       onClick={() => setShowChat(!showChat)}
                       startIcon={<ChatIcon />}
                       sx={{
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
                         color: '#fff',
+                        fontSize: '0.75rem',
                         '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.1)',
-                          borderColor: 'rgba(255, 255, 255, 0.5)',
+                          bgcolor: 'rgba(255, 255, 255, 0.05)',
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
                         },
                       }}
                     >
@@ -1674,11 +1382,12 @@ const SettingsRef = ({
                       onClick={resetGame}
                       startIcon={<FontAwesomeIcon icon={faRedo} />}
                       sx={{
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
                         color: '#fff',
+                        fontSize: '0.75rem',
                         '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.1)',
-                          borderColor: 'rgba(255, 255, 255, 0.5)',
+                          bgcolor: 'rgba(255, 255, 255, 0.05)',
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
                         },
                       }}
                     >
@@ -1692,14 +1401,14 @@ const SettingsRef = ({
                     onClick={handleSaveAndClose}
                     disabled={saving || gameLoading}
                     startIcon={
-                      gameLoading ? null : saving ? <CircularProgress color="error" size={20} /> : <SaveIcon />
+                      gameLoading ? null : saving ? <CircularProgress color="error" size={16} /> : <SaveIcon />
                     }
                     sx={{
-                      bgcolor: 'linear-gradient(45deg, #4caf50, #388e3c)',
+                      bgcolor: '#4caf50',
                       color: '#fff',
+                      fontSize: '0.75rem',
                       '&:hover': {
-                        bgcolor: 'linear-gradient(45deg, #66bb6a, #4caf50)',
-                        transform: 'scale(1.05)',
+                        bgcolor: '#45a049',
                       },
                       '&:disabled': {
                         bgcolor: grey[700],
@@ -1707,52 +1416,18 @@ const SettingsRef = ({
                       },
                     }}
                   >
-                    {gameLoading ? <CircularProgress color="error" size={20} /> : 'Save & Close'}
+                    {gameLoading ? <CircularProgress color="error" size={16} /> : 'Save & Close'}
                   </Button>
                 )}
               </Box>
             </Box>
 
-            {isLoadingSuggestions ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
-                <CircularProgress size={20} sx={{ mr: 1, color: '#ff4081' }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#fff' }}>
-                  Generating Suggested Prompts...
-                </Typography>
-              </Box>
-            ) : suggestedPrompts.length > 0 ? (
-              <Box sx={{ mb: 2, ...glassmorphismStyle, p: 2, borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#fff' }}>
-                  Suggested Prompts
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {suggestedPrompts.map((prompt, index) => (
-                    <Chip
-                      key={index}
-                      label={prompt}
-                      onClick={() => handleFollowUpPrompt(prompt)}
-                      color={prompt.startsWith('[User Feedback]') ? 'error' : 'warning'}
-                      sx={{
-                        bgcolor: prompt.startsWith('[User Feedback]') ? 'rgba(244, 67, 54, 0.2)' : 'rgba(255, 193, 7, 0.2)',
-                        color: '#fff',
-                        borderRadius: 2,
-                        '&:hover': {
-                          bgcolor: prompt.startsWith('[User Feedback]') ? 'rgba(244, 67, 54, 0.3)' : 'rgba(255, 193, 7, 0.3)',
-                          cursor: 'pointer',
-                        },
-                      }}
-                      disabled={saving || gameLoading}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            ) : null}
-
             {showChat && (
               <Box
                 sx={{
-                  ...glassmorphismStyle,
-                  borderRadius: 2,
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                   mb: 2,
                   overflow: 'hidden',
                   display: 'flex',
@@ -1766,16 +1441,15 @@ const SettingsRef = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    bgcolor: 'rgba(255, 255, 255, 0.05)',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                     p: 1.5,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 24, height: 24, fontSize: '0.875rem', mr: 1 }}>
+                    <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', mr: 1 }}>
                       AI
                     </Avatar>
-                    <Typography variant="subtitle2" sx={{ color: '#fff' }}>
+                    <Typography variant="subtitle2" sx={{ color: '#fff', fontSize: '0.875rem' }}>
                       AI Game Assistant
                     </Typography>
                   </Box>
@@ -1788,7 +1462,6 @@ const SettingsRef = ({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 2,
-                    bgcolor: 'rgba(0, 0, 0, 0.05)',
                   }}
                 >
                   {chatMessages.length > 0 ? (
@@ -1804,63 +1477,61 @@ const SettingsRef = ({
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                           {message.type === 'ai' && (
-                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.775rem', mr: 1 }}>
+                            <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem', mr: 1 }}>
                               AI
                             </Avatar>
                           )}
-                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
                             {formatTime(message.timestamp)}
                           </Typography>
                           {message.type === 'user' && (
-                            <Avatar sx={{ width: 24, height: 24, bgcolor: blue[500], fontSize: '0.775rem', ml: 1 }}>
+                            <Avatar sx={{ width: 20, height: 20, bgcolor: blue[500], fontSize: '0.65rem', ml: 1 }}>
                               U
                             </Avatar>
                           )}
                         </Box>
-                        <Paper
+                        <Box
                           sx={{
                             p: 1.5,
-                            bgcolor: message.type === 'user' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                            borderRadius: 2,
-                            border: 'none',
+                            bgcolor: message.type === 'user' ? 'rgba(33, 150, 243, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '8px',
+                            border: `1px solid ${message.type === 'user' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
                             color: '#fff',
-                            ...glassmorphismStyle,
                           }}
                         >
-                          <Typography variant="body2">{message.content}</Typography>
-                        </Paper>
+                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{message.content}</Typography>
+                        </Box>
                       </Box>
                     ))
                   ) : (
-                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', fontSize: '0.8rem' }}>
                       No messages yet. Start by sending a prompt!
                     </Typography>
                   )}
                   {processingMessage && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-start', maxWidth: '80%' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.775rem', mr: 1 }}>
+                        <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem', mr: 1 }}>
                           AI
                         </Avatar>
-                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
                           {formatTime(new Date())}
                         </Typography>
                       </Box>
-                      <Paper
+                      <Box
                         sx={{
                           p: 1.5,
-                          bgcolor: 'rgba(255, 255, 255, 0.1)',
-                          borderRadius: 2,
-                          border: 'none',
+                          bgcolor: 'rgba(255, 255, 255, 0.05)',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
                           display: 'flex',
                           alignItems: 'center',
                           color: '#fff',
-                          ...glassmorphismStyle,
                         }}
                       >
                         <CircularProgress color='error' size={16} sx={{ mr: 1 }} />
-                        <Typography variant="body2">{processingMessage.content}</Typography>
-                      </Paper>
+                        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{processingMessage.content}</Typography>
+                      </Box>
                     </Box>
                   )}
                   <div ref={chatEndRef} />
@@ -1868,7 +1539,14 @@ const SettingsRef = ({
               </Box>
             )}
 
-            <Box sx={{ ...glassmorphismStyle, p: isMobile ? 2 : 3, borderRadius: 2 }}>
+            <Box 
+              sx={{ 
+                p: isMobile ? 2 : 3, 
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+              }}
+            >
               <TextField
                 multiline
                 rows={isMobile ? 3 : 4}
@@ -1891,7 +1569,7 @@ const SettingsRef = ({
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#fff',
-                    borderRadius: 2,
+                    borderRadius: '8px',
                   },
                 }}
               />
@@ -1903,14 +1581,13 @@ const SettingsRef = ({
                   disabled={loading || saving || gameLoading || localCredits < modelCost}
                   startIcon={loading || saving || gameLoading ? <CircularProgress color='error' size={20} sx={{ color: '#fff' }} /> : <SendIcon />}
                   sx={{
-                    borderRadius: 2,
+                    borderRadius: '8px',
                     textTransform: 'none',
                     fontWeight: 600,
+                    fontSize: '0.875rem',
                     px: 3,
                     '&:hover': {
-                      bgcolor: '#ff0000',
-                      transform: 'scale(1.05)',
-                      transition: 'all 0.3s ease',
+                      bgcolor: '#cc0000',
                     },
                     '&:disabled': {
                       bgcolor: grey[700],
@@ -1933,7 +1610,7 @@ const SettingsRef = ({
             }}
           >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#fff', fontSize: '0.875rem' }}>
                 Generated Game
               </Typography>
             </Box>
@@ -1945,12 +1622,13 @@ const SettingsRef = ({
                   justifyContent: 'center',
                   alignItems: 'center',
                   height: isMobile ? 300 : 600,
-                  ...glassmorphismStyle,
-                  borderRadius: 2,
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                 }}
               >
                 <CircularProgress color='error' size={60} sx={{ mb: 2 }} />
-                <Typography variant="body1" sx={{ color: '#fff' }}>
+                <Typography variant="body1" sx={{ color: '#fff', fontSize: '0.875rem' }}>
                   Generating your game...
                 </Typography>
               </Box>
@@ -1962,25 +1640,26 @@ const SettingsRef = ({
                   justifyContent: 'center',
                   alignItems: 'center',
                   height: isMobile ? 300 : 600,
-                  ...glassmorphismStyle,
-                  borderRadius: 2,
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                   p: 3,
                 }}
               >
-                <Typography variant="h6" sx={{ mb: 2, color: '#ff1744' }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#ff0000', fontSize: '1rem' }}>
                   Error
                 </Typography>
-                <Typography sx={{ color: '#fff' }}>{componentError}</Typography>
+                <Typography sx={{ color: '#fff', fontSize: '0.875rem' }}>{componentError}</Typography>
               </Box>
             ) : GameComponent ? (
               <Box
                 sx={{
                   width: '100%',
                   height: isMobile ? 300 : 600,
-                  borderRadius: 2,
+                  borderRadius: '8px',
                   overflow: 'auto',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  ...glassmorphismStyle,
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(255, 255, 255, 0.02)',
                   position: 'relative',
                 }}
               >
@@ -1990,7 +1669,7 @@ const SettingsRef = ({
                   } catch (error) {
                     setComponentError(`Runtime error: ${error.message}`);
                     return (
-                      <Typography sx={{ color: '#ff1744', p: 2 }}>
+                      <Typography sx={{ color: '#ff0000', p: 2, fontSize: '0.875rem' }}>
                         Failed to render game: {error.message}
                       </Typography>
                     );
@@ -2004,14 +1683,14 @@ const SettingsRef = ({
                   justifyContent: 'center',
                   alignItems: 'center',
                   height: isMobile ? 300 : 600,
-                  ...glassmorphismStyle,
                   p: 2,
                   textAlign: 'center',
-                  borderRadius: 2,
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                 }}
               >
-                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', }}>
+                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
                   No game generated yet. Enter a prompt and click Generate.
                 </Typography>
               </Box>

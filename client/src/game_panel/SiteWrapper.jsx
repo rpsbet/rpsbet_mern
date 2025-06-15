@@ -92,6 +92,7 @@ import {
 } from '../redux/Logic/logic.actions.js';
 import PrivyLogin from './modal/PrivyLogin.jsx';
 import { usePrivy } from '@privy-io/react-auth';
+import { faBell, faBellSlash, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 // Lazy-loaded components
 const HistoryTable = lazy(() => import('./LiveGames/HistoryTable.jsx'));
@@ -181,7 +182,7 @@ const appendCurrencyBracket = (message, amount, solPrice) => {
   }
 };
 
-function SiteWrapper({ children }) {
+function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
@@ -593,6 +594,8 @@ function SiteWrapper({ children }) {
     return status;
   };
 
+
+
   const handlePortfolio = useCallback(() => {
     navigate('/portfolio');
     dispatch(selectMainTab(1));
@@ -600,7 +603,11 @@ function SiteWrapper({ children }) {
 
   // Handler functions - simplified
   const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
-  const handleOpenProfileMenu = (e) => setAnchorElProfile(e.currentTarget);
+  const handleOpenProfileMenu = (e) => {
+
+    e.stopPropagation(); // Stop the event from bubbling up
+    setAnchorElProfile(e.currentTarget);
+  };
   const handleCloseProfileMenu = () => setAnchorElProfile(null);
   const handleOpenEliteSubscriptionModal = () => setEliteModalOpen(true);
   const handleOpenAccountManagementModal = () => {
@@ -901,60 +908,62 @@ function SiteWrapper({ children }) {
       }}
       PaperProps={{
         sx: {
-          background: '#1a1a1a',
+          background: 'rgba(255, 255, 255, 0.02)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
-          borderRadius: '6px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
           minWidth: '160px',
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
           mt: 0.5,
           '& .MuiMenuItem-root': {
             py: 0.75,
             px: 1.5,
-            fontSize: '0.8rem',
+            fontSize: '0.75rem',
             fontWeight: 500,
-            color: isDarkMode ? '#ffffff' : '#333333',
-            minHeight: '36px',
+            color: '#ffffff',
+            minHeight: '32px',
+            borderRadius: '4px',
+            mx: 0.5,
+            my: 0.25,
             '&:hover': {
-              backgroundColor: '#ff0000',
+              backgroundColor: 'rgba(255, 0, 0, 0.1)',
               color: '#ffffff',
             },
             '&.elite-item': {
-              background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05))',
-              borderLeft: '3px solid #ffd700',
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
               '&:hover': {
-                backgroundColor: '#ff0000',
-                borderLeftColor: '#ffd700',
+                backgroundColor: 'rgba(255, 215, 0, 0.2)',
               },
             },
             '&.logout-item': {
               '&:hover': {
-                backgroundColor: '#cc0000',
+                backgroundColor: 'rgba(220, 53, 69, 0.2)',
               },
             },
           },
           '& .MuiListItemIcon-root': {
-            color: isDarkMode ? '#ffffff' : '#333333',
-            minWidth: '28px',
+            color: '#ffffff',
+            minWidth: '24px',
             '& .MuiSvgIcon-root': {
-              fontSize: '1rem',
+              fontSize: '0.9rem',
             },
           },
-          '& .MuiMenuItem-root:hover .MuiListItemIcon-root': {
-            color: '#ffffff',
+          '& .elite-item .MuiListItemIcon-root': {
+            color: '#ffd700',
           },
           '& .MuiListItemText-root': {
             '& .MuiListItemText-primary': {
-              fontSize: '0.8rem',
+              fontSize: '0.75rem',
               fontWeight: 600,
               letterSpacing: '0.5px',
             },
           },
           '& .MuiDivider-root': {
-            borderColor: isDarkMode
-              ? 'rgba(255, 255, 255, 0.1)'
-              : 'rgba(0, 0, 0, 0.1)',
-            my: 0.25,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            my: 0.5,
+            mx: 0.5,
           },
         },
       }}
@@ -994,7 +1003,7 @@ function SiteWrapper({ children }) {
         className="elite-item"
       >
         <ListItemIcon>
-          <Star sx={{ color: '#ffd700' }} />
+          <Star />
         </ListItemIcon>
         <ListItemText primary="ELITE" />
       </MenuItem>
@@ -1025,92 +1034,86 @@ function SiteWrapper({ children }) {
       slotProps={{
         paper: {
           sx: {
-            background: '#1a1a1a',
+            background: 'rgba(255, 255, 255, 0.02)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
             borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-            color: isDarkMode ? '#fff' : '#333',
+            color: '#fff',
             minWidth: '350px',
             maxWidth: '90vw',
           },
         },
       }}
     >
-      {/* Header - same as before */}
+      {/* Clean Header */}
       <Box sx={{
-        p: 2,
-        borderBottom: '1px solid',
-        borderColor: 'rgba(255, 0, 0, 0.2)',
-        background: 'rgba(32, 32, 32, 0.05)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box sx={{
-            width: 28,
-            height: 28,
-            borderRadius: '6px',
-            background: '#ff0000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <HistoryIcon sx={{ color: 'white', fontSize: '16px' }} />
-          </Box>
-
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 600,
-            color: '#ff0000',
-            fontSize: '0.95rem',
-          }}>
-            BALANCE HISTORY
-          </Typography>
-
-          <Tooltip
-            title="Net profit shown (winnings - bet - fees)"
-            placement="top"
-            arrow
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FontAwesomeIcon
+            icon={faHistory}
+            style={{
+              color: '#ff0000',
+              fontSize: '14px'
+            }}
+          />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.9rem'
+            }}
           >
-            <IconButton
-              size="small"
-              sx={{
-                ml: 'auto',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-                '&:hover': { color: '#ff0000' },
-              }}
-            >
-              <QuestionMark sx={{ fontSize: '16px' }} />
-            </IconButton>
-          </Tooltip>
+            Balance History
+          </Typography>
         </Box>
+        <Tooltip
+          title="Net profit shown (winnings - bet - fees)"
+          placement="top"
+          arrow
+        >
+          <IconButton
+            size="small"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              '&:hover': { color: '#fff' },
+            }}
+          >
+            <QuestionMark sx={{ fontSize: '14px' }} />
+          </IconButton>
+        </Tooltip>
       </Box>
 
-      {/* Content with loading state */}
-      <Box sx={{ p: 2 }}>
-        <TableContainer
-          component={Paper}
-          elevation={0}
+      {/* Content */}
+      <Box sx={{ padding: '16px' }}>
+        <Box
           sx={{
-            background: 'transparent',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '4px',
             mb: 2,
-            borderRadius: '6px',
-            border: '1px solid',
-            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden',
           }}
         >
           <Table size="small">
             <TableBody>
               {isLoadingTransactions ? (
-                // Show loading skeletons
                 Array.from({ length: 3 }).map((_, index) => (
                   <TableRow key={`loading-${index}`}>
-                    <TableCell sx={{ py: 1, px: 1.5 }}>
-                      <Skeleton variant="text" width="60%" height={20} />
+                    <TableCell sx={{ py: 1, px: 1.5, borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+                      <Skeleton variant="text" width="60%" height={16} />
                     </TableCell>
-                    <TableCell sx={{ py: 1, px: 1.5 }}>
-                      <Skeleton variant="text" width="80%" height={20} />
+                    <TableCell sx={{ py: 1, px: 1.5, borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+                      <Skeleton variant="text" width="80%" height={16} />
                     </TableCell>
-                    <TableCell sx={{ py: 1, px: 1.5 }}>
-                      <Skeleton variant="text" width="40%" height={20} />
+                    <TableCell sx={{ py: 1, px: 1.5, borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+                      <Skeleton variant="text" width="40%" height={16} />
                     </TableCell>
                   </TableRow>
                 ))
@@ -1121,7 +1124,9 @@ function SiteWrapper({ children }) {
                     sx={{
                       textAlign: 'center',
                       py: 3,
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      fontSize: '0.8rem',
+                      borderColor: 'rgba(255, 255, 255, 0.05)',
                     }}
                   >
                     No transactions available
@@ -1152,7 +1157,7 @@ function SiteWrapper({ children }) {
                             : 'inherit',
                         },
                         '& .MuiTableCell-root': {
-                          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                          borderColor: 'rgba(255, 255, 255, 0.05)',
                           py: 1,
                           px: 1.5,
                         }
@@ -1161,21 +1166,21 @@ function SiteWrapper({ children }) {
                       <TableCell sx={{
                         color: isPositive ? '#00ff00' : '#ff0000',
                         fontWeight: 600,
-                        fontSize: '0.85rem',
+                        fontSize: '0.75rem',
                       }}>
                         {isPositive
-                          ? `+ ${amount.toFixed(4)} SOL (${convertToCurrency(amount, solPrice)})`
-                          : `- ${Math.abs(amount).toFixed(4)} SOL (${convertToCurrency(Math.abs(amount), solPrice)})`}
+                          ? `+ ${amount.toFixed(4)} SOL`
+                          : `- ${Math.abs(amount).toFixed(4)} SOL`}
                       </TableCell>
                       <TableCell sx={{
-                        color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
-                        fontSize: '0.8rem',
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        fontSize: '0.75rem',
                       }}>
                         {row.description}
                       </TableCell>
                       <TableCell sx={{
-                        color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-                        fontSize: '0.75rem',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '0.7rem',
                       }}>
                         {row.from_now || 'Invalid Date'}
                       </TableCell>
@@ -1185,20 +1190,21 @@ function SiteWrapper({ children }) {
               )}
             </TableBody>
           </Table>
-        </TableContainer>
+        </Box>
 
-        {/* Button */}
         <Button
           color="error"
           variant="contained"
           onClick={() => setShowAllGameLogs(true)}
           fullWidth
           disabled={isLoadingTransactions}
+          size="small"
           sx={{
-            borderRadius: '6px',
-            py: 1,
+            borderRadius: '4px',
+            py: 0.75,
             fontWeight: 600,
             textTransform: 'none',
+            fontSize: '0.75rem',
             backgroundColor: '#ff0000',
             '&:hover': {
               backgroundColor: '#cc0000',
@@ -1214,7 +1220,6 @@ function SiteWrapper({ children }) {
     </Popover>
   );
 
-  // Compact Notifications Popover with Red Theme
   const renderNotificationsPopover = () => (
     <Popover
       open={Boolean(anchorElNotifications)}
@@ -1229,12 +1234,13 @@ function SiteWrapper({ children }) {
       slotProps={{
         paper: {
           sx: {
-            background: '#1a1a1a',
+            background: 'rgba(255, 255, 255, 0.02)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
             borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-            color: isDarkMode ? '#fff' : '#333',
+            color: '#fff',
             width: 320,
             maxWidth: '90vw',
             maxHeight: '70vh',
@@ -1244,59 +1250,55 @@ function SiteWrapper({ children }) {
         },
       }}
     >
-      {/* Compact Header */}
+      {/* Clean Header */}
       <Box sx={{
-        p: 2,
-        borderBottom: '1px solid',
-        borderColor: 'rgba(45, 45, 45, 0.2)',
-        background: 'rgba(255, 0, 0, 0.05)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box sx={{
-            width: 28,
-            height: 28,
-            borderRadius: '6px',
-            background: '#ff0000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <NotificationsIcon sx={{ color: 'white', fontSize: '16px' }} />
-          </Box>
-
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 600,
-            color: '#ff0000',
-            fontSize: '0.95rem',
-          }}>
-            NOTIFICATIONS
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FontAwesomeIcon
+            icon={faBell}
+            style={{
+              color: '#ff0000',
+              fontSize: '14px'
+            }}
+          />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.9rem'
+            }}
+          >
+            Notifications
           </Typography>
-
-          {/* Notification count */}
-          {processedNotifications.filter(n => !n.is_read).length > 0 && (
-            <Chip
-              label={processedNotifications.filter(n => !n.is_read).length}
-              size="small"
-              sx={{
-                ml: 'auto',
-                backgroundColor: '#ff0000',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '0.7rem',
-                height: '20px',
-                '& .MuiChip-label': { px: 0.75 },
-              }}
-            />
-          )}
         </Box>
+
+        {/* Notification count */}
+        {processedNotifications.filter(n => !n.is_read).length > 0 && (
+          <Chip
+            label={processedNotifications.filter(n => !n.is_read).length}
+            size="small"
+            sx={{
+              backgroundColor: '#ff0000',
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '0.65rem',
+              height: '18px',
+              '& .MuiChip-label': { px: 0.75 },
+            }}
+          />
+        )}
       </Box>
 
-      {/* Compact Content */}
+      {/* Content */}
       <Box sx={{
         flex: 1,
         overflowY: 'auto',
-        px: 1,
-        pb: 1,
+        padding: '8px',
       }}>
         {processedNotifications.length > 0 ? (
           processedNotifications.map((notification, index) => {
@@ -1312,20 +1314,19 @@ function SiteWrapper({ children }) {
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 1.5,
+                    gap: 1,
                     p: 1.5,
-                    mx: 0.5,
-                    my: 0.5,
-                    borderRadius: '6px',
+                    borderRadius: '4px',
                     background: notification.is_read
                       ? 'transparent'
                       : 'rgba(255, 0, 0, 0.05)',
                     border: '1px solid',
                     borderColor: notification.is_read
-                      ? 'transparent'
+                      ? 'rgba(255, 255, 255, 0.05)'
                       : 'rgba(255, 0, 0, 0.2)',
                     cursor: 'pointer',
                     position: 'relative',
+                    mb: 0.5,
                     '&:hover': {
                       background: 'rgba(255, 0, 0, 0.08)',
                       borderColor: 'rgba(255, 0, 0, 0.3)',
@@ -1339,7 +1340,7 @@ function SiteWrapper({ children }) {
                       setSelectedCreator(notification._id);
                       setShowPlayerModal(true);
                     }}
-                    sx={{ borderRadius: '6px' }}
+                    sx={{ borderRadius: '4px' }}
                   >
                     <Avatar
                       user_id={notification._id}
@@ -1349,7 +1350,7 @@ function SiteWrapper({ children }) {
                       elite={notification.elite}
                       username={notification.username}
                       className="avatar"
-                      style={{ width: 36, height: 36 }}
+                      style={{ width: 32, height: 32 }}
                     />
                   </ButtonBase>
 
@@ -1372,8 +1373,8 @@ function SiteWrapper({ children }) {
                             position: 'absolute',
                             top: -2,
                             right: -2,
-                            width: 8,
-                            height: 8,
+                            width: 6,
+                            height: 6,
                             borderRadius: '50%',
                             backgroundColor: '#ff0000',
                           }}
@@ -1387,8 +1388,8 @@ function SiteWrapper({ children }) {
                           mb: 0.25,
                           lineHeight: 1.3,
                           fontWeight: notification.is_read ? 400 : 600,
-                          color: isDarkMode ? '#e1e5e9' : '#2c3e50',
-                          fontSize: '0.8rem',
+                          color: '#e1e5e9',
+                          fontSize: '0.75rem',
                         }}
                         dangerouslySetInnerHTML={{ __html: processedMessage }}
                       />
@@ -1396,8 +1397,8 @@ function SiteWrapper({ children }) {
                       <Typography
                         variant="caption"
                         sx={{
-                          color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-                          fontSize: '0.7rem',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontSize: '0.65rem',
                         }}
                       >
                         {notification.from_now}
@@ -1407,12 +1408,7 @@ function SiteWrapper({ children }) {
                 </Box>
 
                 {index < processedNotifications.length - 1 && (
-                  <Divider
-                    sx={{
-                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                      mx: 1,
-                    }}
-                  />
+                  <Box sx={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', mx: 1, my: 0.5 }} />
                 )}
               </Box>
             );
@@ -1426,17 +1422,19 @@ function SiteWrapper({ children }) {
             py: 4,
             gap: 1,
           }}>
-            <NotificationsOffIcon sx={{
-              fontSize: '2rem',
-              opacity: 0.3,
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-            }} />
+            <FontAwesomeIcon
+              icon={faBellSlash}
+              style={{
+                fontSize: '2rem',
+                color: 'rgba(255, 255, 255, 0.3)',
+              }}
+            />
             <Typography
               variant="body2"
               sx={{
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
                 textAlign: 'center',
-                fontSize: '0.85rem',
+                fontSize: '0.8rem',
               }}
             >
               No notifications available
@@ -1564,6 +1562,120 @@ function SiteWrapper({ children }) {
     );
   }
 
+  // SiteWrapper.jsx - Updated main_header section
+
+  const renderMobileNavButtons = () => {
+    if (!selectedMobileTab || !setSelectedMobileTab) return null;
+
+    return (
+      <Box
+        className="mobile-nav-header"
+        sx={{
+          display: { xs: 'flex', lg: 'none' },
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
+        {/* Live Games Button */}
+        <Button
+          onClick={() => setSelectedMobileTab('live_games')}
+          sx={{
+            minWidth: 0,
+            px: 1.5,
+            py: 0.5,
+            color: selectedMobileTab === 'live_games' ? '#fff' : '#8E9297',
+            backgroundColor: selectedMobileTab === 'live_games' ? 'rgba(255, 0, 0, 0.2)' : 'transparent',
+            border: selectedMobileTab === 'live_games' ? '1px solid #ff0000' : '1px solid transparent',
+            borderRadius: '6px',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 0, 0, 0.1)',
+              color: '#fff',
+            },
+          }}
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 32 32" style={{ marginRight: '4px' }}>
+            <path
+              stroke="currentColor"
+              strokeWidth="1.5"
+              d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
+            />
+          </svg>
+          Games
+        </Button>
+
+        {/* My Games Button */}
+        <Button
+          onClick={() => setSelectedMobileTab('my_games')}
+          sx={{
+            minWidth: 0,
+            px: 1.5,
+            py: 0.5,
+            color: selectedMobileTab === 'my_games' ? '#fff' : '#8E9297',
+            backgroundColor: selectedMobileTab === 'my_games' ? 'rgba(255, 0, 0, 0.2)' : 'transparent',
+            border: selectedMobileTab === 'my_games' ? '1px solid #ff0000' : '1px solid transparent',
+            borderRadius: '6px',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 0, 0, 0.1)',
+              color: '#fff',
+            },
+          }}
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 33 32" style={{ marginRight: '4px' }}>
+            <path
+              stroke="currentColor"
+              strokeWidth="1.5"
+              d="M27.5 27.5c0-2.917-1.159-5.715-3.222-7.778-2.063-2.063-4.86-3.222-7.778-3.222-2.917 0-5.715 1.159-7.778 3.222C6.659 21.785 5.5 24.582 5.5 27.5"
+            />
+            <path
+              fill="currentColor"
+              d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v-1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
+            />
+          </svg>
+          Portfolio
+        </Button>
+
+        {/* Chat Button */}
+        <Button
+          onClick={() => setSelectedMobileTab('chat')}
+          sx={{
+            minWidth: 0,
+            px: 1.5,
+            py: 0.5,
+            color: selectedMobileTab === 'chat' ? '#fff' : '#8E9297',
+            backgroundColor: selectedMobileTab === 'chat' ? 'rgba(255, 0, 0, 0.2)' : 'transparent',
+            border: selectedMobileTab === 'chat' ? '1px solid #ff0000' : '1px solid transparent',
+            borderRadius: '6px',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 0, 0, 0.1)',
+              color: '#fff',
+            },
+          }}
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 33 32" style={{ marginRight: '4px' }}>
+            <path
+              stroke="currentColor"
+              strokeWidth="1.5"
+              d="M28 16c0 6.351-5.149 11.5-11.5 11.5-1.407 0-2.754-.253-4-.715-2.75-1.02-4.091 1.378-4.75.965-.685-.43 1.328-2.929.75-3.489C6.342 22.171 5 19.242 5 16 5 9.649 10.149 4.5 16.5 4.5S28 9.649 28 16z"
+            />
+            <circle cx="10.5" cy="16" r="2" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="16.5" cy="16" r="2" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="22.5" cy="16" r="2" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          Chat
+        </Button>
+      </Box>
+    );
+  };
+
   return (
     <ThemeProvider theme={theme}>
       {showCookieConsent && <CookieConsent />}
@@ -1572,8 +1684,22 @@ function SiteWrapper({ children }) {
 
       <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
         <div className="game_header">
-          <div className="main_header">
-            <Box>
+          <div className="main_header" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '8px 12px',
+            minHeight: '56px',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}>
+            {/* Left section - Logo and Help */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              flex: { xs: '0 0 auto', lg: '1' },
+              minWidth: 0,
+            }}>
               <a
                 className="game_logo"
                 href="/"
@@ -1581,16 +1707,32 @@ function SiteWrapper({ children }) {
                   e.preventDefault();
                   window.location.href = '/';
                 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
               >
                 <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
-                <span className="title desktop-only">CATSINO</span>
+                <span className="title" style={{
+                  display: window.innerWidth > 768 ? 'inline' : 'none',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                }}>
+                  CATSINO
+                </span>
               </a>
               <a
                 href="#"
                 style={{
                   position: "relative",
                   fontWeight: "400",
-                  marginLeft: '20px'
+                  marginLeft: window.innerWidth > 768 ? '20px' : '12px',
+                  fontSize: window.innerWidth > 768 ? '1rem' : '0.8rem',
+                  textDecoration: 'none',
+                  color: 'inherit',
                 }}
                 onClick={(e) => {
                   e.preventDefault();
@@ -1601,76 +1743,89 @@ function SiteWrapper({ children }) {
               </a>
             </Box>
 
-            <Suspense fallback={<Skeleton variant="rectangular" width={200} height={40} />}>
-              <HistoryTable userId={shouldShowAuthenticatedContent ? user._id : null} />
-            </Suspense>
+            {/* Center section - Mobile nav buttons (only on mobile) */}
+            {renderMobileNavButtons()}
 
-            <div className="header_action_panel">
+            {/* Center section - History table (desktop only) */}
+            <Box sx={{
+              display: { xs: 'none', lg: 'flex' },
+              flex: 1,
+              justifyContent: 'center',
+            }}>
+              <Suspense fallback={<Skeleton variant="rectangular" width={200} height={40} />}>
+                <HistoryTable userId={shouldShowAuthenticatedContent ? user._id : null} />
+              </Suspense>
+            </Box>
+
+            {/* Right section - User actions */}
+            <div className="header_action_panel" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: window.innerWidth > 768 ? '12px' : '6px',
+              flex: '0 0 auto',
+            }}>
               {shouldShowAuthenticatedContent && (
                 <>
-                  <Box
-                    component="a"
-                    href="#"
-                    className="desktop-only action-icon"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowLeaderboardsModal(true);
-                    }}
-                    id="btn_leaderboards"
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: '#ffffff',
-                      mx: 1.5,
-                      '&:hover': { color: '#ff3030' }
-                    }}
-                  >
-                    <LeaderboardOutlined fontSize="medium" />
-                  </Box>
-
-                  <Box
-                    component="a"
-                    href="#"
-                    className="desktop-only action-icon"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setAnchorElNotifications(e.currentTarget);
-                    }}
-                    id="btn_notifications"
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: '#ffffff',
-                      mx: 1.5,
-                      '&:hover': { color: '#ff3030' }
-                    }}
-                  >
-                    <Badge
-                      badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
-                      color="error"
+                  {/* Desktop-only action buttons */}
+                  <Box sx={{ display: { xs: 'none', lg: 'flex' }, alignItems: 'center', gap: 1.5 }}>
+                    <Box
+                      component="a"
+                      href="#"
+                      className="action-icon"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowLeaderboardsModal(true);
+                      }}
+                      id="btn_leaderboards"
                       sx={{
-                        '& .MuiBadge-badge': {
-                          fontSize: '10px',
-                          height: '16px',
-                          minWidth: '16px',
-                          backgroundColor: '#ff3030'
-                        }
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#ffffff',
+                        '&:hover': { color: '#ff3030' }
                       }}
                     >
-                      <NotificationsOutlined fontSize="medium" />
-                    </Badge>
-                  </Box>
-                </>
-              )}
+                      <LeaderboardOutlined fontSize="medium" />
+                    </Box>
 
-              {shouldShowAuthenticatedContent ? (
-                <>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {/* Use WalletBalanceDisplay with fallback */}
+                    <Box
+                      component="a"
+                      href="#"
+                      className="action-icon"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setAnchorElNotifications(e.currentTarget);
+                      }}
+                      id="btn_notifications"
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#ffffff',
+                        '&:hover': { color: '#ff3030' }
+                      }}
+                    >
+                      <Badge
+                        badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
+                        color="error"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            fontSize: '10px',
+                            height: '16px',
+                            minWidth: '16px',
+                            backgroundColor: '#ff3030'
+                          }
+                        }}
+                      >
+                        <NotificationsOutlined fontSize="medium" />
+                      </Badge>
+                    </Box>
+                  </Box>
+
+                  {/* Wallet Balance */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Suspense fallback={
                       <Skeleton variant="rectangular" width={80} height={30} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
                     }>
@@ -1682,40 +1837,38 @@ function SiteWrapper({ children }) {
                     </Suspense>
                   </Box>
 
+                  {/* Mobile notifications */}
                   <Box
                     component="a"
                     href="#"
-                    className="mobile-only"
-                    onClick={handleNotificationsClick}
-                    id="btn_notifications_mobile"
                     sx={{
-                      display: 'inline-flex',
+                      display: { xs: 'inline-flex', lg: 'none' },
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
                       color: '#ffffff',
-                      mx: 1.5,
-                      '&:hover': {
-                        color: '#ff3030',
-                      }
+                      '&:hover': { color: '#ff3030' }
                     }}
+                    onClick={handleNotificationsClick}
+                    id="btn_notifications_mobile"
                   >
                     <Badge
                       badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
                       color="error"
                       sx={{
                         '& .MuiBadge-badge': {
-                          fontSize: '10px',
-                          height: '16px',
-                          minWidth: '16px',
+                          fontSize: '9px',
+                          height: '14px',
+                          minWidth: '14px',
                           backgroundColor: '#ff3030'
                         }
                       }}
                     >
-                      <NotificationsOutlined fontSize="medium" />
+                      <NotificationsOutlined fontSize="small" />
                     </Badge>
                   </Box>
 
+                  {/* Profile Button */}
                   <Button
                     aria-controls="profile-menu"
                     aria-haspopup="true"
@@ -1725,7 +1878,6 @@ function SiteWrapper({ children }) {
                       padding: '4px',
                       minWidth: 'auto',
                       borderRadius: '50%',
-                      ml: 1,
                       '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 0.05)'
                       }
@@ -1742,17 +1894,20 @@ function SiteWrapper({ children }) {
                         username={user.username}
                         className="avatar"
                         darkMode={isDarkMode}
-                        sx={{ width: 38, height: 38 }}
+                        sx={{ width: window.innerWidth > 768 ? 38 : 32, height: window.innerWidth > 768 ? 38 : 32 }}
                       />
                     ) : (
-                      <Skeleton variant="circular" width={38} height={38} />
+                      <Skeleton variant="circular" width={32} height={32} />
                     )}
-                    <ArrowDropDown sx={{ color: '#ffffff' }} />
+                    <ArrowDropDown sx={{
+                      color: '#ffffff',
+                      fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem'
+                    }} />
                   </Button>
-
-                  {renderProfileMenu()}
                 </>
-              ) : (
+              )}
+
+              {!shouldShowAuthenticatedContent && (
                 <Suspense fallback={
                   <Skeleton variant="rectangular" width={80} height={36} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
                 }>
@@ -1761,7 +1916,7 @@ function SiteWrapper({ children }) {
               )}
             </div>
           </div>
-
+          {renderProfileMenu()}
           {renderNotificationsPopover()}
           {renderGameLogPopover()}
         </div>

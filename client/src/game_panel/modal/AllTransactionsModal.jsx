@@ -5,8 +5,6 @@ import {
   Box,
   Button,
   Typography,
-  TableContainer,
-  Paper,
   Table,
   TableHead,
   TableBody,
@@ -85,16 +83,16 @@ const SORT_OPTIONS = [
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
     case 'completed':
-      return { bg: 'rgba(0, 255, 58, 0.15)', color: '#00ff3a' };
+      return { bg: 'rgba(0, 255, 58, 0.1)', color: '#00ff3a' };
     case 'failed':
     case 'cancelled':
-      return { bg: 'rgba(255, 0, 0, 0.15)', color: '#ff0000' };
+      return { bg: 'rgba(255, 0, 0, 0.1)', color: '#ff0000' };
     case 'pending':
     case 'processing':
     case 'waiting':
-      return { bg: 'rgba(255, 193, 7, 0.15)', color: '#ffc107' };
+      return { bg: 'rgba(255, 193, 7, 0.1)', color: '#ffc107' };
     default:
-      return { bg: 'rgba(255, 255, 255, 0.15)', color: '#ffffff' };
+      return { bg: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' };
   }
 };
 
@@ -148,12 +146,10 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
   // Filtered transaction count by type
   const getFilteredCount = useCallback((type) => {
     if (!dataToRender.length) return 0;
-    // This would need to be implemented based on your data structure
     return dataToRender.filter(tx => {
       switch (type) {
         case 'showDeposits': return tx.amount > 0;
         case 'showWithdrawals': return tx.amount < 0;
-        // Add other filters based on your transaction structure
         default: return true;
       }
     }).length;
@@ -174,7 +170,6 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
-    // Debounced search would be better here
     dispatch(getTransactions(1, filterType || '', sortType, value));
   }, [dispatch, filterType, sortType]);
 
@@ -204,15 +199,15 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
 
   // Render loading skeleton
   const renderLoadingSkeleton = () => (
-    <Box sx={{ mt: 2, width: '100%' }}>
+    <Box sx={{ p: 2 }}>
       {Array.from({ length: 6 }).map((_, index) => (
         <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-          <Skeleton variant="text" width="100%" height={24} />
-          <Skeleton variant="text" width="100%" height={24} />
-          <Skeleton variant="text" width="100%" height={24} />
-          <Skeleton variant="text" width="100%" height={24} />
-          <Skeleton variant="text" width="100%" height={24} />
-          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="15%" height={20} />
+          <Skeleton variant="text" width="15%" height={20} />
+          <Skeleton variant="text" width="25%" height={20} />
+          <Skeleton variant="text" width="15%" height={20} />
+          <Skeleton variant="text" width="20%" height={20} />
+          <Skeleton variant="text" width="10%" height={20} />
         </Box>
       ))}
     </Box>
@@ -221,48 +216,46 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
   // Render table header
   const renderTableHeader = () => (
     <TableHead>
-      <TableRow sx={{ 
-        backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)'
-      }}>
+      <TableRow>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600,
-          backgroundColor: '#222222'
+          fontSize: '0.75rem',
         }}>
           AMOUNT
         </TableCell>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600,
-          backgroundColor: '#222222'
+          fontSize: '0.75rem',
         }}>
           TIME
         </TableCell>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600,
-          backgroundColor: '#222222'
+          fontSize: '0.75rem',
         }}>
           DESCRIPTION
         </TableCell>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600,
-          backgroundColor: '#222222'
+          fontSize: '0.75rem',
         }}>
           STATUS
         </TableCell>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600,
-          backgroundColor: '#222222'
+          fontSize: '0.75rem',
         }}>
           TRANSACTION
         </TableCell>
         <TableCell sx={{ 
-          color: isDarkMode ? '#ccc' : '#666', 
+          color: 'rgba(255, 255, 255, 0.6)', 
           fontWeight: 600,
-          backgroundColor: '#222222'
+          fontSize: '0.75rem',
         }}>
           ACTION
         </TableCell>
@@ -279,37 +272,36 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
       <TableRow 
         key={transaction._id}
         sx={{
-          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           '&:hover': { 
-            backgroundColor: isDarkMode ? 'rgba(50, 50, 50, 0.8)' : 'rgba(240, 240, 240, 0.8)' 
+            backgroundColor: 'rgba(255, 255, 255, 0.02)' 
           },
           opacity: ['waiting', 'pending', 'processing'].includes(transaction.status) ? 0.7 : 1,
           transition: 'background-color 0.2s ease',
         }}
       >
         {/* Amount */}
-        <TableCell sx={{ backgroundColor: 'transparent' }}>
+        <TableCell>
           <Box>
-            <Typography sx={{ color: amountData.color, fontWeight: 600, fontSize: '0.9rem' }}>
+            <Typography sx={{ color: amountData.color, fontWeight: 600, fontSize: '0.875rem' }}>
               {amountData.display}
             </Typography>
-            <Typography sx={{ color: isDarkMode ? '#ccc' : '#666', fontSize: '0.75rem' }}>
+            <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem' }}>
               {amountData.usd}
             </Typography>
           </Box>
         </TableCell>
 
         {/* Time */}
-        <TableCell sx={{ backgroundColor: 'transparent' }}>
-          <Typography sx={{ color: isDarkMode ? '#fff' : '#333', fontSize: '0.8rem' }}>
+        <TableCell>
+          <Typography sx={{ color: '#fff', fontSize: '0.8rem' }}>
             {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
           </Typography>
         </TableCell>
 
         {/* Description */}
-        <TableCell sx={{ backgroundColor: 'transparent' }}>
+        <TableCell>
           <Typography sx={{ 
-            color: isDarkMode ? '#fff' : '#333', 
+            color: '#fff', 
             fontSize: '0.8rem',
             maxWidth: '200px',
             overflow: 'hidden',
@@ -321,7 +313,7 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
         </TableCell>
 
         {/* Status */}
-        <TableCell sx={{ backgroundColor: 'transparent' }}>
+        <TableCell>
           <Chip 
             label={transaction.status?.toUpperCase() || 'UNKNOWN'}
             size="small"
@@ -330,19 +322,23 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
               color: statusColors.color,
               borderRadius: '6px',
               fontWeight: 600,
-              fontSize: '0.7rem',
-              height: '24px',
+              fontSize: '0.65rem',
+              height: '20px',
+              border: `1px solid ${statusColors.color}30`,
+              '& .MuiChip-label': {
+                padding: '0 6px',
+              },
             }}
           />
         </TableCell>
 
         {/* Transaction Hash */}
-        <TableCell sx={{ backgroundColor: 'transparent' }}>
+        <TableCell>
           {transaction.hash ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Tooltip title={transaction.hash} placement="top">
                 <Typography sx={{ 
-                  color: isDarkMode ? '#ccc' : '#666', 
+                  color: 'rgba(255, 255, 255, 0.6)', 
                   fontSize: '0.75rem',
                   fontFamily: 'monospace'
                 }}>
@@ -350,18 +346,19 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
                 </Typography>
               </Tooltip>
               
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', gap: 0.25 }}>
                 <Tooltip title="Copy Hash">
                   <IconButton 
                     size="small" 
                     onClick={() => copyTxHash(transaction.hash)}
                     sx={{ 
                       color: '#ff0000', 
-                      p: 0.5,
+                      width: 24,
+                      height: 24,
                       '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
                     }}
                   >
-                    <ContentCopyIcon fontSize="small" />
+                    <ContentCopyIcon sx={{ fontSize: '14px' }} />
                   </IconButton>
                 </Tooltip>
                 
@@ -374,24 +371,25 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
                     size="small"
                     sx={{ 
                       color: '#ff0000', 
-                      p: 0.5,
+                      width: 24,
+                      height: 24,
                       '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
                     }}
                   >
-                    <LaunchIcon fontSize="small" />
+                    <LaunchIcon sx={{ fontSize: '14px' }} />
                   </IconButton>
                 </Tooltip>
               </Box>
             </Box>
           ) : (
-            <Typography sx={{ color: isDarkMode ? '#666' : '#999', fontSize: '0.75rem', fontStyle: 'italic' }}>
+            <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.75rem', fontStyle: 'italic' }}>
               No hash
             </Typography>
           )}
         </TableCell>
 
         {/* Action */}
-        <TableCell sx={{ backgroundColor: 'transparent' }}>
+        <TableCell>
           {transaction.room ? (
             <Button
               component={Link}
@@ -402,16 +400,21 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
               startIcon={<MeetingRoomIcon />}
               sx={{
                 fontSize: '0.7rem',
-                py: 0.5,
+                py: 0.25,
                 px: 1,
                 minWidth: 'auto',
-                '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
+                height: 24,
+                borderColor: 'rgba(255, 0, 0, 0.3)',
+                '&:hover': { 
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  borderColor: '#ff0000',
+                }
               }}
             >
               Join
             </Button>
           ) : (
-            <Typography sx={{ color: isDarkMode ? '#666' : '#999', fontSize: '0.75rem', fontStyle: 'italic' }}>
+            <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.75rem', fontStyle: 'italic' }}>
               —
             </Typography>
           )}
@@ -430,8 +433,7 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
           style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
-        <Paper
-          elevation={24}
+        <Box
           sx={{
             position: 'absolute',
             top: '50%',
@@ -441,22 +443,25 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
             maxWidth: '1400px',
             maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 3,
-            p: { xs: 2, sm: 3, md: 4 },
-            background: isDarkMode 
-              ? 'rgba(30, 30, 30, 0.95)' 
-              : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            color: isDarkMode ? '#fff' : '#333',
+            borderRadius: '8px',
+            p: { xs: 2, sm: 3 },
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            color: '#fff',
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: '3px',
+            },
           }}
         >
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <FontAwesomeIcon icon={faCreditCard} style={{ color: '#ff0000' }} />
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <FontAwesomeIcon icon={faCreditCard} style={{ color: '#ff0000', fontSize: '20px' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.25rem' }}>
                 ALL TRANSACTIONS
               </Typography>
               {totalCount > 0 && (
@@ -466,7 +471,12 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
                   sx={{ 
                     backgroundColor: '#ff0000',
                     color: '#fff',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    fontSize: '0.65rem',
+                    height: 20,
+                    '& .MuiChip-label': {
+                      padding: '0 6px',
+                    },
                   }} 
                 />
               )}
@@ -474,24 +484,36 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
             <IconButton
               onClick={close}
               sx={{
-                color: isDarkMode ? '#fff' : '#333',
-                '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
+                color: '#fff',
+                width: 32,
+                height: 32,
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
               }}
             >
-              <CloseIcon />
+              <CloseIcon sx={{ fontSize: '18px' }} />
             </IconButton>
           </Box>
 
           {/* Filters and Search */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
               {/* Filter Button */}
               <Button
                 variant="outlined"
                 color="error"
+                size="small"
                 onClick={(e) => setFilterAnchorEl(e.currentTarget)}
-                endIcon={<FilterListIcon />}
-                sx={{ minWidth: 'auto' }}
+                endIcon={<FilterListIcon sx={{ fontSize: '14px' }} />}
+                sx={{ 
+                  minWidth: 'auto',
+                  fontSize: '0.75rem',
+                  height: 28,
+                  borderColor: 'rgba(255, 0, 0, 0.3)',
+                  '&:hover': {
+                    borderColor: '#ff0000',
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  },
+                }}
               >
                 {filterType ? TRANSACTION_TYPES[Object.keys(TRANSACTION_TYPES).find(k => TRANSACTION_TYPES[k].key === filterType)]?.label || 'Filter' : 'Filter'}
               </Button>
@@ -500,9 +522,19 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
               <Button
                 variant="outlined"
                 color="error"
+                size="small"
                 onClick={(e) => setSortAnchorEl(e.currentTarget)}
-                endIcon={<SortIcon />}
-                sx={{ minWidth: 'auto' }}
+                endIcon={<SortIcon sx={{ fontSize: '14px' }} />}
+                sx={{ 
+                  minWidth: 'auto',
+                  fontSize: '0.75rem',
+                  height: 28,
+                  borderColor: 'rgba(255, 0, 0, 0.3)',
+                  '&:hover': {
+                    borderColor: '#ff0000',
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  },
+                }}
               >
                 Sort: {SORT_OPTIONS.find(opt => opt.key === sortType)?.label || 'Date'}
               </Button>
@@ -514,32 +546,37 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 sx={{ 
-                  minWidth: '250px',
+                  minWidth: '200px',
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
-                    color: isDarkMode ? '#fff' : '#333',
-                    '& fieldset': { borderColor: '#ff0000' },
-                    '&:hover fieldset': { borderColor: '#ff0000' },
-                    '&.Mui-focused fieldset': { borderColor: '#ff0000' },
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '8px',
+                    height: 28,
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 0, 0, 0.5)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#ff0000',
+                    },
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
                   },
                   '& .MuiInputBase-input': {
-                    color: isDarkMode ? '#fff' : '#333',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    padding: '4px 8px',
                   },
-                  '& .MuiInputBase-input::placeholder': {
-                    color: isDarkMode ? '#ccc' : '#666',
-                    opacity: 1,
-                  }
                 }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: '#ff0000' }} />
+                      <SearchIcon sx={{ color: '#ff0000', fontSize: '16px' }} />
                     </InputAdornment>
                   ),
                   endAdornment: searchQuery && (
                     <InputAdornment position="end">
-                      <IconButton size="small" onClick={clearSearch} sx={{ color: isDarkMode ? '#fff' : '#333' }}>
-                        <ClearIcon fontSize="small" />
+                      <IconButton size="small" onClick={clearSearch} sx={{ color: '#fff', width: 20, height: 20 }}>
+                        <ClearIcon sx={{ fontSize: '14px' }} />
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -552,24 +589,30 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
           {all_transactions === null && transactions_loading ? (
             renderLoadingSkeleton()
           ) : (
-            <TableContainer
-              component={Paper}
+            <Box
               sx={{
                 height: 500,
                 overflowY: 'auto',
-                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                borderRadius: 2,
-                backgroundColor: isDarkMode ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '3px',
+                },
               }}
               onScroll={handleScroll}
             >
-              <Table stickyHeader>
+              <Table>
                 {renderTableHeader()}
                 <TableBody>
                   {dataToRender.length === 0 ? (
-                    <TableRow sx={{ backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)' }}>
-                      <TableCell colSpan={6} align="center" sx={{ py: 4, backgroundColor: 'transparent' }}>
-                        <Typography sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                        <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
                           No transactions found
                         </Typography>
                       </TableCell>
@@ -580,15 +623,15 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
 
                   {/* Loading more indicator */}
                   {dataToRender.length > 0 && transactions_loading && (
-                    <TableRow sx={{ backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)' }}>
-                      <TableCell colSpan={6} align="center" sx={{ py: 2, backgroundColor: 'transparent' }}>
-                        <CircularProgress color="error" size={24} />
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 2 }}>
+                        <CircularProgress color="error" size={20} />
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
-            </TableContainer>
+            </Box>
           )}
 
           {/* Filter Menu */}
@@ -596,11 +639,18 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
             anchorEl={filterAnchorEl}
             open={Boolean(filterAnchorEl)}
             onClose={() => setFilterAnchorEl(null)}
+            PaperProps={{
+              sx: {
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+              }
+            }}
           >
-            <MenuItem onClick={() => handleFilterSelect(null)} selected={!filterType}>
+            <MenuItem onClick={() => handleFilterSelect(null)} selected={!filterType} sx={{ color: '#fff', fontSize: '0.875rem' }}>
               Show All
             </MenuItem>
-            <Divider />
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
             {Object.entries(TRANSACTION_TYPES).map(([key, config]) => {
               const IconComponent = config.icon;
               const count = getFilteredCount(config.key);
@@ -609,8 +659,9 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
                   key={key}
                   onClick={() => handleFilterSelect(config.key)}
                   selected={filterType === config.key}
+                  sx={{ color: '#fff', fontSize: '0.875rem' }}
                 >
-                  <IconComponent sx={{ mr: 1, color: config.color }} />
+                  <IconComponent sx={{ mr: 1, color: config.color, fontSize: '16px' }} />
                   {config.label}
                   <Badge badgeContent={count} color="primary" sx={{ ml: 'auto' }} />
                 </MenuItem>
@@ -623,6 +674,13 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
             anchorEl={sortAnchorEl}
             open={Boolean(sortAnchorEl)}
             onClose={() => setSortAnchorEl(null)}
+            PaperProps={{
+              sx: {
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+              }
+            }}
           >
             {SORT_OPTIONS.map((option) => {
               const IconComponent = option.icon;
@@ -631,14 +689,15 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
                   key={option.key}
                   onClick={() => handleSortSelect(option.key)}
                   selected={sortType === option.key}
+                  sx={{ color: '#fff', fontSize: '0.875rem' }}
                 >
-                  <IconComponent sx={{ mr: 1 }} />
+                  <IconComponent sx={{ mr: 1, fontSize: '16px' }} />
                   {option.label}
                 </MenuItem>
               );
             })}
           </Menu>
-        </Paper>
+        </Box>
       </Modal>
 
       {/* Copy notification */}
@@ -651,11 +710,11 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
             transform: 'translateX(-50%)',
             bgcolor: 'rgba(0, 0, 0, 0.8)',
             color: 'white',
-            px: 3,
-            py: 1.5,
-            borderRadius: 1,
+            px: 2,
+            py: 1,
+            borderRadius: '8px',
             zIndex: 9999,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            fontSize: '0.875rem',
           }}
         >
           ✅ Transaction hash copied to clipboard

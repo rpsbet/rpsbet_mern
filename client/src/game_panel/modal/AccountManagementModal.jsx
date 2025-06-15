@@ -19,14 +19,14 @@ import {
   Tab,
   IconButton,
   Typography,
-  Paper,
   Switch,
   TextField,
   Grid,
   Chip,
   Alert,
   CircularProgress,
-  FormControlLabel
+  FormControlLabel,
+  ThemeProvider
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -35,8 +35,27 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   Save as SaveIcon,
+  Upload as UploadIcon,
+  Settings as SettingsIcon,
+  Person as PersonIcon,
+  Security as SecurityIcon,
+  Code as CodeIcon,
 } from '@mui/icons-material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faUser,
+  faCog,
+  faLock,
+  faCode,
+  faVolumeUp,
+  faBell,
+  faPalette,
+  faWallet,
+  faEye,
+  faKey
+} from '@fortawesome/free-solid-svg-icons';
 import axios from '../../util/Api';
+import { getCustomTheme } from '../../config/theme';
 
 const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const dispatch = useDispatch();
@@ -46,12 +65,8 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const user = useSelector(state => state.auth.user);
   const isDarkMode = useSelector(state => state.auth.isDarkMode);
   const isNotificationsAllowed = useSelector(state => state.auth.isNotificationsAllowed);
-  const isMuted = useSelector(state => state.auth.isMuted);
   const gameSounds = useSelector(state => state.auth.gameSounds);
-  const notificationSounds = useSelector(state => state.auth.notificationSounds);
-  const isMusicEnabled = useSelector(state => state.auth.isMusicEnabled);
   const isLowGraphics = useSelector(state => state.auth.isLowGraphics);
-  const loading = useSelector(state => state.auth.loading);
 
   const [activeTab, setActiveTab] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,12 +98,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const [expandedKey, setExpandedKey] = useState(null);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
-  const tabs = [
-    { label: 'Profile', icon: '👤', value: 0 },
-    { label: 'Settings', icon: '⚙️', value: 1 },
-    { label: 'Accounts', icon: '🔒', value: 2 },
-    { label: 'Developer', icon: '💻', value: 3 }
-  ];
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   // Update local state when user data changes
   useEffect(() => {
@@ -131,13 +141,11 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Check if file is an image
     if (!file.type.startsWith('image/')) {
       dispatch(errorMsgBar('Please select an image file'));
       return;
     }
 
-    // Check file size (limit to 5MB)
     if (file.size > 5 * 1024 * 1024) {
       dispatch(errorMsgBar('File size must be less than 5MB'));
       return;
@@ -146,17 +154,12 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
     setIsLoading(true);
 
     try {
-      // FIXED: Upload to Pinata instead of converting to base64
       const avatarUrl = await uploadAvatarToPinata(file);
-
-      // Set the Pinata URL (not base64 data!)
       setProfileData({
         ...profileData,
         avatar: avatarUrl
       });
-
       dispatch(successMsgBar('Avatar uploaded successfully!'));
-
     } catch (error) {
       console.error('Avatar upload failed:', error);
       dispatch(errorMsgBar('Failed to upload avatar. Please try again.'));
@@ -164,8 +167,8 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       setIsLoading(false);
     }
   };
+
   const uploadAvatarToPinata = async (file) => {
-    // Resize avatar to optimal size
     const resizeAvatar = (file) => {
       return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
@@ -178,12 +181,9 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
         };
 
         img.onload = () => {
-          // Avatar-specific sizing (square, 200x200)
           const maxSize = 200;
           let width = img.width;
           let height = img.height;
-
-          // Make it square by cropping to center
           const size = Math.min(width, height);
           const x = (width - size) / 2;
           const y = (height - size) / 2;
@@ -192,8 +192,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
           canvas.height = maxSize;
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-
-          // Draw cropped and resized image
           ctx.drawImage(img, x, y, size, size, 0, 0, maxSize, maxSize);
 
           canvas.toBlob((blob) => {
@@ -202,7 +200,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
             } else {
               reject('Failed to generate avatar blob.');
             }
-          }, 'image/webp', 0.8); // Use WebP for better compression
+          }, 'image/webp', 0.8);
         };
 
         img.onerror = (error) => {
@@ -214,15 +212,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
     };
 
     try {
-
-      // Resize the avatar
       const resizedBlob = await resizeAvatar(file);
-
-      // Create FormData for upload
       const formData = new FormData();
       formData.append('file', resizedBlob, 'avatar.webp');
 
-      // Use your existing Pinata upload endpoint
       const response = await axios.post('/game/upload-to-pinata', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -239,7 +232,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       }
 
       return imageUrl;
-
     } catch (error) {
       console.error('❌ Avatar upload error:', error);
       throw new Error('Failed to upload avatar: ' + error.message);
@@ -253,7 +245,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
   const handleSaveProfile = async () => {
     setIsLoading(true);
     try {
-      // Update username if changed
       if (profileData.username !== user.username) {
         const result = await dispatch(changeUserName(profileData.username));
         if (!result.success) {
@@ -262,7 +253,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
         }
       }
 
-      // Update bio if changed
       if (profileData.bio !== user.bio) {
         const result = await dispatch(changeLink(profileData.bio));
         if (!result.success) {
@@ -271,7 +261,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
         }
       }
 
-      // Update avatar if changed
       if (profileData.avatar !== user.avatar) {
         const result = await dispatch(changePasswordAndAvatar(null, profileData.avatar));
         if (!result.success) {
@@ -280,7 +269,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
         }
       }
 
-      // Refresh user data
       await dispatch(getUser());
       dispatch(successMsgBar('Profile updated successfully!'));
     } catch (error) {
@@ -339,7 +327,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
           rateLimit: { requestsPerHour: 100, requestsPerDay: 1000 }
         });
         dispatch(successMsgBar('API key generated successfully!'));
-        fetchApiKeys(); // Refresh the list
+        fetchApiKeys();
       } else {
         dispatch(errorMsgBar(response.data.error || 'Failed to generate API key'));
       }
@@ -361,7 +349,7 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       const response = await axios.delete(`/api/api-keys/${keyId}`);
       if (response.data.success) {
         dispatch(successMsgBar('API key revoked successfully!'));
-        fetchApiKeys(); // Refresh the list
+        fetchApiKeys();
       } else {
         dispatch(errorMsgBar('Failed to revoke API key'));
       }
@@ -375,11 +363,6 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
       ? newKeyData.permissions.filter(p => p !== permission)
       : [...newKeyData.permissions, permission];
     setNewKeyData({ ...newKeyData, permissions: newPermissions });
-  };
-
-  const handleDisconnectWallet = (walletAddress) => {
-    dispatch(disconnectWalletAddress());
-    dispatch(successMsgBar('Wallet disconnected successfully!'));
   };
 
   const formatDate = (dateString) => {
@@ -405,158 +388,137 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
         style={{ display: 'none' }}
       />
 
-      <Modal open={modalIsOpen || false} onClose={closeModal}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: '#fff',
-            maxHeight: '90vh',
-            width: { xs: '95%', sm: '80%', md: '70%', lg: '60%' },
-            maxWidth: '1200px',
-            overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.85)',
-            },
-          }}
-        >
-          <Paper
-            elevation={3}
+      <ThemeProvider theme={theme}>
+        <Modal open={modalIsOpen || false} onClose={closeModal}>
+          <Box
             sx={{
-              background: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              borderRadius: 2,
-              color: isDarkMode ? '#fff' : '#333',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: { xs: '95%', sm: '80%', md: '70%', lg: '60%' },
+              maxWidth: '800px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              borderRadius: '8px',
+              background: '#262626',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              color: '#fff',
             }}
           >
-            {/* Header */}
+            {/* Clean Header */}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                p: 2,
-                borderBottom: '1px solid',
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(240, 240, 240, 0.9)',
-                borderRadius: '8px 8px 0 0',
+                padding: '12px 16px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333' }}>
-                Account Management
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FontAwesomeIcon
+                  icon={faCog}
+                  style={{
+                    color: '#ff0000',
+                    fontSize: '14px'
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Account Management
+                </Typography>
+              </Box>
               <IconButton
                 onClick={closeModal}
+                size="small"
                 sx={{
-                  color: isDarkMode ? '#fff' : '#333',
-                  '&:hover': { bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    color: '#fff'
+                  },
                 }}
               >
-                <CloseIcon />
+                <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
 
-            {/* Tabs */}
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              textColor="inherit"
-              variant="scrollable"
-              scrollButtons="auto"
-              allowScrollButtonsMobile
+            {/* Clean Tabs */}
+            <Box
               sx={{
-                // hide the *first* scroll button (backward arrow)
-                '& .MuiTabScrollButton-root:first-of-type': {
-                  display: 'none',
-                },
-
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#ff0000',
-                  height: '3px',
-                },
-                '& .MuiTab-root': {
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  color: isDarkMode ? '#ccc' : '#555',
-                  px: 2,
-                  '&.Mui-selected': {
-                    color: '#ff0000',
-                  },
-                },
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              {tabs.map((tab) => (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <span>{tab.icon}</span>
-                      {tab.label}
-                    </Box>
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                textColor="inherit"
+                variant="fullWidth"
+                TabIndicatorProps={{
+                  style: {
+                    backgroundColor: '#ff0000',
+                    height: '2px',
                   }
-                />
-              ))}
-            </Tabs>
+                }}
+                sx={{
+                  '& .MuiTab-root': { 
+                    fontSize: '0.8rem', 
+                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    textTransform: 'none',
+                    minHeight: 40,
+                    '&.Mui-selected': { color: '#fff' } 
+                  },
+                }}
+              >
+                <Tab label="Profile" />
+                <Tab label="Settings" />
+                <Tab label="Security" />
+                <Tab label="Developer" />
+              </Tabs>
+            </Box>
 
             {/* Content */}
-            <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+            <Box sx={{ padding: '16px' }}>
 
               {/* Profile Tab */}
               {activeTab === 0 && (
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                   <Grid item xs={12} md={4}>
-                    <Paper
-                      elevation={1}
-                      sx={{
-                        p: 3,
-                        textAlign: 'center',
-                        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                        borderRadius: 2,
-                        color: isDarkMode ? '#fff' : '#333',
-                      }}
-                    >
-                      {/* UPDATED: Avatar display with loading state and error handling */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {/* Avatar */}
                       <Box
                         sx={{
-                          width: 120,
-                          height: 120,
+                          width: 80,
+                          height: 80,
                           borderRadius: '50%',
-                          backgroundColor: '#ff3030',
+                          mb: 1.5,
+                          border: '2px solid rgba(255, 0, 0, 0.3)',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          backgroundColor: '#ff0000',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          margin: '0 auto 16px',
-                          fontSize: '48px',
-                          color: 'white',
-                          overflow: 'hidden',
-                          position: 'relative'
                         }}
                       >
                         {profileData.avatar ? (
                           <img
                             src={profileData.avatar}
                             alt="Avatar"
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover'
-                            }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {
-                              // Fallback if image fails to load
                               e.target.style.display = 'none';
                               e.target.nextSibling.style.display = 'flex';
                             }}
                           />
                         ) : null}
 
-                        {/* Fallback display */}
                         <Box
                           sx={{
                             position: profileData.avatar ? 'absolute' : 'static',
@@ -567,16 +529,13 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                             display: profileData.avatar ? 'none' : 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            backgroundColor: '#ff3030',
-                            borderRadius: '50%',
-                            fontSize: '48px',
+                            fontSize: '36px',
                             color: 'white'
                           }}
                         >
                           {profileData.username ? profileData.username.charAt(0).toUpperCase() : '👤'}
                         </Box>
 
-                        {/* Loading indicator */}
                         {isLoading && (
                           <Box
                             sx={{
@@ -597,223 +556,220 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                         )}
                       </Box>
 
-                      <Typography variant="h6" sx={{ mb: 1, color: isDarkMode ? '#fff' : '#333' }}>
+                      {/* Username & Status */}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          textAlign: 'center',
+                          mb: 0.5,
+                          fontSize: '1.1rem'
+                        }}
+                      >
                         {profileData.username}
                       </Typography>
+
                       <Chip
                         label={user?.elite ? 'Elite Member' : 'Standard Member'}
+                        size="small"
                         sx={{
                           backgroundColor: user?.elite ? '#ffd700' : '#666',
                           color: user?.elite ? '#000' : '#fff',
-                          mb: 2
+                          fontWeight: 600,
+                          fontSize: '0.65rem',
+                          height: 18,
+                          mb: 2,
                         }}
                       />
 
-                      {/* UPDATED: Upload button with better loading state */}
+                      {/* Upload Button */}
                       <Button
                         variant="outlined"
                         color="error"
                         fullWidth
-                        startIcon={isLoading ? <CircularProgress size={20} color="error" /> : <span>📁</span>}
+                        size="small"
+                        startIcon={isLoading ? <CircularProgress size={16} color="error" /> : <UploadIcon fontSize="small" />}
                         onClick={triggerFileUpload}
                         disabled={isLoading}
                         sx={{
+                          fontSize: '0.75rem',
+                          py: 0.5,
                           color: '#ff0000',
-                          borderColor: '#ff0000',
+                          borderColor: 'rgba(255, 0, 0, 0.5)',
                           '&:hover': {
                             backgroundColor: 'rgba(255, 0, 0, 0.1)',
                             borderColor: '#ff0000',
                           },
-                          '&:disabled': {
-                            opacity: 0.6,
-                            cursor: 'not-allowed'
-                          }
                         }}
                       >
                         {isLoading ? 'Uploading...' : 'Upload Avatar'}
                       </Button>
-
-                      {/* NEW: Upload progress/status indicator */}
-                      {isLoading && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            display: 'block',
-                            mt: 1,
-                            color: isDarkMode ? '#ccc' : '#666'
-                          }}
-                        >
-                          Processing sexiness...
-                        </Typography>
-                      )}
-                    </Paper>
+                    </Box>
                   </Grid>
 
                   <Grid item xs={12} md={8}>
-                    <Paper
-                      elevation={1}
+                    <Box
                       sx={{
-                        p: 3,
-                        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                        borderRadius: 2,
-                        color: isDarkMode ? '#fff' : '#333',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '4px',
                       }}
                     >
-                      <Typography variant="h6" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#333' }}>
-                        Personal Information
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 1.5,
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        Profile Information
                       </Typography>
-                      <Grid container spacing={2}>
+                      
+                      <Grid container spacing={1.5}>
                         <Grid item xs={12}>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                            Username
+                          </Typography>
                           <TextField
                             fullWidth
-                            label="Username"
                             value={profileData.username}
                             onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                            variant="outlined"
+                            size="small"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                                color: isDarkMode ? '#fff' : '#333',
+                                fontSize: '0.8rem',
+                                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                color: '#fff',
                                 '& fieldset': {
-                                  borderColor: '#ff0000',
+                                  borderColor: 'rgba(255, 255, 255, 0.1)',
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: '#ff0000',
+                                  borderColor: 'rgba(255, 0, 0, 0.5)',
                                 },
                                 '&.Mui-focused fieldset': {
                                   borderColor: '#ff0000',
                                 },
                               },
-                              '& .MuiInputLabel-root': {
-                                color: isDarkMode ? '#fff' : '#333',
-                                '&.Mui-focused': {
-                                  color: '#ff0000',
-                                }
-                              }
                             }}
                           />
                         </Grid>
                         <Grid item xs={12}>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                            Bio
+                          </Typography>
                           <TextField
                             fullWidth
-                            label="Bio"
                             value={profileData.bio}
                             onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                            variant="outlined"
                             multiline
-                            rows={3}
+                            rows={2}
+                            size="small"
                             placeholder="Tell us about yourself..."
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                                color: isDarkMode ? '#fff' : '#333',
+                                fontSize: '0.8rem',
+                                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                color: '#fff',
                                 '& fieldset': {
-                                  borderColor: '#ff0000',
+                                  borderColor: 'rgba(255, 255, 255, 0.1)',
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: '#ff0000',
+                                  borderColor: 'rgba(255, 0, 0, 0.5)',
                                 },
                                 '&.Mui-focused fieldset': {
                                   borderColor: '#ff0000',
                                 },
                               },
-                              '& .MuiInputLabel-root': {
-                                color: isDarkMode ? '#fff' : '#333',
-                                '&.Mui-focused': {
-                                  color: '#ff0000',
-                                }
-                              }
                             }}
                           />
                         </Grid>
                         <Grid item xs={6}>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                            Member Since
+                          </Typography>
                           <TextField
                             fullWidth
-                            label="Member Since"
                             value={formatDate(user?.created_at)}
-                            variant="outlined"
+                            size="small"
                             disabled
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(200, 200, 200, 0.3)',
+                                fontSize: '0.8rem',
+                                backgroundColor: 'rgba(255, 255, 255, 0.01)',
                                 '& input': {
-                                  color: isDarkMode ? '#ccc' : '#666', // Explicitly set input text color
-                                  WebkitTextFillColor: isDarkMode ? '#ccc' : '#666', // For browser compatibility
+                                  color: 'rgba(255, 255, 255, 0.5)',
+                                  WebkitTextFillColor: 'rgba(255, 255, 255, 0.5)',
                                 },
-                              },
-                              '& .MuiInputLabel-root': {
-                                color: isDarkMode ? '#ccc' : '#666',
                               },
                             }}
                           />
                         </Grid>
                         <Grid item xs={6}>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                            Total Wagered
+                          </Typography>
                           <TextField
                             fullWidth
-                            label="Total Wagered"
-                            value={`${(user?.totalWagered).toFixed(4) || 0} SOL`}
-                            variant="outlined"
+                            value={`${(user?.totalWagered || 0).toFixed(4)} SOL`}
+                            size="small"
                             disabled
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(200, 200, 200, 0.3)',
+                                fontSize: '0.8rem',
+                                backgroundColor: 'rgba(255, 255, 255, 0.01)',
                                 '& input': {
-                                  color: isDarkMode ? '#ccc' : '#666', // Explicitly set input text color
-                                  WebkitTextFillColor: isDarkMode ? '#ccc' : '#666', // For browser compatibility
+                                  color: 'rgba(255, 255, 255, 0.5)',
+                                  WebkitTextFillColor: 'rgba(255, 255, 255, 0.5)',
                                 },
-                              },
-                              '& .MuiInputLabel-root': {
-                                color: isDarkMode ? '#ccc' : '#666',
                               },
                             }}
                           />
                         </Grid>
                       </Grid>
 
-                      {/* UPDATED: Save button with better loading state */}
                       <Button
                         onClick={handleSaveProfile}
                         disabled={isLoading}
                         variant="contained"
                         color="error"
-                        sx={{ mt: 3 }}
-                        startIcon={isLoading ? <CircularProgress color='error' size={20} /> : <span>💾</span>}
+                        size="small"
+                        sx={{ mt: 2, fontSize: '0.75rem', py: 0.5 }}
+                        startIcon={isLoading ? <CircularProgress color='error' size={16} /> : <SaveIcon fontSize="small" />}
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </Button>
-
-                      {/* NEW: Avatar format info */}
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          display: 'block',
-                          mt: 2,
-                          color: isDarkMode ? '#aaa' : '#777',
-                          fontStyle: 'italic'
-                        }}
-                      >
-                        🔥 Dammm where did you get that (that beauty)!
-                      </Typography>
-                    </Paper>
+                    </Box>
                   </Grid>
                 </Grid>
               )}
 
               {/* Settings Tab */}
               {activeTab === 1 && (
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <Paper
-                      elevation={1}
+                    <Box
                       sx={{
-                        p: 3,
-                        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                        borderRadius: 2,
-                        color: isDarkMode ? '#fff' : '#333',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '4px',
                       }}
                     >
-                      <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                        🔔 Notifications
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 1.5,
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faBell} style={{ fontSize: '12px' }} />
+                        Notifications
                       </Typography>
                       <FormControlLabel
                         control={
@@ -821,655 +777,530 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                             checked={isNotificationsAllowed}
                             onChange={(e) => dispatch(setNotificationsAllowed(e.target.checked))}
                             color="error"
+                            size="small"
                           />
                         }
-                        label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Push Notifications</Typography>}
-                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                        label={
+                          <Typography sx={{ fontSize: '0.8rem' }}>
+                            Push Notifications
+                          </Typography>
+                        }
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          width: '100%',
+                          m: 0
+                        }}
                       />
-                    </Paper>
+                    </Box>
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <Paper
-                      elevation={1}
+                    <Box
                       sx={{
-                        p: 3,
-                        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                        borderRadius: 2,
-                        color: isDarkMode ? '#fff' : '#333',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '4px',
                       }}
                     >
-                      <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                        🔊 Audio Settings
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 1.5,
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faVolumeUp} style={{ fontSize: '12px' }} />
+                        Audio
                       </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={gameSounds}
-                              onChange={(e) => dispatch(toggleGameSounds(e.target.checked))}
-                              color="error"
-                            />
-                          }
-                          label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Sound</Typography>}
-                          sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                        />
-                        {/* <FormControlLabel
-                          control={
-                            <Switch
-                              checked={notificationSounds}
-                              onChange={(e) => dispatch(toggleNotificationSounds(e.target.checked))}
-                              color="error"
-                            />
-                          }
-                          label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Notification Sounds</Typography>}
-                          sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                        />
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={isMusicEnabled}
-                              onChange={(e) => dispatch(toggleMusic(e.target.checked))}
-                              color="error"
-                            />
-                          }
-                          label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Background Music</Typography>}
-                          sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                        /> */}
-                      </Box>
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <Paper
-                      elevation={1}
-                      sx={{
-                        p: 3,
-                        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                        borderRadius: 2,
-                        color: isDarkMode ? '#fff' : '#333',
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                        🎨 Appearance
-                      </Typography>
-                      {/* <FormControlLabel
+                      <FormControlLabel
                         control={
                           <Switch
-                            checked={isDarkMode}
-                            onChange={(e) => dispatch(setDarkMode(e.target.checked))}
+                            checked={gameSounds}
+                            onChange={(e) => dispatch(toggleGameSounds(e.target.checked))}
                             color="error"
+                            size="small"
                           />
                         }
-                        label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Dark Mode</Typography>}
-                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}
-                      /> */}
+                        label={
+                          <Typography sx={{ fontSize: '0.8rem' }}>
+                            Game Sounds
+                          </Typography>
+                        }
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          width: '100%',
+                          m: 0
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 1.5,
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faPalette} style={{ fontSize: '12px' }} />
+                        Appearance
+                      </Typography>
                       <FormControlLabel
                         control={
                           <Switch
                             checked={isLowGraphics}
                             onChange={(e) => dispatch(toggleLowGraphics(e.target.checked))}
                             color="error"
+                            size="small"
                           />
                         }
-                        label={<Typography sx={{ color: isDarkMode ? '#fff' : '#333' }}>Low Graphics Mode</Typography>}
-                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                        label={
+                          <Typography sx={{ fontSize: '0.8rem' }}>
+                            Low Graphics Mode
+                          </Typography>
+                        }
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          width: '100%',
+                          m: 0
+                        }}
                       />
-                    </Paper>
+                    </Box>
                   </Grid>
                 </Grid>
               )}
 
-              {/* Accounts Tab */}
+              {/* Security Tab */}
               {activeTab === 2 && (
                 <Box>
-                  <Alert severity="info" sx={{ mb: 3 }}>
-                    Here's your connected web3 addresses.
-                  </Alert>
-
-                  <Grid container spacing={3}>
-                    {/* <Grid item xs={12} md={6}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 3,
-                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                          borderRadius: 2,
-                          color: isDarkMode ? '#fff' : '#333',
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          🔑 Password & Authentication
-                        </Typography>
-                        <Button 
-                          onClick={() => setShowPasswordDialog(true)}
-                          variant="outlined"
-                          color="error"
-                          fullWidth
-                          startIcon={<span>🔑</span>}
-                          sx={{
-                            color: '#ff0000',
-                            borderColor: '#ff0000',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                              borderColor: '#ff0000',
-                            }
-                          }}
-                        >
-                          Change Password
-                        </Button>
-                        <Typography variant="body2" sx={{ mt: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          Last password change: {formatDate(new Date())}
-                        </Typography>
-                      </Paper>
-                    </Grid> */}
-
-                    <Grid item xs={12}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 3,
-                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                          borderRadius: 2,
-                          color: isDarkMode ? '#fff' : '#333',
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          💳 Connected Wallets
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          Manage your connected Solana wallet addresses
-                        </Typography>
-                        {user?.accounts?.length > 0 ? (
-                          <Grid container spacing={1}>
-                            {user.accounts.map((account, index) => (
-                              <Grid item xs={12} sm={6} md={4} key={index}>
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    p: 1.5,
-                                    borderRadius: 1,
-                                    backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                                  }}
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      mb: 1.5,
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faWallet} style={{ fontSize: '12px' }} />
+                    Connected Wallets
+                  </Typography>
+                  <Box
+                    sx={{
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    {user?.accounts?.length > 0 ? (
+                      <Grid container spacing={1}>
+                        {user.accounts.map((account, index) => (
+                          <Grid item xs={12} key={index}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '8px 12px',
+                                borderRadius: '4px',
+                                background: 'rgba(255, 255, 255, 0.02)',
+                                border: '1px solid rgba(255, 255, 255, 0.05)',
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontFamily: 'monospace',
+                                  fontSize: '0.75rem',
+                                  color: 'rgba(255, 255, 255, 0.8)',
+                                }}
+                              >
+                                💳 {shortenAddress(account)}
+                              </Typography>
+                              <Box>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => navigator.clipboard.writeText(account)}
+                                  sx={{ p: 0.5, color: 'rgba(255, 255, 255, 0.6)' }}
                                 >
-                                  <Typography variant="body2" sx={{ fontFamily: 'monospace', color: isDarkMode ? '#fff' : '#333' }}>
-                                    💳 {shortenAddress(account)}
-                                  </Typography>
-                                  <Box>
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => navigator.clipboard.writeText(account)}
-                                      sx={{ color: '#ff0000' }}
-                                    >
-                                      <FileCopyIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                      size="small"
-                                      component="a"
-                                      href={`https://solscan.io/account/${account}`}
-                                      target="_blank"
-                                      sx={{ color: '#ff0000' }}
-                                    >
-                                      <LinkIcon fontSize="small" />
-                                    </IconButton>
-                                    {/* <IconButton
-                                      size="small"
-                                      onClick={() => handleDisconnectWallet(account)}
-                                      sx={{ color: '#ff0000' }}
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton> */}
-                                  </Box>
-                                </Box>
-                              </Grid>
-                            ))}
+                                  <FileCopyIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                                <IconButton
+                                  component="a"
+                                  href={`https://solscan.io/account/${account}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  size="small"
+                                  sx={{ p: 0.5, color: 'rgba(255, 255, 255, 0.6)' }}
+                                >
+                                  <LinkIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Box>
+                            </Box>
                           </Grid>
-                        ) : (
-                          <Typography variant="body1" sx={{ fontStyle: 'italic', color: isDarkMode ? '#ccc' : '#666' }}>
-                            No connected wallets
-                          </Typography>
-                        )}
-                      </Paper>
-                    </Grid>
-                  </Grid>
+                        ))}
+                      </Grid>
+                    ) : (
+                      <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem' }}>
+                        No connected wallets
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
               )}
 
               {/* Developer Tab */}
               {activeTab === 3 && (
                 <Box>
-                  <Alert severity="info" sx={{ mb: 3 }}>
-                    <Typography variant="body1">
-                      <strong>🚀 Streamlined API v1.0.0</strong>
-                    </Typography>
-                    Create complete game experiences with a single endpoint! React generation, image creation,
-                    and blockchain deposits are now unified. All games require SOL deposits and private keys for automated transactions.
-                  </Alert>
+                  {!user?.elite && (
+                    <Alert 
+                      severity="error" 
+                      sx={{ 
+                        mb: 2, 
+                        fontSize: '0.8rem',
+                        backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                        border: '1px solid rgba(211, 47, 47, 0.3)',
+                        color: '#fff'
+                      }}
+                    >
+                      Elite Membership Required for API access
+                    </Alert>
+                  )}
 
-                  <Paper
-                    elevation={1}
-                    sx={{
-                      p: 3,
-                      backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                      borderRadius: 2,
-                      mb: 3,
-                      color: isDarkMode ? '#fff' : '#333',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                      <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                        🔑 API Keys
+                  {/* API Keys Section */}
+                  <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faKey} style={{ fontSize: '12px' }} />
+                        API Keys
                       </Typography>
                       <Button
                         onClick={() => setShowNewKeyDialog(true)}
-                        variant="contained"
+                        disabled={!user?.elite}
+                        variant="outlined"
                         color="error"
-                        startIcon={<AddIcon />}
+                        size="small"
+                        startIcon={<AddIcon fontSize="small" />}
+                        sx={{
+                          fontSize: '0.75rem',
+                          py: 0.5,
+                          px: 1,
+                          color: '#ff0000',
+                          borderColor: 'rgba(255, 0, 0, 0.5)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            borderColor: '#ff0000',
+                          },
+                        }}
                       >
-                        Generate New Key
+                        Generate
                       </Button>
                     </Box>
 
-                    {!user?.elite && (
-                      <Alert severity="error" sx={{ mb: 3 }}>
-                        <Typography variant="body1">
-                          <strong>Elite Membership Required</strong>
-                        </Typography>
-                        You need Elite membership to access the Game Creation API. Visit the store to upgrade your account.
-                      </Alert>
-                    )}
-
-                    {loadingApiKeys ? (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                        <CircularProgress color='error' />
-                      </Box>
-                    ) : apiKeys.length === 0 ? (
-                      <Box sx={{ textAlign: 'center', p: 3 }}>
-                        <Typography variant="body1" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          No API keys generated yet
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                          Click "Generate New Key" to create your first API key for the streamlined API
-                        </Typography>
-                      </Box>
-                    ) : (
-                      apiKeys.map((key) => (
-                        <Paper
-                          key={key.id}
-                          elevation={0}
-                          sx={{
-                            mb: 2,
-                            backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: 1,
-                            color: isDarkMode ? '#fff' : '#333',
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              p: 2,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center'
-                            }}
-                            onClick={() => setExpandedKey(expandedKey === key.id ? null : key.id)}
-                          >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Typography variant="body1" sx={{ fontWeight: 500, color: isDarkMode ? '#fff' : '#333' }}>
-                                {key.name}
-                              </Typography>
-                              <Chip
-                                label={key.isActive ? 'Active' : 'Revoked'}
-                                size="small"
-                                color={key.isActive ? 'success' : 'error'}
-                              />
-                              <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                                {key.usageCount} requests
-                              </Typography>
-                            </Box>
-                            <Typography variant="h6" sx={{ color: isDarkMode ? '#fff' : '#333' }}>
-                              {expandedKey === key.id ? '▼' : '▶'}
-                            </Typography>
-                          </Box>
-
-                          {expandedKey === key.id && (
-                            <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                              <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 0.5 }}>
-                                    Key ID
+                    <Box
+                      sx={{
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '4px',
+                        minHeight: '80px',
+                      }}
+                    >
+                      {loadingApiKeys ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                          <CircularProgress color='error' size={24} />
+                        </Box>
+                      ) : apiKeys.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 2 }}>
+                          <Typography variant="body2" sx={{ mb: 1, color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8rem' }}>
+                            No API keys generated yet
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.7rem' }}>
+                            Generate your first API key to get started
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {apiKeys.slice(0, 3).map((key) => (
+                            <Box
+                              key={key.id}
+                              sx={{
+                                padding: '8px 12px',
+                                background: 'rgba(255, 255, 255, 0.02)',
+                                border: '1px solid rgba(255, 255, 255, 0.05)',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => setExpandedKey(expandedKey === key.id ? null : key.id)}
+                            >
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.8rem' }}>
+                                    {key.name}
                                   </Typography>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: isDarkMode ? '#fff' : '#333' }}>
+                                  <Chip
+                                    label={key.isActive ? 'Active' : 'Revoked'}
+                                    size="small"
+                                    sx={{
+                                      height: 16,
+                                      fontSize: '0.6rem',
+                                      backgroundColor: key.isActive ? '#4caf50' : '#666',
+                                      color: 'white',
+                                    }}
+                                  />
+                                </Box>
+                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.7rem' }}>
+                                  {key.usageCount} uses
+                                </Typography>
+                              </Box>
+                              
+                              {expandedKey === key.id && (
+                                <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: '0.7rem' }}>
                                       {key.keyId}
                                     </Typography>
                                     <IconButton
                                       size="small"
-                                      onClick={() => handleCopyKey(key.keyId)}
-                                      sx={{ color: '#ff0000' }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopyKey(key.keyId);
+                                      }}
+                                      sx={{ p: 0.25, color: 'rgba(255, 255, 255, 0.6)' }}
                                     >
-                                      <FileCopyIcon fontSize="small" />
+                                      <FileCopyIcon sx={{ fontSize: 12 }} />
                                     </IconButton>
                                   </Box>
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 0.5 }}>
-                                    Last Used
-                                  </Typography>
-                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#fff' : '#333' }}>
-                                    {key.lastUsed ? formatDate(key.lastUsed) : 'Never'}
-                                  </Typography>
-                                </Grid>
-                                <Grid item xs={12}>
-                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
-                                    Permissions
-                                  </Typography>
-                                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                    {key.permissions.map((permission) => {
-                                      const permissionLabels = {
-                                        'create_room': 'Create Rooms (includes React & Deposits)',
-                                        // Legacy permissions still shown for existing keys
-                                        'generate_react': 'Generate React (Legacy - use create_room)',
-                                        'extract_room_info': 'Extract Info (Legacy - now automatic)',
-                                        'generate_image': 'Generate Images (Legacy - now optional in create_room)'
-                                      };
-
-                                      const isLegacy = ['generate_react', 'extract_room_info', 'generate_image'].includes(permission);
-
-                                      return (
-                                        <Chip
-                                          key={permission}
-                                          label={permissionLabels[permission] || permission.replace('_', ' ')}
-                                          size="small"
-                                          variant="outlined"
-                                          sx={{
-                                            borderColor: isLegacy ? '#ff9800' : '#ff0000',
-                                            color: isLegacy ? '#ff9800' : (isDarkMode ? '#fff' : '#333'),
-                                            backgroundColor: isLegacy ? 'rgba(255, 152, 0, 0.1)' : 'transparent'
-                                          }}
-                                        />
-                                      );
-                                    })}
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem' }}>
+                                      Last used: {key.lastUsed ? formatDate(key.lastUsed) : 'Never'}
+                                    </Typography>
+                                    <Button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRevokeKey(key.keyId);
+                                      }}
+                                      disabled={!key.isActive}
+                                      variant="outlined"
+                                      color="error"
+                                      size="small"
+                                      startIcon={<DeleteIcon sx={{ fontSize: 12 }} />}
+                                      sx={{
+                                        fontSize: '0.65rem',
+                                        py: 0.25,
+                                        px: 0.75,
+                                        minWidth: 'auto',
+                                        color: '#ff0000',
+                                        borderColor: 'rgba(255, 0, 0, 0.5)',
+                                      }}
+                                    >
+                                      Revoke
+                                    </Button>
                                   </Box>
-                                  {key.permissions.some(p => ['generate_react', 'extract_room_info', 'generate_image'].includes(p)) && (
-                                    <Alert severity="warning" sx={{ mt: 1, fontSize: '0.75rem' }}>
-                                      <Typography variant="caption">
-                                        This key has legacy permissions. Consider regenerating with create_room permission for the new unified API.
-                                      </Typography>
-                                    </Alert>
-                                  )}
-                                </Grid>
-                                <Grid item xs={12}>
-                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
-                                    Rate Limits: {key.rateLimit?.requestsPerHour || 10}/hour, {key.rateLimit?.requestsPerDay || 100}/day
-                                  </Typography>
-                                  <Button
-                                    onClick={() => handleRevokeKey(key.keyId)}
-                                    disabled={!key.isActive}
-                                    variant="outlined"
-                                    color="error"
-                                    size="small"
-                                    startIcon={<DeleteIcon />}
-                                    sx={{
-                                      color: '#ff0000',
-                                      borderColor: '#ff0000',
-                                      '&:hover': {
-                                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                                        borderColor: '#ff0000',
-                                      }
-                                    }}
-                                  >
-                                    Revoke Key
-                                  </Button>
-                                </Grid>
-                              </Grid>
+                                </Box>
+                              )}
                             </Box>
+                          ))}
+                          {apiKeys.length > 3 && (
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center', fontSize: '0.7rem' }}>
+                              +{apiKeys.length - 3} more keys
+                            </Typography>
                           )}
-                        </Paper>
-                      ))
-                    )}
-                  </Paper>
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
 
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Paper
-                        elevation={1}
+                  {/* Usage Stats & Documentation */}
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Box
                         sx={{
-                          p: 3,
-                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                          borderRadius: 2,
-                          color: isDarkMode ? '#fff' : '#333',
+                          padding: '12px',
+                          textAlign: 'center',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          borderRadius: '4px'
                         }}
                       >
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          📖 Documentation
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#ff0000', fontSize: '1.1rem' }}>
+                          {apiKeys.reduce((sum, key) => sum + key.usageCount, 0)}
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          Complete API documentation for the streamlined workflow
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
+                          Total Requests
                         </Typography>
-                        <Alert severity="success" sx={{ mb: 2, fontSize: '0.85rem' }}>
-                          <strong>New:</strong> Single endpoint for complete game creation with mandatory blockchain deposits!
-                        </Alert>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Box
+                        sx={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          borderRadius: '4px'
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#10b981', fontSize: '1.1rem' }}>
+                          {apiKeys.filter(key => key.isActive).length}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
+                          Active Keys
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Box
+                        sx={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          borderRadius: '4px'
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#3b82f6', fontSize: '1.1rem' }}>
+                          {apiKeys.reduce((sum, key) => sum + (key.roomsCreated || 0), 0)}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.65rem' }}>
+                          Games Created
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  {/* Documentation Section */}
+                  <Box sx={{ mt: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: 600,
+                        mb: 1.5,
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCode} style={{ fontSize: '12px' }} />
+                      Documentation & API Info
+                    </Typography>
+                    <Box
+                      sx={{
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      <Alert 
+                        severity="info" 
+                        sx={{ 
+                          mb: 2, 
+                          fontSize: '0.75rem',
+                          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                          border: '1px solid rgba(33, 150, 243, 0.3)',
+                          color: '#fff'
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                          <strong>🚀 Streamlined API v1.0.0</strong><br />
+                          Single endpoint for complete game creation with mandatory blockchain deposits
+                        </Typography>
+                      </Alert>
+
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Button
                           variant="outlined"
                           color="error"
                           fullWidth
+                          size="small"
                           sx={{
-                            mb: 1,
+                            fontSize: '0.75rem',
+                            py: 0.5,
                             color: '#ff0000',
-                            borderColor: '#ff0000',
+                            borderColor: 'rgba(255, 0, 0, 0.5)',
                             '&:hover': {
                               backgroundColor: 'rgba(255, 0, 0, 0.1)',
                               borderColor: '#ff0000',
                             }
                           }}
-                          startIcon={<span>📖</span>}
+                          startIcon={<span style={{ fontSize: '12px' }}>📖</span>}
                           component="a"
                           href="/docs"
                           target="_blank"
                         >
-                          View Documentation
+                          View Complete Documentation
                         </Button>
-                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 1, color: isDarkMode ? '#aaa' : '#777' }}>
+                        <Typography variant="caption" sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem' }}>
                           Includes migration guide from legacy endpoints
                         </Typography>
-                      </Paper>
-                    </Grid>
+                      </Box>
 
-                    <Grid item xs={12} md={6}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 3,
-                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                          borderRadius: 2,
-                          color: isDarkMode ? '#fff' : '#333',
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          📊 Usage Statistics
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          Your API usage for this month
-                        </Typography>
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                            Total Requests
-                          </Typography>
-                          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#ff3030' }}>
-                            {apiKeys.reduce((sum, key) => sum + key.usageCount, 0)}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                            Active Keys
-                          </Typography>
-                          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#10b981' }}>
-                            {apiKeys.filter(key => key.isActive).length}
-                          </Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666' }}>
-                            Games Created
-                          </Typography>
-                          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#3b82f6' }}>
-                            {apiKeys.reduce((sum, key) => sum + (key.roomsCreated || 0), 0)}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: isDarkMode ? '#aaa' : '#777' }}>
-                            All with blockchain verification
-                          </Typography>
-                        </Box>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 3,
-                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                          borderRadius: 2,
-                          color: isDarkMode ? '#fff' : '#333',
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          🚀 Streamlined API Endpoints
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 3, color: isDarkMode ? '#ccc' : '#666' }}>
-                          We've unified 5 separate endpoints into 2 powerful ones. Everything you need in fewer calls!
-                        </Typography>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12}>
-                            <Box
-                              sx={{
-                                p: 3,
-                                borderRadius: 1,
-                                border: '2px solid #ff3030',
-                                backgroundColor: isDarkMode ? 'rgba(255, 48, 48, 0.1)' : 'rgba(255, 48, 48, 0.05)',
-                              }}
-                            >
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                <Box>
-                                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#ff3030', mb: 1 }}>
-                                    POST /api/public-api/create-room
-                                  </Typography>
-                                  <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 2 }}>
-                                    Create complete game experiences with mandatory blockchain deposits
-                                  </Typography>
-                                </Box>
-                                <Chip label="Primary" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
-                              </Box>
-
-                              <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
-                                ✅ What's Included:
-                              </Typography>
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                                <Chip label="🎮 React Game Generation" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
-                                <Chip label="🎨 Optional AI Images" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
-                                <Chip label="💰 Mandatory SOL Deposits" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
-                                <Chip label="🔐 Private Key Signing" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
-                                <Chip label="📊 Auto Info Extraction" size="small" variant="outlined" sx={{ borderColor: '#ff3030', color: isDarkMode ? '#fff' : '#333' }} />
-                              </Box>
-
-                              <Typography variant="body2" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
-                                🔧 Required Fields:
-                              </Typography>
-                              <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', fontFamily: 'monospace' }}>
-                                bet_amount, name, connectedAccount, privateKey, reactPrompt
-                              </Typography>
-                            </Box>
-                          </Grid>
-
-                          <Grid item xs={12} md={6}>
-                            <Box
-                              sx={{
-                                p: 2,
-                                borderRadius: 1,
-                                border: '1px solid #666',
-                                backgroundColor: isDarkMode ? 'rgba(102, 102, 102, 0.1)' : 'rgba(102, 102, 102, 0.05)',
-                              }}
-                            >
-                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#666', mb: 1 }}>
-                                GET /api/public-api/info
-                              </Typography>
-                              <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 1 }}>
-                                API information and status
-                              </Typography>
-                              <Chip label="Info Only" size="small" sx={{ backgroundColor: '#666', color: '#fff' }} />
-                            </Box>
-                          </Grid>
-                        </Grid>
-
-                        <Alert severity="info" sx={{ mt: 3 }}>
-                          <Typography variant="body2">
-                            <strong>Migration Complete:</strong> Legacy endpoints (generate-react, extract-room-info, etc.) have been
-                            consolidated into create-room. Existing API keys with old permissions will continue to work but we recommend
-                            generating new keys with create_room permission.
-                          </Typography>
-                        </Alert>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Paper
-                        elevation={1}
-                        sx={{
-                          p: 3,
-                          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.7)' : 'rgba(250, 250, 250, 0.7)',
-                          borderRadius: 2,
-                          color: isDarkMode ? '#fff' : '#333',
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                          ⚡ Quick Start Example
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 2, color: isDarkMode ? '#ccc' : '#666' }}>
-                          Create your first game with a single API call
+                      {/* Quick API Reference */}
+                      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)', mb: 1, display: 'block' }}>
+                          Primary Endpoint:
                         </Typography>
                         <Box
                           sx={{
-                            backgroundColor: isDarkMode ? '#0a0a0a' : '#f8f9fa',
-                            color: isDarkMode ? '#e6e6e6' : '#2d3748',
-                            border: `1px solid ${isDarkMode ? '#444' : '#e2e8f0'}`,
-                            borderRadius: 1,
-                            p: 2,
-                            fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
-                            fontSize: '12px',
-                            overflow: 'auto',
+                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '4px',
+                            padding: '8px',
+                            fontFamily: 'monospace',
+                            fontSize: '0.7rem',
+                            color: '#ff0000',
+                            mb: 1
                           }}
                         >
-                          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: isDarkMode ? '#e6e6e6' : '#2d3748' }}>
-                            {`curl -X POST "https://catsino.fun/api/public-api/create-room" \\
-  -H "X-API-Key: your_api_key_here" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "bet_amount": 0.1,
-    "name": "Dice Master",
-    "connectedAccount": "your_wallet_address",
-    "privateKey": "your_base58_private_key",
-    "reactPrompt": "Create a dice rolling game with multipliers"
-  }'`}
-                          </pre>
+                          POST /api/public-api/create-room
                         </Box>
-                        <Alert severity="warning" sx={{ mt: 2 }}>
-                          <Typography variant="body2">
-                            <strong>Security:</strong> Never expose private keys in client-side code.
-                            Use this API only from secure server environments.
-                          </Typography>
-                        </Alert>
-                      </Paper>
-                    </Grid>
-                  </Grid>
+                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                          React generation • AI images • SOL deposits • Blockchain signing
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
                 </Box>
               )}
             </Box>
-          </Paper>
-        </Box>
-      </Modal>
+          </Box>
+        </Modal>
+      </ThemeProvider>
 
       {/* Password Change Dialog */}
       {showPasswordDialog && (
@@ -1481,11 +1312,10 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               left: '50%',
               transform: 'translate(-50%, -50%)',
               width: { xs: '90%', sm: '400px' },
-              bgcolor: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              borderRadius: 2,
-              boxShadow: 24,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: isDarkMode ? '#fff' : '#333',
+              borderRadius: '8px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              color: '#fff',
             }}
           >
             <Box
@@ -1493,44 +1323,48 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                p: 2,
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '12px 16px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              <Typography variant="h6" sx={{ color: isDarkMode ? '#fff' : '#333' }}>
+              <Typography variant="h6" sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
                 Change Password
               </Typography>
               <IconButton
                 onClick={() => setShowPasswordDialog(false)}
-                sx={{ color: isDarkMode ? '#fff' : '#333' }}
+                size="small"
+                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
               >
-                <CloseIcon />
+                <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ padding: '16px' }}>
               <TextField
                 fullWidth
                 type="password"
                 label="New Password"
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                size="small"
                 sx={{
-                  mb: 2,
+                  mb: 1.5,
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                    color: isDarkMode ? '#fff' : '#333',
+                    fontSize: '0.8rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    color: '#fff',
                     '& fieldset': {
-                      borderColor: '#ff0000',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
                     },
                     '&:hover fieldset': {
-                      borderColor: '#ff0000',
+                      borderColor: 'rgba(255, 0, 0, 0.5)',
                     },
                     '&.Mui-focused fieldset': {
                       borderColor: '#ff0000',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: isDarkMode ? '#fff' : '#333',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.8rem',
                     '&.Mui-focused': {
                       color: '#ff0000',
                     }
@@ -1543,39 +1377,44 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 label="Confirm Password"
                 value={passwordData.confirmPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                size="small"
                 sx={{
-                  mb: 3,
+                  mb: 2,
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                    color: isDarkMode ? '#fff' : '#333',
+                    fontSize: '0.8rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    color: '#fff',
                     '& fieldset': {
-                      borderColor: '#ff0000',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
                     },
                     '&:hover fieldset': {
-                      borderColor: '#ff0000',
+                      borderColor: 'rgba(255, 0, 0, 0.5)',
                     },
                     '&.Mui-focused fieldset': {
                       borderColor: '#ff0000',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: isDarkMode ? '#fff' : '#333',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.8rem',
                     '&.Mui-focused': {
                       color: '#ff0000',
                     }
                   }
                 }}
               />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   onClick={() => setShowPasswordDialog(false)}
                   variant="outlined"
                   fullWidth
+                  size="small"
                   sx={{
-                    color: isDarkMode ? '#fff' : '#333',
-                    borderColor: isDarkMode ? '#fff' : '#333',
+                    fontSize: '0.75rem',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
                     '&:hover': {
-                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     }
                   }}
                 >
@@ -1586,9 +1425,12 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                   disabled={isLoading || !passwordData.newPassword.trim() || !passwordData.confirmPassword.trim()}
                   variant="contained"
                   color="error"
-                  startIcon={isLoading ? <CircularProgress color='error' size={20} /> : <SaveIcon />}
+                  fullWidth
+                  size="small"
+                  startIcon={isLoading ? <CircularProgress color='error' size={16} /> : <SaveIcon fontSize="small" />}
+                  sx={{ fontSize: '0.75rem' }}
                 >
-                  {isLoading ? 'Updating...' : 'Update Password'}
+                  {isLoading ? 'Updating...' : 'Update'}
                 </Button>
               </Box>
             </Box>
@@ -1605,12 +1447,11 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: '600px' },
-              bgcolor: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              borderRadius: 2,
-              boxShadow: 24,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: isDarkMode ? '#fff' : '#333',
+              width: { xs: '90%', sm: '500px' },
+              borderRadius: '8px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              color: '#fff',
             }}
           >
             <Box
@@ -1618,54 +1459,48 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                p: 2,
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '12px 16px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              <Typography variant="h6" sx={{ color: isDarkMode ? '#fff' : '#333' }}>
+              <Typography variant="h6" sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
                 Generate New API Key
               </Typography>
               <IconButton
                 onClick={() => setShowNewKeyDialog(false)}
-                sx={{ color: isDarkMode ? '#fff' : '#333' }}
+                size="small"
+                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
               >
-                <CloseIcon />
+                <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
-            <Box sx={{ p: 3 }}>
-              {!user?.elite && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                  <Typography variant="body1">
-                    <strong>Elite Membership Required</strong>
-                  </Typography>
-                  You need Elite membership to access the Game Creation API. Visit the store to upgrade your account.
-                </Alert>
-              )}
-
+            <Box sx={{ padding: '16px' }}>
               <TextField
                 fullWidth
                 label="Key Name"
                 value={newKeyData.name}
                 onChange={(e) => setNewKeyData({ ...newKeyData, name: e.target.value })}
-                placeholder="e.g., Production API, Development Key"
-                disabled={!user?.elite}
+                placeholder="e.g., Production API"
+                size="small"
                 sx={{
-                  mb: 3,
+                  mb: 2,
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                    color: isDarkMode ? '#fff' : '#333',
+                    fontSize: '0.8rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    color: '#fff',
                     '& fieldset': {
-                      borderColor: '#ff0000',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
                     },
                     '&:hover fieldset': {
-                      borderColor: '#ff0000',
+                      borderColor: 'rgba(255, 0, 0, 0.5)',
                     },
                     '&.Mui-focused fieldset': {
                       borderColor: '#ff0000',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: isDarkMode ? '#fff' : '#333',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.8rem',
                     '&.Mui-focused': {
                       color: '#ff0000',
                     }
@@ -1673,87 +1508,55 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 }}
               />
 
-              <Typography variant="body1" sx={{ mb: 2, color: isDarkMode ? '#fff' : '#333' }}>
-                API Permissions
+              <Typography variant="body2" sx={{ mb: 1, fontSize: '0.8rem', fontWeight: 500 }}>
+                Permissions
               </Typography>
 
+              <Box
+                sx={{
+                  padding: '12px',
+                  border: newKeyData.permissions.includes('create_room')
+                    ? '2px solid #ff0000'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                  backgroundColor: newKeyData.permissions.includes('create_room')
+                    ? 'rgba(255, 0, 0, 0.1)'
+                    : 'rgba(255, 255, 255, 0.02)',
+                  cursor: 'pointer',
+                  mb: 2,
+                }}
+                onClick={() => togglePermission('create_room')}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Switch
+                    checked={newKeyData.permissions.includes('create_room')}
+                    onChange={() => togglePermission('create_room')}
+                    color="error"
+                    size="small"
+                  />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
+                      🎮 Complete Game Creation
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.7rem' }}>
+                      React generation, images, deposits & blockchain signing
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
 
-              <Grid container spacing={1} sx={{ mb: 3 }}>
-                <Grid item xs={12}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 3,
-                      border: newKeyData.permissions.includes('create_room')
-                        ? '2px solid #ff0000'
-                        : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: 1,
-                      backgroundColor: newKeyData.permissions.includes('create_room')
-                        ? isDarkMode ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 0, 0, 0.05)'
-                        : isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-                      cursor: user?.elite ? 'pointer' : 'not-allowed',
-                      opacity: user?.elite ? 1 : 0.6,
-                      transition: 'all 0.2s ease',
-                      '&:hover': user?.elite ? {
-                        backgroundColor: isDarkMode ? 'rgba(255, 0, 0, 0.15)' : 'rgba(255, 0, 0, 0.08)',
-                      } : {},
-                    }}
-                    onClick={() => user?.elite && togglePermission('create_room')}
-                  >
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={newKeyData.permissions.includes('create_room')}
-                          onChange={() => user?.elite && togglePermission('create_room')}
-                          color="error"
-                          disabled={!user?.elite}
-                        />
-                      }
-                      label={
-                        <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 600, color: '#ff3030', mb: 1 }}>
-                            🎮 Complete Game Creation
-                          </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 500, color: isDarkMode ? '#fff' : '#333', mb: 1 }}>
-                            Create Rooms with Full Features
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: isDarkMode ? '#ccc' : '#666', mb: 2 }}>
-                            Everything you need to create complete game experiences with a single API call
-                          </Typography>
-
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                            <Chip label="⚛️ React Generation" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
-                            <Chip label="🎨 AI Images" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
-                            <Chip label="💰 SOL Deposits" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
-                            <Chip label="📊 Auto Extraction" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
-                            <Chip label="🔐 Blockchain Signing" size="small" sx={{ backgroundColor: '#ff3030', color: '#fff' }} />
-                          </Box>
-                        </Box>
-                      }
-                      sx={{ width: '100%', margin: 0, alignItems: 'flex-start' }}
-                    />
-                  </Paper>
-                </Grid>
-              </Grid>
-
-
-              <Alert severity="warning" sx={{ mb: 3 }}>
-                <Typography variant="body2">
-                  <strong>Important:</strong> API keys are sensitive. Keep them secure and never expose them in client-side code.
-                  Use server-side environments to interact with the API.
-                </Typography>
-              </Alert>
-
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   onClick={() => setShowNewKeyDialog(false)}
                   fullWidth
                   variant="outlined"
+                  size="small"
                   sx={{
-                    color: isDarkMode ? '#fff' : '#333',
-                    borderColor: isDarkMode ? '#fff' : '#333',
+                    fontSize: '0.75rem',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
                     '&:hover': {
-                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     }
                   }}
                 >
@@ -1761,12 +1564,15 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                 </Button>
                 <Button
                   onClick={handleGenerateApiKey}
-                  disabled={isLoading || !newKeyData.name.trim() || newKeyData.permissions.length === 0 || !user?.elite}
+                  disabled={isLoading || !newKeyData.name.trim() || newKeyData.permissions.length === 0}
                   variant="contained"
                   color="error"
-                  startIcon={isLoading ? <CircularProgress color='error' size={20} /> : null}
+                  fullWidth
+                  size="small"
+                  startIcon={isLoading ? <CircularProgress color='error' size={16} /> : null}
+                  sx={{ fontSize: '0.75rem' }}
                 >
-                  {isLoading ? 'Generating...' : 'Generate Key'}
+                  {isLoading ? 'Generating...' : 'Generate'}
                 </Button>
               </Box>
             </Box>
@@ -1783,45 +1589,49 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: '600px' },
-              bgcolor: isDarkMode ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              borderRadius: 2,
-              boxShadow: 24,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: isDarkMode ? '#fff' : '#333',
+              width: { xs: '90%', sm: '500px' },
+              borderRadius: '8px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              color: '#fff',
             }}
           >
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: isDarkMode ? '#fff' : '#333' }}>
-                ✅ API Key Generated Successfully
+            <Box sx={{ padding: '16px' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontSize: '0.9rem', fontWeight: 600, textAlign: 'center' }}>
+                ✅ API Key Generated
               </Typography>
 
-              <Alert severity="warning" sx={{ mb: 3 }}>
-                <strong>⚠️ Important:</strong> This is the only time you'll see the full API key.
-                Copy it now and store it securely.
+              <Alert 
+                severity="warning" 
+                sx={{ 
+                  mb: 2, 
+                  fontSize: '0.75rem',
+                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                  border: '1px solid rgba(255, 152, 0, 0.3)',
+                  color: '#fff'
+                }}
+              >
+                Copy this key now - you won't see it again!
               </Alert>
 
-              <Typography variant="body2" sx={{ mb: 1, color: isDarkMode ? '#ccc' : '#666' }}>
-                Your API Key
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 <TextField
                   fullWidth
                   value={generatedKey.fullKey}
-                  variant="outlined"
                   InputProps={{
                     readOnly: true,
                     style: {
                       fontFamily: 'monospace',
-                      fontSize: '12px',
-                      color: isDarkMode ? '#fff' : '#333'
+                      fontSize: '11px',
+                      color: '#fff'
                     }
                   }}
+                  size="small"
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
                       '& fieldset': {
-                        borderColor: '#ff0000',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
                       }
                     }
                   }}
@@ -1830,22 +1640,24 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
                   onClick={() => handleCopyKey(generatedKey.fullKey)}
                   variant="contained"
                   color="error"
-                  startIcon={<FileCopyIcon />}
+                  size="small"
+                  startIcon={<FileCopyIcon fontSize="small" />}
+                  sx={{ fontSize: '0.75rem', minWidth: 'auto', px: 1 }}
                 >
                   Copy
                 </Button>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Button
-                  onClick={() => setGeneratedKey(null)}
-                  variant="contained"
-                  color="error"
-                  size="large"
-                >
-                  I've Saved My Key
-                </Button>
-              </Box>
+              <Button
+                onClick={() => setGeneratedKey(null)}
+                variant="contained"
+                color="error"
+                fullWidth
+                size="small"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                I've Saved My Key
+              </Button>
             </Box>
           </Box>
         </Modal>
@@ -1860,13 +1672,13 @@ const AccountManagementModal = ({ modalIsOpen, closeModal }) => {
             right: 20,
             backgroundColor: '#10b981',
             color: 'white',
-            p: 2,
-            borderRadius: 2,
+            padding: '8px 12px',
+            borderRadius: '4px',
             zIndex: 2000,
-            boxShadow: 3,
+            fontSize: '0.8rem',
           }}
         >
-          ✅ Copied to clipboard!
+          ✅ Copied!
         </Box>
       )}
     </>

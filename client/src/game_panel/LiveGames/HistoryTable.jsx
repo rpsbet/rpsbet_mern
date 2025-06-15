@@ -2,11 +2,20 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setHighlightedRooms, clearHighlightedRooms } from '../../redux/Logic/logic.actions';
 import { differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays, isValid } from 'date-fns';
-import { Box, Typography, useTheme, alpha } from '@mui/material';
+import { Box, Typography, useTheme, alpha, Fade, Chip } from '@mui/material';
 import PlayerModal from '../modal/PlayerModal';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
-import { transform } from 'lodash';
+import {
+  TrendingUp,
+  TrendingDown,
+  Add as CreateIcon,
+  RemoveCircle as RugIcon,
+  CallSplit as SplitIcon,
+  GetApp as WithdrawIcon,
+  Bolt as PumpIcon,
+  MonetizationOn as SeedIcon
+} from '@mui/icons-material';
 
 /**
  * Formats a timestamp into a human-readable "time ago" string
@@ -17,20 +26,74 @@ const formatTimeAgo = (date) => {
   if (!isValid(dateObj)) return 'Invalid Date';
 
   const seconds = differenceInSeconds(now, dateObj);
-  if (seconds < 60) return `${Math.round(seconds)}s ago`;
+  if (seconds < 60) return `${Math.round(seconds)}s`;
 
   const minutes = differenceInMinutes(now, dateObj);
-  if (minutes < 60) return `${Math.round(minutes)}m ago`;
+  if (minutes < 60) return `${Math.round(minutes)}m`;
 
   const hours = differenceInHours(now, dateObj);
-  if (hours < 24) return `${Math.round(hours)}h ago`;
+  if (hours < 24) return `${Math.round(hours)}h`;
 
   const days = differenceInDays(now, dateObj);
-  return `${Math.round(days)}d ago`;
+  return `${Math.round(days)}d`;
 };
 
 /**
- * HistoryTable - Displays the most recent transaction with real-time updates
+ * Get action icon and styling
+ */
+const getActionIcon = (action) => {
+  const iconProps = { fontSize: 'small', sx: { fontSize: '14px' } };
+
+  switch (action) {
+    case 'won':
+      return <TrendingUp {...iconProps} sx={{ ...iconProps.sx, color: '#00ff3a' }} />;
+    case 'lost':
+      return <TrendingDown {...iconProps} sx={{ ...iconProps.sx, color: '#ff4444' }} />;
+    case 'created':
+      return <CreateIcon {...iconProps} sx={{ ...iconProps.sx, color: '#03ff3b' }} />;
+    case 'rugged':
+      return <RugIcon {...iconProps} sx={{ ...iconProps.sx, color: '#ff1744' }} />;
+    case 'split':
+      return <SplitIcon {...iconProps} sx={{ ...iconProps.sx, color: '#ffa726' }} />;
+    case 'withdrew':
+      return <WithdrawIcon {...iconProps} sx={{ ...iconProps.sx, color: '#ab47bc' }} />;
+    case 'pumped':
+      return <PumpIcon {...iconProps} sx={{ ...iconProps.sx, color: '#66bb6a' }} />;
+    case 'receivedAutoPayout':
+      return <SeedIcon {...iconProps} sx={{ ...iconProps.sx, color: '#42a5f5' }} />;
+    case 'jeet':
+      return <TrendingDown {...iconProps} sx={{ ...iconProps.sx, color: '#ff7043' }} />;
+    default:
+      return <CreateIcon {...iconProps} sx={{ ...iconProps.sx, color: '#90a4ae' }} />;
+  }
+};
+
+/**
+ * Get action color based on type
+ */
+const getActionColor = (action) => {
+  switch (action) {
+    case 'won':
+    case 'split':
+    case 'pumped':
+      return '#00ff3a';
+    case 'lost':
+    case 'rugged':
+    case 'jeet':
+      return '#ff4444';
+    case 'created':
+      return '#03ff3b';
+    case 'withdrew':
+      return '#ab47bc';
+    case 'receivedAutoPayout':
+      return '#42a5f5';
+    default:
+      return '#90a4ae';
+  }
+};
+
+/**
+ * Enhanced HistoryTable - Displays the most recent transaction with improved design
  */
 function HistoryTable({ socket: propSocket, history: propHistory, solPrice: propSolPrice }) {
   const dispatch = useDispatch();
@@ -54,32 +117,35 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
   const history = propHistory ?? reduxHistory;
   const solPrice = propSolPrice ?? reduxSolPrice;
 
-  // Local state - only need the latest item
+  // Local state
   const [latestItem, setLatestItem] = useState(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
+  const [isNewItem, setIsNewItem] = useState(false);
 
   // Get the most recent history item
   useEffect(() => {
-    // Handle different data structures
     let historyArray = [];
 
     if (history) {
       if (Array.isArray(history)) {
         historyArray = history;
       } else if (typeof history === 'object' && history._id) {
-        // Single history object - convert to array
         historyArray = [history];
       } else if (history.history && Array.isArray(history.history)) {
-        // History wrapped in an object with history property
         historyArray = history.history;
       }
     }
 
     if (historyArray.length > 0) {
-      setLatestItem(historyArray[0]); // Get the first (most recent) item
+      const newLatest = historyArray[0];
+      if (latestItem && newLatest._id !== latestItem._id) {
+        setIsNewItem(true);
+        setTimeout(() => setIsNewItem(false), 2000);
+      }
+      setLatestItem(newLatest);
     } else {
-      setLatestItem(null); // Clear if no history
+      setLatestItem(null);
     }
   }, [history]);
 
@@ -96,8 +162,10 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
       setTimeout(() => dispatch(clearHighlightedRooms()), 200);
     }
 
-    // Update to show the newest item
+    // Update to show the newest item with animation
+    setIsNewItem(true);
     setLatestItem(firstLog);
+    setTimeout(() => setIsNewItem(false), 2000);
   }, [dispatch]);
 
   // Set up socket connection
@@ -113,8 +181,87 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
     };
   }, [socket, handleNewLog]);
 
+  const CompactAvatar = ({ userObj, onClick }) => {
+    if (!userObj?._id) return null;
+    return (
+      <Box
+        component="span"
+        onClick={onClick}
+        sx={{
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          transition: 'transform 0.2s ease',
 
-  // Build compact message content
+        }}
+      >
+        <Avatar
+          user_id={userObj._id}
+          src={userObj.avatar}
+          username={userObj.username}
+          rank={userObj.totalWagered}
+          accessory={userObj.accessory}
+          elite={userObj.elite}
+          alt={userObj.username || ''}
+          style={{
+            display: 'inline-block',
+            marginRight: 6,
+            verticalAlign: 'middle',
+            width: 20,
+            height: 20,
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '50%'
+          }}
+        />
+      </Box>
+    );
+  };
+
+  // Enhanced room chip
+  const CompactRoom = ({ roomObj }) => {
+    if (!roomObj?._id) return null;
+    return (
+      <Chip
+        component="a"
+        href={`/join/${roomObj._id}`}
+        label={roomObj.ticker}
+        size="small"
+        sx={{
+          cursor: 'pointer',
+          textDecoration: 'none',
+          height: '18px',
+          fontSize: '0.65rem',
+          fontWeight: 700,
+          backgroundColor: 'rgba(255, 0, 0, 0.1)',
+          color: '#ff0000',
+          border: '1px solid rgba(255, 0, 0, 0.3)',
+          '& .MuiChip-label': {
+            padding: '0 6px'
+          }
+        }}
+      />
+    );
+  };
+
+  // Enhanced amount display with icons
+  const AmountDisplay = ({ amount, action, showIcon = true }) => (
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+      {showIcon && getActionIcon(action)}
+      <Typography
+        component="span"
+        sx={{
+          color: getActionColor(action),
+          fontWeight: 700,
+          fontSize: '0.75rem',
+          textShadow: `0 0 8px ${alpha(getActionColor(action), 0.3)}`
+        }}
+      >
+        {amount}
+      </Typography>
+    </Box>
+  );
+
+  // Build enhanced message content
   const buildMessage = useCallback((logItem) => {
     if (!solPrice || !logItem) return '';
 
@@ -123,176 +270,150 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
     const joinedUser = logItem.joined_user || {};
     const creator = logItem.creator || {};
 
-    const getAmountColor = (action) => {
-      switch (action) {
-        case 'won':
-        case 'split':
-          return '#00ff3a';
-        case 'lost':
-        case 'rugged':
-        case 'jeet':
-          return theme.palette.error.main;
-        default:
-          return theme.palette.success.light;
-      }
-    };
-
-    const AmountText = ({ children, action }) => (
-      <Typography component="span" sx={{ color: getAmountColor(action), fontWeight: 700, fontSize: '0.75rem' }}>
-        {children}
-      </Typography>
-    );
-
     const messageStyles = {
       fontSize: '0.75rem',
       fontWeight: 500,
       display: 'flex',
       alignItems: 'center',
-      gap: 0.5,
+      gap: 0.75,
       color: '#fff',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap'
+      flexWrap: 'wrap'
     };
 
-    // Compact avatar (smaller)
-    const CompactAvatar = ({ userObj }) => {
-      if (!userObj?._id) return null;
-      return (
-        <Box
-          component="span"
-          onClick={() => {
-            setShowPlayerModal(true);
-            setSelectedCreator(userObj._id);
-          }}
-          sx={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
-        >
-          <Avatar
-            user_id={userObj._id}
-            src={userObj.avatar}
-            username={userObj.username}
-            rank={userObj.totalWagered}
-            accessory={userObj.accessory}
-            elite={userObj.elite}
-            alt={userObj.username || ''}
-            style={{
-              display: 'inline-block',
-              marginRight: 4,
-              verticalAlign: 'middle',
-              width: 18,
-              height: 18
-            }}
-          />
-        </Box>
-      );
-    };
-
-    // Compact room info (just ticker)
-    const CompactRoom = ({ roomObj }) => {
-      if (!roomObj?._id) return null;
-      return (
-        <Typography
-          component="a"
-          href={`/join/${roomObj._id}`}
-          sx={{
-            cursor: 'pointer',
-            textDecoration: 'none',
-            color: '#fff',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            '&:hover': { textDecoration: 'underline', color: '#d81719' }
-          }}
-        >
-          {roomObj.ticker}
-        </Typography>
-      );
+    const handleUserClick = (userObj) => {
+      if (userObj?._id) {
+        setShowPlayerModal(true);
+        setSelectedCreator(userObj._id);
+      }
     };
 
     switch (logItem.action) {
       case 'won':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={joinedUser} />
-            won <AmountText action="won">{winnings}</AmountText> in <CompactRoom roomObj={logItem.room} />
+            <CompactAvatar userObj={joinedUser} onClick={() => handleUserClick(joinedUser)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>won</Typography>
+            <AmountDisplay amount={winnings} action="won" />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>in</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       case 'created':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={creator} />
-            created <CompactRoom roomObj={logItem.room} /> • <AmountText action="created">{betAmt}</AmountText>
+            <CompactAvatar userObj={creator} onClick={() => handleUserClick(creator)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>created</Typography>
+            <CompactRoom roomObj={logItem.room} />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <AmountDisplay amount={betAmt} action="created" />
           </Box>
         );
       case 'rugged':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={creator} />
-            rugged <AmountText action="rugged">{winnings}</AmountText> • <CompactRoom roomObj={logItem.room} />
+            <CompactAvatar userObj={creator} onClick={() => handleUserClick(creator)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>rugged</Typography>
+            <AmountDisplay amount={winnings} action="rugged" />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       case 'split':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={joinedUser} />
-            split <AmountText action="split">{convertToCurrency(logItem.bet_amount * 2, solPrice)}</AmountText> • <CompactRoom roomObj={logItem.room} />
+            <CompactAvatar userObj={joinedUser} onClick={() => handleUserClick(joinedUser)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>split</Typography>
+            <AmountDisplay amount={convertToCurrency(logItem.bet_amount * 2, solPrice)} action="split" />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       case 'lost':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={joinedUser} />
-            lost <AmountText action="lost">{betAmt}</AmountText> • <CompactRoom roomObj={logItem.room} />
+            <CompactAvatar userObj={joinedUser} onClick={() => handleUserClick(joinedUser)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>lost</Typography>
+            <AmountDisplay amount={betAmt} action="lost" />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       case 'jeet':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={creator} />
-            jeeted <AmountText action="jeet">{betAmt}</AmountText> • <CompactRoom roomObj={logItem.room} />
+            <CompactAvatar userObj={creator} onClick={() => handleUserClick(creator)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>jeeted</Typography>
+            <AmountDisplay amount={betAmt} action="jeet" />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       case 'pumped':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={creator} />
-            pumped <AmountText action="pumped">{betAmt}</AmountText> • <CompactRoom roomObj={logItem.room} />
+            <CompactAvatar userObj={creator} onClick={() => handleUserClick(creator)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>pumped</Typography>
+            <AmountDisplay amount={betAmt} action="pumped" />
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       case 'withdrew':
         return (
           <Box sx={messageStyles}>
-            <CompactAvatar userObj={creator} />
-            withdrew <AmountText action="withdrew">{betAmt}</AmountText>
+            <CompactAvatar userObj={creator} onClick={() => handleUserClick(creator)} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>withdrew</Typography>
+            <AmountDisplay amount={betAmt} action="withdrew" />
           </Box>
         );
       case 'receivedAutoPayout':
         return (
           <Box sx={messageStyles}>
-            Pool seeded • <CompactRoom roomObj={logItem.room} />
+            <SeedIcon sx={{ fontSize: '14px', color: '#42a5f5' }} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>Pool seeded</Typography>
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
       default:
         return (
           <Box sx={messageStyles}>
-            {logItem.action || 'Activity'} • <CompactRoom roomObj={logItem.room} />
+            <Typography component="span" sx={{ fontSize: '0.75rem', color: '#e0e0e0' }}>{logItem.action || 'Activity'}</Typography>
+            <Typography component="span" sx={{ fontSize: '0.7rem', color: '#999' }}>•</Typography>
+            <CompactRoom roomObj={logItem.room} />
           </Box>
         );
     }
-  }, [solPrice, theme.palette]);
+  }, [solPrice]);
 
   // Don't render anything if no item
   if (!latestItem) {
     return (
       <Box
         sx={{
-          padding: '8px 12px',
+          padding: '8px 16px',
           display: 'flex',
           alignItems: 'center',
-          minHeight: '36px',
+          minHeight: '40px',
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)'
         }}
       >
-        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
-          Loading...
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              backgroundColor: '#666',
+              animation: 'pulse 1.5s infinite'
+            }}
+          />
+          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
+            Loading activity...
+          </Typography>
+        </Box>
       </Box>
     );
   }
@@ -303,38 +424,71 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
     <Box>
       <Box
         sx={{
-          padding: '4px 6px',
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            transform: 'translateY(-1px)'
-          },
+          padding: '8px 16px',
+          borderRadius: '8px',
+          background: isNewItem
+            ? 'linear-gradient(90deg, rgba(255, 0, 0, 0.15), rgba(255, 0, 0, 0.05))'
+            : 'rgba(255, 255, 255, 0.02)',
+          border: isNewItem
+            ? '1px solid rgba(255, 0, 0, 0.3)'
+            : '1px solid rgba(255, 255, 255, 0.05)',
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          overflow: 'hidden',
+      
+          '&::before': isNewItem ? {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent, #ff0000, transparent)',
+            animation: 'shimmer 2s ease-in-out'
+          } : {},
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           opacity: isUserInvolved ? 1 : 0.95,
-          animation: 'slideIn 0.3s ease-out',
-          minHeight: '36px',
-          maxWidth: '100%',
-          mt: 1
+          minHeight: '40px',
+          maxWidth: '100%'
         }}
       >
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        {/* Activity indicator dot */}
+        
+
+        <Box sx={{ flexGrow: 1, minWidth: 0,}}>
           {buildMessage(latestItem)}
         </Box>
 
-        <Typography
-          variant="caption"
-          sx={{
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: '0.65rem',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            marginLeft: 1,
-            flexShrink: 0
-          }}
-        >
-          {formatTimeAgo(latestItem.created_at)}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, ml: 2 }}>
+          {isUserInvolved && (
+            <Chip
+              label="YOU"
+              size="small"
+              sx={{
+                height: '16px',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                color: '#ff0000',
+                border: '1px solid rgba(255, 0, 0, 0.4)',
+                '& .MuiChip-label': { padding: '0 4px' }
+              }}
+            />
+          )}
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: '0.65rem',
+              fontWeight: 500,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {formatTimeAgo(latestItem.created_at)}
+          </Typography>
+        </Box>
       </Box>
 
       {showPlayerModal && (
@@ -348,18 +502,6 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
         />
       )}
 
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </Box>
   );
 }

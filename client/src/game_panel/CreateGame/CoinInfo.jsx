@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   InputAdornment,
-  alpha,
   CircularProgress,
 } from '@mui/material';
 import { CloudUpload as UploadIcon, Info, AutoAwesome } from '@mui/icons-material';
@@ -14,85 +13,7 @@ import { useDispatch } from 'react-redux';
 import { setFocused } from '../../redux/Auth/user.actions';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
-import styled from 'styled-components';
 import { manualAutopopulate } from '../../redux/Logic/logic.actions';
-
-// Styled components for glassmorphism effect
-const GlassContainer = styled(Box)`
-  background: ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(30, 30, 30, 0.3)' : 'rgba(255, 255, 255, 0.65)'};
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 16px;
-  border: 1px solid ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'};
-  box-shadow: ${({ isDarkMode }) =>
-    isDarkMode
-      ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-      : '0 8px 32px rgba(31, 38, 135, 0.1)'};
-  padding: 24px;
-  transition: all 0.3s ease;
-`;
-
-const GlassButton = styled.button`
-  background: ${({ isDarkMode, isActive }) =>
-    isActive
-      ? isDarkMode
-        ? 'rgba(211, 47, 47, 0.8)'
-        : 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.12)'
-      : 'rgba(255, 255, 255, 0.5)'};
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid ${({ isActive, isDarkMode }) =>
-    isActive
-      ? 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.08)'
-      : 'rgba(255, 255, 255, 0.5)'};
-  color: ${({ isActive, isDarkMode }) =>
-    isActive
-      ? 'white'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.9)'
-      : 'rgba(0, 0, 0, 0.8)'};
-  font-weight: ${({ isActive }) => (isActive ? '600' : '400')};
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${({ isDarkMode }) =>
-      isDarkMode ? 'rgba(211, 47, 47, 0.6)' : 'rgba(211, 47, 47, 0.6)'};
-    color: white;
-  }
-`;
-
-const GlassDropzone = styled(Box)`
-  border: 2px dashed ${({ isDragging, isDarkMode }) =>
-    isDragging
-      ? '#FF0000'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.2)'
-      : 'rgba(0, 0, 0, 0.2)'};
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  margin: 20px 0;
-  transition: all 0.2s ease;
-  background: ${({ isDragging, isDarkMode }) =>
-    isDragging
-      ? isDarkMode
-        ? 'rgba(211, 47, 47, 0.08)'
-        : 'rgba(211, 47, 47, 0.05)'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.05)'
-      : 'rgba(255, 255, 255, 0.3)'};
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-`;
 
 const CoinInfo = ({
   onChangeState,
@@ -165,7 +86,6 @@ const CoinInfo = ({
     setIsAutopopulating(true);
     
     try {
-      
       // Call the updated manualAutopopulate function
       const result = await manualAutopopulate(gameCode, onChangeState, dispatch, true);
       
@@ -199,27 +119,27 @@ const CoinInfo = ({
 
   return (
     <ThemeProvider theme={theme}>
-      <GlassContainer isDarkMode={isDarkMode} className="coin-info-panel" sx={{ mb: 2, mt: 3 }}>
+      <Box 
+        className="coin-info-panel" 
+        sx={{ 
+          mb: 2, 
+          mt: 3,
+          p: 2,
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
         {/* Title + Tooltip + Auto-populate Button */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Typography
             variant="h6"
             component="h3"
             className="game-sub-title"
             sx={{
               fontWeight: 600,
-              position: 'relative',
-              color: isDarkMode ? '#fff' : '#000',
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -6,
-                left: 0,
-                width: '40px',
-                height: '3px',
-                background: theme.palette.error.main,
-                borderRadius: '2px',
-              },
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             Room Information
@@ -240,25 +160,26 @@ const CoinInfo = ({
                   disabled={isAutopopulating || !gameCode}
                   startIcon={
                     isAutopopulating ? (
-                      <CircularProgress size={16} color="error" />
+                      <CircularProgress size={14} color="error" />
                     ) : (
-                      <AutoAwesome />
+                      <AutoAwesome sx={{ fontSize: '14px' }} />
                     )
                   }
                   sx={{
-                    borderColor: 'rgba(211, 47, 47, 0.5)',
-                    color: isDarkMode ? '#fff' : '#000',
+                    borderColor: 'rgba(255, 0, 0, 0.3)',
+                    color: '#fff',
                     textTransform: 'none',
                     fontSize: '0.75rem',
                     minWidth: 'auto',
                     px: 1.5,
                     py: 0.5,
+                    height: 28,
                     '&:hover': {
-                      borderColor: theme.palette.error.main,
-                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                      borderColor: '#ff0000',
+                      backgroundColor: 'rgba(255, 0, 0, 0.1)',
                     },
                     '&:disabled': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
                       color: 'rgba(255, 255, 255, 0.5)',
                     },
                   }}
@@ -275,9 +196,10 @@ const CoinInfo = ({
               <Info
                 sx={{
                   cursor: 'pointer',
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '16px',
                   '&:hover': {
-                    color: theme.palette.error.main,
+                    color: '#ff0000',
                   },
                   transition: 'color 0.2s ease',
                 }}
@@ -310,30 +232,29 @@ const CoinInfo = ({
           sx={{
             mb: 2,
             '& .MuiOutlinedInput-root': {
-              background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '8px',
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: alpha(theme.palette.error.main, 0.7),
+                borderColor: 'rgba(255, 0, 0, 0.5)',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
+                borderColor: '#ff0000',
               },
               '& fieldset': {
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
               },
             },
             '& .MuiInputLabel-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
               '&.Mui-focused': {
-                color: theme.palette.error.main,
+                color: '#ff0000',
               },
             },
             '& .MuiFormHelperText-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
             },
             '& .MuiInputBase-input': {
-              color: isDarkMode ? '#fff' : '#000',
+              color: '#fff',
             },
           }}
         />
@@ -367,42 +288,49 @@ const CoinInfo = ({
           sx={{
             mb: 2,
             '& .MuiOutlinedInput-root': {
-              background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '8px',
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: alpha(theme.palette.error.main, 0.7),
+                borderColor: 'rgba(255, 0, 0, 0.5)',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
+                borderColor: '#ff0000',
               },
               '& fieldset': {
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
               },
             },
             '& .MuiInputLabel-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
               '&.Mui-focused': {
-                color: theme.palette.error.main,
+                color: '#ff0000',
               },
             },
             '& .MuiFormHelperText-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
             },
             '& .MuiInputBase-input': {
-              color: isDarkMode ? '#fff' : '#000',
+              color: '#fff',
             },
             '& .MuiInputAdornment-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
             },
           }}
         />
 
         {/* Dropzone for Image Upload */}
-        <GlassDropzone
-          isDragging={isDragging}
-          isDarkMode={isDarkMode}
-          sx={{ mt: 3 }}
+        <Box
+          sx={{ 
+            border: `2px dashed ${isDragging ? '#ff0000' : 'rgba(255, 255, 255, 0.1)'}`,
+            borderRadius: '8px',
+            padding: 2,
+            textAlign: 'center',
+            mt: 2,
+            transition: 'all 0.2s ease',
+            background: isDragging 
+              ? 'rgba(255, 0, 0, 0.05)' 
+              : 'rgba(255, 255, 255, 0.02)',
+          }}
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragging(true);
@@ -418,7 +346,8 @@ const CoinInfo = ({
                 sx={{
                   display: 'block',
                   mb: 2,
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '0.875rem',
                 }}
               >
                 Drag or drop an image
@@ -431,16 +360,14 @@ const CoinInfo = ({
                   component="label"
                   sx={{
                     mt: 1,
-                    background: alpha(theme.palette.error.main, 0.9),
-                    backdropFilter: 'blur(4px)',
-                    boxShadow: '0 4px 12px rgba(211, 47, 47, 0.2)',
-                    '&:hover': {
-                      background: theme.palette.error.main,
-                      boxShadow: '0 6px 16px rgba(211, 47, 47, 0.3)',
-                    },
+                    background: '#ff0000',
                     borderRadius: '8px',
                     textTransform: 'none',
                     fontWeight: 500,
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      background: '#cc0000',
+                    },
                   }}
                 >
                   Upload Image
@@ -455,24 +382,30 @@ const CoinInfo = ({
             </Box>
           ) : (
             <Box sx={{ position: 'relative' }}>
-              <GlassButton
-                isDarkMode={isDarkMode}
-                isActive={false}
+              <Button
+                variant="outlined"
+                size="small"
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById('image-input').click();
                 }}
-                style={{
+                sx={{
                   position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  fontSize: '12px',
-                  padding: '4px 12px',
+                  top: 8,
+                  right: 8,
+                  fontSize: '0.75rem',
+                  padding: '4px 8px',
                   zIndex: 2,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                  },
                 }}
               >
                 Change Image
-              </GlassButton>
+              </Button>
 
               <Box
                 sx={{
@@ -487,10 +420,10 @@ const CoinInfo = ({
                   src={image}
                   alt="Uploaded"
                   sx={{
-                    maxWidth: '250px',
+                    maxWidth: '200px',
                     height: 'auto',
-                    borderRadius: '10px',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}
                 />
               </Box>
@@ -504,8 +437,8 @@ const CoinInfo = ({
             hidden
             onChange={handleImageUpload}
           />
-        </GlassDropzone>
-      </GlassContainer>
+        </Box>
+      </Box>
     </ThemeProvider>
   );
 };

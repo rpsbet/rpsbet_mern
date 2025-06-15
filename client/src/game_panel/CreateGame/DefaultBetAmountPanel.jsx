@@ -5,65 +5,11 @@ import {
   TextField,
   Tooltip,
   useTheme,
+  Button,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
-import styled from 'styled-components';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
-import { alpha } from '@mui/material';
-
-// Styled components for glassmorphism effect
-const GlassContainer = styled(Box)`
-  background: ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(30, 30, 30, 0.3)' : 'rgba(255, 255, 255, 0.65)'};
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 16px;
-  border: 1px solid ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'};
-  box-shadow: ${({ isDarkMode }) =>
-    isDarkMode
-      ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-      : '0 8px 32px rgba(31, 38, 135, 0.1)'};
-  padding: 24px;
-  transition: all 0.3s ease;
-`;
-
-const GlassButton = styled.button`
-  background: ${({ isDarkMode, isActive }) =>
-    isActive
-      ? isDarkMode
-        ? 'rgba(211, 47, 47, 0.8)'
-        : 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-        ? 'rgba(255, 255, 255, 0.12)'
-        : 'rgba(255, 255, 255, 0.5)'};
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid ${({ isActive, isDarkMode }) =>
-    isActive
-      ? 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-        ? 'rgba(255, 255, 255, 0.08)'
-        : 'rgba(255, 255, 255, 0.5)'};
-  color: ${({ isActive, isDarkMode }) =>
-    isActive
-      ? 'white'
-      : isDarkMode
-        ? 'rgba(255, 255, 255, 0.9)'
-        : 'rgba(0, 0, 0, 0.8)'};
-  font-weight: ${({ isActive }) => (isActive ? '600' : '400')};
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(211, 47, 47, 0.6)' : 'rgba(211, 47, 47, 0.6)'};
-    color: white;
-  }
-`;
 
 function DefaultBetAmountPanel({
   tax,
@@ -76,7 +22,8 @@ function DefaultBetAmountPanel({
   isDarkMode,
 }) {
   const theme = useTheme();
-console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
+  console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
+  
   const handleBetAmountChange = (e) => {
     const value = e.target.value;
     if (value === '' || (!isNaN(value) && Number(value) >= 0)) {
@@ -97,14 +44,22 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
 
   return (
     <ThemeProvider theme={getCustomTheme(isDarkMode)}>
-      <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 3 }}>
+      <Box 
+        sx={{ 
+          mt: 3,
+          p: 2,
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
         {/* Initial Buy-In (SOL) Header */}
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 3,
+            mb: 2,
           }}
         >
           <Typography
@@ -113,18 +68,8 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
             className="game-sub-title"
             sx={{
               fontWeight: 600,
-              position: 'relative',
-              color: isDarkMode ? '#fff' : '#000', // Explicit color for consistency
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -6,
-                left: 0,
-                width: '40px',
-                height: '3px',
-                background: theme.palette.error.main,
-                borderRadius: '2px',
-              },
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             Initial Buy-In (SOL)
@@ -136,9 +81,10 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
             <Info
               sx={{
                 cursor: 'pointer',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '16px',
                 '&:hover': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
                 transition: 'color 0.2s ease',
               }}
@@ -155,14 +101,31 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
           }}
         >
           {defaultBetAmounts.map((amount) => (
-            <GlassButton
+            <Button
               key={amount}
-              isDarkMode={isDarkMode}
-              isActive={Number(bet_amount) === amount}
+              variant={Number(bet_amount) === amount ? 'contained' : 'outlined'}
+              color="error"
+              size="small"
               onClick={() => selectBetAmount(amount)}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                minWidth: 'auto',
+                px: 1.5,
+                py: 0.5,
+                height: 28,
+                borderColor: Number(bet_amount) === amount ? '#ff0000' : 'rgba(255, 0, 0, 0.3)',
+                color: Number(bet_amount) === amount ? '#fff' : '#ff0000',
+                backgroundColor: Number(bet_amount) === amount ? '#ff0000' : 'transparent',
+                '&:hover': {
+                  borderColor: '#ff0000',
+                  backgroundColor: Number(bet_amount) === amount ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                  color: '#fff',
+                },
+              }}
             >
               {amount} SOL
-            </GlassButton>
+            </Button>
           ))}
         </Box>
 
@@ -176,29 +139,31 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
           inputProps={{ min: 0, step: '0.001' }}
           variant="outlined"
           sx={{
-            mt: 3,
+            mt: 2,
             '& .MuiOutlinedInput-root': {
-              background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '8px',
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: alpha(theme.palette.error.main, 0.7),
+                borderColor: 'rgba(255, 0, 0, 0.5)',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
+                borderColor: '#ff0000',
               },
               '& fieldset': {
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
               },
             },
             '& .MuiInputLabel-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
               '&.Mui-focused': {
-                color: theme.palette.error.main,
+                color: '#ff0000',
               },
             },
             '& .MuiFormHelperText-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
+            },
+            '& .MuiInputBase-input': {
+              color: '#fff',
             },
           }}
           helperText={
@@ -209,13 +174,15 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
           error={balance < bet_amount}
         />
 
-        {/* Health (SOL) Header */}
-        {/* <Box
+        {/* Health (SOL) Section - Commented out but preserved for reference */}
+        {/* 
+        <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 3,
+            mb: 2,
+            mt: 3,
           }}
         >
           <Typography
@@ -224,18 +191,8 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
             className="game-sub-title"
             sx={{
               fontWeight: 600,
-              position: 'relative',
-              color: isDarkMode ? '#fff' : '#000', // Explicit color for consistency
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -6,
-                left: 0,
-                width: '40px',
-                height: '3px',
-                background: theme.palette.error.main,
-                borderRadius: '2px',
-              },
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             Health (SOL)
@@ -247,9 +204,10 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
             <Info
               sx={{
                 cursor: 'pointer',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '16px',
                 '&:hover': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
                 transition: 'color 0.2s ease',
               }}
@@ -267,34 +225,37 @@ console.log('DefaultBetAmountPanel rendered', balance, bet_amount);
           inputProps={{ min: 10, step: '1' }}
           variant="outlined"
           sx={{
-            mb: 3,
+            mb: 2,
             '& .MuiOutlinedInput-root': {
-              background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '8px',
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: alpha(theme.palette.error.main, 0.7),
+                borderColor: 'rgba(255, 0, 0, 0.5)',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
+                borderColor: '#ff0000',
               },
               '& fieldset': {
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
               },
             },
             '& .MuiInputLabel-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
               '&.Mui-focused': {
-                color: theme.palette.error.main,
+                color: '#ff0000',
               },
             },
             '& .MuiFormHelperText-root': {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              color: 'rgba(255, 255, 255, 0.6)',
+            },
+            '& .MuiInputBase-input': {
+              color: '#fff',
             },
           }}
           helperText="Minimum 10 SOL"
-        /> */}
-      </GlassContainer>
+        />
+        */}
+      </Box>
     </ThemeProvider>
   );
 }

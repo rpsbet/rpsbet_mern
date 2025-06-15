@@ -2,25 +2,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { sendSolDeposit } from '../../util/solana';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  differenceInSeconds,
-  differenceInMinutes,
-  differenceInHours,
-  differenceInDays,
-  isValid,
-} from 'date-fns';
-import {
   Box,
-  Tooltip,
   Typography,
   Button,
   TextField,
   Table,
-  TableHead,
   TableBody,
   TableCell,
   TableRow,
-  TableContainer,
-  Card,
   useMediaQuery,
   InputAdornment
 } from '@mui/material';
@@ -33,17 +22,13 @@ import { debounce } from 'lodash';
 import { ThemeProvider } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createChart } from 'lightweight-charts';
-import { PublicKey } from '@solana/web3.js';
 import { getCustomTheme } from '../../config/theme';
 import {
-  getTransactionCandles,
   jeetGame,
   someActionToAppendCandle,
   getMyGames
 } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
-import Avatar from '../../components/Avatar';
-import PlayerModal from '../modal/PlayerModal';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 
 function CoHostModal({
@@ -65,10 +50,7 @@ function CoHostModal({
   const trade_loading = useSelector((state) => state.logic.trade_loading);
 
   const storeCandles = useSelector((state) => state.logic.candles);
-  const transactions = useSelector((state) => state.logic.transactions);
   const account = useSelector(state => state.auth.account);
-  const [showPlayerModal, setShowPlayerModal] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedTab, setSelectedTab] = useState('PUMP');
   const [localCoHostAmount, setLocalCoHostAmount] = useState(0.01);
 
@@ -117,14 +99,14 @@ function CoHostModal({
 
       chartInstanceRef.current = createChart(container, {
         width: container.clientWidth,
-        height: 350,
+        height: 300,
         layout: {
-          background: { type: 'solid', color: 'rgba(0, 0, 0, 0.2)' },
+          background: { type: 'solid', color: 'rgba(0, 0, 0, 0.1)' },
           textColor: '#ffffff',
         },
         grid: {
-          vertLines: { color: 'rgba(197, 203, 206, 0.3)' },
-          horzLines: { color: 'rgba(197, 203, 206, 0.3)' },
+          vertLines: { color: 'rgba(197, 203, 206, 0.2)' },
+          horzLines: { color: 'rgba(197, 203, 206, 0.2)' },
         },
         timeScale: { timeVisible: true, secondsVisible: true },
       });
@@ -155,12 +137,10 @@ function CoHostModal({
   }, [localChartData]);
 
   // ------------------ SOCKET FOR REAL-TIME CANDLE? (Optional) ------------------
-
   useEffect(() => {
     if (!selectedRow?._id || !socket) return;
     const candleEvent = `NEW_CANDLE_${selectedRow._id}`;
     const handleNewCandle = (data) => {
-      // console.log("NEW CANDLE——————data", data)
       dispatch(someActionToAppendCandle(data.newCandle));
     };
     socket.on(candleEvent, handleNewCandle);
@@ -174,27 +154,19 @@ function CoHostModal({
     if (!original) return 'N/A';
     return (((current - original) / original) * 100).toFixed(2);
   };
-  const liquidityPercentageChange = calculatePercentageChange(
-    selectedRow.winnings ? selectedRow.winnings : parseFloat(selectedRow.user_bet),
-    selectedRow.bet_amount
-  );
 
   function simulatePump({
     currentLiquidity,
     hosts,
     userId,
     deposit,
-    commissionPct = 1,   // e.g. 2.5 = 2.5%
-    bonusFraction = 0.12,  // 12% bonus to old holders
+    commissionPct = 1,
+    bonusFraction = 0.12,
   }) {
-    // 1) Commission & net deposit
     const fee = (deposit * commissionPct) / 100;
     const netDeposit = deposit - fee;
-
-    // 2) “Total share supply” is often set to currentLiquidity by your back-end
     let totalShareSupply = currentLiquidity;
 
-    // 3) Convert each host’s percentage into absolute shares
     const oldHosts = hosts.map((h) => {
       const oldAbsoluteShares = (h.share / 100) * totalShareSupply;
       return {
@@ -204,24 +176,18 @@ function CoHostModal({
       };
     });
 
-    // 4) Minted shares = netDeposit
     const mintedShares = netDeposit;
-
-    // 5) Bonus portion for old holders
     const bonusForOld = mintedShares * bonusFraction;
     const buyerShares = mintedShares - bonusForOld;
 
-    // 6) Distribute bonus among old holders proportionally
     const totalOldAbs = oldHosts.reduce((sum, x) => sum + x.oldAbsoluteShares, 0) || 1;
     oldHosts.forEach((h) => {
       const fraction = h.oldAbsoluteShares / totalOldAbs;
       h.newAbsoluteShares = h.oldAbsoluteShares + bonusForOld * fraction;
     });
 
-    // 7) Add the buyer’s new shares
     const buyerIndex = oldHosts.findIndex((h) => h.host === userId);
     if (buyerIndex === -1) {
-      // Buyer is new
       oldHosts.push({
         host: userId,
         share: 0,
@@ -232,10 +198,8 @@ function CoHostModal({
       oldHosts[buyerIndex].newAbsoluteShares += buyerShares;
     }
 
-    // 8) New total share supply = old + minted
     const newTotalShareSupply = totalShareSupply + mintedShares;
 
-    // 9) Recompute share %
     oldHosts.forEach((h) => {
       h.share =
         newTotalShareSupply > 0
@@ -243,7 +207,6 @@ function CoHostModal({
           : 0;
     });
 
-    // 10) Normalize so sum of shares is 100
     const sumPct = oldHosts.reduce((acc, x) => acc + x.share, 0);
     if (sumPct > 0) {
       const factor = 100 / sumPct;
@@ -252,7 +215,6 @@ function CoHostModal({
       });
     }
 
-    // 11) The user’s final share in absolute + percent
     const newLiquidity = currentLiquidity + netDeposit;
     const updatedHosts = oldHosts;
     const userHost = updatedHosts.find((h) => h.host === userId);
@@ -273,13 +235,11 @@ function CoHostModal({
     hosts,
     userId,
     sharesToSell,
-    commissionPct = 1, // e.g. 2.5 = 2.5%
-    shockRatio = 0.10,   // 10% shock to other hosts
+    commissionPct = 1,
+    shockRatio = 0.10,
   }) {
-    // 1) "Total share supply" equals currentLiquidity or a dedicated field if you store it separately
     let totalShareSupply = currentLiquidity;
 
-    // 2) Convert each host’s % into absolute shares
     const oldHosts = hosts.map((h) => {
       const absShares = (h.share / 100) * totalShareSupply;
       return {
@@ -289,7 +249,6 @@ function CoHostModal({
       };
     });
 
-    // 3) Find the seller
     const sellerIndex = oldHosts.findIndex((h) => h.host === userId);
     if (sellerIndex === -1) {
       return {
@@ -297,7 +256,6 @@ function CoHostModal({
       };
     }
 
-    // 4) Check if user has enough shares
     const seller = oldHosts[sellerIndex];
     if (sharesToSell > seller.absShares + 1e-9) {
       return {
@@ -307,18 +265,12 @@ function CoHostModal({
       };
     }
 
-    // 5) Convert shares to currency
-    //    1 share => (currentLiquidity / totalShareSupply) currency
     const valueBeforeFee = sharesToSell * (currentLiquidity / totalShareSupply);
-
-    // 6) Commission
     const fee = (valueBeforeFee * commissionPct) / 100;
     const amountAfterFee = valueBeforeFee - fee;
 
-    // 7) Update the seller’s absolute shares
     seller.newAbsShares = seller.absShares - sharesToSell;
 
-    // 8) Apply shock ratio to other hosts
     oldHosts.forEach((h, idx) => {
       if (idx !== sellerIndex) {
         h.newAbsShares = h.newAbsShares * (1 - shockRatio);
@@ -326,13 +278,9 @@ function CoHostModal({
       }
     });
 
-    // 9) New total share supply
     let newTotalShareSupply = oldHosts.reduce((acc, h) => acc + h.newAbsShares, 0);
-
-    // 10) New liquidity => minus the amount the user withdrew
     const newLiquidity = currentLiquidity - amountAfterFee;
 
-    // 11) Recompute share percentages
     oldHosts.forEach((h) => {
       h.share =
         newTotalShareSupply > 0
@@ -340,7 +288,6 @@ function CoHostModal({
           : 0;
     });
 
-    // 12) Normalize to 100
     const sumPct = oldHosts.reduce((acc, x) => acc + x.share, 0);
     if (sumPct > 0) {
       const factor = 100 / sumPct;
@@ -349,7 +296,6 @@ function CoHostModal({
       });
     }
 
-    // 13) Final user data
     const userFinalSharePct = oldHosts[sellerIndex].share;
     const userFinalAbsolute = (userFinalSharePct / 100) * newLiquidity;
 
@@ -364,36 +310,6 @@ function CoHostModal({
       error: null,
     };
   }
-
-  const totalShare = Array.isArray(hosts)
-    ? hosts.reduce((acc, host) => acc + host.share, 0)
-    : 0;
-
-  const formatRelativeTime = (date) => {
-    const now = new Date();
-    const created = new Date(date);
-
-    if (!isValid(created)) return 'Invalid Date';
-
-    const diffSeconds = differenceInSeconds(now, created);
-    const days = Math.floor(diffSeconds / (24 * 60 * 60));
-    const hours = Math.floor((diffSeconds % (24 * 60 * 60)) / (60 * 60));
-    const minutes = Math.floor((diffSeconds % (60 * 60)) / 60);
-    const seconds = diffSeconds % 60;
-
-    if (days >= 1) {
-      return days > 1 ? `${days}d ${hours}h ago` : `${days}d ${hours > 0 ? hours + 'h' : ''} ago`;
-    }
-    if (hours >= 1) {
-      return hours > 1
-        ? `${hours}h ${minutes}m ago`
-        : `${hours}h ${minutes > 0 ? minutes + 'm' : ''} ago`;
-    }
-    if (minutes >= 1) {
-      return minutes > 1 ? `${minutes}m ago` : `${minutes}m ${seconds}s ago`;
-    }
-    return `${seconds}s ago`;
-  };
 
   const debouncedHandleChange = useCallback(
     debounce((value) => {
@@ -419,7 +335,6 @@ function CoHostModal({
   };
 
   const handleSendCoHostWithDeposit = useCallback(
-
     async () => {
       if (isProcessing || trade_loading) {
         dispatch(errorMsgBar('Trade is already in progress.'));
@@ -434,9 +349,7 @@ function CoHostModal({
 
       setIsProcessing(true);
 
-
       try {
-        // Call sendSolDeposit for non-Custom games
         const depositResult = await sendSolDeposit(
           dispatch,
           amount,
@@ -445,10 +358,10 @@ function CoHostModal({
           'pump',
           account,
           balance,
-          () => { }, // Success callback (empty for now)
+          () => { },
           () => {
             setIsProcessing(false);
-          } // Failure callback
+          }
         );
 
         if (!depositResult.success) {
@@ -456,7 +369,6 @@ function CoHostModal({
           return;
         }
 
-        // Proceed with original handleSendCoHost
         await handleSendCoHost();
       } catch (error) {
         console.error('Error in handleSendCoHostWithDeposit:', error);
@@ -479,7 +391,6 @@ function CoHostModal({
     ]
   );
 
-  // Handle JEET OUT (no sendSolDeposit)
   const handleUnstake = useCallback(
     async (winnings, room_id, stakeAmount) => {
       if (isProcessing || trade_loading) {
@@ -490,7 +401,6 @@ function CoHostModal({
       setIsProcessing(true);
 
       try {
-        // Validate inputs
         const parsedStake = parseFloat(stakeAmount);
         if (isNaN(parsedStake) || parsedStake <= 0) {
           dispatch(errorMsgBar('Invalid amount to withdraw.'));
@@ -509,7 +419,6 @@ function CoHostModal({
           return;
         }
 
-        // Dispatch jeetGame
         await dispatch(jeetGame(room_id, parsedStake));
         await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
       } catch (error) {
@@ -524,388 +433,76 @@ function CoHostModal({
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
-  const handleOpenPlayerModal = (creator_id) => {
-    setSelectedCreator(creator_id);
-    setShowPlayerModal(true);
-  };
-  const handleClosePlayerModal = () => {
-    setShowPlayerModal(false);
-  };
-
-  // ------------------ Render ------------------
   return (
     <ThemeProvider theme={theme}>
       <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 3,
+          gap: 2,
           width: '100%',
-          background: 'rgba(0, 0, 0, 0.15)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '0 0 24px 24px',
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
           overflow: 'hidden',
-          '@supports not (backdrop-filter: blur(20px))': {
-            background: 'rgba(0, 0, 0, 0.35)',
-          },
         }}
       >
-        {/* Header */}
-        {!input_only && !has_joined && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: 3,
-              pb: 0,
-            }}
-          >
-            <Typography
-              variant="h5"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                fontWeight: 700,
-                fontSize: '1.25rem',
-                letterSpacing: '0.5px',
-              }}
-            >
-              <ShowChartOutlined sx={{ mr: 1.5, fontSize: 28 }} />
-              TRADE
-            </Typography>
-            <IconButton
-              onClick={handleClose}
-              sx={{
-                color: 'error.main',
-                bgcolor: 'rgba(255, 0, 0, 0.1)',
-                border: '1px solid rgba(255, 0, 0, 0.2)',
-                '&:hover': {
-                  bgcolor: 'rgba(255, 0, 0, 0.2)',
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        )}
-
-        {/* Player Modal */}
-        {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-          />
-        )}
-
-        {/* Info Dashboard */}
-        {!input_only && !has_joined && (
-          <Box sx={{ px: 3 }}>
-            <Grid container spacing={3}>
-              {/* LIQUIDITY */}
-              <Grid item xs={6} sm={3}>
-                <Card
-                  sx={{
-                    p: 2.5,
-                    textAlign: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
-                    },
-                  }}
-                >
-                  <Tooltip title={`Change: ${liquidityPercentageChange}%`} arrow>
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: 'text.secondary',
-                          mb: 1.5,
-                          display: 'block',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                        }}
-                      >
-                        Liquidity
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: liquidityPercentageChange > 0
-                              ? '#4caf50'
-                              : liquidityPercentageChange < 0
-                                ? '#f44336'
-                                : 'text.primary',
-                            fontWeight: 700,
-                            fontSize: '1.1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                          }}
-                        >
-                          {!selectedRow.winnings
-                            ? convertToCurrency(selectedRow.user_bet, solPrice)
-                            : convertToCurrency(selectedRow.winnings, solPrice)}
-                          {liquidityPercentageChange > 0 && (
-                            <TrendingUpOutlined sx={{ fontSize: 18, color: '#4caf50' }} />
-                          )}
-                          {liquidityPercentageChange < 0 && (
-                            <TrendingDownOutlined sx={{ fontSize: 18, color: '#f44336' }} />
-                          )}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Tooltip>
-                </Card>
-              </Grid>
-
-              {/* HOLDERS */}
-              <Grid item xs={6} sm={3}>
-                <Card
-                  sx={{
-                    p: 2.5,
-                    textAlign: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
-                    },
-                  }}
-                >
-                  <Tooltip
-                    arrow
-                    title={
-                      <Box sx={{ p: 1 }}>
-                        {Array.isArray(hosts) &&
-                          hosts.map((host, i) => {
-                            const pct = totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
-                            return (
-                              <Typography key={i} variant="body2" sx={{ mb: 0.5 }}>
-                                {i === 0 ? 'Dev' : `Co-Host ${i + 1}`}: {pct}%
-                              </Typography>
-                            );
-                          })}
-                      </Box>
-                    }
-                  >
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: 'text.secondary',
-                          mb: 1.5,
-                          display: 'block',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                        }}
-                      >
-                        Holders
-                      </Typography>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: '1.1rem',
-                        }}
-                      >
-                        {Array.isArray(hosts) ? hosts.length : 0}
-                      </Typography>
-                    </Box>
-                  </Tooltip>
-                </Card>
-              </Grid>
-
-              {/* BATTLES */}
-              <Grid item xs={6} sm={3}>
-                <Card
-                  sx={{
-                    p: 2.5,
-                    textAlign: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
-                    },
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: 'text.secondary',
-                      mb: 1.5,
-                      display: 'block',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    Battles
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '1.1rem',
-                    }}
-                  >
-                    {selectedRow.battles
-                      ? selectedRow.battles
-                      : selectedRow.game_log_list?.length || 0}
-                  </Typography>
-                </Card>
-              </Grid>
-
-              {/* CREATED BY */}
-              <Grid item xs={6} sm={3}>
-                <Card
-                  sx={{
-                    p: 2.5,
-                    textAlign: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
-                    },
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: 'text.secondary',
-                      mb: 1.5,
-                      display: 'block',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    Created By
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <Avatar
-                      src={selectedRow.creator_avatar}
-                      user_id={selectedRow.creator_id}
-                      username={selectedRow.username}
-                      rank={selectedRow.rank}
-                      accessory={selectedRow.accessory}
-                      elite={selectedRow.elite}
-                      alt="Creator Avatar"
-                      onClick={() => handleOpenPlayerModal(selectedRow.creator_id)}
-                      sx={{
-                        width: 44,
-                        height: 44,
-                        cursor: 'pointer',
-                        border: '2px solid rgba(255, 255, 255, 0.2)',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          transform: 'scale(1.1)',
-                          borderColor: 'rgba(255, 255, 255, 0.4)',
-                        },
-                      }}
-                    />
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-          </Box>
-        )}
-
         {/* Trading Interface */}
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
-              px: 3,
-              p: 3,
+              padding: '16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: 3,
+              gap: 2,
             }}
           >
             {/* Trade Type Selection */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
               <Button
                 onClick={() => setSelectedTab('PUMP')}
                 variant={selectedTab === 'PUMP' ? 'contained' : 'outlined'}
                 color="success"
+                size="small"
                 sx={{
                   flex: 1,
-                  height: 56,
-                  borderRadius: '16px',
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
+                  height: 36,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  border: selectedTab !== 'PUMP' ? '2px solid #4caf50' : 'none',
                   backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : 'transparent',
+                  borderColor: '#4caf50',
                   color: selectedTab === 'PUMP' ? '#ffffff' : '#4caf50',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
                     backgroundColor: selectedTab === 'PUMP' ? '#45a049' : 'rgba(76, 175, 80, 0.1)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 20px rgba(76, 175, 80, 0.3)',
                   },
                 }}
               >
-                <TrendingUpOutlined sx={{ mr: 1, fontSize: 20 }} />
+                <TrendingUpOutlined sx={{ mr: 0.5, fontSize: 16 }} />
                 Pump
               </Button>
               <Button
                 onClick={() => setSelectedTab('JEET')}
                 variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
                 color="error"
+                size="small"
                 sx={{
                   flex: 1,
-                  height: 56,
-                  borderRadius: '16px',
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
+                  height: 36,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  border: selectedTab !== 'JEET' ? '2px solid #f44336' : 'none',
                   backgroundColor: selectedTab === 'JEET' ? '#f44336' : 'transparent',
+                  borderColor: '#f44336',
                   color: selectedTab === 'JEET' ? '#ffffff' : '#f44336',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
                     backgroundColor: selectedTab === 'JEET' ? '#e53935' : 'rgba(244, 67, 54, 0.1)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 20px rgba(244, 67, 54, 0.3)',
                   },
                 }}
               >
-                <TrendingDownOutlined sx={{ mr: 1, fontSize: 20 }} />
+                <TrendingDownOutlined sx={{ mr: 0.5, fontSize: 16 }} />
                 Jeet
               </Button>
             </Box>
@@ -913,31 +510,34 @@ function CoHostModal({
             {/* Amount Input Section */}
             <Box>
               <Typography
-                variant="body1"
+                variant="caption"
                 sx={{
-                  mb: 2,
+                  mb: 1,
                   fontWeight: 600,
-                  color: 'text.primary',
-                  fontSize: '1rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: '0.7rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'block',
                 }}
               >
                 {selectedTab === 'PUMP' ? 'Amount to invest' : 'Amount to withdraw'}
               </Typography>
 
               {/* Quick Amount Buttons */}
-              <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 {[0.01, 0.1, 1].map((amt) => (
                   <Button
                     key={amt}
                     variant="outlined"
                     onClick={() => handleButtonClick(amt)}
+                    size="small"
                     sx={{
                       flex: 1,
-                      height: 44,
-                      borderRadius: '12px',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      border: `2px solid ${selectedTab === 'PUMP' ? '#4caf50' : '#f44336'}`,
+                      height: 28,
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
                       color: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
                       backgroundColor: 'transparent',
                       transition: 'all 0.2s ease',
@@ -945,7 +545,6 @@ function CoHostModal({
                         backgroundColor: selectedTab === 'PUMP'
                           ? 'rgba(76, 175, 80, 0.1)'
                           : 'rgba(244, 67, 54, 0.1)',
-                        transform: 'scale(1.02)',
                       },
                     }}
                   >
@@ -962,31 +561,30 @@ function CoHostModal({
                 type="number"
                 fullWidth
                 placeholder="Enter amount"
+                size="small"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Box
-                        component="span"
+                      <Typography
+                        variant="caption"
                         sx={{
-                          color: 'text.secondary',
-                          fontSize: '1rem',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontSize: '0.75rem',
                           fontWeight: 600,
                         }}
                       >
                         SOL
-                      </Box>
+                      </Typography>
                     </InputAdornment>
                   ),
                   sx: {
-                    borderRadius: '16px',
-                    height: 64,
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    height: 40,
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
                     '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
-                      borderWidth: '2px',
+                      borderColor: selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
+                      borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
@@ -1016,20 +614,15 @@ function CoHostModal({
                 disabled={isProcessing || trade_loading}
                 fullWidth
                 sx={{
-                  mt: 3,
-                  height: 64,
-                  borderRadius: '16px',
-                  fontSize: '1.2rem',
-                  fontWeight: 700,
+                  mt: 2,
+                  height: 40,
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
                   backgroundColor: selectedTab === 'PUMP' ? '#4caf50' : '#f44336',
-                  boxShadow: `0 8px 20px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.4)' : 'rgba(244, 67, 54, 0.4)'}`,
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
                     backgroundColor: selectedTab === 'PUMP' ? '#45a049' : '#e53935',
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 12px 25px ${selectedTab === 'PUMP' ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)'}`,
                   },
                   '&:disabled': {
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1038,7 +631,7 @@ function CoHostModal({
                 }}
               >
                 {isProcessing || trade_loading ? (
-                  <CircularProgress size={28} color="error" />
+                  <CircularProgress size={20} color="inherit" />
                 ) : (
                   selectedTab === 'PUMP' ? "Pump It" : "Jeet Out"
                 )}
@@ -1046,38 +639,39 @@ function CoHostModal({
             </Box>
 
             {/* Trade Information Table */}
-            <Card
+            <Box
               sx={{
-                backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '20px',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 overflow: 'hidden',
-                backdropFilter: 'blur(10px)',
               }}
             >
-              <Table>
+              <Table size="small">
                 <TableBody>
                   {!input_only && (
                     <>
                       <TableRow>
                         <TableCell
                           sx={{
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: 'text.secondary',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            color: 'rgba(255, 255, 255, 0.6)',
                             fontWeight: 600,
-                            fontSize: '0.9rem',
-                            py: 2,
+                            fontSize: '0.7rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            py: 1,
                           }}
                         >
-                          YOUR BALANCE:
+                          Your Balance:
                         </TableCell>
                         <TableCell
                           align="right"
                           sx={{
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            fontWeight: 700,
-                            fontSize: '0.95rem',
-                            py: 2,
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            py: 1,
                           }}
                         >
                           {convertToCurrency(balance, solPrice)}
@@ -1086,23 +680,25 @@ function CoHostModal({
                       <TableRow>
                         <TableCell
                           sx={{
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: 'text.secondary',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            color: 'rgba(255, 255, 255, 0.6)',
                             fontWeight: 600,
-                            fontSize: '0.9rem',
-                            py: 2,
+                            fontSize: '0.7rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            py: 1,
                           }}
                         >
-                          CURRENT BANKROLL:
+                          Current Bankroll:
                         </TableCell>
                         <TableCell
                           align="right"
                           sx={{
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                             color: '#ff8500',
-                            fontWeight: 700,
-                            fontSize: '0.95rem',
-                            py: 2,
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            py: 1,
                           }}
                         >
                           {selectedRow
@@ -1113,33 +709,33 @@ function CoHostModal({
                     </>
                   )}
 
-                  {/* CURRENT POSITION */}
                   <TableRow>
                     <TableCell
                       sx={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: 'text.secondary',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                        color: 'rgba(255, 255, 255, 0.6)',
                         fontWeight: 600,
-                        fontSize: '0.9rem',
-                        py: 2,
+                        fontSize: '0.7rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        py: 1,
                       }}
                     >
-                      CURRENT POSITION:
+                      Current Position:
                     </TableCell>
                     <TableCell
                       align="right"
                       sx={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        whiteSpace: 'pre-wrap',
-                        py: 2,
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                        py: 1,
                       }}
                     >
                       <Typography
-                        variant="body2"
+                        variant="caption"
                         sx={{
-                          fontWeight: 700,
+                          fontWeight: 600,
                           color: '#ffa726',
-                          fontSize: '0.9rem',
+                          fontSize: '0.7rem',
                         }}
                       >
                         {(() => {
@@ -1162,59 +758,47 @@ function CoHostModal({
                     </TableCell>
                   </TableRow>
 
-                  {/* PROJECTED POSITION */}
                   <TableRow
                     sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
                     }}
                   >
                     <TableCell
                       sx={{
-                        color: 'text.secondary',
+                        color: 'rgba(255, 255, 255, 0.6)',
                         fontWeight: 600,
-                        fontSize: '0.9rem',
-                        py: 2,
+                        fontSize: '0.7rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        py: 1,
                         borderBottom: 'none',
                       }}
                     >
-                      PROJECTED POSITION:
+                      Projected Position:
                     </TableCell>
                     <TableCell
                       align="right"
                       sx={{
                         color: '#ff8500',
-                        whiteSpace: 'pre-line',
-                        fontWeight: 700,
-                        fontSize: '0.9rem',
-                        py: 2,
+                        fontWeight: 600,
+                        fontSize: '0.7rem',
+                        py: 1,
                         borderBottom: 'none',
                       }}
                     >
                       {(() => {
                         if (!selectedRow || !Array.isArray(hosts)) {
-                          return (
-                            <>
-                              0% / 0.000000 SOL (<span style={{ color: 'grey' }}>{convertToCurrency(0, solPrice)}</span>)
-                            </>
-                          );
+                          return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
                         }
 
                         const currentBankroll = parseFloat(selectedRow.user_bet || 0);
                         if (!currentBankroll) {
-                          return (
-                            <>
-                              0% / 0.000000 SOL (<span style={{ color: 'grey' }}>{convertToCurrency(0, solPrice)}</span>)
-                            </>
-                          );
+                          return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
                         }
 
                         const inputValue = parseFloat(coHostAmount || '0');
                         if (inputValue <= 0) {
-                          return (
-                            <>
-                              0% / 0.000000 SOL (<span style={{ color: 'grey' }}>{convertToCurrency(0, solPrice)}</span>)
-                            </>
-                          );
+                          return `0% / 0.000000 SOL (${convertToCurrency(0, solPrice)})`;
                         }
 
                         if (selectedTab === 'PUMP') {
@@ -1230,11 +814,7 @@ function CoHostModal({
                           const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
                           const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
                           const displaySol = userFinalAbsolute.toFixed(6);
-                          return (
-                            <>
-                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.8rem' }}> / {displaySol} SOL ({displayCurrency})</span>
-                            </>
-                          );
+                          return `~${finalPctStr} / ${displaySol} SOL (${displayCurrency})`;
                         } else {
                           const sharesToSell = inputValue;
 
@@ -1254,11 +834,7 @@ function CoHostModal({
                           const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
                           const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
                           const displaySol = userFinalAbsolute.toFixed(6);
-                          return (
-                            <>
-                              ~{finalPctStr} <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '400', fontSize: '0.8rem' }}>/ {displaySol} SOL ({displayCurrency})</span>
-                            </>
-                          );
+                          return `~${finalPctStr} / ${displaySol} SOL (${displayCurrency})`;
                         }
                       })()}
                     </TableCell>
@@ -1267,215 +843,39 @@ function CoHostModal({
               </Table>
 
               {/* Fee Information */}
-              <Box sx={{ p: 2, textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
+              <Box sx={{ p: 1, textAlign: 'center', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
                 <Typography
                   variant="caption"
-                  color="text.secondary"
                   sx={{
-                    fontSize: '0.8rem',
+                    fontSize: '0.65rem',
                     fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.6)',
                   }}
                 >
                   {selectedTab === 'PUMP' ? 'Trading fee: 5%' : 'Trading fee: 5%'}
                 </Typography>
               </Box>
-            </Card>
+            </Box>
           </Box>
         )}
 
         {/* Chart Container */}
         {!input_only && (
-          <Box sx={{}}>
-            <Card
-
-            >
-              <div
-                ref={chartContainerRef}
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                }}
-              />
-            </Card>
-          </Box>
-        )}
-
-        {/* Transactions Table */}
-        {!has_joined && !input_only && (
-          <Box sx={{ px: 3, pb: 3 }}>
-            <Card
-              sx={{
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                backdropFilter: 'blur(10px)',
+          <Box
+            sx={{
+              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+              background: 'rgba(255, 255, 255, 0.01)',
+            }}
+          >
+            <div
+              ref={chartContainerRef}
+              style={{
+                width: '100%',
+                height: 'auto',
               }}
-            >
-              <Box sx={{ p: 3 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    mb: 3,
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    letterSpacing: '0.3px',
-                  }}
-                >
-                  Recent Transactions
-                </Typography>
-
-                <TableContainer sx={{ maxHeight: 320 }}>
-                  <Table stickyHeader>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell
-                          sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
-                            fontWeight: 700,
-                            fontSize: '0.85rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Description
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
-                            fontWeight: 700,
-                            fontSize: '0.85rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Amount
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
-                            fontWeight: 700,
-                            fontSize: '0.85rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Date
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {transactions.length > 0 ? (
-                        transactions.map((tx, i) => {
-                          let desc = tx.description?.toLowerCase() || '';
-                          let label = null;
-                          let labelColor = 'text.primary';
-                          let bgColor = 'transparent';
-
-                          if (desc.includes('joined')) {
-                            label = 'Bet';
-                            labelColor = '#2196f3';
-                            bgColor = 'rgba(33, 150, 243, 0.1)';
-                          } else if (desc.includes('created')) {
-                            label = 'Created';
-                            labelColor = '#9c27b0';
-                            bgColor = 'rgba(156, 39, 176, 0.1)';
-                          } else if (desc.includes('pumped')) {
-                            label = 'Pumped';
-                            labelColor = '#4caf50';
-                            bgColor = 'rgba(76, 175, 80, 0.1)';
-                          } else if (desc.includes('jeeted')) {
-                            label = 'Jeeted';
-                            labelColor = '#f44336';
-                            bgColor = 'rgba(244, 67, 54, 0.1)';
-                          }
-
-                          if (!label) return null;
-
-                          return (
-                            <TableRow
-                              key={i}
-                              sx={{
-                                '&:hover': {
-                                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                },
-                              }}
-                            >
-                              <TableCell
-                                sx={{
-                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                                  py: 2,
-                                }}
-                              >
-                                <Chip
-                                  label={label}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: bgColor,
-                                    color: labelColor,
-                                    fontWeight: 600,
-                                    fontSize: '0.75rem',
-                                    border: `1px solid ${labelColor}40`,
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell
-                                align="center"
-                                sx={{
-                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                                  fontWeight: 700,
-                                  fontSize: '0.9rem',
-                                  py: 2,
-                                }}
-                              >
-                                {convertToCurrency(tx.amount, solPrice)}
-                              </TableCell>
-                              <TableCell
-                                align="right"
-                                sx={{
-                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                                  color: 'text.secondary',
-                                  fontSize: '0.85rem',
-                                  py: 2,
-                                }}
-                              >
-                                {formatRelativeTime(tx.created_at)}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell
-                            colSpan={3}
-                            align="center"
-                            sx={{
-                              py: 6,
-                              color: 'text.secondary',
-                              fontSize: '0.95rem',
-                              fontStyle: 'italic',
-                            }}
-                          >
-                            No transactions available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
-            </Card>
+            />
           </Box>
         )}
-
       </Box>
     </ThemeProvider>
   );

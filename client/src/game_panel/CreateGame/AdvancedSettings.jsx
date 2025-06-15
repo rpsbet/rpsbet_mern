@@ -8,70 +8,14 @@ import {
   Tooltip,
   InputAdornment,
   useTheme,
+  Button,
+  Collapse,
 } from '@mui/material';
-import { Info } from '@mui/icons-material';
+import { Info, ExpandMore, ExpandLess } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
-import styled from 'styled-components';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
-import { alpha } from '@mui/material';
-
-// Styled components for glassmorphism effect
-const GlassContainer = styled(Box)`
-  background: ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(30, 30, 30, 0.3)' : 'rgba(255, 255, 255, 0.65)'};
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 16px;
-  border: 1px solid ${({ isDarkMode }) =>
-    isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'};
-  box-shadow: ${({ isDarkMode }) =>
-    isDarkMode
-      ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-      : '0 8px 32px rgba(31, 38, 135, 0.1)'};
-  padding: 24px;
-  transition: all 0.3s ease;
-`;
-
-const GlassButton = styled.button`
-  background: ${({ isDarkMode, isActive }) =>
-    isActive
-      ? isDarkMode
-        ? 'rgba(211, 47, 47, 0.8)'
-        : 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.12)'
-      : 'rgba(255, 255, 255, 0.5)'};
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid ${({ isActive, isDarkMode }) =>
-    isActive
-      ? 'rgba(211, 47, 47, 0.8)'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.08)'
-      : 'rgba(255, 255, 255, 0.5)'};
-  color: ${({ isActive, isDarkMode }) =>
-    isActive
-      ? 'white'
-      : isDarkMode
-      ? 'rgba(255, 255, 255, 0.9)'
-      : 'rgba(0, 0, 0, 0.8)'};
-  font-weight: ${({ isActive }) => (isActive ? '600' : '400')};
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  &:hover {
-    background: ${({ isDarkMode }) =>
-      isDarkMode ? 'rgba(211, 47, 47, 0.6)' : 'rgba(211, 47, 47, 0.6)'};
-    color: white;
-  }
-`;
 
 function AdvancedSettings(props) {
   const dispatch = useDispatch();
@@ -86,14 +30,22 @@ function AdvancedSettings(props) {
 
   return (
     <ThemeProvider theme={getCustomTheme(isDarkMode)}>
-      <GlassContainer isDarkMode={isDarkMode} sx={{ mt: 3 }}>
+      <Box 
+        sx={{ 
+          mt: 3,
+          p: 2,
+          borderRadius: '8px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
         {/* Privacy Section */}
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 3,
+            mb: 2,
           }}
         >
           <Typography
@@ -102,18 +54,8 @@ function AdvancedSettings(props) {
             className="game-sub-title"
             sx={{
               fontWeight: 600,
-              position: 'relative',
-              color: isDarkMode ? '#fff' : '#000',
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -6,
-                left: 0,
-                width: '40px',
-                height: '3px',
-                background: theme.palette.error.main,
-                borderRadius: '2px',
-              },
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             Privacy
@@ -125,9 +67,10 @@ function AdvancedSettings(props) {
             <Info
               sx={{
                 cursor: 'pointer',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '16px',
                 '&:hover': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
                 transition: 'color 0.2s ease',
               }}
@@ -143,22 +86,56 @@ function AdvancedSettings(props) {
             mb: 2,
           }}
         >
-          <GlassButton
-            isDarkMode={isDarkMode}
-            isActive={!props.is_private}
+          <Button
+            variant={!props.is_private ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
             onClick={() => handleInputChange('is_private', false)}
+            startIcon={<img src="/img/icons/public.svg" alt="Public Game" width="16px" />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              minWidth: 'auto',
+              px: 1.5,
+              py: 0.5,
+              height: 28,
+              borderColor: !props.is_private ? '#ff0000' : 'rgba(255, 0, 0, 0.3)',
+              color: !props.is_private ? '#fff' : '#ff0000',
+              backgroundColor: !props.is_private ? '#ff0000' : 'transparent',
+              '&:hover': {
+                borderColor: '#ff0000',
+                backgroundColor: !props.is_private ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                color: '#fff',
+              },
+            }}
           >
-            <img src="/img/icons/public.svg" alt="Public Game" width="20px" />
             Public
-          </GlassButton>
-          <GlassButton
-            isDarkMode={isDarkMode}
-            isActive={props.is_private}
+          </Button>
+          <Button
+            variant={props.is_private ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
             onClick={() => handleInputChange('is_private', true)}
+            startIcon={<img src="/img/icons/private.svg" alt="Private Game" width="16px" />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              minWidth: 'auto',
+              px: 1.5,
+              py: 0.5,
+              height: 28,
+              borderColor: props.is_private ? '#ff0000' : 'rgba(255, 0, 0, 0.3)',
+              color: props.is_private ? '#fff' : '#ff0000',
+              backgroundColor: props.is_private ? '#ff0000' : 'transparent',
+              '&:hover': {
+                borderColor: '#ff0000',
+                backgroundColor: props.is_private ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                color: '#fff',
+              },
+            }}
           >
-            <img src="/img/icons/private.svg" alt="Private Game" width="20px" />
             Private
-          </GlassButton>
+          </Button>
         </Box>
 
         {props.is_private && (
@@ -171,38 +148,42 @@ function AdvancedSettings(props) {
             fullWidth
             variant="outlined"
             sx={{
-              mb: 3,
+              mb: 2,
               '& .MuiOutlinedInput-root': {
-                background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(4px)',
+                background: 'rgba(255, 255, 255, 0.02)',
                 borderRadius: '8px',
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: alpha(theme.palette.error.main, 0.7),
+                  borderColor: 'rgba(255, 0, 0, 0.5)',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme.palette.error.main,
+                  borderColor: '#ff0000',
                 },
                 '& fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
                 },
               },
               '& .MuiInputLabel-root': {
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
                 '&.Mui-focused': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
+              },
+              '& .MuiInputBase-input': {
+                color: '#fff',
               },
             }}
           />
         )}
 
-        {/* Payout Section */}
-        {/* <Box
+        {/* Payout Section - Commented out but preserved for reference */}
+        {/* 
+        <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 3,
+            mb: 2,
+            mt: 3,
           }}
         >
           <Typography
@@ -211,18 +192,8 @@ function AdvancedSettings(props) {
             className="game-sub-title"
             sx={{
               fontWeight: 600,
-              position: 'relative',
-              color: isDarkMode ? '#fff' : '#000',
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -6,
-                left: 0,
-                width: '40px',
-                height: '3px',
-                background: theme.palette.error.main,
-                borderRadius: '2px',
-              },
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             Payout
@@ -234,9 +205,10 @@ function AdvancedSettings(props) {
             <Info
               sx={{
                 cursor: 'pointer',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '16px',
                 '&:hover': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
                 transition: 'color 0.2s ease',
               }}
@@ -252,22 +224,56 @@ function AdvancedSettings(props) {
             mb: 2,
           }}
         >
-          <GlassButton
-            isDarkMode={isDarkMode}
-            isActive={!props.endgame_type}
+          <Button
+            variant={!props.endgame_type ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
             onClick={() => handleInputChange('endgame_type', false)}
+            startIcon={<img src="/img/icons/manual.svg" alt="Manual Game" width="16px" />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              minWidth: 'auto',
+              px: 1.5,
+              py: 0.5,
+              height: 28,
+              borderColor: !props.endgame_type ? '#ff0000' : 'rgba(255, 0, 0, 0.3)',
+              color: !props.endgame_type ? '#fff' : '#ff0000',
+              backgroundColor: !props.endgame_type ? '#ff0000' : 'transparent',
+              '&:hover': {
+                borderColor: '#ff0000',
+                backgroundColor: !props.endgame_type ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                color: '#fff',
+              },
+            }}
           >
-            <img src="/img/icons/manual.svg" alt="Manual Game" width="20px" />
             Manual
-          </GlassButton>
-          <GlassButton
-            isDarkMode={isDarkMode}
-            isActive={props.endgame_type}
+          </Button>
+          <Button
+            variant={props.endgame_type ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
             onClick={() => handleInputChange('endgame_type', true)}
+            startIcon={<img src="/img/icons/automatic.svg" alt="Automatic Game" width="16px" />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              minWidth: 'auto',
+              px: 1.5,
+              py: 0.5,
+              height: 28,
+              borderColor: props.endgame_type ? '#ff0000' : 'rgba(255, 0, 0, 0.3)',
+              color: props.endgame_type ? '#fff' : '#ff0000',
+              backgroundColor: props.endgame_type ? '#ff0000' : 'transparent',
+              '&:hover': {
+                borderColor: '#ff0000',
+                backgroundColor: props.endgame_type ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                color: '#fff',
+              },
+            }}
           >
-            <img src="/img/icons/automatic.svg" alt="Automatic Game" width="20px" />
             Automatic
-          </GlassButton>
+          </Button>
         </Box>
 
         {props.endgame_type && (
@@ -284,30 +290,36 @@ function AdvancedSettings(props) {
               endAdornment: <InputAdornment position="end">SOL</InputAdornment>,
             }}
             sx={{
-              mb: 3,
+              mb: 2,
               '& .MuiOutlinedInput-root': {
-                background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(4px)',
+                background: 'rgba(255, 255, 255, 0.02)',
                 borderRadius: '8px',
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: alpha(theme.palette.error.main, 0.7),
+                  borderColor: 'rgba(255, 0, 0, 0.5)',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme.palette.error.main,
+                  borderColor: '#ff0000',
                 },
                 '& fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
                 },
               },
               '& .MuiInputLabel-root': {
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
                 '&.Mui-focused': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
+              },
+              '& .MuiInputBase-input': {
+                color: '#fff',
+              },
+              '& .MuiInputAdornment-root': {
+                color: 'rgba(255, 255, 255, 0.6)',
               },
             }}
           />
-        )} */}
+        )}
+        */}
 
         {/* Other Information Section */}
         <Box
@@ -315,7 +327,8 @@ function AdvancedSettings(props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 3,
+            mb: 2,
+            mt: 3,
           }}
         >
           <Typography
@@ -324,18 +337,8 @@ function AdvancedSettings(props) {
             className="game-sub-title"
             sx={{
               fontWeight: 600,
-              position: 'relative',
-              color: isDarkMode ? '#fff' : '#000',
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -6,
-                left: 0,
-                width: '40px',
-                height: '3px',
-                background: theme.palette.error.main,
-                borderRadius: '2px',
-              },
+              color: '#fff',
+              fontSize: '1rem',
             }}
           >
             Other Information
@@ -347,9 +350,10 @@ function AdvancedSettings(props) {
             <Info
               sx={{
                 cursor: 'pointer',
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '16px',
                 '&:hover': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
                 transition: 'color 0.2s ease',
               }}
@@ -361,8 +365,8 @@ function AdvancedSettings(props) {
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
-            mb: 3,
+            gap: 1,
+            mb: 2,
           }}
         >
           <TextField
@@ -377,51 +381,61 @@ function AdvancedSettings(props) {
             variant="outlined"
             sx={{
               '& .MuiOutlinedInput-root': {
-                background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(4px)',
+                background: 'rgba(255, 255, 255, 0.02)',
                 borderRadius: '8px',
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: alpha(theme.palette.error.main, 0.7),
+                  borderColor: 'rgba(255, 0, 0, 0.5)',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme.palette.error.main,
+                  borderColor: '#ff0000',
                 },
                 '& fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
                 },
               },
               '& .MuiInputLabel-root': {
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                color: 'rgba(255, 255, 255, 0.6)',
                 '&.Mui-focused': {
-                  color: theme.palette.error.main,
+                  color: '#ff0000',
                 },
+              },
+              '& .MuiInputBase-input': {
+                color: '#fff',
               },
             }}
           />
-          <FontAwesomeIcon icon={faPenSquare} />
+          <FontAwesomeIcon 
+            icon={faPenSquare} 
+            style={{ 
+              color: 'rgba(255, 255, 255, 0.6)', 
+              fontSize: '16px' 
+            }} 
+          />
         </Box>
 
         <Box sx={{ textAlign: 'left', mb: 2 }}>
-          <a
-            href="#"
-            style={{
-              fontSize: '12px',
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-              textDecoration: 'none',
+          <Button
+            variant="text"
+            size="small"
+            onClick={() => setShowOptions(!showOptions)}
+            endIcon={showOptions ? <ExpandLess /> : <ExpandMore />}
+            sx={{
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              textTransform: 'none',
+              p: 0,
+              minWidth: 'auto',
               '&:hover': {
-                color: theme.palette.error.main,
+                color: '#ff0000',
+                backgroundColor: 'transparent',
               },
             }}
-            onClick={(e) => {
-              e.preventDefault();
-              setShowOptions(!showOptions);
-            }}
           >
-            {showOptions ? 'Hide options ↑' : 'Show more options ↓'}
-          </a>
+            {showOptions ? 'Hide options' : 'Show more options'}
+          </Button>
         </Box>
 
-        {showOptions && (
+        <Collapse in={showOptions}>
           <Box sx={{ display: 'grid', gap: 2 }}>
             <TextField
               color="error"
@@ -435,24 +449,26 @@ function AdvancedSettings(props) {
               onBlur={() => dispatch(setFocused(false))}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(4px)',
+                  background: 'rgba(255, 255, 255, 0.02)',
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: alpha(theme.palette.error.main, 0.7),
+                    borderColor: 'rgba(255, 0, 0, 0.5)',
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.error.main,
+                    borderColor: '#ff0000',
                   },
                   '& fieldset': {
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                   },
                 },
                 '& .MuiInputLabel-root': {
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  color: 'rgba(255, 255, 255, 0.6)',
                   '&.Mui-focused': {
-                    color: theme.palette.error.main,
+                    color: '#ff0000',
                   },
+                },
+                '& .MuiInputBase-input': {
+                  color: '#fff',
                 },
               }}
             />
@@ -468,24 +484,26 @@ function AdvancedSettings(props) {
               onBlur={() => dispatch(setFocused(false))}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(4px)',
+                  background: 'rgba(255, 255, 255, 0.02)',
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: alpha(theme.palette.error.main, 0.7),
+                    borderColor: 'rgba(255, 0, 0, 0.5)',
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.error.main,
+                    borderColor: '#ff0000',
                   },
                   '& fieldset': {
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                   },
                 },
                 '& .MuiInputLabel-root': {
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  color: 'rgba(255, 255, 255, 0.6)',
                   '&.Mui-focused': {
-                    color: theme.palette.error.main,
+                    color: '#ff0000',
                   },
+                },
+                '& .MuiInputBase-input': {
+                  color: '#fff',
                 },
               }}
             />
@@ -501,30 +519,32 @@ function AdvancedSettings(props) {
               onBlur={() => dispatch(setFocused(false))}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(4px)',
+                  background: 'rgba(255, 255, 255, 0.02)',
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: alpha(theme.palette.error.main, 0.7),
+                    borderColor: 'rgba(255, 0, 0, 0.5)',
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.error.main,
+                    borderColor: '#ff0000',
                   },
                   '& fieldset': {
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                   },
                 },
                 '& .MuiInputLabel-root': {
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  color: 'rgba(255, 255, 255, 0.6)',
                   '&.Mui-focused': {
-                    color: theme.palette.error.main,
+                    color: '#ff0000',
                   },
+                },
+                '& .MuiInputBase-input': {
+                  color: '#fff',
                 },
               }}
             />
           </Box>
-        )}
-      </GlassContainer>
+        </Collapse>
+      </Box>
     </ThemeProvider>
   );
 }

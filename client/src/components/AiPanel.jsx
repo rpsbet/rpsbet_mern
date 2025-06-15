@@ -15,17 +15,13 @@ const AiPanel = ({
   creator_id, 
   rank: propRank, 
   is_betting, 
-  rpsbetitems, 
-  qsbetitems, 
   predictedBetAmount, 
   roomId, 
-  ai_mode, 
   user_balance: propUserBalance, 
   user_id: propUserId, 
   strategies, 
   game_type, 
   onChangeState, 
-  qs_game_type, 
   betting, 
   handleSwitchChange 
 }) => {
@@ -73,8 +69,6 @@ const AiPanel = ({
           user_id={user_id}
           is_betting={is_betting}
           strategies={strategies}
-          ai_mode={ai_mode}
-          qs_game_type={qs_game_type}
           rank={rank}
           betting={betting}
           predictedBetAmount={predictedBetAmount}
