@@ -593,13 +593,11 @@ console.log('JoinGame component mounted with room ID:', id);
 
   const handle2xButtonClick = useCallback(() => {
     setGameState(prev => {
-      const maxBetAmount = user_balance;
-      const multipliedBetAmount = prev.bet_amount * 2;
-      const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
+      const maxBetAmount = prev.bet_amount * 2;
 
       return {
         ...prev,
-        bet_amount: limitedBetAmount,
+        bet_amount: maxBetAmount,
         isMax: false
       };
     });
@@ -607,7 +605,7 @@ console.log('JoinGame component mounted with room ID:', id);
 
   const handleMaxButtonClick = useCallback(() => {
     setGameState(prev => {
-      const maxBetAmount = Math.min(user_balance, prev.bankroll);
+      const maxBetAmount = prev.bankroll;
 
       return {
         ...prev,

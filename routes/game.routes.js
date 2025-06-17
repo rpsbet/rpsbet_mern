@@ -951,6 +951,17 @@ const calculateSkillMultiplier = (score) => {
   return Math.min(multiplier, 4.0).toFixed(2);
 };
 
+SKILL-BASED GAMES HOUSE EDGE IMPLEMENTATION:
+- MUST include clear losing conditions (0x multiplier scenarios)
+- Examples of proper losing mechanisms:
+  * Score below minimum threshold
+  * Time expiry before completion  
+  * Lives/attempts exhausted
+  * Failed to reach objective
+  * Performance below acceptable level
+- Target win rate: 60-70% (30-40% of players should lose completely)
+- For winners: Apply 0.92 factor + 4x max cap
+
 MULTIPLIER VALIDATION - Add this function:
 const validateMultiplier = (multiplier, gameType) => {
   const numMultiplier = parseFloat(multiplier);
