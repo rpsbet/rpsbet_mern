@@ -167,6 +167,23 @@ function TermsModal({ modalIsOpen, closeModal }) {
             currency, points, or virtual items have no real-world value and are purely
             for entertainment purposes within our platform.
           </Typography>
+          <Typography variant="h6">3.1 Refund Policy</Typography>
+          <Typography variant="body2" paragraph>
+            Catsino.Fun is not entitled to produce refunds for self-sabotaged games,
+            including but not limited to internet connectivity issues during gameplay,
+            user error, or technical problems on the user's device. Refunds may also
+            not be applicable in the unlikely event of a cyber attack, server breach,
+            force majeure events, or other circumstances beyond our reasonable control.
+            All purchases are final unless otherwise required by applicable law.
+          </Typography>
+
+          <Typography variant="h6">3.2 Skill-Based Gaming Policy</Typography>
+          <Typography variant="body2" paragraph>
+            Catsino.Fun does not condone the use of our casino software or services
+            for gambling purposes. All games provided through our platform are intended
+            to be strictly skill-based entertainment experiences. Users are prohibited
+            from using our services for any form of gambling.
+          </Typography>
 
           <Typography variant="h6">4.0 Age & Jurisdiction</Typography>
           <Typography variant="body2" paragraph>

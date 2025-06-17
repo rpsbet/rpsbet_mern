@@ -155,13 +155,13 @@ const ResponsiveGameContainer = React.memo(({
   logEvent,
   Physics,
   isWalletPopupActive,
-  isProcessing, // Add this prop
+  isProcessing,
   processingMessage,
   isCreator,
   containerSize,
   isMobile,
   isTablet,
-  gameState,        // Add this prop
+  gameState,
   setGameState
 }) => {
 
@@ -492,7 +492,7 @@ function Custom(props) {
     gameStartedCount: 0,
     isGameActive: false,
     hasDeposited: false,
-    isProcessing: false, // Add this
+    isProcessing: false,
     processingMessage: '',
     creatorOverlayDismissed: false,
     depositStatus: {
@@ -503,43 +503,8 @@ function Custom(props) {
     }
   });
 
-  const checkDepositStatus = useCallback(async () => {
-    try {
-      const response = await axios.get(`/game/user/check-deposit-status/${roomInfo._id}`);
-      if (response.data.success) {
-        const newDepositStatus = {
-          hasValidDeposit: response.data.hasValidDeposit,
-          depositAmount: response.data.depositAmount || 0,
-          depositTimestamp: response.data.depositTimestamp,
-          roomId: roomInfo._id
-        };
-
-        setGameState(prev => ({
-          ...prev,
-          depositStatus: newDepositStatus
-        }));
-
-        // NEW: If we found a valid deposit, mark hasDepositedRef as true
-        // This prevents duplicate deposits on refresh
-        if (response.data.hasValidDeposit) {
-          hasDepositedRef.current = true;
-        }
-      }
-    } catch (error) {
-      console.error('Error checking deposit status:', error);
-      setGameState(prev => ({
-        ...prev,
-        depositStatus: {
-          hasValidDeposit: false,
-          depositAmount: 0,
-          depositTimestamp: null,
-          roomId: roomInfo._id
-        }
-      }));
-      // Reset hasDepositedRef if there's an error or no deposit found
-      hasDepositedRef.current = false;
-    }
-  }, [roomInfo._id]);
+  // REMOVE: checkDepositStatus function - we don't need to check on load
+  // REMOVE: useEffect that calls checkDepositStatus on component mount
 
   const blockGamePanel = (message = 'Processing...') => {
     setGameState(prev => ({ ...prev, isProcessing: true, processingMessage: message }));
@@ -633,142 +598,126 @@ function Custom(props) {
     }
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
-  // Solana deposit handler
+  // FIXED: Solana deposit handler - now only called when game starts
   const processSolDeposit = useCallback(async () => {
-  // This should only be called once when user first enters the game
-  // Not on every game start event
-  
-  if (hasDepositedRef.current) {
-    console.log('[Custom] Deposit already processed for this game session, skipping.');
-    return true;
-  }
-
-  // Check if we already have a valid deposit
-  const hasValidDeposit = gameState.depositStatus.hasValidDeposit &&
-    gameState.depositStatus.roomId === roomInfo._id;
-
-  const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
-  const isDepositValid = gameState.depositStatus.depositTimestamp &&
-    gameState.depositStatus.depositTimestamp > fifteenMinutesAgo;
-
-  if (hasValidDeposit && isDepositValid) {
-    console.log('[Custom] Valid deposit already exists, marking as deposited without new transaction');
-    hasDepositedRef.current = true;
-    setGameState(prev => ({ ...prev, hasDeposited: true }));
-    return true;
-  }
-
-  blockGamePanel('Please check your wallet and confirm the transaction to continue');
-
-  // Enhanced account creation with multiple fallbacks
-  let account = null;
-
-  // Method 1: Try creating from Privy user
-  if (privyUser?.wallet?.address) {
-    try {
-      account = createAccountFromPrivyUser(privyUser);
-    } catch (error) {
-      console.error('[Custom] Failed to create account from Privy user:', error);
+    console.log('[Custom] Processing SOL deposit for game start...');
+    
+    if (hasDepositedRef.current) {
+      console.log('[Custom] Deposit already processed for this game session, skipping.');
+      return true;
     }
-  }
 
-  // Method 2: Try using Redux account
-  if (!account && reduxState.account?.publicKey) {
-    account = reduxState.account;
-  }
+    blockGamePanel('Please check your wallet and confirm the transaction to continue');
 
-  // Method 3: Try getting from connected wallet directly
-  if (!account && window.solana?.publicKey) {
-    try {
-      account = {
-        publicKey: window.solana.publicKey
-      };
-    } catch (error) {
-      console.error('[Custom] Failed to create account from window.solana:', error);
-    }
-  }
+    // Enhanced account creation with multiple fallbacks
+    let account = null;
 
-  // Method 4: Try connecting wallet if not connected
-  if (!account && window.solana) {
-    try {
-      if (!window.solana.isConnected) {
-        await window.solana.connect();
+    // Method 1: Try creating from Privy user
+    if (privyUser?.wallet?.address) {
+      try {
+        account = createAccountFromPrivyUser(privyUser);
+      } catch (error) {
+        console.error('[Custom] Failed to create account from Privy user:', error);
       }
+    }
 
-      if (window.solana.publicKey) {
+    // Method 2: Try using Redux account
+    if (!account && reduxState.account?.publicKey) {
+      account = reduxState.account;
+    }
+
+    // Method 3: Try getting from connected wallet directly
+    if (!account && window.solana?.publicKey) {
+      try {
         account = {
           publicKey: window.solana.publicKey
         };
+      } catch (error) {
+        console.error('[Custom] Failed to create account from window.solana:', error);
       }
-    } catch (error) {
-      console.error('[Custom] Failed to connect wallet:', error);
     }
-  }
 
-  // Final validation
-  if (!account?.publicKey) {
-    console.error('[Custom] Failed to create account - no valid source found');
-    dispatch({
-      type: 'ERROR_MSG_BAR',
-      payload: 'Wallet not connected. Please connect your Solana wallet and try again.'
-    });
-    onChangeState({ betting: false });
-    unblockGamePanel();
-    return false;
-  }
+    // Method 4: Try connecting wallet if not connected
+    if (!account && window.solana) {
+      try {
+        if (!window.solana.isConnected) {
+          await window.solana.connect();
+        }
 
-  try {
-    const depositResult = await sendSolDeposit(
-      dispatch,
-      parseFloat(bet_amount),
-      roomInfo._id,
-      roomInfo.name,
-      'join',
-      account,
-      reduxState.balance,
-      () => {
-        hasDepositedRef.current = true;
-        setGameState(prev => ({
-          ...prev,
-          hasDeposited: true,
-          depositStatus: {
-            hasValidDeposit: true,
-            depositAmount: parseFloat(bet_amount),
-            depositTimestamp: Date.now(),
-            roomId: roomInfo._id
-          }
-        }));
-      },
-      () => {
-        console.error('[Custom] Solana deposit failed');
-        onChangeState({ betting: false });
-      },
-      () => setGameState(prev => ({ ...prev, isWalletPopupActive: true })),
-      () => setGameState(prev => ({ ...prev, isWalletPopupActive: false }))
-    );
+        if (window.solana.publicKey) {
+          account = {
+            publicKey: window.solana.publicKey
+          };
+        }
+      } catch (error) {
+        console.error('[Custom] Failed to connect wallet:', error);
+      }
+    }
 
-    if (!depositResult.success) {
-      console.error('[Custom] Deposit failed:', depositResult.message);
-      dispatch({ type: 'ERROR_MSG_BAR', payload: depositResult.message || 'Deposit failed.' });
+    // Final validation
+    if (!account?.publicKey) {
+      console.error('[Custom] Failed to create account - no valid source found');
+      dispatch({
+        type: 'ERROR_MSG_BAR',
+        payload: 'Wallet not connected. Please connect your Solana wallet and try again.'
+      });
       onChangeState({ betting: false });
+      unblockGamePanel();
       return false;
     }
 
-    return true;
-  } catch (error) {
-    console.error('[Custom] Error processing deposit:', error);
-    dispatch({ type: 'ERROR_MSG_BAR', payload: 'Error processing deposit.' });
-    onChangeState({ betting: false });
-    return false;
-  } finally {
-    unblockGamePanel();
-  }
-}, [dispatch, bet_amount, roomInfo._id, roomInfo.name, reduxState.account, reduxState.balance, onChangeState, privyUser, gameState.depositStatus]);
+    try {
+      const depositResult = await sendSolDeposit(
+        dispatch,
+        parseFloat(bet_amount),
+        roomInfo._id,
+        roomInfo.name,
+        'join',
+        account,
+        reduxState.balance,
+        () => {
+          hasDepositedRef.current = true;
+          setGameState(prev => ({
+            ...prev,
+            hasDeposited: true,
+            depositStatus: {
+              hasValidDeposit: true,
+              depositAmount: parseFloat(bet_amount),
+              depositTimestamp: Date.now(),
+              roomId: roomInfo._id
+            }
+          }));
+        },
+        () => {
+          console.error('[Custom] Solana deposit failed');
+          onChangeState({ betting: false });
+        },
+        () => setGameState(prev => ({ ...prev, isWalletPopupActive: true })),
+        () => setGameState(prev => ({ ...prev, isWalletPopupActive: false }))
+      );
 
-  // Game join logic
+      if (!depositResult.success) {
+        console.error('[Custom] Deposit failed:', depositResult.message);
+        dispatch({ type: 'ERROR_MSG_BAR', payload: depositResult.message || 'Deposit failed.' });
+        onChangeState({ betting: false });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[Custom] Error processing deposit:', error);
+      dispatch({ type: 'ERROR_MSG_BAR', payload: 'Error processing deposit.' });
+      onChangeState({ betting: false });
+      return false;
+    } finally {
+      unblockGamePanel();
+    }
+  }, [dispatch, bet_amount, roomInfo._id, roomInfo.name, reduxState.account, reduxState.balance, onChangeState, privyUser]);
+
+  // Game join logic - updated to handle both deposits and results
   const joinGame = useCallback(async (result, multiplier) => {
     onChangeState({ result: '' });
-    blockGamePanel('Joining game...');
+    blockGamePanel('Processing game...');
 
     try {
       const resultData = await join({
@@ -812,11 +761,13 @@ function Custom(props) {
         hasDeposited: false
       }));
 
+      return resultData;
+
     } catch (error) {
-      console.error('[Custom] Error joining game:', error);
+      console.error('[Custom] Error in joinGame:', error);
 
       // Show user-friendly error message
-      const errorMessage = error.message || 'Failed to join game. Please try again.';
+      const errorMessage = error.message || 'Failed to process game. Please try again.';
       onResultChange(
         <span style={{ color: '#ff0000', fontSize: '1rem' }}>
           {errorMessage}
@@ -826,15 +777,15 @@ function Custom(props) {
 
       // Reset betting state
       onChangeState({ betting: false });
+      throw error; // Re-throw so caller can handle
 
     } finally {
       // Always unblock the game panel, regardless of success or failure
       unblockGamePanel();
     }
-  }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange, blockGamePanel, unblockGamePanel, dispatch]);
+  }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange, blockGamePanel, unblockGamePanel]);
 
-  
-
+  // FIXED: Updated logEvent to handle deposit on gameStarted and direct join on gameEnded
   const logEvent = useCallback((eventType, data) => {
     if (playSound) {
       playSound('select');
@@ -851,12 +802,19 @@ function Custom(props) {
 
       // For creators: skip deposit but allow game to run
       if (isCreator) {
+        console.log('[Custom] Creator mode - skipping deposit');
         return;
       }
 
-      // For non-creators: just mark game as active
-      // The deposit should already be processed when user first enters the game
-      console.log('[Custom] Game started - using existing deposit');
+      // For non-creators: process deposit when game starts
+      console.log('[Custom] Game started - processing deposit for non-creator');
+      processSolDeposit().then(success => {
+        if (success) {
+          console.log('[Custom] Deposit successful, game can proceed');
+        } else {
+          console.log('[Custom] Deposit failed, game cannot proceed');
+        }
+      });
 
     } else if (eventType === 'gameEnded') {
       setGameState(prev => ({
@@ -882,153 +840,46 @@ function Custom(props) {
         return;
       }
 
-      // For non-creators: process actual betting using existing deposit
-      setGameState(currentState => {
-        const validResults = ['win', 'loss', 'other'];
-        if (validResults.includes(result) && currentState.gameStartedCount > 0) {
-          // Check if we have a valid deposit for this game session
-          const hasValidDeposit = gameState.depositStatus.hasValidDeposit &&
-            gameState.depositStatus.roomId === roomInfo._id;
+      // For non-creators: call join directly with result and clear deposit
+      const validResults = ['win', 'loss', 'other'];
+      if (validResults.includes(result) && gameState.gameStartedCount > 0) {
+        // Check if we have a valid deposit for this game session
+        const hasValidDeposit = gameState.depositStatus.hasValidDeposit &&
+          gameState.depositStatus.roomId === roomInfo._id;
 
-          if (hasValidDeposit) {
-            // Process bet result directly without new deposit
-            processBetResult(result, multiplier);
-          } else {
-            // No valid deposit - show appropriate message
-            onResultChange(
-              <span style={{ color: '#ff0000', fontSize: '1rem' }}>
-                No valid deposit found. Game result not processed.
-              </span>,
-              false
-            );
-          }
+        if (hasValidDeposit || hasDepositedRef.current) {
+          console.log('[Custom] Game ended - calling join with result:', result, 'multiplier:', multiplier);
+          
+          // Call join directly with the game result
+          joinGame(result, multiplier).then(() => {
+            // Clear deposit status after successful bet processing
+            console.log('[Custom] Clearing deposit status after game completion');
+            setGameState(prev => ({
+              ...prev,
+              depositStatus: {
+                hasValidDeposit: false,
+                depositAmount: 0,
+                depositTimestamp: null,
+                roomId: null
+              }
+            }));
+            hasDepositedRef.current = false;
+          }).catch(error => {
+            console.error('[Custom] Error processing game result:', error);
+            // Don't clear deposit on error in case user wants to retry
+          });
+        } else {
+          // No valid deposit - show appropriate message
+          onResultChange(
+            <span style={{ color: '#ff0000', fontSize: '1rem' }}>
+              No valid deposit found. Game result not processed.
+            </span>,
+            false
+          );
         }
-        return currentState;
-      });
+      }
     }
-  }, [isCreator, playSound, onResultChange, roomInfo._id, gameState.depositStatus]);
-
-  const processBetResult = useCallback(async (result, multiplier) => {
-  blockGamePanel('Processing game result...');
-
-  try {
-    if (!validateIsAuthenticated(reduxState.isAuthenticated, dispatch)) return;
-    if (!validateBetAmount(bet_amount, reduxState.balance, dispatch)) return;
-    if (!validateBankroll(bet_amount, bankrollRef.current, dispatch)) return;
-
-    // Check if we have a valid deposit
-    if (!gameState.depositStatus.hasValidDeposit ||
-      gameState.depositStatus.roomId !== roomInfo._id) {
-      dispatch({
-        type: 'ERROR_MSG_BAR',
-        payload: 'No valid deposit found for this game session.'
-      });
-      return;
-    }
-
-    // Check if deposit is still valid (within 15 minutes)
-    const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
-    if (gameState.depositStatus.depositTimestamp < fifteenMinutesAgo) {
-      dispatch({
-        type: 'ERROR_MSG_BAR',
-        payload: 'Your deposit has expired. Please start a new game session.'
-      });
-      return;
-    }
-
-    // Check if bet amount doesn't exceed deposit amount
-    if (parseFloat(bet_amount) > gameState.depositStatus.depositAmount) {
-      dispatch({
-        type: 'ERROR_MSG_BAR',
-        payload: `Bet amount (${bet_amount} SOL) exceeds your deposit amount (${gameState.depositStatus.depositAmount} SOL).`
-      });
-      return;
-    }
-
-    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-    const passwordCorrect = rooms[roomInfo._id];
-
-    if (roomInfo.is_private && passwordCorrect !== true) {
-      dispatch(openGamePasswordModal());
-      return;
-    }
-
-    // Process bet result directly
-    await submitBetResult(result, multiplier);
-
-  } catch (error) {
-    console.error('[Custom] Error processing bet result:', error);
-    dispatch({
-      type: 'ERROR_MSG_BAR',
-      payload: 'Error processing game result. Please try again.'
-    });
-  } finally {
-    unblockGamePanel();
-  }
-}, [gameState.depositStatus, roomInfo._id, bet_amount, dispatch, reduxState]);
-
-const submitBetResult = useCallback(async (result, multiplier) => {
-  onChangeState({ result: '' });
-
-  try {
-    // Submit bet result to backend using the existing deposit
-    const resultData = await join({
-      bet_amount: parseFloat(bet_amount),
-      result: result || null,
-      multiplier: result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
-      // Only include connectedAccount for win scenarios where withdrawal might be needed
-      ...(result === 'win' && { connectedAccount: reduxState.connectedAccount || window.solana?.publicKey?.toString() })
-    });
-
-    const amount = resultData.amount || 0;
-    const currencyElement = convertToCurrency(Math.abs(amount), reduxState.solPrice);
-    const sign = amount >= 0 ? '+' : '-';
-
-    let soundToPlay = null;
-    if (resultData.betResult === 1) soundToPlay = 'win';
-    else if (resultData.betResult === 0) soundToPlay = 'split';
-    else soundToPlay = 'lose';
-
-    if (playSound && soundToPlay) {
-      playSound(soundToPlay);
-    }
-
-    const formattedResult = (
-      <span style={{
-        color: amount >= 0 ? '#00ff3a' : '#ff0000',
-        fontSize: '1.2rem',
-        fontWeight: 'bold',
-      }}>
-        {sign} {currencyElement}{' '}
-        <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>
-          ({Math.abs(amount).toFixed(4)} SOL)
-        </span>
-      </span>
-    );
-
-    onResultChange(formattedResult, false);
-    onChangeState({ gameResult: resultData.betResult });
-
-    setGameState(prev => ({
-      ...prev,
-      gameStartedCount: prev.gameStartedCount + 1,
-    }));
-
-  } catch (error) {
-    console.error('[Custom] Error submitting bet result:', error);
-
-    const errorMessage = error.message || 'Failed to process bet result. Please try again.';
-    onResultChange(
-      <span style={{ color: '#ff0000', fontSize: '1rem' }}>
-        {errorMessage}
-      </span>,
-      false
-    );
-
-    onChangeState({ betting: false });
-  }
-}, [bet_amount, join, onChangeState, reduxState.solPrice, reduxState.connectedAccount, playSound, onResultChange]);
-
+  }, [isCreator, playSound, onResultChange, roomInfo._id, gameState.depositStatus, gameState.gameStartedCount, processSolDeposit, joinGame]);
 
   // Game code processing - optimized with useMemo
   const processedGameCode = useMemo(() => {
@@ -1065,42 +916,16 @@ const submitBetResult = useCallback(async (result, multiplier) => {
     }
   }, [roomInfo.gameCode, Physics, isPhysicsLoading, componentState.proxiedAssets]);
 
-  
-  useEffect(() => {
-  if (roomInfo._id && !isCreator && !hasDepositedRef.current) {
-    // Only process deposit once when component first loads
-    const shouldProcessDeposit = !gameState.depositStatus.hasValidDeposit ||
-      gameState.depositStatus.roomId !== roomInfo._id;
-    
-    if (shouldProcessDeposit) {
-      console.log('[Custom] Processing initial deposit for new game session');
-      processSolDeposit();
-    }
-  }
-}, [roomInfo._id, isCreator]);
-
-  useEffect(() => {
-    if (roomInfo._id && !isCreator) {
-      checkDepositStatus();
-
-      // NEW: Set up an interval to periodically check deposit status
-      // This helps with cases where deposits are processed after component mount
-      const intervalId = setInterval(checkDepositStatus, 30000); // Check every 30 seconds
-
-      return () => clearInterval(intervalId);
-    }
-  }, [roomInfo._id, isCreator, checkDepositStatus]);
+  // REMOVED: useEffect that processes deposit on component load
+  // Now deposit only happens when gameStarted event is triggered
 
   // Update component when processed code changes
   useEffect(() => {
-
     if (processedGameCode && Physics && !isPhysicsLoading) {
       try {
-
         setComponentState(prev => ({
           ...prev,
           GameComponent: React.memo((props) => {
-
             return React.createElement(processedGameCode, {
               ...props,
               Physics,
@@ -1134,8 +959,7 @@ const submitBetResult = useCallback(async (result, multiplier) => {
         componentError: null
       }));
     }
-  }, [processedGameCode, Physics, isPhysicsLoading, physicsError, roomInfo.gameCode]); // ✅ Removed logEvent from deps
-
+  }, [processedGameCode, Physics, isPhysicsLoading, physicsError, roomInfo.gameCode]);
 
   // Socket effects
   useEffect(() => {
@@ -1150,7 +974,6 @@ const submitBetResult = useCallback(async (result, multiplier) => {
     if (!socket) return;
 
     socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
-
     socket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
 
     return () => {
@@ -1187,26 +1010,27 @@ const submitBetResult = useCallback(async (result, multiplier) => {
     }
   }, [componentState.isPasswordCorrect, joinGame, componentState.gameResult]);
 
+  // UPDATED: Simplified deposit status display - no longer shows deposit check on load
   const renderDepositStatus = () => {
     if (isCreator) return null;
 
     const { hasValidDeposit, depositAmount, depositTimestamp } = gameState.depositStatus;
 
-    if (!hasValidDeposit) {
+    if (!hasValidDeposit && !hasDepositedRef.current) {
       return (
         <Box sx={{
           p: 2,
           mb: 2,
-          backgroundColor: 'rgba(255, 152, 0, 0.1)',
-          border: '1px solid rgba(255, 152, 0, 0.3)',
+          backgroundColor: 'rgba(25, 118, 210, 0.1)',
+          border: '1px solid rgba(25, 118, 210, 0.3)',
           borderRadius: '12px',
           textAlign: 'center'
         }}>
-          <Typography sx={{ color: '#ff9800', fontWeight: 600, mb: 1 }}>
-            ⚠️ Deposit Required
+          <Typography sx={{ color: '#1976d2', fontWeight: 600, mb: 1 }}>
+            🎮 Ready to Play
           </Typography>
           <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>
-            You need to make a SOL deposit to play this game
+            Start the game to begin! Deposit will be processed automatically.
           </Typography>
         </Box>
       );
@@ -1370,7 +1194,6 @@ const submitBetResult = useCallback(async (result, multiplier) => {
 
     return (
       <Box className="game-info-panel">
-
         <Box ref={containerRef}>
           <ResponsiveGameContainer
             GameComponent={componentState.GameComponent}
@@ -1379,13 +1202,13 @@ const submitBetResult = useCallback(async (result, multiplier) => {
             logEvent={logEvent}
             Physics={Physics}
             isWalletPopupActive={gameState.isWalletPopupActive}
-            isProcessing={gameState.isProcessing} // Add this
-            processingMessage={gameState.processingMessage} // Add this
+            isProcessing={gameState.isProcessing}
+            processingMessage={gameState.processingMessage}
             isCreator={isCreator}
             containerSize={containerSize}
             isMobile={isMobile}
             isTablet={isTablet}
-            gameState={gameState}        // Add this prop
+            gameState={gameState}
             setGameState={setGameState}
           />
         </Box>
@@ -1423,7 +1246,6 @@ const submitBetResult = useCallback(async (result, multiplier) => {
     <Box className="game-page">
       {/* Lazy loaded modals */}
       <Suspense fallback={null}>
-
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
