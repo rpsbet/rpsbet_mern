@@ -516,7 +516,6 @@ const addToQueue = async (req, bot = false) => {
     // Process bet if room ID exists
     if (req.body._id) {
       const { bet_amount } = req.body;
-
       // Get room information with populated relations
       roomInfo = await Room.findById(req.body._id)
         .select('name image tax ticker room_number updated_at battles joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private status hosts')
@@ -558,7 +557,6 @@ const addToQueue = async (req, bot = false) => {
         description: 'Joined ' + roomInfo['name'],
         room: req.body._id,
       });
-
       // Create notification template
       message = new Notification({
         from: user,
@@ -570,8 +568,7 @@ const addToQueue = async (req, bot = false) => {
       });
 
       if (
-        bet_amount > roomInfo['user_bet'] ||
-        bet_amount > parseFloat(user.balance)
+        bet_amount > roomInfo['user_bet']
       ) {
         return {
           success: false,
@@ -588,7 +585,7 @@ const addToQueue = async (req, bot = false) => {
         newTransactionJ,
         newGameLog
       );
-
+console.log('customResult', customResult);
       game_result = customResult.game_result;
       newTransactionAmount = customResult.newTransactionAmount;
       bet_item = customResult.bet_item;
@@ -597,12 +594,13 @@ const addToQueue = async (req, bot = false) => {
 
       // Update room and emit candle data
       await updateRoomAndEmitData(roomInfo, user, newTransactionAmount, req);
-
-      // Update user stats
+// console.log('newTransactionAmount', newTransactionAmount);
+// console.log('Room updated and candle data emitted', req.body.connectedAccount);
+//       // Update user stats
       user.gamePlayed++;
       user.gameProfit += newTransactionAmount;
       user.totalWagered += Math.abs(bet_item.bet_amount);
-
+console.log('User req.body.connectedAccount', req.body.connectedAccount);
       // Handle withdrawal creation for wins with connected account
       if (newTransactionAmount > 0 && req.body.connectedAccount) {
         // Validate connectedAccount as a Solana address

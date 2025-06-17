@@ -300,12 +300,12 @@ router.post('/privy', async (req, res) => {
 
       if (!user) {
         // Step 3: Create new user
-        const username = `PRIVY_${privyId.slice(-6)}`;
+        const username = `CAT_${privyId.slice(-6)}`;
 
         user = new User({
           privyId,
           username,
-          email: email || '',
+          email: email || null,
           password: generateRandomPassword(),
           bio: '',
           totalWagered: 0,

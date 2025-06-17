@@ -568,7 +568,6 @@ function Custom(props) {
 
   // Optimized socket handlers
   const handleSocketData = useCallback((data) => {
-    console.log('[Custom] Socket data received:', data);
     setRoomState(prev => ({
       ...prev,
       players: [...prev.players.slice(-4), data.user], // Keep only last 5 players
