@@ -1,8 +1,13 @@
 import {
   UPDATE_CREATOR_PROMPT,
   GAMETYPE_LOADED,
-  STRATEGIES_LOADED,
-  TOP_GAME_TYPES_LOADED,
+ROOM_IDS_LOADED,
+INDIVIDUAL_ROOM_LOADED,
+INDIVIDUAL_ROOM_LOADING,
+INDIVIDUAL_ROOM_ERROR,
+RESET_ROOM_LOADING,
+ROOMS_RESET,
+  
   TOP_WITHDRAWALS_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
@@ -144,6 +149,92 @@ export const proxyAsset = (key, url) => async (dispatch) => {
     return { key, proxiedUrl: null };
   }
 };
+
+export const getRoomIds = (params = {}) => async (dispatch) => {
+  dispatch({ type: START_LOADING });
+  dispatch({ type: RESET_ROOM_LOADING });
+  
+  try {
+    const requestParams = {
+      ...params,
+      limit: 30 // Number of rooms to load
+    };
+    
+    const res = await axios.get('/game/rooms/ids', { params: requestParams });
+    
+    if (res.data.success) {
+      dispatch({
+        type: ROOM_IDS_LOADED,
+        payload: {
+          roomIds: res.data.roomIds,
+          gameType: params.game_type || 'All'
+        },
+      });
+      
+      // Start loading individual rooms immediately
+      dispatch(startLoadingIndividualRooms(res.data.roomIds));
+    } else {
+      throw new Error(res.data.err || 'Failed to fetch room IDs');
+    }
+  } catch (err) {
+    console.error('Error fetching room IDs:', err);
+    dispatch({
+      type: INDIVIDUAL_ROOM_ERROR,
+      payload: { error: err.message }
+    });
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+};
+
+// Load individual rooms with staggered timing
+export const startLoadingIndividualRooms = (roomIds) => async (dispatch) => {
+  // Shuffle array to load rooms in random order (like YouTube)
+  const shuffledIds = [...roomIds].sort(() => Math.random() - 0.5);
+  
+  // Load rooms with random delays to simulate real network conditions
+  shuffledIds.forEach((roomId, index) => {
+    const delay = Math.random() * 2000; // Random delay up to 2 seconds
+    
+    setTimeout(() => {
+      dispatch(loadIndividualRoom(roomId));
+    }, delay);
+  });
+};
+
+// Load a single room
+export const loadIndividualRoom = (roomId) => async (dispatch) => {
+  dispatch({
+    type: INDIVIDUAL_ROOM_LOADING,
+    payload: { roomId }
+  });
+  
+  try {
+    const res = await axios.get(`/game/room/${roomId}`);
+    
+    if (res.data.success) {
+      dispatch({
+        type: INDIVIDUAL_ROOM_LOADED,
+        payload: {
+          roomId,
+          room: res.data.room
+        },
+      });
+    } else {
+      throw new Error(res.data.error || 'Failed to fetch room');
+    }
+  } catch (err) {
+    console.error(`Error fetching room ${roomId}:`, err);
+    dispatch({
+      type: INDIVIDUAL_ROOM_ERROR,
+      payload: { 
+        roomId,
+        error: err.message 
+      }
+    });
+  }
+};
+
 
 export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) => {
   if (!gameCode || !gameCode.trim()) {
@@ -927,22 +1018,71 @@ export const offerLoan = data => async dispatch => {
 };
 
 // logic.actions.js
-export const getRoomList = (params) => async (dispatch) => {
+export const getRoomList = (params = {}) => async (dispatch) => {
   dispatch({ type: START_LOADING });
+  dispatch({ type: ROOMS_RESET }); // Clear existing rooms when fetching new filter
+  
   try {
-    const res = await axios.get('/game/rooms', { params });
+    const requestParams = {
+      ...params,
+      page: 1,
+      limit: 10 // Start with small batch
+    };
+    
+    const res = await axios.get('/game/rooms', { params: requestParams });
+    
     if (res.data.success) {
       dispatch({
         type: ROOMS_LOADED,
         payload: {
           roomList: res.data.roomList,
+          pagination: res.data.pagination,
+          gameType: params.game_type || 'All'
         },
       });
+    } else {
+      throw new Error(res.data.err || 'Failed to fetch rooms');
     }
   } catch (err) {
     console.error('Error fetching room list:', err);
+    dispatch({
+      type: ROOMS_ERROR,
+      payload: err.message
+    });
   } finally {
     dispatch({ type: END_LOADING });
+  }
+};
+
+export const loadMoreRooms = (params = {}, currentPage = 1) => async (dispatch) => {
+  dispatch({ type: ROOMS_LOADING_MORE });
+  
+  try {
+    const requestParams = {
+      ...params,
+      page: currentPage + 1,
+      limit: 10
+    };
+    
+    const res = await axios.get('/game/rooms', { params: requestParams });
+    
+    if (res.data.success) {
+      dispatch({
+        type: ROOMS_BATCH_LOADED,
+        payload: {
+          roomList: res.data.roomList,
+          pagination: res.data.pagination
+        },
+      });
+    } else {
+      throw new Error(res.data.err || 'Failed to fetch more rooms');
+    }
+  } catch (err) {
+    console.error('Error fetching more rooms:', err);
+    dispatch({
+      type: ROOMS_ERROR,
+      payload: err.message
+    });
   }
 };
 
@@ -1129,18 +1269,6 @@ export const jeetGame = (room_id, stake_amount, callback) => async (dispatch, ge
   }
 };
 
-export const getMyHistory = search_condition => async dispatch => {
-  try {
-    const res = await axios.get('/game/my_history', {
-      params: search_condition
-    });
-    if (res.data.success) {
-      dispatch({ type: MY_HISTORY_LOADED, payload: res.data || [] });
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
 
 export const someActionToAppendCandle = (newCandle) => (dispatch) => {
   dispatch({ type: APPEND_NEW_CANDLE, payload: newCandle });
@@ -1432,18 +1560,4 @@ export const selectMainTab = index => dispatch => {
 
 export const globalChatReceived = data => dispatch => {
   dispatch({ type: GLOBAL_CHAT_RECEIVED, payload: data });
-};
-
-export const getRecentTransactions = ({ descriptionPrefix }) => async (dispatch) => {
-  try {
-    const res = await axios.get('/game/recent-transactions', {
-      params: { descriptionPrefix },
-    });
-    if (res.data.success) {
-      return res.data.transactions;
-    }
-  } catch (err) {
-    console.error('Error fetching transactions:', err);
-    return [];
-  }
 };

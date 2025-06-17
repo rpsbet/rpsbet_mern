@@ -430,68 +430,6 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   };
 };
 
-// Validation functions for better organization
-const validateBetRequest = (req, user, roomInfo) => {
-  // Early validations
-  if (user.dailyWithdrawals > 4.269) {
-    return {
-      success: false,
-      message: 'Irregular action detected',
-      betResult: -1000,
-    };
-  }
-
-  if (user.isWithdrawing) {
-    return {
-      success: false,
-      message: 'Withdrawal in progress. Please wait until it completes.',
-      betResult: -1000,
-    };
-  }
-
-  if (parseFloat(req.body.bet_amount) < 0.001) {
-    return {
-      success: false,
-      message: 'Minimum bet is 0.001 SOL',
-    };
-  }
-
-  // Check if user is the creator
-  if (
-    roomInfo['creator'] &&
-    roomInfo['creator']._id &&
-    user &&
-    user._id &&
-    roomInfo['creator']._id.toString() === user._id.toString()
-  ) {
-    return {
-      success: false,
-      message: 'Cannot bet on your own game!',
-      betResult: -101,
-    };
-  }
-
-  // Check if room was updated recently (anti-spam)
-  const tenSecondsAgo = new Date(Date.now() - 500);
-  if (roomInfo['updated_at'] > tenSecondsAgo) {
-    return {
-      success: false,
-      message: 'Room too busy, try again later',
-      betResult: -1200,
-    };
-  }
-
-  // Check if room is finished
-  if (roomInfo['status'] === 'finished') {
-    return {
-      success: false,
-      message: 'This game has ended',
-      betResult: -100,
-    };
-  }
-
-  return { success: true };
-};
 
 const addToQueue = async (req, bot = false) => {
   try {
@@ -538,9 +476,8 @@ const addToQueue = async (req, bot = false) => {
         .select('name image tax ticker room_number updated_at battles joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private status hosts')
         .populate({ path: 'creator', model: User, select: '_id avatar accessory elite totalWagered username gameProfit gamePlayed balance' })
 
-    
-      // Validate bet request
-      const validation = validateBetRequest(req, user, roomInfo);
+      // Validate bet request (now includes deposit validation)
+      const validation = await validateBetRequest(req, user, roomInfo);
       if (!validation.success) {
         return validation;
       }
@@ -612,7 +549,6 @@ const addToQueue = async (req, bot = false) => {
       pool_id = customResult.pool_id;
       message = customResult.message;
 
-
       // Update room and emit candle data
       await updateRoomAndEmitData(roomInfo, user, newTransactionAmount, req);
 
@@ -621,35 +557,15 @@ const addToQueue = async (req, bot = false) => {
       user.gameProfit += newTransactionAmount;
       user.totalWagered += Math.abs(bet_item.bet_amount);
 
+      // Handle withdrawal creation for wins with connected account
       if (newTransactionAmount > 0 && req.body.connectedAccount) {
-        // Validate deposit transaction (check both pending and completed)
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-        const depositTransaction = await GameTransaction.findOne({
-          user: user._id,
-          room: req.body._id,
-          status: { $in: ['pending', 'completed'] },
-          description: { $regex: '^(Joined)', $options: 'i' },
-          created_at: { $gte: fifteenMinutesAgo },
-        });
-
-        if (!depositTransaction) {
-          console.warn(
-            `No valid deposit (pending or completed) for user ${user._id}, room ${req.body._id}`
-          );
-          return {
-            success: false,
-            message:
-              'No valid SOL deposit found within the last 15 minutes for this room. Please wait for your deposit to process and try again.',
-            betResult: -1000,
-          };
-        }
-
         // Validate connectedAccount as a Solana address
         try {
           new PublicKey(req.body.connectedAccount);
         } catch (error) {
           throw new Error('Invalid Solana wallet address');
         }
+        
         // Create a pending GameTransaction for the winnings
         const newGameTransaction = new GameTransaction({
           user: user._id,

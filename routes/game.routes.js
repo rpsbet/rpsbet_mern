@@ -15,7 +15,6 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const babel = require('@babel/core');
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
@@ -23,7 +22,7 @@ const GameLog = require('../model/GameLog');
 const GameCode = require('../model/GameCode');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
-const GameTransanction = require('../model/Transaction');
+const GameTransaction = require('../model/Transaction');
 const System = require('../model/SystemSetting');
 
 const {
@@ -50,10 +49,19 @@ const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = 
 const { revokeMintAndFreezeAuthorities } = require('../helper/util/authority');
 const { distributeTokens } = require('../helper/util/distributeTokens');
 
-
+const compression = require('compression');
+router.use(compression());
 const PINATA_JWT = process.env.PINATA_JWT;
 router.get('/game_types/top', async (req, res) => {
+  const cacheKey = 'top_game_types';
+  const redisClient = req.app.get('redisClient');
+
   try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+
     const topGameTypes = await Room.aggregate([
       {
         $match: {
@@ -76,14 +84,20 @@ router.get('/game_types/top', async (req, res) => {
         }
       },
       { $sort: { count: -1 } }, // Sort by count descending
-      { $limit: 10 }, // Get the top 10 game types
+      { $limit: 7 }, // Get the top 10 game types
       { $project: { _id: 0, game_type_name: '$_id' } } // Reshape to return just the name
     ]);
 
-    res.json({
+    // Format the response to match the original structure
+    const response = {
       success: true,
       gameTypes: topGameTypes.map(gt => gt.game_type_name),
-    });
+    };
+
+    // Cache for 5 minutes
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+    res.json(response);
+    
   } catch (err) {
     console.error('Error fetching top game types:', err);
     res.status(500).json({
@@ -1553,6 +1567,139 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   }
 });
 
+// 1. BACKEND ROUTE - Return individual room by ID/index
+router.get('/room/:roomId', async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+    const room = await Room.findById(roomId)
+      .select(
+        '_id name ticker image description room_number likes dislikes ' +
+        'creator battles username joiners game_type is_private ' +
+        'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts'
+      )
+      .populate({
+        path: 'creator',
+        model: 'rps_users',
+        select: 'avatar totalWagered username accessory elite status',
+      })
+      .lean();
+
+    if (!room) {
+      return res.status(404).json({ success: false, error: 'Room not found' });
+    }
+
+    // Process room data (same logic as before)
+    const joinerIds = room.joiners || [];
+    const joinerUsers = await User.find({ _id: { $in: joinerIds } })
+      .select('avatar totalWagered _id username accessory elite status')
+      .lean();
+
+    const joinerMap = joinerUsers.reduce((map, user) => {
+      map[user._id.toString()] = {
+        user_id: user._id,
+        avatar: user.avatar,
+        totalWagered: user.totalWagered,
+        accessory: user.accessory,
+        elite: user.elite,
+        username: user.username,
+        rank: user.totalWagered,
+      };
+      return map;
+    }, {});
+
+    const joinerData = room.joiners.map(joinedUserId =>
+      joinerMap[joinedUserId.toString()] || null
+    ).filter(Boolean);
+
+    const processedRoom = {
+      _id: room._id,
+      creator_id: room.creator ? room.creator._id : '',
+      joiners: joinerData.map(joiner => ({
+        avatar: joiner.avatar,
+        rank: joiner.totalWagered,
+        username: joiner.username,
+        accessory: joiner.accessory,
+        elite: joiner.elite,
+        _id: joiner.user_id,
+      })),
+      ticker: room.ticker || room.room_number,
+      rank: room.creator?.totalWagered || 0,
+      creator_avatar: room.creator?.avatar || '',
+      accessory: room.creator?.accessory || '',
+      elite: room.creator?.elite || '',
+      username: room.creator?.username || '',
+      creator_status: room.creator?.status || '',
+      game_type: room.game_type || [],
+      name: room.name,
+      description: room.description,
+      image: room.image,
+      bet_amount: room.bet_amount,
+      pr: room.pr,
+      endgame_amount: room.endgame_amount,
+      host_pr: room.host_pr,
+      room_name: (room.game_type && room.game_type.length > 0 ? room.game_type[0] : 'Unknown') + '-' + room.room_number,
+      total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
+      user_bet: parseFloat(room.user_bet || 0),
+      is_private: room.is_private,
+      status: room.status,
+      index: room.room_number,
+      created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
+      updated_at: room.updated_at,
+      battles: room.battles,
+      likes: room.likes,
+      dislikes: room.dislikes,
+      hosts: room.hosts,
+      winnings: parseFloat(room.user_bet || 0),
+    };
+
+    res.json({
+      success: true,
+      room: processedRoom
+    });
+  } catch (err) {
+    console.error('Error fetching individual room:', err);
+    res.status(500).json({
+      success: false,
+      error: err.toString()
+    });
+  }
+});
+
+// 2. UPDATED ROOMS LIST ROUTE - Return room IDs only
+router.get('/rooms/ids', async (req, res) => {
+  const game_type_filter = req.query.game_type || 'All';
+  const limit = parseInt(req.query.limit) || 30;
+
+  const search_condition = {
+    status: 'open',
+  };
+
+  if (game_type_filter !== 'All') {
+    search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
+  }
+
+  try {
+    const roomIds = await Room.find(search_condition)
+      .select('_id')
+      .sort({ updated_at: -1 })
+      .limit(limit)
+      .lean();
+
+    res.json({
+      success: true,
+      roomIds: roomIds.map(room => room._id),
+      total: roomIds.length
+    });
+  } catch (err) {
+    console.error('Error fetching room IDs:', err);
+    res.json({
+      success: false,
+      err: err.toString(),
+    });
+  }
+});
+
 router.get('/room/:id', async (req, res) => {
   const roomId = req.params.id;
   const limit = Number.parseInt(req.query.limit, 10) || 10;
@@ -2056,70 +2203,14 @@ router.get('/history', async (req, res) => {
   }
 });
 
-router.get('/my_history', auth, async (req, res) => {
-  try {
-    const { pageSize = 16 } = req.query;
-
-    const redisClient = req.app.get('redisClient'); // Get Redis client for my_history too
-
-    const history = await getHistory(
-      parseInt(pageSize),
-      req.user._id,
-      redisClient // Pass redisClient to getHistory for my_history as well
-    );
-
-    if (!history) { // Add check for history not found/failed
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch my history'
-      });
-    }
-
-    res.json({
-      success: true,
-      pageSize: parseInt(pageSize),
-      history: history.history,
-      count: history.count, // Include count for my_history as well
-      cached: history.cached || false // Include cached status
-    });
-  } catch (err) {
-    console.error('Error in /my_history route:', err);
-    res.status(500).json({
-      success: false,
-      err: err.toString(),
-    });
-  }
-});
-
-router.get('/count', async (req, res) => {
-  const game_type_filter = req.query.game_type || 'All';
-  try {
-    const search_condition = { status: 'open' };
-
-    if (game_type_filter !== 'All') {
-      // Filter by game_type array containing the specified tag (case-insensitive)
-      search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
-    }
-
-    const roomCount = await Room.countDocuments(search_condition);
-
-    res.json({
-      success: true,
-      game_type: game_type_filter,
-      roomCount: roomCount,
-    });
-  } catch (err) {
-    console.error('Error in /count:', err);
-    res.json({
-      success: false,
-      error: err.toString(),
-    });
-  }
-});
-
 router.get('/rooms', async (req, res) => {
   const game_type_filter = req.query.game_type || 'All';
-  const cacheKey = `rooms:${game_type_filter}`;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10; // Smaller batches
+  const skip = (page - 1) * limit;
+
+  // Use different cache keys for different pages
+  const cacheKey = `rooms:${game_type_filter}:page:${page}:limit:${limit}`;
 
   const redisClient = req.app.get('redisClient');
 
@@ -2135,16 +2226,25 @@ router.get('/rooms', async (req, res) => {
   }
 
   try {
-    const rooms = await getRoomList(game_type_filter);
-    console.log('Rooms fetched:', rooms.rooms.length, 'rooms');
+    console.log(`Fetching rooms - page: ${page}, limit: ${limit}, game_type: ${game_type_filter}`);
+    const result = await getRoomListPaginated(game_type_filter, skip, limit);
+
     const response = {
       success: true,
       query: req.query,
-      roomList: rooms.rooms,
+      roomList: result.rooms,
+      pagination: {
+        page,
+        limit,
+        total: result.total,
+        hasMore: result.hasMore,
+        totalPages: Math.ceil(result.total / limit)
+      }
     };
 
+    // Cache for shorter time for paginated results
     try {
-      await redisClient.setEx(cacheKey, 60, JSON.stringify(response));
+      await redisClient.setEx(cacheKey, 30, JSON.stringify(response));
     } catch (redisErr) {
       console.error('Failed to cache:', redisErr);
     }
@@ -2159,21 +2259,24 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
-const getRoomList = async (game_type_filter) => {
+// 2. UPDATE DATABASE FUNCTION - Add pagination
+const getRoomListPaginated = async (game_type_filter, skip = 0, limit = 10) => {
   const search_condition = {
     status: 'open',
   };
 
   if (game_type_filter !== 'All') {
-    // Filter by game_type array containing the specified tag (case-insensitive)
     search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
   }
 
   try {
+    // Get total count for pagination
+    const total = await Room.countDocuments(search_condition);
+
     const preRooms = await Room.find(search_condition)
       .select(
         '_id name ticker image description room_number likes dislikes ' +
-        'creator battles username joiners game_type qs_game_type is_private ' +
+        'creator battles username joiners game_type is_private ' +
         'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts'
       )
       .populate({
@@ -2182,10 +2285,12 @@ const getRoomList = async (game_type_filter) => {
         select: 'avatar totalWagered username accessory elite status',
       })
       .sort({ updated_at: -1 })
-      .limit(50)
+      .skip(skip)
+      .limit(limit)
       .allowDiskUse(true)
       .lean();
 
+    // Rest of your existing logic for processing rooms...
     const joinerIds = [...new Set(preRooms.flatMap(room => room.joiners))];
     const joinerUsers = await User.find({ _id: { $in: joinerIds } })
       .select('avatar totalWagered _id username accessory elite status')
@@ -2226,16 +2331,14 @@ const getRoomList = async (game_type_filter) => {
           elite: room.creator?.elite || '',
           username: room.creator?.username || '',
           creator_status: room.creator?.status || '',
-          game_type: room.game_type || [], // Ensure it's an array
+          game_type: room.game_type || [],
           name: room.name,
           description: room.description,
           image: room.image,
-          qs_game_type: room.qs_game_type,
           bet_amount: room.bet_amount,
           pr: room.pr,
           endgame_amount: room.endgame_amount,
           host_pr: room.host_pr,
-          // room_name: Construct from first game_type tag, or 'Unknown'
           room_name: (room.game_type && room.game_type.length > 0 ? room.game_type[0] : 'Unknown') + '-' + room.room_number,
           total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
           user_bet: parseFloat(room.user_bet || 0),
@@ -2257,13 +2360,20 @@ const getRoomList = async (game_type_filter) => {
     });
 
     const filteredResults = result.filter(r => r !== null);
-    return { rooms: filteredResults };
+    const hasMore = (skip + limit) < total;
+
+    console.log(`getRoomListPaginated - Found ${filteredResults.length} rooms (${skip + 1}-${skip + filteredResults.length} of ${total})`);
+
+    return {
+      rooms: filteredResults,
+      total,
+      hasMore
+    };
   } catch (error) {
-    console.error('Error in getRoomList:', error);
-    return { rooms: [] };
+    console.error('Error in getRoomListPaginated:', error);
+    return { rooms: [], total: 0, hasMore: false };
   }
 };
-
 // Updated POST /rooms route
 router.post('/rooms', auth, async (req, res) => {
   try {
@@ -2910,7 +3020,7 @@ router.post('/end_game', auth, async (req, res) => {
       const amount = (hostData.share / 100) * parseFloat(roomInfo.user_bet);
 
       if (amount > 0 && connectedAccount) {
-        const depositTransaction = await GameTransanction.findOne({
+        const depositTransaction = await GameTransaction.findOne({
           user: hostId,
           status: { $in: ['pending', 'completed'] },
           description: { $regex: '^(Created)', $options: 'i' },
@@ -2943,7 +3053,7 @@ router.post('/end_game', auth, async (req, res) => {
           });
         }
 
-        const newGameTransaction = new GameTransanction({
+        const newGameTransaction = new GameTransaction({
           user: hostId,
           amount: amount,
           description: `Rugged ${roomInfo.name}`,
@@ -3013,7 +3123,7 @@ router.post('/end_game', auth, async (req, res) => {
       game_result: -100,
     });
 
-    const newTransactionC = new GameTransanction({
+    const newTransactionC = new GameTransaction({
       user: userId, // This is the user who initiated the end_game (the host)
       amount: (roomInfo.hosts[0].share / 100) * parseFloat(roomInfo.user_bet), // This assumes hosts[0] is the primary host
       description: `Rugged ${roomInfo.name}`,
@@ -3037,7 +3147,7 @@ router.post('/end_game', auth, async (req, res) => {
         model: Room,
         select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name', // Do NOT select game_type as it's now string array. Include `name`
       })
-   
+
       .populate({
         path: 'creator',
         model: User,
@@ -3582,7 +3692,7 @@ router.post('/jeet', auth, async (req, res) => {
     req.user.tradingProfit += amountAfterFee;
 
     if (amountAfterFee > 0 && req.body.walletAddress) {
-      const depositTransaction = await GameTransanction.findOne({
+      const depositTransaction = await GameTransaction.findOne({
         user: req.user._id,
         room: roomId,
         status: { $in: ['pending', 'completed'] },
@@ -3612,7 +3722,7 @@ router.post('/jeet', auth, async (req, res) => {
         });
       }
 
-      const newGameTransaction = new GameTransanction({
+      const newGameTransaction = new GameTransaction({
         user: req.user._id,
         amount: amountAfterFee,
         description: `Jeeted ${roomInfo.name}`,
@@ -3673,7 +3783,7 @@ router.post('/jeet', auth, async (req, res) => {
         model: Room,
         select: '_id winnings ticker image creator status hosts room_number bet_amount user_bet host_pr created_at name',
       })
-   
+
       .populate({
         path: 'creator',
         model: User,
@@ -4125,7 +4235,7 @@ router.get('/candles/:room', async (req, res) => {
       });
     }
 
-    let transactions = await GameTransanction.find({ room: room }).sort({
+    let transactions = await GameTransaction.find({ room: room }).sort({
       updated_at: 1,
     });
     // Start liquidity at 0 so the first candle open is 0.
@@ -4468,7 +4578,7 @@ router.post('/tip', auth, async (req, res) => {
     }
 
     // Check for duplicate transaction
-    const usedTransactions = await GameTransanction.find({ hash: txtHash });
+    const usedTransactions = await GameTransaction.find({ hash: txtHash });
     if (usedTransactions.length > 0) {
       console.error('Duplicate transaction:', txtHash);
       return res.json({ success: false, message: 'Transaction already used' });
@@ -4480,7 +4590,7 @@ router.post('/tip', auth, async (req, res) => {
     userToTip.balance += tipAmount;
     req.user.balance -= tipAmount;
 
-    const newTransactionC = new GameTransanction({
+    const newTransactionC = new GameTransaction({
       created_at: now,
       user: req.user._id,
       amount: -tipAmount,
@@ -4488,7 +4598,7 @@ router.post('/tip', auth, async (req, res) => {
       hash: txtHash,
     });
 
-    const newTransactionJ = new GameTransanction({
+    const newTransactionJ = new GameTransaction({
       created_at: now,
       user: userToTip._id,
       amount: tipAmount,
@@ -4639,37 +4749,62 @@ router.post('/bet3', auth, async (req, res) => {
   }
 });
 
+router.get('/user/check-deposit-status/:roomId', auth, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user._id;
+
+    if (!roomId || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Room ID and user ID are required'
+      });
+    }
+
+    // Check for a valid deposit transaction within the last 15 minutes
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+
+    const depositTransaction = await GameTransaction.findOne({
+      user: userId,
+      room: roomId,
+      status: { $in: ['pending', 'completed'] },
+      description: { $regex: '^(Joined)', $options: 'i' },
+      created_at: { $gte: fifteenMinutesAgo },
+      amount: { $lt: 0 } // Negative amount indicates a deposit
+    }).sort({ created_at: -1 }); // Get the most recent deposit
+
+    if (!depositTransaction) {
+      return res.json({
+        success: true,
+        hasValidDeposit: false,
+        message: 'No valid deposit found for this room'
+      });
+    }
+
+    return res.json({
+      success: true,
+      hasValidDeposit: true,
+      depositAmount: Math.abs(depositTransaction.amount),
+      depositTimestamp: depositTransaction.created_at.getTime(),
+      transactionHash: depositTransaction.hash,
+      status: depositTransaction.status
+    });
+
+  } catch (error) {
+    console.error('Error checking deposit status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error checking deposit status'
+    });
+  }
+});
+
 router.post('/checkTokens', auth, async (req, res) => {
   const connectedWallets = req.user.accounts;
   const available = await getUserTokens(connectedWallets);
   return res.json({
     status: available,
   });
-});
-
-router.get('/recent-transactions', async (req, res) => {
-  try {
-    const { descriptionPrefix } = req.query;
-
-    const transactions = await GameTransanction.find({
-      description: { $regex: `^${descriptionPrefix}`, $options: 'i' },
-    })
-      .sort({ created_at: -1 })
-      .limit(4)
-      .populate({
-        path: 'user',
-        model: User,
-        select: 'avatar username totalWagered accessory elite _id',
-      });
-
-    res.json({
-      success: true,
-      transactions,
-    });
-  } catch (err) {
-    console.error('Error fetching transactions:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
 });
 
 module.exports = router;

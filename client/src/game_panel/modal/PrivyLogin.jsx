@@ -10,7 +10,6 @@ import {
   getPrivyWalletBalance, // Updated import
 } from '../../redux/Auth/user.actions';
 import {
-  getMyHistory,
   getMyChat,
   getNotifications,
 } from '../../redux/Logic/logic.actions';
@@ -43,7 +42,6 @@ function PrivyLogin() {
         // Load user-related data in parallel
         const dataPromises = [
           dispatch(getNotifications()),
-          dispatch(getMyHistory()),
           dispatch(getMyChat())
         ];
         

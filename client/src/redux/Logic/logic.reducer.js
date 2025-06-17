@@ -53,8 +53,17 @@ import {
   APPEND_NEW_CANDLE,
   TRANSACTION_CANDLES_ERROR,
   SET_HIGHLIGHTED_ROOMS,
+  ROOM_IDS_LOADED,
+  INDIVIDUAL_ROOM_LOADED,
+  INDIVIDUAL_ROOM_LOADING,
+  INDIVIDUAL_ROOM_ERROR,
+  RESET_ROOM_LOADING,
   UPDATE_SINGLE_ROOM,
-  CLEAR_HIGHLIGHTED_ROOMS
+  CLEAR_HIGHLIGHTED_ROOMS,
+  ROOMS_RESET,
+  ROOMS_BATCH_LOADED, 
+  ROOMS_LOADING_MORE,
+  ROOMS_ERROR,
 } from '../types';
 
 const initialState = {
@@ -65,6 +74,15 @@ const initialState = {
   game_mode: "",
   error: null,
   roomList: [],
+  roomsPagination: {
+    page: 1,
+    limit: 10,
+    total: 0,
+    hasMore: false,
+    totalPages: 0
+  },
+  isLoadingMoreRooms: false,
+  roomsError: null,
   solPrice: 0,
   usdValue: null,
   history: [],
@@ -73,13 +91,10 @@ const initialState = {
   candles: [],
   transactions: [],
   transactionCandlesError: null,
-  bangs: [],
   trade_loading: false,
   is_betting: false,
   my_games_loading: false,
-  rolls: [],
   comments: [],
-  strategies: [],
   pageNumber: 1,
   historyTotalPage: 0,
   historyPageNumber: 1,
@@ -111,8 +126,6 @@ const initialState = {
     room_history: [],
     posted: false,
     is_private: false,
-    rps_game_type: 0,
-    qs_game_type: 2,
     description: '',
     likes: 0,
     dislikes: 0,
@@ -132,8 +145,6 @@ const initialState = {
   myGames: [],
   myGamesTotalPage: 0,
   myGamesPageNumber: 1,
-  myHistory: [],
-  myHistoryPageNumber: 1,
   myChat: [],
   notifications: [],
   chatRoomInfo: {
@@ -218,6 +229,68 @@ export default function (state = initialState, action) {
         }
       };
     }
+case RESET_ROOM_LOADING:
+      return {
+        ...state,
+        roomIds: [],
+        roomsById: {},
+        roomLoadingStates: {},
+        roomErrors: {},
+      };
+
+    case ROOM_IDS_LOADED:
+      // Initialize loading states for all room IDs
+      const loadingStates = {};
+      payload.roomIds.forEach(id => {
+        loadingStates[id] = 'loading';
+      });
+      
+      return {
+        ...state,
+        roomIds: payload.roomIds,
+        currentGameType: payload.gameType,
+        roomLoadingStates: loadingStates,
+        roomErrors: {},
+      };
+
+    case INDIVIDUAL_ROOM_LOADING:
+      return {
+        ...state,
+        roomLoadingStates: {
+          ...state.roomLoadingStates,
+          [payload.roomId]: 'loading'
+        }
+      };
+
+    case INDIVIDUAL_ROOM_LOADED:
+      return {
+        ...state,
+        roomsById: {
+          ...state.roomsById,
+          [payload.roomId]: payload.room
+        },
+        roomLoadingStates: {
+          ...state.roomLoadingStates,
+          [payload.roomId]: 'loaded'
+        },
+        roomErrors: {
+          ...state.roomErrors,
+          [payload.roomId]: null // Clear any previous error
+        }
+      };
+
+    case INDIVIDUAL_ROOM_ERROR:
+      return {
+        ...state,
+        roomLoadingStates: {
+          ...state.roomLoadingStates,
+          [payload.roomId]: 'error'
+        },
+        roomErrors: {
+          ...state.roomErrors,
+          [payload.roomId]: payload.error
+        }
+      };
 
     case SET_HIGHLIGHTED_ROOMS:
       return {
@@ -412,12 +485,54 @@ export default function (state = initialState, action) {
           totalGameLogsCount: payload.totalGameLogsCount
         }
       };
-    case ROOMS_LOADED:
-      const { roomList } = payload;
+    case ROOMS_RESET:
       return {
         ...state,
-        roomList,
+        roomList: [],
+        roomsPagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          hasMore: false,
+          totalPages: 0
+        },
+        roomsError: null,
+        isLoadingMoreRooms: false
       };
+
+    case ROOMS_LOADED:
+      return {
+        ...state,
+        roomList: payload.roomList,
+        roomsPagination: payload.pagination,
+        currentGameType: payload.gameType,
+        roomsError: null,
+        isLoadingMoreRooms: false
+      };
+
+    case ROOMS_BATCH_LOADED:
+      return {
+        ...state,
+        roomList: [...state.roomList, ...payload.roomList], // Append new rooms
+        roomsPagination: payload.pagination,
+        roomsError: null,
+        isLoadingMoreRooms: false
+      };
+
+    case ROOMS_LOADING_MORE:
+      return {
+        ...state,
+        isLoadingMoreRooms: true,
+        roomsError: null
+      };
+
+    case ROOMS_ERROR:
+      return {
+        ...state,
+        roomsError: payload,
+        isLoadingMoreRooms: false
+      };
+
 
     case UPDATE_SINGLE_ROOM:
       console.log('Updating single room:', action.payload);
@@ -451,12 +566,6 @@ export default function (state = initialState, action) {
         ...state,
         myGames: payload.myGames,
         myGamesPageNumber: payload.page
-      };
-    case MY_HISTORY_LOADED:
-      return {
-        ...state,
-        myHistory: payload.history,
-        myHistoryPageNumber: payload.page
       };
     case MY_GAMES_LOADING:
       return {

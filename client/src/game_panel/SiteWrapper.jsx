@@ -636,6 +636,8 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
     setAnchorElNotifications(e.currentTarget);
   };
 
+  // UPDATED: Load history and chat immediately in SiteWrapper.jsx
+
   useEffect(() => {
     if (!authState.hasCheckedAuth || isInitialized) return;
 
@@ -645,30 +647,37 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
         setIsInitialized(true);
         setWebsiteLoading(false);
 
+        // IMMEDIATE: Load history and chat logs right away (don't wait for anything)
+        const immediateDataPromises = [
+          dispatch(getGlobalChatLogs()),
+          dispatch(getHistory()),
+        ];
+
+        // Start loading immediately in parallel
+        Promise.allSettled(immediateDataPromises).catch(error => {
+          console.error('⚠️ Failed to load immediate data:', error);
+        });
+
+        // Load user-specific data if authenticated
+        if (authState.isAuthenticated && user?._id) {
+          dispatch(getNotifications()).catch(error => {
+            console.error('⚠️ Failed to load notifications:', error);
+          });
+        }
+
         // Initialize basic functionality
         document.addEventListener('mousedown', handleClickOutside);
 
-        // Connect socket in background AFTER UI is ready
+        // Connect socket in background AFTER UI is ready (don't block data loading)
         setTimeout(async () => {
           try {
             const socket = await socketClient.connect(endpoint);
-
             if (socket) {
               dispatch(setSocket(socket));
             }
           } catch (socketError) {
             console.error('❌ Socket connection failed during init:', socketError);
             // Don't block the app if socket fails
-          }
-          // Load initial data
-          try {
-            await Promise.allSettled([
-              dispatch(getGlobalChatLogs()),
-              dispatch(getHistory()),
-              authState.isAuthenticated && user?._id ? dispatch(getNotifications()) : Promise.resolve()
-            ]);
-          } catch (dataError) {
-            console.error('⚠️ Failed to load initial data:', dataError);
           }
 
           // Initialize audio
