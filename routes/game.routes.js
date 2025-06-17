@@ -387,81 +387,107 @@ router.post('/extract-room-info', auth, async (req, res) => {
     }
 
     console.log('[Extract] Processing game code...');
+    console.log('[Extract] Code length:', gameCode.length);
 
     // Enhanced title extraction with more specific patterns
     let name = '';
     let confidence = 0;
 
     // Look for Typography with id="game-title" specifically (highest priority)
-    const gameTitleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>([^<]{3,50})<\/Typography>/i);
+    // Updated regex to handle emojis, special characters, and longer titles
+    const gameTitleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>([^<]{1,100})<\/Typography>/i);
 
     if (gameTitleMatch && gameTitleMatch[1]) {
       let extractedTitle = gameTitleMatch[1].trim();
+      console.log('[Extract] Raw extracted title from game-title:', extractedTitle);
 
-      // Clean up JSX syntax and template literals
+      // Clean up JSX syntax and template literals more carefully
       extractedTitle = extractedTitle
-        .replace(/[{}$`]/g, '')
+        // Remove JSX template literal syntax but preserve content
         .replace(/\$\{[^}]+\}/g, '')
-        .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"[^"]*"/g, '')
+        .replace(/`/g, '')
+        // Handle conditional JSX expressions
+        .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"([^"]*)"/g, '$1')
+        .replace(/isMobile\s*\?\s*'[^']*'\s*:\s*'([^']*)'/g, '$1')
+        // Remove remaining JSX artifacts
+        .replace(/[{}]/g, '')
+        // Clean up multiple spaces
         .replace(/\s+/g, ' ')
         .trim();
 
-      // Validate title quality - exclude common non-title words
+      console.log('[Extract] Cleaned extracted title:', extractedTitle);
+
+      // More lenient validation - allow emojis and special characters
       if (extractedTitle.length >= 3 &&
-        extractedTitle.length <= 30 &&
-        !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
+        extractedTitle.length <= 100 && // Increased max length
+        // Remove overly strict exclusions
+        !['Game Rules', 'Rules', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
         !extractedTitle.includes('undefined') &&
         !extractedTitle.includes('null') &&
         !extractedTitle.includes('result') &&
         !extractedTitle.includes('===') &&
         !extractedTitle.startsWith('{') &&
-        !/^[a-z]/.test(extractedTitle)) { // Should start with capital
+        extractedTitle !== '') {
 
         name = extractedTitle;
         confidence = 0.95;
+        console.log('[Extract] ✅ High confidence title found:', name);
+      } else {
+        console.log('[Extract] ❌ Title validation failed for:', extractedTitle);
       }
+    } else {
+      console.log('[Extract] ❌ No game-title id found');
     }
 
     // Fallback patterns if game-title id is not found or invalid
     if (!name) {
+      console.log('[Extract] 🔄 Trying fallback extraction patterns...');
+      
       const titlePatterns = [
-        // Look for Typography with variant h1-h4 that's not "Game Rules"
-        /<Typography[^>]*variant="h[1-4]"[^>]*>([^<]{3,30})<\/Typography>/gi,
-        // Look for regular h1-h3 tags
-        /<h[1-3][^>]*>([^<]{3,30})<\/h[1-3]>/gi,
-        // Look for Typography with game-related content
-        /<Typography[^>]*>([A-Z][A-Za-z\s]{2,29}(?:Game|Simulator|Master|Challenge|Quest|Arena|Zone))<\/Typography>/gi
+        // Look for Typography with variant h1-h6 
+        /<Typography[^>]*variant="h[1-6]"[^>]*>([^<]{3,100})<\/Typography>/gi,
+        // Look for regular h1-h6 tags
+        /<h[1-6][^>]*>([^<]{3,100})<\/h[1-6]>/gi,
+        // Look for any Typography that might contain a game title (broader search with emojis)
+        /<Typography[^>]*>([A-Z🌆🎮🕹️🎯🏆🚀⚡🌟💎🔥🎲🃏♠♥♦♣🎪🎨🎭🎪][^<]{5,100})<\/Typography>/gi
       ];
 
       for (let i = 0; i < titlePatterns.length; i++) {
         const pattern = titlePatterns[i];
         const matches = Array.from(gameCode.matchAll(pattern));
 
+        console.log(`[Extract] Pattern ${i + 1} found ${matches.length} matches`);
+
         for (const match of matches) {
           if (match && match[1]) {
             let extractedTitle = match[1].trim();
+            console.log(`[Extract] Checking match: "${extractedTitle}"`);
 
             // Clean up JSX syntax
             extractedTitle = extractedTitle
-              .replace(/[{}$`]/g, '')
               .replace(/\$\{[^}]+\}/g, '')
-              .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"[^"]*"/g, '')
+              .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"([^"]*)"/g, '$1')
+              .replace(/isMobile\s*\?\s*'[^']*'\s*:\s*'([^']*)'/g, '$1')
+              .replace(/[{}$`]/g, '')
               .replace(/\s+/g, ' ')
               .trim();
 
-            // Validate title quality - exclude rules and generic text
+            console.log(`[Extract] Cleaned match: "${extractedTitle}"`);
+
+            // More lenient validation for fallback
             if (extractedTitle.length >= 3 &&
-              extractedTitle.length <= 30 &&
-              !['Game Rules', 'Rules', 'Game', 'Title', 'App', 'Component', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
+              extractedTitle.length <= 100 &&
+              !['Game Rules', 'Rules', 'Close', 'Start', 'Play', 'Game', 'Title', 'App', 'Component'].includes(extractedTitle) &&
               !extractedTitle.includes('undefined') &&
               !extractedTitle.includes('null') &&
               !extractedTitle.includes('result') &&
               !extractedTitle.includes('===') &&
               !extractedTitle.startsWith('{') &&
-              !/^[a-z]/.test(extractedTitle)) {
+              extractedTitle !== '') {
 
               name = extractedTitle;
               confidence = i === 0 ? 0.8 : (0.7 - i * 0.1);
+              console.log(`[Extract] ✅ Fallback title found: "${name}" with confidence ${confidence}`);
               break;
             }
           }
@@ -470,25 +496,39 @@ router.post('/extract-room-info', auth, async (req, res) => {
       }
     }
 
-    // Generate ticker from name
+    console.log('[Extract] Final extracted title:', name);
+
+    // Generate ticker from name - handle emojis and special characters
     let ticker = '';
     if (name) {
+      // Remove emojis and special characters, then extract letters
+      const cleanName = name
+        .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove emojis
+        .replace(/[^\w\s]/g, ' ') // Replace special chars with spaces
+        .trim();
+
+      console.log('[Extract] Clean name for ticker:', cleanName);
+
       // Split by spaces and take first letter of each word
-      const words = name.split(/\s+/);
+      const words = cleanName.split(/\s+/).filter(word => word.length > 0);
       ticker = words
         .map(word => word.charAt(0).toUpperCase())
         .join('')
         .substring(0, 6);
 
-      // If ticker is too short, use first few chars of name
+      console.log('[Extract] Generated ticker from words:', ticker);
+
+      // If ticker is too short, use first few chars of clean name
       if (ticker.length < 2) {
-        ticker = name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '');
+        ticker = cleanName.substring(0, 6).toUpperCase().replace(/[^A-Z]/g, '');
       }
 
-      // Ensure ticker is 2-6 characters
+      // Final fallback
       if (ticker.length < 2) ticker = 'GAME';
       if (ticker.length > 6) ticker = ticker.substring(0, 6);
     }
+
+    console.log('[Extract] Final ticker:', ticker);
 
     // Extract description from game rules section
     let description = '';
@@ -501,8 +541,8 @@ router.post('/extract-room-info', auth, async (req, res) => {
       /Game Rules[\s\S]*?<\/Typography>([\s\S]*?)(?:<Button|<\/Box>)/i,
       // Look for numbered rules pattern
       /((?:<Typography[^>]*>[^<]*\d+\.[^<]*<\/Typography>\s*){2,})/gi,
-      // Look for step-by-step instructions
-      /((?:Choose|Select|Click|Buy|Sell|Start|Play)[^<]*(?:<\/Typography>)?(?:\s*<Typography[^>]*>[^<]*(?:prices|time|profit|multiplier|seconds)[^<]*<\/Typography>)?){2,}/gi
+      // Look for step-by-step instructions (enhanced for poker and other games)
+      /((?:Choose|Select|Click|Buy|Sell|Start|Play|Receive|Navigate|Use|Beat)[^<]*(?:<\/Typography>)?(?:\s*<Typography[^>]*>[^<]*(?:cards|hand|community|phases|multiplier|opponent|prices|time|profit|seconds)[^<]*<\/Typography>)?){2,}/gi
     ];
 
     for (const pattern of rulesPatterns) {
@@ -525,7 +565,7 @@ router.post('/extract-room-info', auth, async (req, res) => {
                 !cleanText.includes('undefined') &&
                 !cleanText.includes('null') &&
                 !cleanText.startsWith('{') &&
-                (cleanText.includes('.') || cleanText.match(/\d+\s*\./));
+                (cleanText.includes('.') || cleanText.match(/\d+\s*\./) || cleanText.includes('•'));
             })
             .slice(0, 5); // Take first 5 rules
 
@@ -546,7 +586,7 @@ router.post('/extract-room-info', auth, async (req, res) => {
     if (!description) {
       const instructionPatterns = [
         // Look for Typography with instructional keywords
-        /<Typography[^>]*>([^<]{20,200}(?:choose|select|click|buy|sell|trade|play|win|lose|time|seconds|multiplier)[^<]{0,100})<\/Typography>/gi,
+        /<Typography[^>]*>([^<]{20,200}(?:choose|select|click|buy|sell|trade|play|win|lose|time|seconds|multiplier|cards|hand|poker|fold|call)[^<]{0,100})<\/Typography>/gi,
         // Look for any longer descriptive content
         /<Typography[^>]*>([^<]{30,200})<\/Typography>/gi
       ];
@@ -583,10 +623,13 @@ router.post('/extract-room-info', auth, async (req, res) => {
     let gameTheme = 'interactive game';
 
     const themeMapping = {
+      'poker game': ['poker', 'texas', 'hold', 'cards', 'hand', 'flop', 'river', 'fold', 'community'],
+      'casino game': ['casino', 'gambling', 'multiplier', 'fold', 'call', 'showdown', 'chips'],
+      'cyberpunk game': ['cyberpunk', 'neon', 'nexus', 'cyber', 'hud', 'neural'],
+      'card game': ['card', 'deck', 'hand', 'shuffle', 'suit'],
       'stock trading game': ['stock', 'trading', 'simulator', 'market', 'price', 'buy', 'sell', 'profit'],
       'puzzle game': ['puzzle', 'solve', 'brain', 'logic', 'match', 'sudoku'],
       'racing game': ['race', 'speed', 'car', 'track', 'lap', 'finish', 'driving'],
-      'card game': ['card', 'deck', 'poker', 'blackjack', 'hand', 'shuffle'],
       'dice game': ['dice', 'roll', 'random', 'luck', 'chance'],
       'shooter game': ['shoot', 'gun', 'bullet', 'target', 'aim', 'fire'],
       'platform game': ['jump', 'platform', 'mario', 'side-scroller', 'climb'],
@@ -594,7 +637,6 @@ router.post('/extract-room-info', auth, async (req, res) => {
       'arcade game': ['arcade', 'score', 'high score', 'classic', 'retro'],
       'battle game': ['battle', 'fight', 'combat', 'warrior', 'attack'],
       'mining game': ['mine', 'dig', 'treasure', 'gem', 'gold', 'collect'],
-      'casino game': ['casino', 'bet', 'gamble', 'slot', 'roulette', 'chips'],
       'crash game': ['crash', 'rocket', 'multiplier', 'cashout'],
       'memory game': ['memory', 'remember', 'sequence', 'pattern'],
       'action game': ['action', 'fast', 'quick', 'reaction', 'reflex']
@@ -607,21 +649,24 @@ router.post('/extract-room-info', auth, async (req, res) => {
       }
     }
 
+    console.log('[Extract] Detected game theme:', gameTheme);
+
     // Generate fallback description if none found
     if (!description) {
-      if (name && name !== 'Default Game') {
-        description = `An exciting ${gameTheme.replace(' game', '')} experience featuring ${name.toLowerCase()}. Test your skills and achieve high multipliers!`;
+      if (name && name !== 'Default Game' && name !== 'Generated Game') {
+        description = `Experience ${name} - an exciting ${gameTheme.replace(' game', '')} with unique mechanics and multiplier rewards.`;
       } else {
         description = `An engaging ${gameTheme} with exciting gameplay mechanics and multiplier rewards.`;
       }
     }
 
-    // Final validation and adjustments
-    if (!name || name === 'Default Game') {
+    // Final validation and adjustments - only use fallback if we truly found nothing
+    if (!name || name.length < 3) {
+      console.log('[Extract] ⚠️ No valid title found, using theme-based fallback');
       const themeWord = gameTheme.split(' ')[0];
       name = themeWord.charAt(0).toUpperCase() + themeWord.slice(1) + ' Master';
       ticker = name.substring(0, 4).toUpperCase();
-      confidence = 0.5;
+      confidence = 0.3; // Low confidence for fallback
     }
 
     const extractedInfo = {
@@ -629,14 +674,14 @@ router.post('/extract-room-info', auth, async (req, res) => {
       ticker: ticker || 'GAME',
       description: description || 'A fun and engaging game experience.',
       gameTheme,
-      confidence: Math.max(confidence, 0.5)
+      confidence: Math.max(confidence, 0.3)
     };
 
-    console.log('[Extract] Result:', extractedInfo);
+    console.log('[Extract] ✅ Result:', extractedInfo);
     res.json(extractedInfo);
 
   } catch (error) {
-    console.error('[Extract] Error:', error);
+    console.error('[Extract] ❌ Error:', error);
     res.status(500).json({
       error: 'Extraction failed',
       message: error.message || 'Failed to extract room information'
@@ -698,7 +743,6 @@ router.post('/generate-image', auth, async (req, res) => {
     });
   }
 });
-
 
 router.post('/generate-react', auth, async (req, res) => {
   try {
