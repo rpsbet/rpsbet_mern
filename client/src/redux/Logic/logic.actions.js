@@ -157,7 +157,7 @@ export const getRoomIds = (params = {}) => async (dispatch) => {
   try {
     const requestParams = {
       ...params,
-      limit: 30 // Number of rooms to load
+      limit: 50 // Increase limit since we're optimizing the query
     };
     
     const res = await axios.get('/game/rooms/ids', { params: requestParams });
@@ -171,7 +171,7 @@ export const getRoomIds = (params = {}) => async (dispatch) => {
         },
       });
       
-      // Start loading individual rooms immediately
+      // Load rooms in smaller batches to avoid overwhelming the server
       dispatch(startLoadingIndividualRooms(res.data.roomIds));
     } else {
       throw new Error(res.data.err || 'Failed to fetch room IDs');
@@ -187,18 +187,25 @@ export const getRoomIds = (params = {}) => async (dispatch) => {
   }
 };
 
-// Load individual rooms with staggered timing
+// IMPROVED: Load rooms in smaller batches
 export const startLoadingIndividualRooms = (roomIds) => async (dispatch) => {
-  // Shuffle array to load rooms in random order (like YouTube)
-  const shuffledIds = [...roomIds].sort(() => Math.random() - 0.5);
+  const BATCH_SIZE = 10; // Load 10 rooms at a time
+  const batches = [];
   
-  // Load rooms with random delays to simulate real network conditions
-  shuffledIds.forEach((roomId, index) => {
-    const delay = Math.random() * 2000; // Random delay up to 2 seconds
-    
+  // Split roomIds into batches
+  for (let i = 0; i < roomIds.length; i += BATCH_SIZE) {
+    batches.push(roomIds.slice(i, i + BATCH_SIZE));
+  }
+  
+  // Load batches with delays
+  batches.forEach((batch, batchIndex) => {
     setTimeout(() => {
-      dispatch(loadIndividualRoom(roomId));
-    }, delay);
+      batch.forEach((roomId, index) => {
+        setTimeout(() => {
+          dispatch(loadIndividualRoom(roomId));
+        }, index * 200); // 200ms between each room in batch
+      });
+    }, batchIndex * 2000); // 2 seconds between batches
   });
 };
 
@@ -1017,42 +1024,6 @@ export const offerLoan = data => async dispatch => {
   return false;
 };
 
-// logic.actions.js
-export const getRoomList = (params = {}) => async (dispatch) => {
-  dispatch({ type: START_LOADING });
-  dispatch({ type: ROOMS_RESET }); // Clear existing rooms when fetching new filter
-  
-  try {
-    const requestParams = {
-      ...params,
-      page: 1,
-      limit: 10 // Start with small batch
-    };
-    
-    const res = await axios.get('/game/rooms', { params: requestParams });
-    
-    if (res.data.success) {
-      dispatch({
-        type: ROOMS_LOADED,
-        payload: {
-          roomList: res.data.roomList,
-          pagination: res.data.pagination,
-          gameType: params.game_type || 'All'
-        },
-      });
-    } else {
-      throw new Error(res.data.err || 'Failed to fetch rooms');
-    }
-  } catch (err) {
-    console.error('Error fetching room list:', err);
-    dispatch({
-      type: ROOMS_ERROR,
-      payload: err.message
-    });
-  } finally {
-    dispatch({ type: END_LOADING });
-  }
-};
 
 export const loadMoreRooms = (params = {}, currentPage = 1) => async (dispatch) => {
   dispatch({ type: ROOMS_LOADING_MORE });

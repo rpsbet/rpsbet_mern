@@ -66,7 +66,7 @@ function OpenGamesTable(props) {
   const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
   const solPrice = useSelector(state => state.logic.solPrice);
   const isDarkMode = useSelector(state => state.auth.isDarkMode);
-  
+
   // YouTube-style loading selectors
   const roomIds = useSelector(state => state.logic.roomIds || []);
   const roomsById = useSelector(state => state.logic.roomsById || {});
@@ -106,21 +106,21 @@ function OpenGamesTable(props) {
   // Apply highlighting to loaded rooms
   const processedRoomData = useMemo(() => {
     const highlightId = Array.from(highlightedRooms)[0];
-    
+
     if (!highlightId) return orderedRoomData;
-    
+
     // Find the highlighted room and move it to the front if it's loaded
     const highlightedIndex = orderedRoomData.findIndex(
       item => item.id === highlightId && item.isLoaded
     );
-    
+
     if (highlightedIndex > 0) {
       const reordered = [...orderedRoomData];
       const [highlightedItem] = reordered.splice(highlightedIndex, 1);
       reordered.unshift(highlightedItem);
       return reordered;
     }
-    
+
     return orderedRoomData;
   }, [orderedRoomData, highlightedRooms]);
 
@@ -129,55 +129,60 @@ function OpenGamesTable(props) {
     return processedRoomData.filter(item => {
       // Always show loading skeletons
       if (item.isLoading || item.isError) return true;
-      
+
       // Only filter loaded rooms
       if (!item.isLoaded || !item.room) return false;
-      
+
       const room = item.room;
-      
+
       // Game type filter
       if (selectedGameType !== 'All') {
         if (!room.game_type) return false;
-        
+
         const matchesGameType = Array.isArray(room.game_type)
-          ? room.game_type.some(type => 
-              type && typeof type === 'string' && 
-              type.toLowerCase() === selectedGameType.toLowerCase()
-            )
-          : typeof room.game_type === 'string' && 
-            room.game_type.toLowerCase() === selectedGameType.toLowerCase();
-            
+          ? room.game_type.some(type =>
+            type && typeof type === 'string' &&
+            type.toLowerCase() === selectedGameType.toLowerCase()
+          )
+          : typeof room.game_type === 'string' &&
+          room.game_type.toLowerCase() === selectedGameType.toLowerCase();
+
         if (!matchesGameType) return false;
       }
-      
+
       // Search filter
       if (gameTypeSearch) {
         const lowerCaseSearch = gameTypeSearch.toLowerCase();
-        
+
         const roomGameTypes = Array.isArray(room.game_type)
           ? room.game_type.filter(type => type && typeof type === 'string')
           : (room.game_type && typeof room.game_type === 'string') ? [room.game_type] : [];
-        
-        const gameTypeMatch = roomGameTypes.some(type => 
+
+        const gameTypeMatch = roomGameTypes.some(type =>
           type.toLowerCase().includes(lowerCaseSearch)
         );
-        const nameMatch = room.name && 
-          typeof room.name === 'string' && 
+        const nameMatch = room.name &&
+          typeof room.name === 'string' &&
           room.name.toLowerCase().includes(lowerCaseSearch);
-        const descriptionMatch = room.description && 
-          typeof room.description === 'string' && 
+        const descriptionMatch = room.description &&
+          typeof room.description === 'string' &&
           room.description.toLowerCase().includes(lowerCaseSearch);
-        
+
         if (!gameTypeMatch && !nameMatch && !descriptionMatch) return false;
       }
-      
+
       return true;
     });
   }, [processedRoomData, selectedGameType, gameTypeSearch]);
 
   // Initial fetch
   useEffect(() => {
-    dispatch(getRoomIds({ game_type: 'All' }));
+    // Add error handling for initial fetch
+    dispatch(getRoomIds({ game_type: 'All' }))
+      .catch(error => {
+        console.error('Failed to load rooms:', error);
+        // You might want to show an error message to users
+      });
     dispatch(getTopGameTypes());
   }, [dispatch]);
 
@@ -199,7 +204,7 @@ function OpenGamesTable(props) {
   useEffect(() => {
     if (window.socketClient && window.socketClient.socket) {
       window.socketClient.socket.on('ROOM_ACTION_UPDATED', handleRoomActionUpdated);
-      
+
       return () => {
         if (window.socketClient && window.socketClient.socket) {
           window.socketClient.socket.off('ROOM_ACTION_UPDATED', handleRoomActionUpdated);
@@ -307,20 +312,20 @@ function OpenGamesTable(props) {
       }}
     >
       {isError ? (
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           justifyContent: 'center',
           py: 3
         }}>
           <Typography variant="caption" sx={{ color: 'rgba(255, 0, 0, 0.7)', mb: 1 }}>
             Failed to load room
           </Typography>
-          <IconButton 
-            size="small" 
+          <IconButton
+            size="small"
             onClick={onRetry}
-            sx={{ 
+            sx={{
               color: 'rgba(255, 0, 0, 0.7)',
               '&:hover': { color: '#ff0000' }
             }}
@@ -528,7 +533,7 @@ function OpenGamesTable(props) {
                         xl={4}
                         key={`room-${item.id}`}
                       >
-                        <RoomSkeleton 
+                        <RoomSkeleton
                           isError={item.isError}
                           error={item.error}
                           onRetry={() => handleRetryRoom(item.id)}
@@ -658,8 +663,8 @@ function OpenGamesTable(props) {
                                   display: 'block',
                                 }}
                               >
-                                {row.description && row.description.length > 40 
-                                  ? `${row.description.slice(0, 40)}...` 
+                                {row.description && row.description.length > 40
+                                  ? `${row.description.slice(0, 40)}...`
                                   : row.description || 'No description'}
                               </Typography>
                             </Box>
@@ -981,10 +986,10 @@ function OpenGamesTable(props) {
 
               {/* Loading status info */}
               {roomIds.length > 0 && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  mt: 2, 
+                <Box sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  mt: 2,
                   mb: 2,
                   color: 'rgba(255, 255, 255, 0.6)'
                 }}>
@@ -993,7 +998,7 @@ function OpenGamesTable(props) {
                       const loadedCount = Object.values(roomLoadingStates).filter(state => state === 'loaded').length;
                       const totalCount = roomIds.length;
                       const loadingCount = Object.values(roomLoadingStates).filter(state => state === 'loading').length;
-                      
+
                       if (loadingCount > 0) {
                         return `Loading rooms... (${loadedCount}/${totalCount} loaded)`;
                       } else {

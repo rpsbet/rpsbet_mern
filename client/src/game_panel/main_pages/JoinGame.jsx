@@ -32,7 +32,6 @@ import {
   getRoomInfo,
   addNewTransaction,
   pumpGame,
-  getRoomList,
   getTransactionCandles,
 } from '../../redux/Logic/logic.actions';
 import {
@@ -563,11 +562,6 @@ function JoinGame() {
         pumpGame(coHostAmount, roomInfo._id, connectedAccount),
       );
 
-      if (result.success) {
-        await dispatch(getRoomList({ game_type: roomInfo.game_type }));
-      } else {
-        dispatch(errorMsgBar(result.message));
-      }
     } catch (error) {
       console.log("error", error)
       dispatch(errorMsgBar('Room too busy, try again later'));

@@ -52,9 +52,11 @@ const RoomSchema = new Schema({
 
 // Existing indexes
 RoomSchema.index({ status: 1, updated_at: -1 });
-RoomSchema.index({ game_type: 1, status: 1 });
 RoomSchema.index({ creator: 1 });
 RoomSchema.index({ joiners: 1 });
 RoomSchema.index({ created_at: -1 });
+RoomSchema.index({ status: 1, game_type: 1, updated_at: -1 }); // For filtered game type queries
+RoomSchema.index({ status: 1, created_at: -1 });               // Alternative sorting option
+RoomSchema.index({ "hosts.host": 1, status: 1 }); 
 
 module.exports = mongoose.model('rps_rooms', RoomSchema);

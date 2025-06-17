@@ -97,7 +97,7 @@ router.get('/game_types/top', async (req, res) => {
     // Cache for 5 minutes
     await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
     res.json(response);
-    
+
   } catch (err) {
     console.error('Error fetching top game types:', err);
     res.status(500).json({
@@ -1670,27 +1670,46 @@ router.get('/room/:roomId', async (req, res) => {
 router.get('/rooms/ids', async (req, res) => {
   const game_type_filter = req.query.game_type || 'All';
   const limit = parseInt(req.query.limit) || 30;
-
-  const search_condition = {
-    status: 'open',
-  };
-
-  if (game_type_filter !== 'All') {
-    search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
-  }
+  const redisClient = req.app.get('redisClient');
+  const cacheKey = `rooms:ids:${game_type_filter}:${limit}`;
 
   try {
-    const roomIds = await Room.find(search_condition)
-      .select('_id')
-      .sort({ updated_at: -1 })
-      .limit(limit)
-      .lean();
+    // Try cache first
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
 
-    res.json({
+    const search_condition = {
+      status: 'open',
+    };
+
+    if (game_type_filter !== 'All') {
+      search_condition.game_type = {
+        $elemMatch: { $regex: new RegExp(game_type_filter, 'i') }
+      };
+    }
+
+    // FIXED: Use find() with proper indexing instead of aggregation
+    const rooms = await Room.find(search_condition)
+      .allowDiskUse(true)
+      .select('_id updated_at') // Only select what we need
+      .sort({ updated_at: -1 }) // This will use the index
+      .limit(limit)
+      .lean(); // Use lean() for better performance
+
+    const roomIds = rooms.map(room => room._id);
+
+    const response = {
       success: true,
-      roomIds: roomIds.map(room => room._id),
+      roomIds: roomIds,
       total: roomIds.length
-    });
+    };
+
+    // Cache for 30 seconds
+    await redisClient.setEx(cacheKey, 30, JSON.stringify(response));
+
+    res.json(response);
   } catch (err) {
     console.error('Error fetching room IDs:', err);
     res.json({
@@ -2203,177 +2222,6 @@ router.get('/history', async (req, res) => {
   }
 });
 
-router.get('/rooms', async (req, res) => {
-  const game_type_filter = req.query.game_type || 'All';
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10; // Smaller batches
-  const skip = (page - 1) * limit;
-
-  // Use different cache keys for different pages
-  const cacheKey = `rooms:${game_type_filter}:page:${page}:limit:${limit}`;
-
-  const redisClient = req.app.get('redisClient');
-
-  let cached;
-  try {
-    cached = await redisClient.get(cacheKey);
-  } catch (redisErr) {
-    console.error('Redis error, bypassing cache:', redisErr);
-  }
-
-  if (cached) {
-    return res.json(JSON.parse(cached));
-  }
-
-  try {
-    console.log(`Fetching rooms - page: ${page}, limit: ${limit}, game_type: ${game_type_filter}`);
-    const result = await getRoomListPaginated(game_type_filter, skip, limit);
-
-    const response = {
-      success: true,
-      query: req.query,
-      roomList: result.rooms,
-      pagination: {
-        page,
-        limit,
-        total: result.total,
-        hasMore: result.hasMore,
-        totalPages: Math.ceil(result.total / limit)
-      }
-    };
-
-    // Cache for shorter time for paginated results
-    try {
-      await redisClient.setEx(cacheKey, 30, JSON.stringify(response));
-    } catch (redisErr) {
-      console.error('Failed to cache:', redisErr);
-    }
-
-    res.json(response);
-  } catch (err) {
-    console.error('Error in /rooms:', err);
-    res.json({
-      success: false,
-      err: err.toString(),
-    });
-  }
-});
-
-// 2. UPDATE DATABASE FUNCTION - Add pagination
-const getRoomListPaginated = async (game_type_filter, skip = 0, limit = 10) => {
-  const search_condition = {
-    status: 'open',
-  };
-
-  if (game_type_filter !== 'All') {
-    search_condition.game_type = { $elemMatch: { $regex: new RegExp(game_type_filter, 'i') } };
-  }
-
-  try {
-    // Get total count for pagination
-    const total = await Room.countDocuments(search_condition);
-
-    const preRooms = await Room.find(search_condition)
-      .select(
-        '_id name ticker image description room_number likes dislikes ' +
-        'creator battles username joiners game_type is_private ' +
-        'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts'
-      )
-      .populate({
-        path: 'creator',
-        model: 'rps_users',
-        select: 'avatar totalWagered username accessory elite status',
-      })
-      .sort({ updated_at: -1 })
-      .skip(skip)
-      .limit(limit)
-      .allowDiskUse(true)
-      .lean();
-
-    // Rest of your existing logic for processing rooms...
-    const joinerIds = [...new Set(preRooms.flatMap(room => room.joiners))];
-    const joinerUsers = await User.find({ _id: { $in: joinerIds } })
-      .select('avatar totalWagered _id username accessory elite status')
-      .lean();
-
-    const joinerMap = joinerUsers.reduce((map, user) => {
-      map[user._id.toString()] = {
-        user_id: user._id,
-        avatar: user.avatar,
-        totalWagered: user.totalWagered,
-        accessory: user.accessory,
-        elite: user.elite,
-        username: user.username,
-        rank: user.totalWagered,
-      };
-      return map;
-    }, {});
-
-    const result = preRooms.map(room => {
-      try {
-        const joinerData = room.joiners.map(joinedUserId => joinerMap[joinedUserId.toString()] || null).filter(Boolean);
-
-        return {
-          _id: room._id,
-          creator_id: room.creator ? room.creator._id : '',
-          joiners: joinerData.map(joiner => ({
-            avatar: joiner.avatar,
-            rank: joiner.totalWagered,
-            username: joiner.username,
-            accessory: joiner.accessory,
-            elite: joiner.elite,
-            _id: joiner.user_id,
-          })),
-          ticker: room.ticker || room.room_number,
-          rank: room.creator?.totalWagered || 0,
-          creator_avatar: room.creator?.avatar || '',
-          accessory: room.creator?.accessory || '',
-          elite: room.creator?.elite || '',
-          username: room.creator?.username || '',
-          creator_status: room.creator?.status || '',
-          game_type: room.game_type || [],
-          name: room.name,
-          description: room.description,
-          image: room.image,
-          bet_amount: room.bet_amount,
-          pr: room.pr,
-          endgame_amount: room.endgame_amount,
-          host_pr: room.host_pr,
-          room_name: (room.game_type && room.game_type.length > 0 ? room.game_type[0] : 'Unknown') + '-' + room.room_number,
-          total_stakes: room.hosts.reduce((acc, host) => acc + (host.stake || 0), 0),
-          user_bet: parseFloat(room.user_bet || 0),
-          is_private: room.is_private,
-          status: room.status,
-          index: room.room_number,
-          created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
-          updated_at: room.updated_at,
-          battles: room.battles,
-          likes: room.likes,
-          dislikes: room.dislikes,
-          hosts: room.hosts,
-          winnings: parseFloat(room.user_bet || 0),
-        };
-      } catch (error) {
-        console.error('Error building room object:', error.toString());
-        return null;
-      }
-    });
-
-    const filteredResults = result.filter(r => r !== null);
-    const hasMore = (skip + limit) < total;
-
-    console.log(`getRoomListPaginated - Found ${filteredResults.length} rooms (${skip + 1}-${skip + filteredResults.length} of ${total})`);
-
-    return {
-      rooms: filteredResults,
-      total,
-      hasMore
-    };
-  } catch (error) {
-    console.error('Error in getRoomListPaginated:', error);
-    return { rooms: [], total: 0, hasMore: false };
-  }
-};
 // Updated POST /rooms route
 router.post('/rooms', auth, async (req, res) => {
   try {

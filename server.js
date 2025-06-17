@@ -54,7 +54,7 @@ const server = app.listen(PORT, () => {
 // Your socketController will now be responsible for configuring cors, transports, etc.
 const io = socketController.socketio(server, redisClient); // <--- MODIFIED LINE
 
-setTimeout(() => callCronJob.callCronJobs(io), 500);
+// setTimeout(() => callCronJob.callCronJobs(io), 500);
 setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
 setTimeout(() => cronJob.checkConfirmations(), 5000);
 setTimeout(() => interestCron.updateRoomInterests(io), 11000);

@@ -49,7 +49,6 @@ import {
   getMyGames,
   editPayout,
   addNewTransaction,
-  getRoomList,
   endGame,
   pumpGame,
 } from '../../redux/Logic/logic.actions';
@@ -244,7 +243,6 @@ function MyGamesTable() {
       const result = await dispatch(pumpGame(coHostAmount, selectedRow._id));
       if (result.success) {
         dispatch(addNewTransaction(result.newTransaction));
-        await dispatch(getRoomList({ game_type: 'All' }));
       } else {
         dispatch(errorMsgBar(result.message));
       }
@@ -258,7 +256,6 @@ function MyGamesTable() {
     dispatch,
     pumpGame,
     addNewTransaction,
-    getRoomList,
   ]);
 
   // ---------- Payout ----------
