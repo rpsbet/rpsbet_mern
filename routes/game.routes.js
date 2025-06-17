@@ -52,6 +52,7 @@ const { distributeTokens } = require('../helper/util/distributeTokens');
 const compression = require('compression');
 router.use(compression());
 const PINATA_JWT = process.env.PINATA_JWT;
+
 router.get('/game_types/top', async (req, res) => {
   const cacheKey = 'top_game_types';
   const redisClient = req.app.get('redisClient');
@@ -1569,6 +1570,7 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 
 // 1. BACKEND ROUTE - Return individual room by ID/index
 router.get('/room/:roomId', async (req, res) => {
+
   const { roomId } = req.params;
 
   try {
@@ -1668,6 +1670,7 @@ router.get('/room/:roomId', async (req, res) => {
 
 // 2. UPDATED ROOMS LIST ROUTE - Return room IDs only
 router.get('/rooms/ids', async (req, res) => {
+
   const game_type_filter = req.query.game_type || 'All';
   const limit = parseInt(req.query.limit) || 30;
   const redisClient = req.app.get('redisClient');
@@ -1690,7 +1693,6 @@ router.get('/rooms/ids', async (req, res) => {
       };
     }
 
-    // FIXED: Use find() with proper indexing instead of aggregation
     const rooms = await Room.find(search_condition)
       .allowDiskUse(true)
       .select('_id updated_at') // Only select what we need
@@ -1719,7 +1721,7 @@ router.get('/rooms/ids', async (req, res) => {
   }
 });
 
-router.get('/room/:id', async (req, res) => {
+router.get('/game-room/:id', async (req, res) => {
   const roomId = req.params.id;
   const limit = Number.parseInt(req.query.limit, 10) || 10;
   const cacheKey = `room:${roomId}:limit:${limit}`;

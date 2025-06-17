@@ -13,7 +13,8 @@ async function callCronJobs(io) {
   lastExecutionTime = executionTime;
 
   try {
-    // Use aggregation cursor to stream documents
+console.log('🔍eeeeCRON AGGREGATION START:', new Date().toISOString());
+
     const cursor = Room.aggregate([
       { $match: { status: 'open' } },
       { $sort: { updated_at: 1 } },
@@ -190,9 +191,9 @@ async function callCronJobs(io) {
   }
 }
 
-const cronJob = cron.schedule('*/5 * * * * *', async () => {
-  await callCronJobs(socketio);
-});
+// const cronJob = cron.schedule('*/5 * * * * *', async () => {
+//   await callCronJobs(socketio);
+// });
 
 module.exports = {
   callCronJobs,

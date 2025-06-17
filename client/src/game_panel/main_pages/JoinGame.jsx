@@ -213,7 +213,7 @@ function JoinGame() {
         console.error('Error in init useEffect:', error);
       }
     };
-
+console.log('JoinGame component mounted with room ID:', id);
     init();
 
     // Cleanup

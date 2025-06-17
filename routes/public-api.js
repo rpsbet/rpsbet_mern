@@ -239,9 +239,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
 
     console.log('🔍 VALIDATION STARTING');
 
-    let ticker = originalTicker;
-    let description = originalDescription;
-
     // Validation - Required fields
     const user_bet = parseFloat(bet_amount);
     console.log('Parsed bet amount:', user_bet);
@@ -331,9 +328,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       });
     }
 
-    // Process mandatory automated deposit
-
-
+    // Image generation/processing
     let finalImageUrl = null;
     let generatedImageInfo = null;
 
@@ -420,19 +415,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
 
       // Extract room info from generated code
       extractedInfo = extractRoomInfoFromCode(finalGameCode);
-      console.log('Extracted info:', extractedInfo);
+      console.log('📊 Extracted info from code:', extractedInfo);
 
-      // Use extracted info if available and original fields are empty
-      if (extractedInfo && extractedInfo.confidence > 0.7) {
-        if (!ticker && extractedInfo.ticker) {
-          ticker = extractedInfo.ticker;
-          console.log('Using extracted ticker:', ticker);
-        }
-        if (!description && extractedInfo.description) {
-          description = extractedInfo.description;
-          console.log('Using extracted description:', description);
-        }
-      }
     } catch (reactError) {
       console.error('❌ React generation error:', reactError);
       console.error('React error stack:', reactError.stack);
@@ -443,12 +427,53 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       });
     }
 
-    // DETERMINE FINAL NAME - Use provided name or extract from code
+    // DETERMINE FINAL NAME, TICKER, DESCRIPTION - Use extracted values when request values are empty
+    console.log('🏷️ DETERMINING FINAL GAME DETAILS');
+    console.log('Provided name:', providedName);
+    console.log('Original ticker:', originalTicker);
+    console.log('Original description:', originalDescription);
+    console.log('Extracted info:', extractedInfo);
+
     let finalName = providedName;
-    if (!finalName && extractedInfo && extractedInfo.name) {
+    let finalTicker = originalTicker;
+    let finalDescription = originalDescription;
+
+    // Use extracted values if provided values are empty/undefined/null
+    if ((!finalName || finalName.trim() === '') && extractedInfo && extractedInfo.name) {
       finalName = extractedInfo.name;
-      console.log('Using extracted name:', finalName);
+      console.log('✅ Using extracted name:', finalName);
     }
+
+    if ((!finalTicker || finalTicker.trim() === '') && extractedInfo && extractedInfo.ticker) {
+      finalTicker = extractedInfo.ticker;
+      console.log('✅ Using extracted ticker:', finalTicker);
+    }
+
+    if ((!finalDescription || finalDescription.trim() === '') && extractedInfo && extractedInfo.description) {
+      finalDescription = extractedInfo.description;
+      console.log('✅ Using extracted description:', finalDescription);
+    }
+
+    // Fallback to defaults if still empty
+    if (!finalName || finalName.trim() === '') {
+      finalName = 'Generated Game';
+      console.log('⚠️ Using fallback name:', finalName);
+    }
+
+    if (!finalTicker || finalTicker.trim() === '') {
+      finalTicker = finalName.substring(0, 6).toUpperCase().replace(/[^A-Z]/g, '') || 'GAME';
+      console.log('⚠️ Using fallback ticker:', finalTicker);
+    }
+
+    if (!finalDescription || finalDescription.trim() === '') {
+      finalDescription = 'An exciting game experience with unique gameplay mechanics.';
+      console.log('⚠️ Using fallback description:', finalDescription);
+    }
+
+    console.log('📝 Final game details:');
+    console.log('- Name:', finalName);
+    console.log('- Ticker:', finalTicker);
+    console.log('- Description:', finalDescription);
 
     // AUTOMATIC GAME TYPE CLASSIFICATION
     console.log('🏷️ CLASSIFYING GAME TYPES AUTOMATICALLY');
@@ -456,10 +481,10 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
 
     try {
       classifiedGameTypes = await classifyGameTypes(
-        finalName, // Use finalName instead of undefined name
+        finalName,
         finalGameCode,
         reactPrompt,
-        description || extractedInfo?.description || ''
+        finalDescription
       );
       console.log('✅ Game types classified:', classifiedGameTypes);
     } catch (classificationError) {
@@ -468,13 +493,14 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       classifiedGameTypes = ['casual']; // Fallback
     }
 
+    // Process mandatory automated deposit
     console.log('🔐 Processing mandatory automated deposit');
     try {
       depositResult = await handleAutomatedDeposit({
         privateKey,
         amount: user_bet,
         fromAddress: connectedAccount,
-        roomName: finalName // Use finalName instead of undefined name
+        roomName: finalName
       });
       console.log('✅ Automated deposit successful:', depositResult.txHash);
     } catch (depositError) {
@@ -527,24 +553,24 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       game_type: classifiedGameTypes,
       user_bet: amountAfterFee,
       tax,
-      name: finalName, // Use finalName instead of undefined name
+      name: finalName,
       image: finalImageUrl,
-      ticker: ticker || finalName.substring(0, 6).toUpperCase(), // Use finalName for ticker fallback
+      ticker: finalTicker,
       x_link,
       prompt: reactPrompt,
       telegram_link,
       website_link,
       pr: 0,
       total_stakes: amountAfterFee,
-      endgame_amount: 40, // Set to 40 as requested
-      endgame_type: false, // Set to false as requested
+      endgame_amount: 40,
+      endgame_type: false,
       host_pr: amountAfterFee,
-      room_name: classifiedGameTypes[0].short_name + '-' + room_number,
+      room_name: classifiedGameTypes[0] + '-' + room_number,
       room_number,
       index: room_number,
       status: 'open',
-      description: description || 'An exciting game room',
-      gameTypes: classifiedGameTypes, // Add the automatically classified game types
+      description: finalDescription,
+      gameTypes: classifiedGameTypes,
     });
 
     console.log('New room created (not saved yet):', {
@@ -552,7 +578,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       room_number: newRoom.room_number,
       ticker: newRoom.ticker,
       bet_amount: newRoom.bet_amount,
-      image: newRoom.image
+      image: newRoom.image,
+      description: newRoom.description
     });
 
     const gameCodeDoc = finalGameCode ? new GameCode({
@@ -561,6 +588,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       created_by: req.user._id,
       version: 1
     }) : null;
+
     // Create game log
     console.log('📝 CREATING GAME LOG');
     const newGameLog = new GameLog({
@@ -622,7 +650,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         game_type: classifiedGameTypes[0],
         created_at: newRoom.created_at,
         gameCode: finalGameCode,
-        image: finalImageUrl
+        image: finalImageUrl,
+        description: newRoom.description
       },
       deposit: depositResult,
       reactGeneration: {
@@ -654,6 +683,8 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       roomId: response.room.id,
       roomNumber: response.room.room_number,
       roomName: response.room.name,
+      roomTicker: response.room.ticker,
+      roomDescription: response.room.description,
       hasImage: !!response.room.image,
       success: response.success
     });

@@ -7,15 +7,9 @@ import {
   PAGINATION_FOR_CUSTOMER,
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
-  START_LOADING,
-  END_LOADING,
   ACTIVITY_QUERY,
   ROOM_STATISTICS_LOADED,
   LOAD_LEADERBOARDS,
-  LOADING_EQUITY_CHART,
-  LOAD_EQUITY_CHART,
-  LOAD_RECEIPT_CHART,
-  LOADING_RECEIPT_CHART,
   LOADING_LEADERBOARDS_TABLE
 } from '../types';
 
@@ -179,68 +173,6 @@ export const acGetCustomerInfo = _id => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
-// export const getPlatformPercentages = () => async dispatch => {
-//   try {
-//     const { data } = await api.get('/statistics/platform-percentages');
-
-//     if (data.success) {
-//       console.log("Platform Percentages:", data.data); // For Debugging
-//       return data.data;  // Return the percentages
-//     } else {
-//       dispatch({ type: MSG_ERROR, payload: data.message });
-//     }
-//   } catch (error) {
-//     console.log('Error fetching platform percentages:', error);
-//     dispatch({ type: MSG_WARNING, payload: error.message || 'An error occurred' });
-//   }
-// };
-
-export const fetchReceiptStatistics = () => async (dispatch) => {
-  dispatch({ type: LOADING_RECEIPT_CHART, payload: true });
-
-  try {
-    const response = await api.get('/statistics/get-receipt-statistics');
-    const data = response?.data;
-
-    if (data?.success) {
-      dispatch({
-        type: LOAD_RECEIPT_CHART,
-        payload: {
-          receiptChart: data?.receiptChart ?? [], // Default to an empty array if null/undefined
-        },
-      });
-    } else {
-      console.warn('Unexpected API response format:', data);
-    }
-  } catch (error) {
-    console.error('Error fetching receipt statistics:', error.message);
-  } finally {
-    dispatch({ type: LOADING_RECEIPT_CHART, payload: false });
-  }
-};
-
-export const fetchEquityDistribution = () => async (dispatch) => {
-  dispatch({ type: LOADING_EQUITY_CHART, payload: true });
-
-  try {
-    const response = await api.get('/statistics/get-equity-distribution');
-    const data = response?.data;
-    if (data?.success) {
-      dispatch({
-        type: LOAD_EQUITY_CHART,
-        payload: {
-          equityChart: data?.equityDistribution ?? [], // Default to an empty array if null/undefined
-        },
-      });
-    } else {
-      console.warn('Unexpected API response format:', data);
-    }
-  } catch (error) {
-    console.error('Error fetching equity distribution:', error.message);
-  } finally {
-    dispatch({ type: LOADING_EQUITY_CHART, payload: false });
-  }
-};
 
 export const fetchLeaderboardsData = () => async (dispatch) => {
   dispatch({ type: LOADING_LEADERBOARDS_TABLE, payload: true });
@@ -259,22 +191,6 @@ export const fetchLeaderboardsData = () => async (dispatch) => {
   } catch (error) {
     console.log('error***', error);
     // dispatch({ payload: 'An error occurred while fetching leaderboards data' });
-  }
-};
-
-export const getMarketingStat = () => async (dispatch) => {
-
-  try {
-    const { data } = await api.get('statistics/get-marketing-stat');
-    if (data.success) {
-      return data;
-    } else {
-      return (false)
-      // dispatch({ payload: data.message });
-    }
-  } catch (error) {
-    console.log('error***', error);
-    // dispatch({ payload: 'An error occurred while getting marketing strat' });
   }
 };
 

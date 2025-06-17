@@ -237,6 +237,7 @@ router.delete('/:keyId', auth, async (req, res) => {
 // Get API key usage statistics
 router.get('/stats', auth, async (req, res) => {
   try {
+
     const stats = await ApiKey.aggregate([
       { $match: { user: req.user._id } },
       {
