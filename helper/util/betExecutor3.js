@@ -430,6 +430,52 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   };
 };
 
+const validateUserDeposit = async (user, roomId, betAmount) => {
+  try {
+    // Check for a valid deposit transaction within the last 15 minutes for this specific room
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+
+    const depositTransaction = await GameTransaction.findOne({
+      user: user._id,
+      room: roomId,
+      status: { $in: ['pending', 'completed'] },
+      description: { $regex: '^(Joined)', $options: 'i' },
+      created_at: { $gte: fifteenMinutesAgo },
+      amount: { $lt: 0 } // Negative amount indicates a deposit
+    });
+
+    if (!depositTransaction) {
+      console.warn(`No valid deposit found for user ${user._id}, room ${roomId}`);
+      return {
+        success: false,
+        message: 'No valid SOL deposit found for this game. Please deposit SOL first.',
+        betResult: -1000,
+      };
+    }
+
+    // Additional check: ensure deposit amount is sufficient for the bet
+    const depositAmount = Math.abs(depositTransaction.amount);
+    if (depositAmount < betAmount) {
+      console.warn(`Deposit amount ${depositAmount} insufficient for bet ${betAmount}`);
+      return {
+        success: false,
+        message: 'Deposit amount is insufficient for this bet size.',
+        betResult: -1000,
+      };
+    }
+
+    console.log(`✅ Valid deposit found: ${depositAmount} SOL for user ${user._id}, room ${roomId}`);
+    return { success: true };
+
+  } catch (error) {
+    console.error('Error validating user deposit:', error);
+    return {
+      success: false,
+      message: 'Error validating deposit. Please try again.',
+      betResult: -1000,
+    };
+  }
+};
 
 const addToQueue = async (req, bot = false) => {
   try {
@@ -477,7 +523,7 @@ const addToQueue = async (req, bot = false) => {
         .populate({ path: 'creator', model: User, select: '_id avatar accessory elite totalWagered username gameProfit gamePlayed balance' })
 
       // Validate bet request (now includes deposit validation)
-      const validation = await validateBetRequest(req, user, roomInfo);
+      const validation = await validateUserDeposit(user, req.body._id, bet_amount);
       if (!validation.success) {
         return validation;
       }

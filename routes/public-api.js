@@ -1080,246 +1080,192 @@ House Edge Validation Comment:
   };
 }
 
-// Replace the extractRoomInfoFromCode function in your public-api.js:
+// Replace the extractRoomInfoFromCode function with this simpler, more robust version:
 
 function extractRoomInfoFromCode(gameCode) {
   console.log('📊 EXTRACTING ROOM INFO FROM CODE');
   console.log('Code length:', gameCode.length);
 
   try {
-    // Enhanced title extraction with more specific patterns
     let name = '';
     let confidence = 0;
 
-    // Look for Typography with id="game-title" specifically (highest priority)
-    // Updated regex to handle emojis, special characters, and quotes
-    const gameTitleMatch = gameCode.match(/<Typography[^>]*id="game-title"[^>]*>([^<]{1,100})<\/Typography>/i);
-
+    // Method 1: Look for Typography with id="game-title" 
+    console.log('🔍 Method 1: Looking for Typography with id="game-title"');
+    
+    // Simple pattern that captures everything between the tags
+    const gameTitlePattern = /<Typography[^>]*id="game-title"[^>]*>(.*?)<\/Typography>/gi;
+    const gameTitleMatch = gameTitlePattern.exec(gameCode);
+    
     if (gameTitleMatch && gameTitleMatch[1]) {
-      let extractedTitle = gameTitleMatch[1].trim();
-      console.log('Raw extracted title from game-title:', extractedTitle);
-
-      // Clean up JSX syntax and template literals more carefully
-      extractedTitle = extractedTitle
-        // Remove JSX template literal syntax but preserve content
-        .replace(/\$\{[^}]+\}/g, '')
-        .replace(/`/g, '')
-        // Handle conditional JSX expressions
-        .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"([^"]*)"/g, '$1')
-        .replace(/isMobile\s*\?\s*'[^']*'\s*:\s*'([^']*)'/g, '$1')
-        // Remove remaining JSX artifacts
-        .replace(/[{}]/g, '')
-        // Clean up multiple spaces
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      console.log('Cleaned extracted title:', extractedTitle);
-
-      // More lenient validation - allow emojis and special characters
-      if (extractedTitle.length >= 3 &&
-        extractedTitle.length <= 100 && // Increased max length
-        // Remove generic exclusions that are too strict
-        !['Game Rules', 'Rules', 'Close', 'Start', 'Play'].includes(extractedTitle) &&
-        !extractedTitle.includes('undefined') &&
-        !extractedTitle.includes('null') &&
-        !extractedTitle.includes('result') &&
-        !extractedTitle.includes('===') &&
-        !extractedTitle.startsWith('{') &&
-        extractedTitle !== '') {
-
-        name = extractedTitle;
-        confidence = 0.95;
-        console.log('✅ High confidence title found:', name);
-      } else {
-        console.log('❌ Title validation failed for:', extractedTitle);
-      }
-    } else {
-      console.log('❌ No game-title id found');
-    }
-
-    // Fallback patterns if game-title id is not found or invalid
-    if (!name) {
-      console.log('🔄 Trying fallback extraction patterns...');
+      let rawTitle = gameTitleMatch[1];
+      console.log('Raw title found:', JSON.stringify(rawTitle));
       
-      const titlePatterns = [
-        // Look for Typography with variant h1-h6 
-        /<Typography[^>]*variant="h[1-6]"[^>]*>([^<]{3,100})<\/Typography>/gi,
-        // Look for regular h1-h6 tags
-        /<h[1-6][^>]*>([^<]{3,100})<\/h[1-6]>/gi,
-        // Look for any Typography that might contain a game title (broader search)
-        /<Typography[^>]*>([A-Z🌆🎮🕹️🎯🏆🚀⚡🌟💎🔥🎲🃏♠♥♦♣🎪🎨🎭🎪][^<]{5,100})<\/Typography>/gi
-      ];
-
-      for (let i = 0; i < titlePatterns.length; i++) {
-        const pattern = titlePatterns[i];
-        const matches = Array.from(gameCode.matchAll(pattern));
-
-        console.log(`Pattern ${i + 1} found ${matches.length} matches`);
-
-        for (const match of matches) {
-          if (match && match[1]) {
-            let extractedTitle = match[1].trim();
-            console.log(`Checking match: "${extractedTitle}"`);
-
-            // Clean up JSX syntax
-            extractedTitle = extractedTitle
-              .replace(/\$\{[^}]+\}/g, '')
-              .replace(/isMobile\s*\?\s*"[^"]*"\s*:\s*"([^"]*)"/g, '$1')
-              .replace(/isMobile\s*\?\s*'[^']*'\s*:\s*'([^']*)'/g, '$1')
-              .replace(/[{}$`]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim();
-
-            console.log(`Cleaned match: "${extractedTitle}"`);
-
-            // More lenient validation for fallback
-            if (extractedTitle.length >= 3 &&
-              extractedTitle.length <= 100 &&
-              !['Game Rules', 'Rules', 'Close', 'Start', 'Play', 'Game', 'Title', 'App', 'Component'].includes(extractedTitle) &&
-              !extractedTitle.includes('undefined') &&
-              !extractedTitle.includes('null') &&
-              !extractedTitle.includes('result') &&
-              !extractedTitle.includes('===') &&
-              !extractedTitle.startsWith('{') &&
-              extractedTitle !== '') {
-
-              name = extractedTitle;
-              confidence = i === 0 ? 0.8 : (0.7 - i * 0.1);
-              console.log(`✅ Fallback title found: "${name}" with confidence ${confidence}`);
-              break;
-            }
-          }
-        }
-        if (name) break;
-      }
-    }
-
-    console.log('Final extracted title:', name);
-
-    // Only use fallback if we truly found nothing
-    if (!name || name.length < 3) {
-      console.log('⚠️ No valid title found, using fallback');
-      name = 'Generated Game';
-      confidence = 0.3; // Low confidence for fallback
-    }
-
-    // Generate ticker from name - handle emojis and special characters
-    let ticker = '';
-    if (name) {
-      // Remove emojis and special characters, then extract letters
-      const cleanName = name
-        .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove emojis
-        .replace(/[^\w\s]/g, ' ') // Replace special chars with spaces
+      // Clean the title - remove JSX expressions but keep the actual text
+      let cleanTitle = rawTitle
+        .replace(/\{[^}]*\}/g, '') // Remove JSX expressions like {isMobile ? ... : ...}
+        .replace(/\s+/g, ' ')      // Normalize whitespace
         .trim();
-
-      console.log('Clean name for ticker:', cleanName);
-
-      // Split by spaces and take first letter of each word
-      const words = cleanName.split(/\s+/).filter(word => word.length > 0);
-      ticker = words
-        .map(word => word.charAt(0).toUpperCase())
-        .join('')
-        .substring(0, 6);
-
-      console.log('Generated ticker from words:', ticker);
-
-      // If ticker is too short, use first few chars of clean name
-      if (ticker.length < 2) {
-        ticker = cleanName.substring(0, 6).toUpperCase().replace(/[^A-Z]/g, '');
+      
+      console.log('Cleaned title:', JSON.stringify(cleanTitle));
+      
+      // Very basic validation - just check if it's not empty and has reasonable length
+      if (cleanTitle && cleanTitle.length >= 3 && cleanTitle.length <= 200) {
+        name = cleanTitle;
+        confidence = 0.95;
+        console.log('✅ HIGH CONFIDENCE title found:', name);
       }
-
-      // Final fallback
-      if (ticker.length < 2) ticker = 'GAME';
-      if (ticker.length > 6) ticker = ticker.substring(0, 6);
     }
 
-    console.log('Final ticker:', ticker);
+    // Method 2: Fallback - look for Typography with h4 variant
+    if (!name) {
+      console.log('🔍 Method 2: Looking for Typography with h4 variant');
+      
+      const h4Pattern = /<Typography[^>]*variant="h4"[^>]*>(.*?)<\/Typography>/gi;
+      const h4Match = h4Pattern.exec(gameCode);
+      
+      if (h4Match && h4Match[1]) {
+        let rawTitle = h4Match[1];
+        console.log('H4 title found:', JSON.stringify(rawTitle));
+        
+        let cleanTitle = rawTitle
+          .replace(/\{[^}]*\}/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        console.log('Cleaned H4 title:', JSON.stringify(cleanTitle));
+        
+        if (cleanTitle && cleanTitle.length >= 3 && cleanTitle.length <= 200) {
+          name = cleanTitle;
+          confidence = 0.8;
+          console.log('✅ MEDIUM CONFIDENCE title found:', name);
+        }
+      }
+    }
 
-    // Extract description (existing logic is fine, just adding more logging)
-    let description = '';
+    // Method 3: Look for any large Typography elements that might be titles
+    if (!name) {
+      console.log('🔍 Method 3: Looking for any large Typography elements');
+      
+      // Look for Typography elements with common game words or that start with emojis/caps
+      const anyTitlePattern = /<Typography[^>]*>((?:[🎮🌆🎯🏆🚀⚡🌟💎🔥🎲🃏♠♥♦♣]|[A-Z])[^<]{5,100}(?:GAME|POKER|NEXUS|MASTER|CHALLENGE|QUEST|ARENA|ZONE|HOLD|TEXAS)[^<]*)<\/Typography>/gi;
+      
+      let match;
+      while ((match = anyTitlePattern.exec(gameCode)) !== null) {
+        let rawTitle = match[1];
+        console.log('Potential title found:', JSON.stringify(rawTitle));
+        
+        let cleanTitle = rawTitle
+          .replace(/\{[^}]*\}/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        // Skip if it's obviously not a title
+        if (cleanTitle.includes('Game Rules') || cleanTitle.includes('Close') || cleanTitle.includes('Button')) {
+          continue;
+        }
+        
+        if (cleanTitle && cleanTitle.length >= 5 && cleanTitle.length <= 200) {
+          name = cleanTitle;
+          confidence = 0.7;
+          console.log('✅ LOW CONFIDENCE title found:', name);
+          break;
+        }
+      }
+    }
 
-    // Look for game rules content within the rules modal/section
-    const rulesPatterns = [
-      /<Box[^>]*id="game-rules"[^>]*>[\s\S]*?<\/Box>/i,
-      /Game Rules[\s\S]*?<\/Typography>([\s\S]*?)(?:<Button|<\/Box>)/i,
-      /((?:<Typography[^>]*>[^<]*\d+\.[^<]*<\/Typography>\s*){2,})/gi,
-      /((?:Choose|Select|Click|Buy|Sell|Start|Play|Receive|Navigate|Use|Beat)[^<]*(?:<\/Typography>)?(?:\s*<Typography[^>]*>[^<]*(?:cards|hand|community|phases|multiplier|opponent)[^<]*<\/Typography>)?){2,}/gi
-    ];
-
-    for (const pattern of rulesPatterns) {
-      const match = gameCode.match(pattern);
-      if (match) {
-        let rulesContent = match[1] || match[0];
-
-        // Extract text content from Typography elements
-        const textMatches = Array.from(rulesContent.matchAll(/<Typography[^>]*>([^<]+)<\/Typography>/gi));
-
-        if (textMatches.length >= 2) {
-          const ruleTexts = textMatches
-            .map(m => m[1])
-            .filter(text => {
-              const cleanText = text.trim();
-              return cleanText.length > 10 &&
-                !cleanText.includes('Game Rules') &&
-                !cleanText.includes('Close') &&
-                !cleanText.includes('undefined') &&
-                !cleanText.includes('null') &&
-                !cleanText.startsWith('{') &&
-                (cleanText.includes('.') || cleanText.match(/\d+\s*\./) || cleanText.includes('•'));
-            })
-            .slice(0, 5);
-
-          if (ruleTexts.length >= 2) {
-            description = ruleTexts.join(' ').replace(/\s+/g, ' ').trim();
-            if (description.length > 300) {
-              description = description.substring(0, 300) + '...';
-            }
+    // Method 4: Ultra-simple text search for common patterns
+    if (!name) {
+      console.log('🔍 Method 4: Ultra-simple text search');
+      
+      // Look for text patterns that look like game titles
+      const simplePatterns = [
+        /(?:🌆|🎮|🎯|🏆)\s*([A-Z][A-Z\s']{10,50})/gi,
+        /([A-Z]{2,}\s+[A-Z]{2,}\s+[A-Z\s']{5,30})/g,
+        /(NEON\s+NEXUS[^<>\n]{0,30})/gi
+      ];
+      
+      for (const pattern of simplePatterns) {
+        const matches = gameCode.match(pattern);
+        if (matches && matches.length > 0) {
+          let cleanTitle = matches[0]
+            .replace(/[{}]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          if (cleanTitle && cleanTitle.length >= 5) {
+            name = cleanTitle;
+            confidence = 0.6;
+            console.log('✅ PATTERN MATCH title found:', name);
             break;
           }
         }
       }
     }
 
-    // Generate fallback description if none found
+    // Final fallback
+    if (!name) {
+      console.log('⚠️ No title found, using fallback');
+      name = 'Generated Game';
+      confidence = 0.3;
+    }
+
+    // Generate ticker - much simpler approach
+    let ticker = '';
+    if (name && name !== 'Generated Game') {
+      // Remove all non-letter characters and take first letters of words
+      const letters = name
+        .replace(/[^\p{L}\s]/gu, '') // Remove everything except letters and spaces
+        .split(/\s+/)
+        .filter(word => word.length > 0)
+        .map(word => word[0].toUpperCase())
+        .join('')
+        .substring(0, 6);
+      
+      ticker = letters.length >= 2 ? letters : 'GAME';
+    } else {
+      ticker = 'GAME';
+    }
+
+    // Simple description extraction
+    let description = '';
+    
+    // Look for bullet points or numbered lists that might be rules
+    const rulePattern = /(?:•|\d+\.)\s*([^•\n]{20,200})/g;
+    const ruleMatches = gameCode.match(rulePattern);
+    
+    if (ruleMatches && ruleMatches.length >= 2) {
+      description = ruleMatches.slice(0, 3).join(' ').substring(0, 300);
+    }
+    
+    // Fallback description
     if (!description) {
-      if (name && name !== 'Generated Game') {
-        description = `Experience ${name} - an exciting game with unique mechanics and multiplier rewards.`;
-      } else {
-        description = 'An engaging game experience with exciting gameplay mechanics.';
-      }
+      description = name && name !== 'Generated Game' 
+        ? `Experience ${name} with exciting gameplay and multiplier rewards.`
+        : 'An engaging game experience with exciting gameplay mechanics.';
     }
 
-    // Determine game theme based on content analysis
-    const themeWords = (name + ' ' + description + ' ' + gameCode).toLowerCase();
+    // Simple theme detection
+    const lowerText = (name + ' ' + description + ' ' + gameCode).toLowerCase();
     let gameTheme = 'interactive game';
-
-    const themeMapping = {
-      'poker game': ['poker', 'texas', 'hold', 'cards', 'hand', 'flop', 'river', 'fold', 'community'],
-      'casino game': ['casino', 'gambling', 'multiplier', 'fold', 'call', 'showdown'],
-      'card game': ['card', 'deck', 'hand', 'shuffle', 'suit'],
-      'cyberpunk game': ['cyberpunk', 'neon', 'nexus', 'cyber', 'hud', 'neural'],
-      'strategy game': ['strategy', 'tactical', 'plan', 'decision'],
-      'skill game': ['skill', 'precision', 'timing', 'challenge']
-    };
-
-    for (const [theme, keywords] of Object.entries(themeMapping)) {
-      if (keywords.some(keyword => themeWords.includes(keyword))) {
-        gameTheme = theme;
-        break;
-      }
+    
+    if (lowerText.includes('poker') || lowerText.includes('texas') || lowerText.includes('hold')) {
+      gameTheme = 'poker game';
+    } else if (lowerText.includes('card') || lowerText.includes('deck')) {
+      gameTheme = 'card game';
+    } else if (lowerText.includes('casino') || lowerText.includes('multiplier')) {
+      gameTheme = 'casino game';
     }
-
-    console.log('Detected game theme:', gameTheme);
 
     const result = {
       name,
       ticker,
       description,
       gameTheme,
-      confidence: Math.max(confidence, 0.5)
+      confidence
     };
 
-    console.log('✅ Room info extraction completed:', result);
+    console.log('✅ Final extraction result:', result);
     return result;
 
   } catch (error) {
