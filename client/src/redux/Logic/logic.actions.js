@@ -1,13 +1,13 @@
 import {
   UPDATE_CREATOR_PROMPT,
   GAMETYPE_LOADED,
-ROOM_IDS_LOADED,
-INDIVIDUAL_ROOM_LOADED,
-INDIVIDUAL_ROOM_LOADING,
-INDIVIDUAL_ROOM_ERROR,
-RESET_ROOM_LOADING,
-ROOMS_RESET,
-  
+  ROOM_IDS_LOADED,
+  INDIVIDUAL_ROOM_LOADED,
+  INDIVIDUAL_ROOM_LOADING,
+  INDIVIDUAL_ROOM_ERROR,
+  RESET_ROOM_LOADING,
+  CLEANUP_OLD_ROOMS,
+  ROOM_SEARCH_RESULTS,
   TOP_WITHDRAWALS_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
@@ -150,28 +150,69 @@ export const proxyAsset = (key, url) => async (dispatch) => {
   }
 };
 
+let recentRoomFetches = [];
+let activeFetches = new Set();
+
+// UPDATED: Get room IDs with pagination and sorting
 export const getRoomIds = (params = {}) => async (dispatch) => {
-  dispatch({ type: START_LOADING });
-  dispatch({ type: RESET_ROOM_LOADING });
+  const timestamp = Date.now();
+  const gameType = params.game_type || 'All';
+  const page = params.page || 1;
+  const sortBy = params.sort_by || 'default'; // New sorting parameter
+  const fetchKey = `${gameType}-${page}-${sortBy}`;
+  const isMobile = window.innerWidth <= 768;
   
+  // Prevent duplicate fetches
+  if (activeFetches.has(fetchKey)) {
+    console.warn('🚨 BLOCKING DUPLICATE FETCH - Already in progress:', fetchKey);
+    return Promise.resolve();
+  }
+
+  // Clean old entries
+  recentRoomFetches = recentRoomFetches.filter(fetch => timestamp - fetch.timestamp < 3000);
+
+  const recentDuplicate = recentRoomFetches.find(fetch =>
+    fetch.fetchKey === fetchKey && timestamp - fetch.timestamp < 1000
+  );
+
+  if (recentDuplicate) {
+    console.warn('🚨 BLOCKING DUPLICATE FETCH - Too recent:', fetchKey);
+    return Promise.resolve();
+  }
+
+  activeFetches.add(fetchKey);
+  recentRoomFetches.push({ fetchKey, timestamp });
+
+  dispatch({ type: START_LOADING });
+
+  // Only reset on first page
+  if (page === 1) {
+    dispatch({ type: RESET_ROOM_LOADING });
+  }
+
   try {
     const requestParams = {
       ...params,
-      limit: 50 // Increase limit since we're optimizing the query
+      limit: isMobile ? 9 : 21, // Reduced limit
+      page: page,
+      sort_by: sortBy // Include sorting parameter
     };
-    
+
     const res = await axios.get('/game/rooms/ids', { params: requestParams });
-    
+
     if (res.data.success) {
       dispatch({
         type: ROOM_IDS_LOADED,
         payload: {
           roomIds: res.data.roomIds,
-          gameType: params.game_type || 'All'
+          pagination: res.data.pagination,
+          gameType: params.game_type || 'All',
+          sortBy: res.data.sortBy || sortBy,
+          isLoadMore: page > 1 // Flag to append rather than replace
         },
       });
-      
-      // Load rooms in smaller batches to avoid overwhelming the server
+
+      // Load rooms with mobile optimization
       dispatch(startLoadingIndividualRooms(res.data.roomIds));
     } else {
       throw new Error(res.data.err || 'Failed to fetch room IDs');
@@ -183,42 +224,123 @@ export const getRoomIds = (params = {}) => async (dispatch) => {
       payload: { error: err.message }
     });
   } finally {
+    activeFetches.delete(fetchKey);
     dispatch({ type: END_LOADING });
   }
 };
 
-// IMPROVED: Load rooms in smaller batches
-export const startLoadingIndividualRooms = (roomIds) => async (dispatch) => {
-  const BATCH_SIZE = 10; // Load 10 rooms at a time
-  const batches = [];
+export const searchRooms = (params = {}) => async (dispatch) => {
+  const { query, game_type, page = 1, sort_by = 'default' } = params;
+  const fetchKey = `search-${query}-${game_type}-${page}-${sort_by}`;
+
+  if (activeFetches.has(fetchKey)) {
+    return Promise.resolve();
+  }
+
+  activeFetches.add(fetchKey);
+  dispatch({ type: START_LOADING });
+
+  if (page === 1) {
+    dispatch({ type: RESET_ROOM_LOADING });
+  }
+
+  try {
+    const res = await axios.get('/game/rooms/search', { 
+      params: {
+        ...params,
+        sort_by // Include sorting parameter
+      }
+    });
+
+    if (res.data.success) {
+      dispatch({
+        type: ROOM_SEARCH_RESULTS,
+        payload: {
+          roomIds: res.data.roomIds,
+          pagination: res.data.pagination,
+          searchQuery: res.data.searchQuery,
+          sortBy: res.data.sortBy || sort_by,
+          isLoadMore: page > 1
+        },
+      });
+
+      dispatch(startLoadingIndividualRooms(res.data.roomIds));
+    }
+  } catch (err) {
+    console.error('Error searching rooms:', err);
+    dispatch({
+      type: INDIVIDUAL_ROOM_ERROR,
+      payload: { error: err.message }
+    });
+  } finally {
+    activeFetches.delete(fetchKey);
+    dispatch({ type: END_LOADING });
+  }
+};
+
+// Updated load more to include current sort
+export const loadMoreRooms = () => async (dispatch, getState) => {
+  const state = getState();
+  const { pagination, currentGameType, isSearchMode, searchQuery, currentSortBy } = state.logic;
   
+  if (!pagination || !pagination.hasNext) return;
+
+  const nextPage = pagination.currentPage + 1;
+
+  if (isSearchMode) {
+    dispatch(searchRooms({
+      query: searchQuery,
+      game_type: currentGameType !== 'All' ? currentGameType : undefined,
+      page: nextPage,
+      sort_by: currentSortBy || 'default'
+    }));
+  } else {
+    dispatch(getRoomIds({
+      game_type: currentGameType,
+      page: nextPage,
+      sort_by: currentSortBy || 'default'
+    }));
+  }
+};
+
+// Rest of the existing functions remain the same
+export const startLoadingIndividualRooms = (roomIds) => async (dispatch) => {
+  // Detect mobile device
+  const isMobile = window.innerWidth <= 768;
+
+  // Adjust batch sizes based on device
+  const BATCH_SIZE = isMobile ? 5 : 10; // Smaller batches for mobile
+  const BATCH_DELAY = isMobile ? 3000 : 2000; // Longer delays for mobile
+  const ROOM_DELAY = isMobile ? 300 : 200; // Longer delays between rooms
+
+  const batches = [];
+
   // Split roomIds into batches
   for (let i = 0; i < roomIds.length; i += BATCH_SIZE) {
     batches.push(roomIds.slice(i, i + BATCH_SIZE));
   }
-  
-  // Load batches with delays
+
+  // Load batches with mobile-optimized timing
   batches.forEach((batch, batchIndex) => {
     setTimeout(() => {
       batch.forEach((roomId, index) => {
         setTimeout(() => {
           dispatch(loadIndividualRoom(roomId));
-        }, index * 200); // 200ms between each room in batch
+        }, index * ROOM_DELAY);
       });
-    }, batchIndex * 2000); // 2 seconds between batches
+    }, batchIndex * BATCH_DELAY);
   });
 };
 
-// Load a single room
-export const loadIndividualRoom = (roomId) => async (dispatch) => {
+export const loadIndividualRoom = (roomId, retryCount = 0) => async (dispatch) => {
   dispatch({
     type: INDIVIDUAL_ROOM_LOADING,
     payload: { roomId }
   });
-  
+
   try {
     const res = await axios.get(`/game/room/${roomId}`);
-    
+
     if (res.data.success) {
       dispatch({
         type: INDIVIDUAL_ROOM_LOADED,
@@ -232,16 +354,33 @@ export const loadIndividualRoom = (roomId) => async (dispatch) => {
     }
   } catch (err) {
     console.error(`Error fetching room ${roomId}:`, err);
-    dispatch({
-      type: INDIVIDUAL_ROOM_ERROR,
-      payload: { 
-        roomId,
-        error: err.message 
-      }
-    });
+
+    // Retry logic for mobile connections
+    if (retryCount < 2) {
+      setTimeout(() => {
+        dispatch(loadIndividualRoom(roomId, retryCount + 1));
+      }, Math.pow(2, retryCount) * 1000); // Exponential backoff
+    } else {
+      dispatch({
+        type: INDIVIDUAL_ROOM_ERROR,
+        payload: {
+          roomId,
+          error: err.message
+        }
+      });
+    }
   }
 };
 
+export const cleanupOldRooms = () => (dispatch, getState) => {
+  const state = getState();
+  const isMobile = window.innerWidth <= 768;
+
+  // Only cleanup on mobile devices and when we have too many rooms
+  if (isMobile && state.logic.roomIds.length > 50) {
+    dispatch({ type: 'CLEANUP_OLD_ROOMS' });
+  }
+};
 
 export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) => {
   if (!gameCode || !gameCode.trim()) {
@@ -575,31 +714,31 @@ export const uploadAvatarToPinata = (file) => async (dispatch) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
-        
+
         const reader = new FileReader();
         reader.onload = (e) => {
           img.src = e.target.result;
         };
-        
+
         img.onload = () => {
           // Avatar-specific sizing (square, smaller than game images)
           const maxSize = 200; // 200x200 for avatars
           let width = img.width;
           let height = img.height;
-          
+
           // Make it square by cropping to center
           const size = Math.min(width, height);
           const x = (width - size) / 2;
           const y = (height - size) / 2;
-          
+
           canvas.width = maxSize;
           canvas.height = maxSize;
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          
+
           // Draw cropped and resized image
           ctx.drawImage(img, x, y, size, size, 0, 0, maxSize, maxSize);
-          
+
           canvas.toBlob((blob) => {
             if (blob) {
               resolve(blob);
@@ -608,18 +747,18 @@ export const uploadAvatarToPinata = (file) => async (dispatch) => {
             }
           }, 'image/webp', 0.8); // Use WebP for better compression
         };
-        
+
         img.onerror = (error) => {
           reject('Error processing avatar: ' + error);
         };
-        
+
         reader.readAsDataURL(file);
       });
     };
 
     // Resize the avatar
     const resizedBlob = await resizeAvatar(file);
-    
+
     // Create FormData for upload
     const formData = new FormData();
     formData.append('file', resizedBlob, 'avatar.webp');
@@ -1023,39 +1162,6 @@ export const offerLoan = data => async dispatch => {
     dispatch({ type: TNX_COMPLETE });
   }
   return false;
-};
-
-
-export const loadMoreRooms = (params = {}, currentPage = 1) => async (dispatch) => {
-  dispatch({ type: ROOMS_LOADING_MORE });
-  
-  try {
-    const requestParams = {
-      ...params,
-      page: currentPage + 1,
-      limit: 10
-    };
-    
-    const res = await axios.get('/game/rooms', { params: requestParams });
-    
-    if (res.data.success) {
-      dispatch({
-        type: ROOMS_BATCH_LOADED,
-        payload: {
-          roomList: res.data.roomList,
-          pagination: res.data.pagination
-        },
-      });
-    } else {
-      throw new Error(res.data.err || 'Failed to fetch more rooms');
-    }
-  } catch (err) {
-    console.error('Error fetching more rooms:', err);
-    dispatch({
-      type: ROOMS_ERROR,
-      payload: err.message
-    });
-  }
 };
 
 export const getHistory = search_condition => async dispatch => {

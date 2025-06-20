@@ -977,21 +977,34 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
 // @access  Private
 router.post('/logout', auth, async (req, res) => {
   try {
-    // Update user status
-    req.user.status = 'off';
-
-    // Save with proper error handling
-    await saveDocumentWithRetry(req.user);
-
+    // Return immediately for better UX
     res.json({
       success: true,
-      message: 'Successfully logged out!'
+      message: 'Logout initiated'
     });
+
+    // Update user status in background (don't await)
+    setImmediate(async () => {
+      try {
+        req.user.status = 'off';
+        await req.user.save();
+        
+        // Clear any session cache
+        const redisClient = req.app.get('redisClient');
+        if (redisClient) {
+          const sessionKey = `session:${req.user._id}`;
+          await redisClient.del(sessionKey).catch(console.warn);
+        }
+      } catch (error) {
+        console.error('Background logout cleanup error:', error);
+      }
+    });
+
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to complete logout process'
+    res.status(200).json({ // Still return 200 to not block logout
+      success: true,
+      message: 'Logout completed with warnings'
     });
   }
 });

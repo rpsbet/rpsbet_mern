@@ -114,11 +114,10 @@ const BackgroundImage = styled('img')({
 });
 
 function Footer({ open, style }) {
-  const { isDarkMode } = useSelector((state) => ({
-    auth: state.auth.isAuthenticated,
-    user_id: state.auth.user._id,
-    isDarkMode: state.auth.isDarkMode,
-  }));
+  // FIXED: Use individual selectors instead of returning a new object
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  const userId = useSelector(state => state.auth.user?._id);
+  const isDarkMode = useSelector(state => state.auth.isDarkMode);
 
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);

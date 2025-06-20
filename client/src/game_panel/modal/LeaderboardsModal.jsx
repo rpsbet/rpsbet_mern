@@ -24,8 +24,6 @@ import {
   TrendingDown as TrendingDownIcon,
   EmojiEvents as TrophyIcon
 } from '@mui/icons-material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList } from '@fortawesome/free-solid-svg-icons';
 
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
@@ -323,17 +321,17 @@ function LeaderboardsModal({ modalIsOpen, closeModal }) {
 
   // Loading skeleton
   const renderLoadingSkeleton = () => (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, width: "100%" }}>
       {Array.from({ length: 8 }).map((_, index) => (
-        <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+        <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2, width: "100%" }}>
           <Skeleton variant="text" width="40px" height={20} />
           <Skeleton variant="circular" width={32} height={32} />
           <Skeleton variant="text" width="100px" height={20} />
+          <Skeleton variant="text" width="50%" height={20} />
           <Skeleton variant="text" width="80px" height={20} />
+          <Skeleton variant="text" width="30%" height={20} />
           <Skeleton variant="text" width="80px" height={20} />
-          <Skeleton variant="text" width="80px" height={20} />
-          <Skeleton variant="text" width="80px" height={20} />
-          <Skeleton variant="text" width="50px" height={20} />
+          <Skeleton variant="text" width="20%" height={20} />
         </Box>
       ))}
     </Box>

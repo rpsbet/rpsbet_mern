@@ -1,5 +1,6 @@
 import {
   ACTION_ROOM,
+  CLEANUP_OLD_ROOMS,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
   TOP_GAME_TYPES_LOADED,
@@ -61,9 +62,11 @@ import {
   UPDATE_SINGLE_ROOM,
   CLEAR_HIGHLIGHTED_ROOMS,
   ROOMS_RESET,
-  ROOMS_BATCH_LOADED, 
+  ROOMS_BATCH_LOADED,
   ROOMS_LOADING_MORE,
   ROOMS_ERROR,
+  ROOM_SEARCH_RESULTS,
+  SET_SORT_PREFERENCE
 } from '../types';
 
 const initialState = {
@@ -74,13 +77,7 @@ const initialState = {
   game_mode: "",
   error: null,
   roomList: [],
-  roomsPagination: {
-    page: 1,
-    limit: 10,
-    total: 0,
-    hasMore: false,
-    totalPages: 0
-  },
+  pagination: null,
   isLoadingMoreRooms: false,
   roomsError: null,
   solPrice: 0,
@@ -229,28 +226,82 @@ export default function (state = initialState, action) {
         }
       };
     }
-case RESET_ROOM_LOADING:
+    case RESET_ROOM_LOADING:
       return {
         ...state,
         roomIds: [],
         roomsById: {},
         roomLoadingStates: {},
         roomErrors: {},
+        // Don't reset sorting state when resetting rooms
       };
 
     case ROOM_IDS_LOADED:
-      // Initialize loading states for all room IDs
-      const loadingStates = {};
-      payload.roomIds.forEach(id => {
-        loadingStates[id] = 'loading';
-      });
-      
+      // FIXED: Safely destructure with defaults
+      const {
+        roomIds = [],
+        pagination = null,
+        gameType = 'All',
+        sortBy = 'default',
+        isLoadMore = false
+      } = action.payload || {};
+
       return {
         ...state,
-        roomIds: payload.roomIds,
-        currentGameType: payload.gameType,
-        roomLoadingStates: loadingStates,
-        roomErrors: {},
+        // Append or replace room IDs based on isLoadMore
+        roomIds: isLoadMore ? [...state.roomIds, ...roomIds] : roomIds,
+        pagination: pagination, // Can be null for backward compatibility
+        currentGameType: gameType,
+        currentSortBy: sortBy, // Store current sort setting
+        isSearchMode: false,
+        searchQuery: '',
+
+        // Initialize loading states for new rooms
+        roomLoadingStates: {
+          ...(isLoadMore ? state.roomLoadingStates : {}),
+          ...roomIds.reduce((acc, roomId) => {
+            acc[roomId] = 'loading';
+            return acc;
+          }, {})
+        },
+
+        // Clear errors for new rooms
+        roomErrors: isLoadMore ? state.roomErrors : {}
+      };
+
+    case ROOM_SEARCH_RESULTS:
+      const {
+        roomIds: searchRoomIds,
+        pagination: searchPagination,
+        searchQuery,
+        sortBy: searchSortBy = 'default',
+        isLoadMore: isSearchLoadMore
+      } = action.payload;
+
+      return {
+        ...state,
+        roomIds: isSearchLoadMore ? [...state.roomIds, ...searchRoomIds] : searchRoomIds,
+        pagination: searchPagination,
+        currentSortBy: searchSortBy, // Store current sort setting for search
+        isSearchMode: true,
+        searchQuery: searchQuery,
+
+        // Initialize loading states for search results
+        roomLoadingStates: {
+          ...(isSearchLoadMore ? state.roomLoadingStates : {}),
+          ...searchRoomIds.reduce((acc, roomId) => {
+            acc[roomId] = 'loading';
+            return acc;
+          }, {})
+        },
+
+        roomErrors: {
+          ...(isSearchLoadMore ? state.roomErrors : {}),
+          ...searchRoomIds.reduce((acc, roomId) => {
+            delete acc[roomId];
+            return acc;
+          }, {})
+        }
       };
 
     case INDIVIDUAL_ROOM_LOADING:
@@ -292,6 +343,11 @@ case RESET_ROOM_LOADING:
         }
       };
 
+    case SET_SORT_PREFERENCE:
+      return {
+        ...state,
+        currentSortBy: action.payload.sortBy
+      };
     case SET_HIGHLIGHTED_ROOMS:
       return {
         ...state,
@@ -532,10 +588,33 @@ case RESET_ROOM_LOADING:
         roomsError: payload,
         isLoadingMoreRooms: false
       };
+    case CLEANUP_OLD_ROOMS:
+      // Keep only the most recent 100 rooms to prevent memory issues
+      const maxRooms = 100;
+      if (state.roomIds.length <= maxRooms) {
+        return state;
+      }
 
+      const recentRoomIds = state.roomIds.slice(-maxRooms);
+      const cleanedRoomsById = {};
+      const cleanedLoadingStates = {};
+      const cleanedErrors = {};
+
+      recentRoomIds.forEach(roomId => {
+        if (state.roomsById[roomId]) cleanedRoomsById[roomId] = state.roomsById[roomId];
+        if (state.roomLoadingStates[roomId]) cleanedLoadingStates[roomId] = state.roomLoadingStates[roomId];
+        if (state.roomErrors[roomId]) cleanedErrors[roomId] = state.roomErrors[roomId];
+      });
+
+      return {
+        ...state,
+        roomIds: recentRoomIds,
+        roomsById: cleanedRoomsById,
+        roomLoadingStates: cleanedLoadingStates,
+        roomErrors: cleanedErrors
+      };
 
     case UPDATE_SINGLE_ROOM:
-      console.log('Updating single room:', action.payload);
       return {
         ...state,
         roomList: state.roomList.map(room =>

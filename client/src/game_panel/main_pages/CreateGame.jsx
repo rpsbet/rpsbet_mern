@@ -665,8 +665,7 @@
             sx={{
               background: 'transparent',
               borderRadius: '16px',
-              pl: { xs: 2, md: 3 },
-              pr: { xs: 2, md: 3 },
+              p: { xs: 2, md: 3 },
               mb: 4,
               mt: 2
             }}

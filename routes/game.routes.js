@@ -15,6 +15,7 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+const mongoose = require('mongoose');
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
@@ -1625,60 +1626,101 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 
 // 1. BACKEND ROUTE - Return individual room by ID/index
 router.get('/room/:roomId', async (req, res) => {
-
   const { roomId } = req.params;
+  const redisClient = req.app.get('redisClient');
+  const cacheKey = `room:v2:${roomId}`;
 
   try {
-    const room = await Room.findById(roomId)
-      .select(
-        '_id name ticker image description room_number likes dislikes ' +
-        'creator battles username joiners game_type is_private ' +
-        'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts'
-      )
-      .populate({
-        path: 'creator',
-        model: 'rps_users',
-        select: 'avatar totalWagered username accessory elite status',
-      })
-      .lean();
+    // Try cache first - individual rooms cached longer
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
 
-    if (!room) {
+    // Optimized aggregation pipeline for better performance
+    const roomData = await Room.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(roomId) } },
+      {
+        $lookup: {
+          from: 'rps_users',
+          localField: 'creator',
+          foreignField: '_id',
+          as: 'creator_data',
+          pipeline: [
+            { $project: { 
+              avatar: 1, 
+              totalWagered: 1, 
+              username: 1, 
+              accessory: 1, 
+              elite: 1, 
+              status: 1 
+            }}
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'rps_users',
+          localField: 'joiners',
+          foreignField: '_id',
+          as: 'joiner_data',
+          pipeline: [
+            { $project: { 
+              avatar: 1, 
+              totalWagered: 1, 
+              username: 1, 
+              accessory: 1, 
+              elite: 1 
+            }}
+          ]
+        }
+      },
+      {
+        $project: {
+          // Only include fields needed by frontend
+          _id: 1,
+          name: 1,
+          ticker: 1,
+          image: 1,
+          description: 1,
+          room_number: 1,
+          likes: { $ifNull: ['$likes', []] },
+          dislikes: { $ifNull: ['$dislikes', []] },
+          game_type: 1,
+          bet_amount: 1,
+          user_bet: 1,
+          pr: 1,
+          host_pr: 1,
+          endgame_amount: 1,
+          is_private: 1,
+          status: 1,
+          created_at: 1,
+          updated_at: 1,
+          battles: 1,
+          hosts: 1,
+          creator: { $arrayElemAt: ['$creator_data', 0] },
+          joiners: '$joiner_data'
+        }
+      }
+    ]).hint({ _id: 1 }); // Force index on _id
+
+    if (!roomData || roomData.length === 0) {
       return res.status(404).json({ success: false, error: 'Room not found' });
     }
 
-    // Process room data (same logic as before)
-    const joinerIds = room.joiners || [];
-    const joinerUsers = await User.find({ _id: { $in: joinerIds } })
-      .select('avatar totalWagered _id username accessory elite status')
-      .lean();
-
-    const joinerMap = joinerUsers.reduce((map, user) => {
-      map[user._id.toString()] = {
-        user_id: user._id,
-        avatar: user.avatar,
-        totalWagered: user.totalWagered,
-        accessory: user.accessory,
-        elite: user.elite,
-        username: user.username,
-        rank: user.totalWagered,
-      };
-      return map;
-    }, {});
-
-    const joinerData = room.joiners.map(joinedUserId =>
-      joinerMap[joinedUserId.toString()] || null
-    ).filter(Boolean);
-
+    const room = roomData[0];
+    
+    // Process the data efficiently
     const processedRoom = {
       _id: room._id,
-      creator_id: room.creator ? room.creator._id : '',
-      joiners: joinerData.map(joiner => ({
+      creator_id: room.creator?._id || '',
+      joiners: room.joiners.map(joiner => ({
         avatar: joiner.avatar,
         rank: joiner.totalWagered,
         username: joiner.username,
         accessory: joiner.accessory,
         elite: joiner.elite,
-        _id: joiner.user_id,
+        _id: joiner._id,
       })),
       ticker: room.ticker || room.room_number,
       rank: room.creator?.totalWagered || 0,
@@ -1701,7 +1743,7 @@ router.get('/room/:roomId', async (req, res) => {
       is_private: room.is_private,
       status: room.status,
       index: room.room_number,
-      created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
+      created_at: room.created_at,
       updated_at: room.updated_at,
       battles: room.battles,
       likes: room.likes,
@@ -1710,10 +1752,15 @@ router.get('/room/:roomId', async (req, res) => {
       winnings: parseFloat(room.user_bet || 0),
     };
 
-    res.json({
+    const response = {
       success: true,
       room: processedRoom
-    });
+    };
+
+    // Cache individual rooms for 2 minutes
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(response));
+
+    res.json(response);
   } catch (err) {
     console.error('Error fetching individual room:', err);
     res.status(500).json({
@@ -1725,11 +1772,13 @@ router.get('/room/:roomId', async (req, res) => {
 
 // 2. UPDATED ROOMS LIST ROUTE - Return room IDs only
 router.get('/rooms/ids', async (req, res) => {
-
   const game_type_filter = req.query.game_type || 'All';
   const limit = parseInt(req.query.limit) || 30;
+  const page = parseInt(req.query.page) || 1;
+  const sort_by = req.query.sort_by || 'default'; // New sorting parameter
+  const skip = (page - 1) * limit;
   const redisClient = req.app.get('redisClient');
-  const cacheKey = `rooms:ids:${game_type_filter}:${limit}`;
+  const cacheKey = `rooms:ids:${game_type_filter}:${limit}:${page}:${sort_by}`;
 
   try {
     // Try cache first
@@ -1748,19 +1797,58 @@ router.get('/rooms/ids', async (req, res) => {
       };
     }
 
+    // Build sort object based on sort_by parameter
+    let sortObject = { updated_at: -1 }; // Default sort
+
+    switch (sort_by) {
+      case 'bankroll_high':
+        sortObject = { user_bet: -1, updated_at: -1 };
+        break;
+      case 'bankroll_low':
+        sortObject = { user_bet: 1, updated_at: -1 };
+        break;
+      case 'battles_high':
+        sortObject = { battles: -1, updated_at: -1 };
+        break;
+      case 'battles_low':
+        sortObject = { battles: 1, updated_at: -1 };
+        break;
+      case 'age_newest':
+        sortObject = { created_at: -1, updated_at: -1 };
+        break;
+      case 'age_oldest':
+        sortObject = { created_at: 1, updated_at: -1 };
+        break;
+      default:
+        sortObject = { updated_at: -1 }; // Default
+    }
+
+    // Get total count for pagination
+    const totalCount = await Room.countDocuments(search_condition);
+    const totalPages = Math.ceil(totalCount / limit);
+
     const rooms = await Room.find(search_condition)
       .allowDiskUse(true)
-      .select('_id updated_at') // Only select what we need
-      .sort({ updated_at: -1 }) // This will use the index
+      .select('_id updated_at user_bet battles created_at') // Include fields needed for sorting
+      .sort(sortObject)
+      .skip(skip)
       .limit(limit)
-      .lean(); // Use lean() for better performance
+      .lean();
 
     const roomIds = rooms.map(room => room._id);
 
     const response = {
       success: true,
       roomIds: roomIds,
-      total: roomIds.length
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalCount: totalCount,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+        limit: limit
+      },
+      sortBy: sort_by // Include sort info in response
     };
 
     // Cache for 30 seconds
@@ -1769,6 +1857,102 @@ router.get('/rooms/ids', async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error('Error fetching room IDs:', err);
+    res.json({
+      success: false,
+      err: err.toString(),
+    });
+  }
+});
+
+// UPDATED SEARCH ROUTE with sorting support
+router.get('/rooms/search', async (req, res) => {
+  const { query, game_type, limit = 20, page = 1, sort_by = 'default' } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const redisClient = req.app.get('redisClient');
+  const cacheKey = `rooms:search:${query}:${game_type}:${limit}:${page}:${sort_by}`;
+
+  try {
+    // Try cache first
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+
+    let search_condition = {
+      status: 'open',
+    };
+
+    // Add text search if query provided
+    if (query) {
+      search_condition.$or = [
+        { name: { $regex: new RegExp(query, 'i') } },
+        { description: { $regex: new RegExp(query, 'i') } },
+        { game_type: { $elemMatch: { $regex: new RegExp(query, 'i') } } }
+      ];
+    }
+
+    // Add game type filter
+    if (game_type && game_type !== 'All') {
+      search_condition.game_type = {
+        $elemMatch: { $regex: new RegExp(game_type, 'i') }
+      };
+    }
+
+    // Build sort object for search results
+    let sortObject = { updated_at: -1 }; // Default sort
+
+    switch (sort_by) {
+      case 'bankroll_high':
+        sortObject = { user_bet: -1, updated_at: -1 };
+        break;
+      case 'bankroll_low':
+        sortObject = { user_bet: 1, updated_at: -1 };
+        break;
+      case 'battles_high':
+        sortObject = { battles: -1, updated_at: -1 };
+        break;
+      case 'battles_low':
+        sortObject = { battles: 1, updated_at: -1 };
+        break;
+      case 'age_newest':
+        sortObject = { created_at: -1, updated_at: -1 };
+        break;
+      case 'age_oldest':
+        sortObject = { created_at: 1, updated_at: -1 };
+        break;
+      default:
+        sortObject = { updated_at: -1 }; // Default
+    }
+
+    const totalCount = await Room.countDocuments(search_condition);
+    const rooms = await Room.find(search_condition)
+      .select('_id updated_at user_bet battles created_at')
+      .sort(sortObject)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const response = {
+      success: true,
+      roomIds: rooms.map(room => room._id),
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount: totalCount,
+        hasNext: parseInt(page) < Math.ceil(totalCount / parseInt(limit)),
+        hasPrev: parseInt(page) > 1,
+        limit: parseInt(limit)
+      },
+      searchQuery: query,
+      sortBy: sort_by
+    };
+
+    // Cache search results for 15 seconds (shorter than regular results)
+    await redisClient.setEx(cacheKey, 15, JSON.stringify(response));
+
+    res.json(response);
+  } catch (err) {
+    console.error('Error searching rooms:', err);
     res.json({
       success: false,
       err: err.toString(),

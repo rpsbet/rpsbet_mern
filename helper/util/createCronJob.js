@@ -161,7 +161,7 @@ async function checkConfirmations(io) {
         socketController.newTransaction(transaction);
       } else {
         console.log(
-          `Deposit mismatch. On-chain deposit: ${depositSOL}, expected: ${transaction.amount}`
+          `Deposit mismatch. On-chain deposit: ${depositSOL}, expected: ${transaction.hash}`
         );
       }
     }

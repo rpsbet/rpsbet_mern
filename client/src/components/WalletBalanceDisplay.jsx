@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { usePrivy } from '@privy-io/react-auth';
-import { ButtonBase, Typography, Box, Tooltip, CircularProgress, Skeleton } from '@mui/material';
-import { AccountBalanceWallet, Refresh, Error } from '@mui/icons-material';
+import { ButtonBase, Typography, Box, Tooltip, CircularProgress, Skeleton, useMediaQuery, useTheme } from '@mui/material';
+import { AccountBalanceWallet, Refresh, Error } from '@mui/icons-material'
 import { getPrivyWalletBalance } from '../redux/Auth/user.actions';
 
 // Updated selector to use live wallet balance
@@ -36,6 +36,8 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
   const dispatch = useDispatch();
   const { user: privyUser, authenticated, ready } = usePrivy();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const userData = useSelector(selectUserData);
   const solPrice = useSelector(selectSolPrice);
@@ -71,18 +73,19 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
     }
   }, [dispatch, privyUser, isRefreshing, isWalletBalanceLoading]);
 
-  // Auto-refresh balance every 30 seconds if wallet is connected
-  // useEffect(() => {
-  //   if (!privyUser?.wallet?.address || !authenticated) return;
+//    useEffect(() => {
+//   if (!privyUser?.wallet?.address || !authenticated) return;
 
-  //   const interval = setInterval(() => {
-  //     if (!isRefreshing && !isWalletBalanceLoading) {
-  //       dispatch(getPrivyWalletBalance(privyUser));
-  //     }
-  //   }, 30000);
+//   const interval = setInterval(() => {
+//     console.log("d")
+//     if (!isRefreshing && !isWalletBalanceLoading) {
+//       dispatch(getPrivyWalletBalance(privyUser));
+//     }
+//   }, 30000);
 
-  //   return () => clearInterval(interval);
-  // }, [dispatch, privyUser?.wallet?.address, isRefreshing, isWalletBalanceLoading, authenticated]);
+//   return () => clearInterval(interval);
+// }, [dispatch, privyUser?.wallet?.address, isRefreshing, isWalletBalanceLoading, authenticated]);
+
 
   // Initial balance fetch when component mounts and user has wallet
   useEffect(() => {
@@ -104,6 +107,17 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
   if (!ready || (authenticated && !user)) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {isMobile && (
+          <Skeleton
+            variant="rectangular"
+            width={40}
+            height={32}
+            sx={{
+              borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }}
+          />
+        )}
         <Skeleton
           variant="rectangular"
           width={100}
@@ -122,7 +136,8 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
     return null;
   }
 
-  return (
+
+  const WalletButton = () => (
     <Tooltip
       title={
         <Box>
@@ -252,6 +267,12 @@ const WalletBalanceDisplay = ({ onBalanceClick, isHovered, setIsHovered }) => {
         </Box>
       </ButtonBase>
     </Tooltip>
+  );
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <WalletButton />
+    </Box>
   );
 };
 

@@ -445,7 +445,7 @@ function AllTransactionsModal({ modalIsOpen, close, transactions, isDarkMode, so
             overflowY: 'auto',
             borderRadius: '8px',
             p: { xs: 2, sm: 3 },
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: '#262626',
             border: '1px solid rgba(255, 255, 255, 0.05)',
             color: '#fff',
             '&::-webkit-scrollbar': {

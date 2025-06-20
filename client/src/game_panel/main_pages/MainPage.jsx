@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -54,37 +54,63 @@ const MOBILE_TABS = {
   CHAT: 'chat',
 };
 
-const selectWalletBalance = (state) => {
-  const liveWalletBalance = state?.auth?.liveWalletBalance ?? 0;
-  const backendBalance = state?.auth?.user?.balance ?? 0;
-  const walletAddress = state?.auth?.walletAddress;
+// FIXED: Memoized selector using useMemo instead of reselect
+const useSelectWalletBalance = () => {
+  const liveWalletBalance = useSelector(state => state?.auth?.liveWalletBalance ?? 0);
+  const backendBalance = useSelector(state => state?.auth?.user?.balance ?? 0);
+  const walletAddress = useSelector(state => state?.auth?.walletAddress);
 
-  // Use live wallet balance if available, otherwise fall back to backend balance
-  return {
+  return useMemo(() => ({
     balance: walletAddress ? liveWalletBalance : backendBalance,
     isWalletBalance: Boolean(walletAddress),
     walletAddress
-  };
+  }), [liveWalletBalance, backendBalance, walletAddress]);
 };
-// Custom hooks
+
+// FIXED: Custom hooks with memoization
 const useMainPageState = () => {
   const location = useLocation();
 
-  return useSelector((state) => ({
-    isAuthenticated: state.auth.isAuthenticated,
-    roomList: state.logic.roomList,
-    balance: state.auth.balance,
-    user: state.auth.user,
-    isDarkMode: state.auth.isDarkMode,
-    onlineUserList: state.logic.onlineUserList,
-    isDrawerOpen: state.auth.isDrawerOpen,
-    gameTypeList: state.logic.gameTypeList,
-    selectedMainTabIndex: state.logic.selectedMainTabIndex,
-    pageNumber: state.logic.pageNumber,
-    isLowGraphics: state.auth.isLowGraphics,
-  }));
-};
+  // Use individual selectors instead of returning a new object every time
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const roomList = useSelector((state) => state.logic.roomList);
+  const balance = useSelector((state) => state.auth.balance);
+  const user = useSelector((state) => state.auth.user);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const onlineUserList = useSelector((state) => state.logic.onlineUserList);
+  const isDrawerOpen = useSelector((state) => state.auth.isDrawerOpen);
+  const gameTypeList = useSelector((state) => state.logic.gameTypeList);
+  const selectedMainTabIndex = useSelector((state) => state.logic.selectedMainTabIndex);
+  const pageNumber = useSelector((state) => state.logic.pageNumber);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
 
+  // Memoize the returned object to prevent unnecessary re-renders
+  return useMemo(() => ({
+    isAuthenticated,
+    roomList,
+    balance,
+    user,
+    isDarkMode,
+    onlineUserList,
+    isDrawerOpen,
+    gameTypeList,
+    selectedMainTabIndex,
+    pageNumber,
+    isLowGraphics,
+  }), [
+    isAuthenticated,
+    roomList,
+    balance,
+    user,
+    isDarkMode,
+    onlineUserList,
+    isDrawerOpen,
+    gameTypeList,
+    selectedMainTabIndex,
+    pageNumber,
+    isLowGraphics,
+  ]);
+};
 
 // Redesigned CreateRoomPanel component with clean, compact design matching HistoryTable
 const CreateRoomPanel = ({
@@ -396,8 +422,7 @@ function MainPage({ selectedMobileTab, setSelectedMobileTab }) {
     isMobile && selectedMobileTab === 'live_games' && showOpenGame === 1;
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
-  const walletData = useSelector(selectWalletBalance);
-
+  const walletData = useSelectWalletBalance();
 
   return (
     <ThemeProvider theme={theme}>

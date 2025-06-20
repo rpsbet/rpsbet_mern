@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { SnackbarProvider } from 'notistack';
 import { PrivyProvider } from '@privy-io/react-auth';
-import {toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 import { Alert } from '@mui/material';
 import store from './redux/store';
 import App from './App';
@@ -67,23 +67,18 @@ const getTheme = (mode) =>
         secondary: '#ffffff',
       },
     },
-    typography: {
-      fontFamily: "'Staatliches', cursive",
-      allVariants: {
-        color: '#ffffff',
-      },
-    },
+
     components: {
       MuiPaper: {
         styleOverrides: {
           root: {
-            color: '#ffffff !important',
+            color: '#ffffff11 !important',
             '& *': {
-              color: '#ffffff !important',
+              color: '#fff !important',
             },
             // Exclude SnackbarContent to avoid interference
             '&:not(.MuiSnackbarContent-root)': {
-              backgroundColor: '#ffffff',
+              backgroundColor: '#ffffff11',
             },
           },
         },
@@ -157,43 +152,38 @@ root.render(
   <PrivyProvider
     appId="cm9i6xoyw033ll80ntlqnl78e"
     config={{
-      loginMethods: [ 'google', 'email', 'wallet'],
+      loginMethods: ['wallet', 'google', 'email'], // Wallet first for web3 users
       appearance: {
-        theme: 'dark', 
-        showWalletLoginFirst: false,
+        theme: 'dark',
+        showWalletLoginFirst: true, // Show wallet options first on mobile
         walletChainType: 'solana-only',
+        // Optimized order: most popular mobile wallets first
         walletList: [
-          "detected_solana_wallets",
-          "phantom",
-          "solflare",
-          "backpack",
+          "phantom",                    // Most popular Solana wallet
+          "solflare",                   // Popular mobile wallet
+          "backpack",                   // Growing mobile user base  
+          "detected_solana_wallets",    // Auto-detect other installed wallets
+          "wallet_connect",             // Explicit WalletConnect for long-tail wallets
           "okx_wallet"
         ]
-      },
-      fundingMethodConfig: {
-        moonpay: {
-          useSandbox: true
-        }
       },
       embeddedWallets: {
         requireUserPasswordOnCreate: false,
         showWalletUIs: true,
-        ethereum: {
-          createOnLogin: "off"
-        },
+        ethereum: { createOnLogin: "off" },
         solana: {
-          createOnLogin: "users-without-wallets"
+          createOnLogin: "users-without-wallets" // Create smart wallet if no external wallet
         }
-      },
-      mfa: {
-        noPromptOnMfaRequired: false
       },
       externalWallets: {
         solana: {
-          connectors: toSolanaWalletConnectors(), 
+          connectors: toSolanaWalletConnectors(),
         }
+      },
+      // Optional: Customize mobile experience
+      mfa: {
+        noPromptOnMfaRequired: false
       }
-
     }}
   >
     <Provider store={store}>

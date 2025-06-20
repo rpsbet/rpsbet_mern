@@ -22,13 +22,13 @@ import {
   ListItemText,
   Divider,
   Tooltip,
-  Paper,
+  useTheme,
   Popover,
   Typography,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
+  useMediaQuery,
   TableRow,
   Badge,
   DialogTitle,
@@ -55,6 +55,7 @@ import {
   Notifications as NotificationsIcon,
   NotificationsOff as NotificationsOffIcon,
   History as HistoryIcon,
+  Home
 } from '@mui/icons-material';
 import WalletBalanceDisplay from '../components/WalletBalanceDisplay.jsx';
 import socketClient from '../util/socketClient.js';
@@ -186,6 +187,9 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
+
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // FIXED: Add Privy authentication hooks first
   const {
@@ -263,12 +267,6 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
       ? 'https://catsino.fun'
       : `http://${window.location.hostname}:5001`,
     []
-  );
-
-  // Memoized theme - only recalculate when isDarkMode changes
-  const theme = useMemo(() =>
-    isDarkMode ? THEMES.dark : THEMES.main,
-    [isDarkMode]
   );
 
   // Only memoize complex calculations that benefit from it
@@ -505,88 +503,99 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
 
   // 3. Fixed logout function to properly disconnect socket
   const handleLogout = useCallback(async (clearToken) => {
-    if (handleLogout.isLoggingOut) {
-      return;
+  // Prevent multiple logout calls
+  if (handleLogout.isLoggingOut) {
+    return;
+  }
+  handleLogout.isLoggingOut = true;
+
+  try {
+    // IMMEDIATE UI Updates (optimistic)
+    setAnchorElProfile(null);
+    setAuthState({
+      isReady: true,
+      isAuthenticated: false,
+      isLoading: false,
+      hasCheckedAuth: true
+    });
+
+    // Start all operations in parallel (don't wait)
+    const operations = [];
+
+    // 1. Socket cleanup (non-blocking)
+    operations.push(
+      new Promise((resolve) => {
+        try {
+          socketClient.disconnect();
+          resolve();
+        } catch (error) {
+          console.warn('Socket disconnect error:', error);
+          resolve(); // Don't block on socket errors
+        }
+      })
+    );
+
+    // 2. Backend logout (with timeout)
+    operations.push(
+      Promise.race([
+        dispatch(userSignOut(clearToken, navigate)),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Backend logout timeout')), 3000)
+        )
+      ]).catch(error => {
+        console.warn('Backend logout failed:', error);
+        // Continue anyway - don't block UI
+      })
+    );
+
+    // 3. Privy logout (with timeout)
+    operations.push(
+      Promise.race([
+        privyLogout(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Privy logout timeout')), 3000)
+        )
+      ]).catch(error => {
+        console.warn('Privy logout failed:', error);
+        // Continue anyway
+      })
+    );
+
+    // Execute all operations in parallel with timeout
+    await Promise.allSettled(operations);
+
+    // Force cleanup regardless of operation results
+    if (clearToken) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('isAuthenticated');
+      setAuthToken();
     }
 
-    handleLogout.isLoggingOut = true;
+    // Clear Redux state
+    dispatch({ type: 'LOGOUT' });
 
-    try {
-      // Step 1: Close UI elements first
-      setAnchorElProfile(null);
-
-      // Step 2: Disconnect socket cleanly
-      try {
-        socketClient.disconnect();
-      } catch (socketError) {
-        console.warn('⚠️ Socket disconnect error:', socketError);
-      }
-
-      // Step 3: Backend logout
-      try {
-        await dispatch(userSignOut(clearToken, navigate));
-      } catch (backendError) {
-        console.warn('⚠️ Backend logout failed, continuing...', backendError);
-      }
-
-      // Step 4: Privy logout
-      try {
-        await privyLogout();
-      } catch (privyError) {
-        console.error('❌ Privy logout failed:', privyError);
-      }
-
-      // Step 5: Force cleanup
-      if (clearToken) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('isAuthenticated');
-        setAuthToken();
-      }
-
-      // Reset auth state
-      setAuthState({
-        isReady: true,
-        isAuthenticated: false,
-        isLoading: false,
-        hasCheckedAuth: true
-      });
-
-      // Clear Redux state
-      dispatch({ type: 'LOGOUT' });
-
-      // Navigate to home
-      if (location.pathname !== '/') {
-        navigate('/', { replace: true });
-      }
-
-    } catch (error) {
-      console.error('❌ Logout error, forcing cleanup:', error);
-
-      // Force cleanup even if there's an error
-      socketClient.disconnect();
-
-      if (clearToken) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('isAuthenticated');
-        setAuthToken();
-      }
-
-      setAuthState({
-        isReady: true,
-        isAuthenticated: false,
-        isLoading: false,
-        hasCheckedAuth: true
-      });
-
-      dispatch({ type: 'LOGOUT' });
-
-      if (location.pathname !== '/') {
-        navigate('/', { replace: true });
-      }
-    } finally {
-      handleLogout.isLoggingOut = false;
+    // Navigate immediately
+    if (location.pathname !== '/') {
+      navigate('/', { replace: true });
     }
-  }, [dispatch, navigate, privyLogout, location.pathname]);
+
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Force cleanup even on error
+    if (clearToken) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('isAuthenticated');
+      setAuthToken();
+    }
+    dispatch({ type: 'LOGOUT' });
+    if (location.pathname !== '/') {
+      navigate('/', { replace: true });
+    }
+  } finally {
+    handleLogout.isLoggingOut = false;
+  }
+}, [dispatch, navigate, privyLogout, location.pathname]);
+
 
   window.socketDebug = () => {
     const status = socketClient.getConnectionStatus();
@@ -901,6 +910,39 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
     </Dialog>
   );
 
+
+  const HomeButton = () => (
+    <Tooltip title="Home" arrow placement="top">
+      <ButtonBase
+        onClick={() => navigate('/')}
+        sx={{
+          padding: '6px 8px',
+          borderRadius: '12px',
+          background: 'transparent',
+          backdropFilter: 'blur(15px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          transition: 'all 0.2s ease',
+          cursor: 'pointer',
+          minWidth: '40px',
+          '&:hover': {
+            transform: 'scale(1.05)',
+            borderColor: 'rgba(255, 255, 255, 0.4)',
+            boxShadow: '0 4px 20px rgba(255, 255, 255, 0.2)',
+          },
+        }}
+      >
+        <Home
+          sx={{
+            width: '16px',
+            height: '16px',
+            color: '#e1e5e9',
+            transition: 'transform 0.2s ease',
+          }}
+        />
+      </ButtonBase>
+    </Tooltip>
+  );
+
   const renderProfileMenu = () => (
     <Menu
       anchorEl={anchorElProfile}
@@ -917,7 +959,7 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
       }}
       PaperProps={{
         sx: {
-          background: 'rgba(255, 255, 255, 0.02)',
+         background: 'rgba(22, 22, 22, 0.98)', // nearly solid, very dark
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           borderRadius: '8px',
@@ -1573,6 +1615,7 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
 
   // SiteWrapper.jsx - Updated main_header section
 
+
   const renderMobileNavButtons = () => {
     if (!selectedMobileTab || !setSelectedMobileTab) return null;
 
@@ -1587,7 +1630,10 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
       >
         {/* Live Games Button */}
         <Button
-          onClick={() => setSelectedMobileTab('live_games')}
+           onClick={() => {
+            setSelectedMobileTab('live_games');
+            navigate('/');
+          }}
           sx={{
             minWidth: 0,
             px: 1.5,
@@ -1617,7 +1663,10 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
 
         {/* My Games Button */}
         <Button
-          onClick={() => setSelectedMobileTab('my_games')}
+          onClick={() => {
+            setSelectedMobileTab('my_games');
+            navigate('/portfolio');
+          }}
           sx={{
             minWidth: 0,
             px: 1.5,
@@ -1651,7 +1700,10 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
 
         {/* Chat Button */}
         <Button
-          onClick={() => setSelectedMobileTab('chat')}
+          onClick={() => {
+            setSelectedMobileTab('chat');
+            navigate('/');
+          }}
           sx={{
             minWidth: 0,
             px: 1.5,
@@ -1832,6 +1884,7 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
                       </Badge>
                     </Box>
                   </Box>
+                  {isMobile && <HomeButton />}
 
                   {/* Wallet Balance */}
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>

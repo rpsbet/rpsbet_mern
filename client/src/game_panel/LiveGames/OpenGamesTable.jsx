@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import {
   getRoomIds,
+  searchRooms,
+  loadMoreRooms,
   loadIndividualRoom,
   actionRoom,
   getTopGameTypes,
 } from '../../redux/Logic/logic.actions';
-import isEqual from 'lodash/isEqual';
 import {
   TrendingUpOutlined,
   TrendingDownOutlined,
   LockOutlined,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import {
   AvatarGroup,
@@ -22,9 +24,12 @@ import {
   TextField,
   Chip,
   InputAdornment,
-  Alert,
+  Button,
   Fade,
   IconButton,
+  Pagination,
+  Collapse,
+  Divider,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
@@ -45,6 +50,216 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import { LikeDislikeView } from '../../components/LikeDislikeView';
 
+// Mobile-optimized skeleton with reduced complexity
+const MobileOptimizedSkeleton = React.memo(({ isError, error, onRetry }) => (
+  <Box
+    sx={{
+      padding: '8px 12px', // Reduced padding for mobile
+      borderRadius: '6px', // Smaller border radius
+      background: isError ? 'rgba(255, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+      border: isError ? '1px solid rgba(255, 0, 0, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)',
+      minHeight: '120px', // Fixed height to prevent layout shift
+    }}
+  >
+    {isError ? (
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 2
+      }}>
+        <Typography variant="caption" sx={{ color: 'rgba(255, 0, 0, 0.7)', mb: 1, fontSize: '0.7rem' }}>
+          Failed to load
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={onRetry}
+          sx={{
+            color: 'rgba(255, 0, 0, 0.7)',
+            '&:hover': { color: '#ff0000' },
+            padding: '4px'
+          }}
+        >
+          <RefreshIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    ) : (
+      <>
+        {/* Simplified skeleton structure */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Skeleton variant="rounded" width={24} height={24} sx={{ borderRadius: '4px', mr: 1 }} />
+          <Box sx={{ flexGrow: 1 }}>
+            <Skeleton variant="text" width="60%" height={14} sx={{ mb: 0.5 }} />
+            <Skeleton variant="text" width="40%" height={12} />
+          </Box>
+          <Skeleton variant="rounded" width={40} height={16} sx={{ borderRadius: '4px' }} />
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Skeleton variant="text" width="20%" height={12} />
+          <Skeleton variant="text" width="15%" height={12} />
+          <Skeleton variant="text" width="15%" height={12} />
+        </Box>
+        <Skeleton variant="rounded" width="100%" height={4} sx={{ borderRadius: '2px' }} />
+      </>
+    )}
+  </Box>
+));
+
+// Updated AdvancedSearch component - now only handles expanded content
+const AdvancedSearch = React.memo(({ 
+  gameTypeSearch, 
+  setGameTypeSearch, 
+  onSearch, 
+  isSearchMode,
+  onClearSearch,
+  effectiveIsDarkMode,
+  sortBy,
+  setSortBy,
+  onSortChange,
+  isExpanded
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    if (searchQuery.trim()) {
+      onSearch(searchQuery.trim());
+    }
+  }, [searchQuery, onSearch]);
+
+  const handleClear = useCallback(() => {
+    setSearchQuery('');
+    setGameTypeSearch('');
+    onClearSearch();
+  }, [setGameTypeSearch, onClearSearch]);
+
+  const handleSortChange = useCallback((newSortBy) => {
+    setSortBy(newSortBy);
+    onSortChange(newSortBy);
+  }, [setSortBy, onSortChange]);
+
+  return (
+    <Collapse in={isExpanded}>
+      <Box sx={{ 
+        mt: 2, 
+        p: 2, 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
+        borderRadius: '8px',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)'
+      }}>
+        {/* Search Section */}
+        <Typography variant="subtitle2" sx={{ mb: 1, fontSize: '0.8rem', fontWeight: 600 }}>
+          Search All Rooms
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 2 }}>
+          <TextField
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search names, descriptions, game types..."
+            variant="outlined"
+            size="small"
+            color="error"
+            sx={{
+              minWidth: '250px',
+              flex: 1,
+              '& .MuiOutlinedInput-root': {
+                fontSize: '0.875rem',
+              }
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button
+            onClick={handleSearch}
+            variant="contained"
+            color="error"
+            size="small"
+            disabled={!searchQuery.trim()}
+            sx={{ fontSize: '0.75rem', px: 2 }}
+          >
+            Search
+          </Button>
+          {isSearchMode && (
+            <Button
+              onClick={handleClear}
+              variant="outlined"
+              color="error"
+              size="small"
+              sx={{ fontSize: '0.75rem' }}
+            >
+              Clear
+            </Button>
+          )}
+        </Box>
+
+        <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+        {/* Sort Section */}
+        <Typography variant="subtitle2" sx={{ mb: 1, fontSize: '0.8rem', fontWeight: 600 }}>
+          Sort By
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Button
+            onClick={() => handleSortChange('default')}
+            variant={sortBy === 'default' ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
+            sx={{ fontSize: '0.75rem' }}
+          >
+            Default
+          </Button>
+          <Button
+            onClick={() => handleSortChange('bankroll_high')}
+            variant={sortBy === 'bankroll_high' ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
+            sx={{ fontSize: '0.75rem' }}
+          >
+            Bankroll (High to Low)
+          </Button>
+          <Button
+            onClick={() => handleSortChange('bankroll_low')}
+            variant={sortBy === 'bankroll_low' ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
+            sx={{ fontSize: '0.75rem' }}
+          >
+            Bankroll (Low to High)
+          </Button>
+          <Button
+            onClick={() => handleSortChange('battles_high')}
+            variant={sortBy === 'battles_high' ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
+            sx={{ fontSize: '0.75rem' }}
+          >
+            Battles (High to Low)
+          </Button>
+          <Button
+            onClick={() => handleSortChange('battles_low')}
+            variant={sortBy === 'battles_low' ? 'contained' : 'outlined'}
+            color="error"
+            size="small"
+            sx={{ fontSize: '0.75rem' }}
+          >
+            Battles (Low to High)
+          </Button>
+        </Box>
+
+        {isSearchMode && (
+          <Typography variant="caption" sx={{ 
+            display: 'block', 
+            mt: 2, 
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '0.7rem'
+          }}>
+            Searching all rooms in database
+          </Typography>
+        )}
+      </Box>
+    </Collapse>
+  );
+});
+
 function OpenGamesTable(props) {
   const {
     loading: propLoading,
@@ -53,39 +268,57 @@ function OpenGamesTable(props) {
     selectedCreator,
     handleOpenPlayerModal,
     handleClosePlayerModal,
-    connectedAccount: propConnectedAccount,
     solPrice: propSolPrice,
   } = props;
 
   const dispatch = useDispatch();
 
-  // Redux selectors for YouTube-style loading
-  const topGameTypes = useSelector(state => state.logic.topGameTypes || [], isEqual);
-  const user = useSelector(state => state.auth.user, isEqual);
-  const highlightedRooms = useSelector(state => state.logic.highlightedRooms, isEqual);
+  // Selectors - optimized for mobile
+  const topGameTypesRaw = useSelector(state => state.logic.topGameTypes);
+  const user = useSelector(state => state.auth.user);
+  const highlightedRoomsRaw = useSelector(state => state.logic.highlightedRooms);
   const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
   const solPrice = useSelector(state => state.logic.solPrice);
   const isDarkMode = useSelector(state => state.auth.isDarkMode);
+  const roomIdsRaw = useSelector(state => state.logic.roomIds);
+  const roomsByIdRaw = useSelector(state => state.logic.roomsById);
+  const roomLoadingStatesRaw = useSelector(state => state.logic.roomLoadingStates);
+  const roomErrorsRaw = useSelector(state => state.logic.roomErrors);
+  const currentGameTypeRaw = useSelector(state => state.logic.currentGameType);
+  const paginationRaw = useSelector(state => state.logic.pagination);
+  const isSearchModeRaw = useSelector(state => state.logic.isSearchMode);
+  const searchQueryRaw = useSelector(state => state.logic.searchQuery);
 
-  // YouTube-style loading selectors
-  const roomIds = useSelector(state => state.logic.roomIds || []);
-  const roomsById = useSelector(state => state.logic.roomsById || {});
-  const roomLoadingStates = useSelector(state => state.logic.roomLoadingStates || {});
-  const roomErrors = useSelector(state => state.logic.roomErrors || {});
-  const currentGameType = useSelector(state => state.logic.currentGameType || 'All');
+  // Memoized fallbacks
+  const topGameTypes = useMemo(() => topGameTypesRaw || [], [topGameTypesRaw]);
+  const highlightedRooms = useMemo(() => highlightedRoomsRaw || new Set(), [highlightedRoomsRaw]);
+  const roomIds = useMemo(() => roomIdsRaw || [], [roomIdsRaw]);
+  const roomsById = useMemo(() => roomsByIdRaw || {}, [roomsByIdRaw]);
+  const roomLoadingStates = useMemo(() => roomLoadingStatesRaw || {}, [roomLoadingStatesRaw]);
+  const roomErrors = useMemo(() => roomErrorsRaw || {}, [roomErrorsRaw]);
+  const currentGameType = useMemo(() => currentGameTypeRaw || 'All', [currentGameTypeRaw]);
+  const pagination = useMemo(() => paginationRaw || null, [paginationRaw]);
+  const isSearchMode = useMemo(() => isSearchModeRaw || false, [isSearchModeRaw]);
+  const searchQuery = useMemo(() => searchQueryRaw || '', [searchQueryRaw]);
 
-  // Existing props with fallbacks
   const effectiveLoading = propLoading !== undefined ? propLoading : loading;
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
   const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
 
+  // Mobile detection
+  const isMobile = useMemo(() => window.innerWidth <= 768, []);
+  
   // Local state
   const [selectedGameType, setSelectedGameType] = useState('All');
   const [gameTypeSearch, setGameTypeSearch] = useState('');
+  const [sortBy, setSortBy] = useState('default');
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
+  const mountedRef = useRef(false);
+  const initialFetchRef = useRef(false);
   const theme = getCustomTheme(effectiveIsDarkMode);
 
-  // Create ordered array of rooms (loaded + skeletons)
+  // Create ordered array of rooms with mobile optimization
   const orderedRoomData = useMemo(() => {
     return roomIds.map(roomId => {
       const loadingState = roomLoadingStates[roomId];
@@ -103,13 +336,11 @@ function OpenGamesTable(props) {
     });
   }, [roomIds, roomsById, roomLoadingStates, roomErrors]);
 
-  // Apply highlighting to loaded rooms
+  // Apply highlighting
   const processedRoomData = useMemo(() => {
     const highlightId = Array.from(highlightedRooms)[0];
-
     if (!highlightId) return orderedRoomData;
 
-    // Find the highlighted room and move it to the front if it's loaded
     const highlightedIndex = orderedRoomData.findIndex(
       item => item.id === highlightId && item.isLoaded
     );
@@ -124,13 +355,15 @@ function OpenGamesTable(props) {
     return orderedRoomData;
   }, [orderedRoomData, highlightedRooms]);
 
-  // Apply client-side filtering
+  // Client-side filtering (for local search only)
   const filteredRoomData = useMemo(() => {
-    return processedRoomData.filter(item => {
-      // Always show loading skeletons
-      if (item.isLoading || item.isError) return true;
+    if (isSearchMode) {
+      // In search mode, don't apply local filters
+      return processedRoomData;
+    }
 
-      // Only filter loaded rooms
+    return processedRoomData.filter(item => {
+      if (item.isLoading || item.isError) return true;
       if (!item.isLoaded || !item.room) return false;
 
       const room = item.room;
@@ -138,7 +371,6 @@ function OpenGamesTable(props) {
       // Game type filter
       if (selectedGameType !== 'All') {
         if (!room.game_type) return false;
-
         const matchesGameType = Array.isArray(room.game_type)
           ? room.game_type.some(type =>
             type && typeof type === 'string' &&
@@ -146,14 +378,12 @@ function OpenGamesTable(props) {
           )
           : typeof room.game_type === 'string' &&
           room.game_type.toLowerCase() === selectedGameType.toLowerCase();
-
         if (!matchesGameType) return false;
       }
 
-      // Search filter
+      // Local search filter
       if (gameTypeSearch) {
         const lowerCaseSearch = gameTypeSearch.toLowerCase();
-
         const roomGameTypes = Array.isArray(room.game_type)
           ? room.game_type.filter(type => type && typeof type === 'string')
           : (room.game_type && typeof room.game_type === 'string') ? [room.game_type] : [];
@@ -173,69 +403,97 @@ function OpenGamesTable(props) {
 
       return true;
     });
-  }, [processedRoomData, selectedGameType, gameTypeSearch]);
+  }, [processedRoomData, selectedGameType, gameTypeSearch, isSearchMode]);
 
   // Initial fetch
   useEffect(() => {
-    // Add error handling for initial fetch
-    dispatch(getRoomIds({ game_type: 'All' }))
-      .catch(error => {
-        console.error('Failed to load rooms:', error);
-        // You might want to show an error message to users
-      });
-    dispatch(getTopGameTypes());
-  }, [dispatch]);
-
-  // Handle room action updates via socket
-  const handleRoomActionUpdated = useCallback((data) => {
-    console.log('Room action updated:', data);
-    dispatch({
-      type: 'UPDATE_SINGLE_ROOM',
-      payload: {
-        _id: data.roomId,
-        likes: data.likes,
-        dislikes: data.dislikes,
-        views: data.views
-      }
-    });
-  }, [dispatch]);
-
-  // Setup socket listener
-  useEffect(() => {
-    if (window.socketClient && window.socketClient.socket) {
-      window.socketClient.socket.on('ROOM_ACTION_UPDATED', handleRoomActionUpdated);
-
-      return () => {
-        if (window.socketClient && window.socketClient.socket) {
-          window.socketClient.socket.off('ROOM_ACTION_UPDATED', handleRoomActionUpdated);
-        }
-      };
+    mountedRef.current = true;
+    if (!initialFetchRef.current) {
+      initialFetchRef.current = true;
+      dispatch(getRoomIds({ game_type: 'All' }));
+      dispatch(getTopGameTypes());
     }
-  }, [handleRoomActionUpdated]);
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [dispatch]);
 
-  // Handle game type change
+  // Handlers
   const handleGameTypeChange = useCallback((gameType) => {
+    if (gameType === selectedGameType) return;
+    
     setSelectedGameType(gameType);
     setGameTypeSearch('');
-    dispatch(getRoomIds({ game_type: gameType }));
-  }, [dispatch]);
+    dispatch(getRoomIds({ 
+      game_type: gameType, 
+      page: 1,
+      sort_by: sortBy !== 'default' ? sortBy : undefined
+    }));
+  }, [dispatch, selectedGameType, sortBy]);
 
-  const handleGameTypeSearchChange = useCallback((event) => {
-    const value = event.target.value;
-    setGameTypeSearch(value);
-  }, []);
+  const handleAdvancedSearch = useCallback((query) => {
+    dispatch(searchRooms({ 
+      query, 
+      game_type: selectedGameType !== 'All' ? selectedGameType : undefined,
+      page: 1,
+      sort_by: sortBy !== 'default' ? sortBy : undefined
+    }));
+  }, [dispatch, selectedGameType, sortBy]);
 
-  const handleGameTypeChipClick = useCallback((tag) => {
-    setSelectedGameType(tag);
-    setGameTypeSearch('');
-    dispatch(getRoomIds({ game_type: tag }));
-  }, [dispatch]);
+  const handleClearSearch = useCallback(() => {
+    dispatch(getRoomIds({ 
+      game_type: selectedGameType, 
+      page: 1,
+      sort_by: sortBy !== 'default' ? sortBy : undefined
+    }));
+  }, [dispatch, selectedGameType, sortBy]);
 
-  // Retry loading a failed room
+  const handleSortChange = useCallback((newSortBy) => {
+    setSortBy(newSortBy);
+    
+    // Trigger new fetch with sorting
+    if (isSearchMode) {
+      dispatch(searchRooms({ 
+        query: searchQuery,
+        game_type: selectedGameType !== 'All' ? selectedGameType : undefined,
+        page: 1,
+        sort_by: newSortBy !== 'default' ? newSortBy : undefined
+      }));
+    } else {
+      dispatch(getRoomIds({ 
+        game_type: selectedGameType, 
+        page: 1,
+        sort_by: newSortBy !== 'default' ? newSortBy : undefined
+      }));
+    }
+  }, [dispatch, isSearchMode, searchQuery, selectedGameType]);
+
   const handleRetryRoom = useCallback((roomId) => {
     dispatch(loadIndividualRoom(roomId));
   }, [dispatch]);
 
+  const handleLoadMore = useCallback(() => {
+    dispatch(loadMoreRooms());
+  }, [dispatch]);
+
+  const handlePageChange = useCallback((event, page) => {
+    if (isSearchMode) {
+      dispatch(searchRooms({ 
+        query: searchQuery,
+        game_type: selectedGameType !== 'All' ? selectedGameType : undefined,
+        page,
+        sort_by: sortBy !== 'default' ? sortBy : undefined
+      }));
+    } else {
+      dispatch(getRoomIds({ 
+        game_type: selectedGameType, 
+        page,
+        sort_by: sortBy !== 'default' ? sortBy : undefined
+      }));
+    }
+  }, [dispatch, isSearchMode, searchQuery, selectedGameType, sortBy]);
+
+  // Custom time display
   const customFromNow = useCallback((date) => {
     const now = new Date();
     const dateObj = new Date(date);
@@ -300,69 +558,6 @@ function OpenGamesTable(props) {
     return { color: '#03ff3b' };
   }, []);
 
-  // Skeleton component for loading rooms
-  const RoomSkeleton = ({ isError, error, onRetry }) => (
-    <Box
-      sx={{
-        padding: '12px 16px',
-        borderRadius: '8px',
-        background: isError ? 'rgba(255, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-        border: isError ? '1px solid rgba(255, 0, 0, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)',
-        position: 'relative',
-      }}
-    >
-      {isError ? (
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 3
-        }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255, 0, 0, 0.7)', mb: 1 }}>
-            Failed to load room
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={onRetry}
-            sx={{
-              color: 'rgba(255, 0, 0, 0.7)',
-              '&:hover': { color: '#ff0000' }
-            }}
-          >
-            <RefreshIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      ) : (
-        <>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, height: 96 }}>
-            <Skeleton variant="rounded" width={32} height={32} sx={{ borderRadius: '6px', mr: 2 }} />
-            <Box sx={{ flexGrow: 1 }}>
-              <Skeleton variant="text" width="70%" height={18} sx={{ mb: 0.5 }} />
-              <Skeleton variant="text" width="50%" height={14} />
-            </Box>
-            <Skeleton variant="rounded" width={60} height={20} sx={{ borderRadius: '4px' }} />
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Skeleton variant="text" width="25%" height={16} />
-            <Skeleton variant="text" width="20%" height={16} />
-            <Skeleton variant="text" width="15%" height={16} />
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ width: '60%' }}>
-              <Skeleton variant="rounded" width="100%" height={6} sx={{ borderRadius: '3px' }} />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <Skeleton variant="circular" width={24} height={24} />
-              <Skeleton variant="circular" width={24} height={24} />
-              <Skeleton variant="circular" width={24} height={24} />
-            </Box>
-          </Box>
-        </>
-      )}
-    </Box>
-  );
-
   return (
     <ThemeProvider theme={theme}>
       <>
@@ -374,114 +569,132 @@ function OpenGamesTable(props) {
           />
         )}
 
-        {/* Filter chips section */}
-        <Box
-          sx={{
-            ml: 3,
-            mr: 3,
-            display: 'flex',
-            justifyContent: 'flex-start',
-            marginBottom: '24px',
-            gap: '12px',
-            overflowX: { xs: 'auto', sm: 'visible' },
-            flexWrap: { xs: 'nowrap', sm: 'wrap' },
-            whiteSpace: { xs: 'nowrap', sm: 'normal' },
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: { xs: 'thin', sm: 'none' },
-            '&::-webkit-scrollbar': {
-              height: { xs: '6px', sm: '0px' },
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: { xs: 'rgba(0, 0, 0, 0.15)', sm: 'transparent' },
-              borderRadius: '3px',
-            },
-          }}
-        >
-          {/* All Games chip */}
-          <Chip
-            label="All Games"
-            onClick={() => handleGameTypeChange('All')}
-            color={selectedGameType === 'All' ? 'error' : 'default'}
-            variant={selectedGameType === 'All' ? 'filled' : 'outlined'}
-            clickable
+        {/* Filter and Search Section */}
+        <Box sx={{ ml: 3, mr: 3, mb: 3 }}>
+          {/* Game Type Chips and Filter Button on Same Row */}
+          <Box
             sx={{
-              fontWeight: 600,
-              letterSpacing: '0.5px',
-              '&:hover': {
-                transform: 'translateY(-1px)',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
-              },
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+              gap: '8px',
+              flexWrap: { xs: 'wrap', sm: 'nowrap' },
             }}
-          />
-
-          {/* Top game type chips */}
-          {topGameTypes.map((gameType) => (
-            <Chip
-              key={gameType}
-              label={gameType.toUpperCase()}
-              onClick={() => handleGameTypeChipClick(gameType)}
-              color={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'error' : 'default'}
-              variant={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'filled' : 'outlined'}
-              clickable
+          >
+            {/* Game Type Chips */}
+            <Box
               sx={{
-                fontWeight: 600,
-                letterSpacing: '0.5px',
-                '&:hover': {
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+                display: 'flex',
+                justifyContent: 'flex-start',
+                gap: '8px',
+                overflowX: { xs: 'auto', sm: 'visible' },
+                flexWrap: { xs: 'nowrap', sm: 'wrap' },
+                whiteSpace: { xs: 'nowrap', sm: 'normal' },
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: { xs: 'thin', sm: 'none' },
+                flex: 1,
+                minWidth: 0,
+                '&::-webkit-scrollbar': {
+                  height: { xs: '4px', sm: '0px' },
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: { xs: 'rgba(0, 0, 0, 0.15)', sm: 'transparent' },
+                  borderRadius: '2px',
                 },
               }}
-            />
-          ))}
+            >
+              <Chip
+                label="All Games"
+                onClick={() => handleGameTypeChange('All')}
+                color={selectedGameType === 'All' ? 'error' : 'default'}
+                variant={selectedGameType === 'All' ? 'filled' : 'outlined'}
+                clickable
+                size={isMobile ? 'small' : 'medium'}
+                sx={{
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                  fontSize: isMobile ? '0.7rem' : '0.875rem',
+                  '&:hover': {
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.12)',
+                  },
+                }}
+              />
 
-          {/* Search Input */}
-          <TextField
-            value={gameTypeSearch}
-            onChange={handleGameTypeSearchChange}
-            placeholder="Search rooms..."
-            variant="outlined"
-            size="small"
-            sx={{
-              ml: { xs: 0, sm: 2 },
-              minWidth: { xs: '150px', sm: '200px' },
-              flexShrink: 0,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '12px',
-                backgroundColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                '& fieldset': {
-                  borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              {topGameTypes.map((gameType) => (
+                <Chip
+                  key={gameType}
+                  label={gameType.toUpperCase()}
+                  onClick={() => handleGameTypeChange(gameType)}
+                  color={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'error' : 'default'}
+                  variant={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'filled' : 'outlined'}
+                  clickable
+                  size={isMobile ? 'small' : 'medium'}
+                  sx={{
+                    fontWeight: 600,
+                    letterSpacing: '0.5px',
+                    fontSize: isMobile ? '0.7rem' : '0.875rem',
+                    '&:hover': {
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.12)',
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+
+            {/* Filter Button */}
+            <Button
+              onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<SearchIcon sx={{ fontSize: '1rem' }} />}
+              sx={{
+                minWidth: 'auto',
+                px: 2,
+                fontSize: '0.75rem',
+                flexShrink: 0,
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1rem',
                 },
-                '&:hover fieldset': {
-                  borderColor: effectiveIsDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: theme.palette.error.main,
-                },
-              },
-              '& .MuiInputBase-input': {
-                color: effectiveIsDarkMode ? '#fff' : '#000',
-              },
-              '& .MuiInputAdornment-root .MuiSvgIcon-root': {
-                color: effectiveIsDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
+                '& .MuiButton-endIcon': {
+                  ml: 0.5,
+                  '& .MuiSvgIcon-root': {
+                    transform: isFilterExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s',
+                  }
+                }
+              }}
+              endIcon={<ExpandMoreIcon />}
+            >
+              Filter
+            </Button>
+          </Box>
+
+          {/* Advanced Search - Now only expanded content */}
+          <AdvancedSearch
+            gameTypeSearch={gameTypeSearch}
+            setGameTypeSearch={setGameTypeSearch}
+            onSearch={handleAdvancedSearch}
+            isSearchMode={isSearchMode}
+            onClearSearch={handleClearSearch}
+            effectiveIsDarkMode={effectiveIsDarkMode}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            onSortChange={handleSortChange}
+            isExpanded={isFilterExpanded}
           />
         </Box>
 
         {/* Games Display */}
         <div className="table main-game-table open-games">
           {effectiveLoading && roomIds.length === 0 ? (
-            // Initial loading state
+            // Initial loading
             <Box sx={{ px: 3 }}>
-              <Grid container spacing={2}>
-                {Array.from({ length: 12 }).map((_, index) => (
+              <Grid container spacing={isMobile ? 1 : 2}>
+                {Array.from({ length: isMobile ? 6 : 12 }).map((_, index) => (
                   <Grid
                     item
                     xs={12}
@@ -491,7 +704,7 @@ function OpenGamesTable(props) {
                     xl={4}
                     key={`initial-skeleton-${index}`}
                   >
-                    <RoomSkeleton />
+                    <MobileOptimizedSkeleton />
                   </Grid>
                 ))}
               </Grid>
@@ -501,7 +714,7 @@ function OpenGamesTable(props) {
             <Box
               sx={{
                 textAlign: 'center',
-                py: 12,
+                py: isMobile ? 6 : 12,
                 px: 3,
               }}
             >
@@ -511,17 +724,17 @@ function OpenGamesTable(props) {
                 sx={{
                   fontWeight: 400,
                   letterSpacing: '0.5px',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
                 }}
               >
-                GO TO 'BE THE HOUSE' TO CREATE ONE!
+                {isSearchMode ? 'NO ROOMS FOUND' : 'GO TO \'BE THE HOUSE\' TO CREATE ONE!'}
               </Typography>
             </Box>
           ) : (
-            // YouTube-style loading: show rooms as they load
+            // Room grid - keeping the existing room display logic
             <Box sx={{ px: 3 }}>
-              <Grid container spacing={2}>
+              <Grid container spacing={isMobile ? 1 : 2}>
                 {filteredRoomData.map((item, index) => {
-                  // Show skeleton for loading or error states
                   if (item.isLoading || item.isError) {
                     return (
                       <Grid
@@ -533,7 +746,7 @@ function OpenGamesTable(props) {
                         xl={4}
                         key={`room-${item.id}`}
                       >
-                        <RoomSkeleton
+                        <MobileOptimizedSkeleton
                           isError={item.isError}
                           error={item.error}
                           onRetry={() => handleRetryRoom(item.id)}
@@ -542,7 +755,6 @@ function OpenGamesTable(props) {
                     );
                   }
 
-                  // Show loaded room
                   if (!item.isLoaded || !item.room) return null;
 
                   const row = item.room;
@@ -562,7 +774,7 @@ function OpenGamesTable(props) {
                       xl={4}
                       key={`room-${item.id}`}
                     >
-                      <Fade in={true} timeout={500}>
+                      <Fade in={true} timeout={300}>
                         <Box
                           onClick={(event) => {
                             if (!event.defaultPrevented) {
@@ -573,8 +785,8 @@ function OpenGamesTable(props) {
                             }
                           }}
                           sx={{
-                            padding: '12px 16px',
-                            borderRadius: '8px',
+                            padding: isMobile ? '8px 12px' : '12px 16px',
+                            borderRadius: '6px',
                             background: isFirstItem
                               ? 'linear-gradient(90deg, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.03))'
                               : 'rgba(255, 255, 255, 0.02)',
@@ -584,33 +796,24 @@ function OpenGamesTable(props) {
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             position: 'relative',
+                            minHeight: isMobile ? '140px' : '160px',
                             '&:hover': {
                               background: 'rgba(255, 255, 255, 0.03)',
                               border: '1px solid rgba(255, 0, 0, 0.2)',
+                              transform: isMobile ? 'none' : 'translateY(-2px)',
                             },
-                            ...(isFirstItem && {
-                              '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                height: '2px',
-                                background: 'linear-gradient(90deg, transparent, #ff0000, transparent)',
-                                animation: 'shimmer 2s ease-in-out infinite'
-                              }
-                            })
                           }}
                         >
+                          {/* Rest of the room display code remains the same */}
                           {/* Header Row */}
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: isMobile ? 1 : 2 }}>
                             <Box
                               sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: '6px',
+                                width: isMobile ? 24 : 32,
+                                height: isMobile ? 24 : 32,
+                                borderRadius: '4px',
                                 overflow: 'hidden',
-                                mr: 2,
+                                mr: isMobile ? 1 : 2,
                                 border: '1px solid rgba(255, 255, 255, 0.1)',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -621,7 +824,11 @@ function OpenGamesTable(props) {
                               <img
                                 src={row.image}
                                 alt={row.name}
-                                style={{ width: 28, height: 28, objectFit: 'cover' }}
+                                style={{ 
+                                  width: isMobile ? 20 : 28, 
+                                  height: isMobile ? 20 : 28, 
+                                  objectFit: 'cover' 
+                                }}
                               />
                             </Box>
 
@@ -630,7 +837,7 @@ function OpenGamesTable(props) {
                                 variant="body2"
                                 sx={{
                                   fontWeight: 600,
-                                  fontSize: '0.875rem',
+                                  fontSize: isMobile ? '0.75rem' : '0.875rem',
                                   lineHeight: 1.2,
                                   mb: 0.25,
                                   overflow: 'hidden',
@@ -643,8 +850,8 @@ function OpenGamesTable(props) {
                                 <Typography
                                   component="span"
                                   sx={{
-                                    ml: 1,
-                                    fontSize: '0.75rem',
+                                    ml: 0.5,
+                                    fontSize: isMobile ? '0.65rem' : '0.75rem',
                                     fontWeight: 500,
                                     color: 'rgba(255, 255, 255, 0.6)',
                                   }}
@@ -655,7 +862,7 @@ function OpenGamesTable(props) {
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: '0.7rem',
+                                  fontSize: isMobile ? '0.6rem' : '0.7rem',
                                   color: 'rgba(255, 255, 255, 0.5)',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -663,8 +870,8 @@ function OpenGamesTable(props) {
                                   display: 'block',
                                 }}
                               >
-                                {row.description && row.description.length > 40
-                                  ? `${row.description.slice(0, 40)}...`
+                                {row.description && row.description.length > (isMobile ? 25 : 40)
+                                  ? `${row.description.slice(0, isMobile ? 25 : 40)}...`
                                   : row.description || 'No description'}
                               </Typography>
                             </Box>
@@ -675,146 +882,26 @@ function OpenGamesTable(props) {
                                 : (row.game_type ? String(row.game_type).toUpperCase() : 'N/A')}
                               size="small"
                               sx={{
-                                height: '20px',
-                                fontSize: '0.65rem',
+                                height: isMobile ? '16px' : '20px',
+                                fontSize: isMobile ? '0.6rem' : '0.65rem',
                                 fontWeight: 600,
                                 backgroundColor: 'transparent',
                                 color: 'rgba(255, 255, 255, 0.7)',
                                 border: '1px solid rgba(255, 255, 255, 0.1)',
                                 '& .MuiChip-label': {
-                                  padding: '0 6px',
+                                  padding: isMobile ? '0 4px' : '0 6px',
                                 },
                               }}
                             />
                           </Box>
 
-                          {/* Players and Battle Icon */}
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              mb: 2,
-                            }}
-                          >
-                            {/* Hosts */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              {row.hosts?.length > 0 ? (
-                                <AvatarGroup
-                                  max={2}
-                                  sx={{
-                                    '& .MuiAvatar-root': {
-                                      width: 24,
-                                      height: 24,
-                                      borderRadius: '6px',
-                                      border: 'none',
-                                      fontSize: '0.7rem',
-                                    },
-                                    '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                      marginLeft: '-8px',
-                                    },
-                                  }}
-                                >
-                                  {row.hosts.map((host, hostIndex) => (
-                                    <Avatar
-                                      key={hostIndex}
-                                      alt={host.username}
-                                      username={host.username}
-                                      elite={host.elite}
-                                      src={host.avatar}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenPlayerModal(row.hosts[hostIndex]);
-                                      }}
-                                      sx={{
-                                        cursor: 'pointer',
-                                        transition: 'transform 0.2s',
-                                        '&:hover': {
-                                          transform: 'scale(1.1)',
-                                          zIndex: 10,
-                                        },
-                                      }}
-                                    />
-                                  ))}
-                                </AvatarGroup>
-                              ) : (
-                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem' }}>
-                                  No hosts
-                                </Typography>
-                              )}
-                            </Box>
-
-                            {/* Battle Icon */}
-                            <Box
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                                border: '1px solid rgba(255, 0, 0, 0.2)',
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faFistRaised} style={{ fontSize: 12, color: '#ff0000' }} />
-                            </Box>
-
-                            {/* Joiners */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              {row.joiners?.length > 0 ? (
-                                <AvatarGroup
-                                  max={2}
-                                  sx={{
-                                    '& .MuiAvatar-root': {
-                                      width: 24,
-                                      height: 24,
-                                      borderRadius: '6px',
-                                      border: 'none',
-                                      fontSize: '0.7rem',
-                                    },
-                                    '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                      marginLeft: '-8px',
-                                    },
-                                  }}
-                                >
-                                  {row.joiners.map((joiner, joinerIndex) => (
-                                    <Avatar
-                                      key={joinerIndex}
-                                      alt={joiner.username}
-                                      username={joiner.username}
-                                      elite={joiner.elite}
-                                      src={joiner.avatar}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenPlayerModal(row.joiners[joinerIndex]);
-                                      }}
-                                      sx={{
-                                        cursor: 'pointer',
-                                        transition: 'transform 0.2s',
-                                        '&:hover': {
-                                          transform: 'scale(1.1)',
-                                          zIndex: 10,
-                                        },
-                                      }}
-                                    />
-                                  ))}
-                                </AvatarGroup>
-                              ) : (
-                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem' }}>
-                                  No joiners
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-
-                          {/* Stats Row */}
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                          {/* Stats Row - Mobile optimized */}
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: isMobile ? 1 : 2 }}>
                             <Box sx={{ textAlign: 'left' }}>
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: '0.65rem',
+                                  fontSize: isMobile ? '0.6rem' : '0.65rem',
                                   color: 'rgba(255, 255, 255, 0.6)',
                                   display: 'block',
                                   mb: 0.25,
@@ -827,7 +914,7 @@ function OpenGamesTable(props) {
                                 sx={{
                                   ...getColorClass(row.user_bet - row.bet_amount),
                                   fontWeight: 600,
-                                  fontSize: '0.8rem',
+                                  fontSize: isMobile ? '0.7rem' : '0.8rem',
                                   lineHeight: 1.2,
                                   display: 'flex',
                                   alignItems: 'center',
@@ -838,9 +925,9 @@ function OpenGamesTable(props) {
                                 {row.user_bet !== row.bet_amount && (
                                   <>
                                     {row.user_bet > row.bet_amount ? (
-                                      <TrendingUpOutlined sx={{ fontSize: 10 }} />
+                                      <TrendingUpOutlined sx={{ fontSize: isMobile ? 8 : 10 }} />
                                     ) : (
-                                      <TrendingDownOutlined sx={{ fontSize: 10 }} />
+                                      <TrendingDownOutlined sx={{ fontSize: isMobile ? 8 : 10 }} />
                                     )}
                                   </>
                                 )}
@@ -851,7 +938,7 @@ function OpenGamesTable(props) {
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: '0.65rem',
+                                  fontSize: isMobile ? '0.6rem' : '0.65rem',
                                   color: 'rgba(255, 255, 255, 0.6)',
                                   display: 'block',
                                   mb: 0.25,
@@ -863,7 +950,7 @@ function OpenGamesTable(props) {
                                 variant="body2"
                                 sx={{
                                   fontWeight: 600,
-                                  fontSize: '0.8rem',
+                                  fontSize: isMobile ? '0.7rem' : '0.8rem',
                                   color: '#fff',
                                 }}
                               >
@@ -875,7 +962,7 @@ function OpenGamesTable(props) {
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: '0.65rem',
+                                  fontSize: isMobile ? '0.6rem' : '0.65rem',
                                   color: 'rgba(255, 255, 255, 0.6)',
                                   display: 'block',
                                   mb: 0.25,
@@ -887,7 +974,7 @@ function OpenGamesTable(props) {
                                 variant="body2"
                                 sx={{
                                   fontWeight: 600,
-                                  fontSize: '0.8rem',
+                                  fontSize: isMobile ? '0.7rem' : '0.8rem',
                                   color: '#fff',
                                 }}
                               >
@@ -897,20 +984,14 @@ function OpenGamesTable(props) {
                           </Box>
 
                           {/* Health bar and actions */}
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                            }}
-                          >
-                            <Box sx={{ flex: 1, mr: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box sx={{ flex: 1, mr: isMobile ? 1 : 2 }}>
                               <Box
                                 sx={{
                                   width: '100%',
-                                  height: '6px',
+                                  height: isMobile ? '4px' : '6px',
                                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                  borderRadius: '3px',
+                                  borderRadius: isMobile ? '2px' : '3px',
                                   overflow: 'hidden',
                                   position: 'relative',
                                 }}
@@ -920,7 +1001,7 @@ function OpenGamesTable(props) {
                                     width: `${100 - progressPercentage}%`,
                                     height: '100%',
                                     background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
-                                    borderRadius: '3px',
+                                    borderRadius: isMobile ? '2px' : '3px',
                                     transition: 'width 0.3s ease',
                                   }}
                                 />
@@ -928,7 +1009,7 @@ function OpenGamesTable(props) {
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: '0.6rem',
+                                  fontSize: isMobile ? '0.55rem' : '0.6rem',
                                   color: 'rgba(255, 255, 255, 0.6)',
                                   mt: 0.25,
                                   display: 'block',
@@ -938,39 +1019,40 @@ function OpenGamesTable(props) {
                               </Typography>
                             </Box>
 
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              <LikeDislikeView
-                                row={row}
-                                user={user}
-                                handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
-                                handleDislike={() => dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))}
-                                handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
-                              />
-                            </Box>
+                            {!isMobile && (
+                              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                <LikeDislikeView
+                                  row={row}
+                                  user={user}
+                                  handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
+                                  handleDislike={() => dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))}
+                                  handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
+                                />
+                              </Box>
+                            )}
                           </Box>
 
                           {/* Private room indicator */}
                           {row.is_private && (
-                            <Tooltip title="A password is required to battle this room." arrow>
+                            <Tooltip title="Password required" arrow>
                               <Box
                                 sx={{
                                   position: 'absolute',
-                                  top: 8,
-                                  right: 8,
-                                  width: 24,
-                                  height: 24,
+                                  top: 6,
+                                  right: 6,
+                                  width: isMobile ? 16 : 24,
+                                  height: isMobile ? 16 : 24,
                                   borderRadius: '50%',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
                                   backdropFilter: 'blur(4px)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
                                 }}
                               >
                                 <LockOutlined
                                   sx={{
-                                    fontSize: 12,
+                                    fontSize: isMobile ? 8 : 12,
                                     color: 'rgba(255, 255, 255, 0.8)',
                                   }}
                                 />
@@ -984,7 +1066,71 @@ function OpenGamesTable(props) {
                 })}
               </Grid>
 
-              {/* Loading status info */}
+              {/* Pagination Controls */}
+              {pagination && pagination.totalPages > 1 && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  mt: 4, 
+                  mb: 2,
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: 'center',
+                  gap: 2
+                }}>
+                  {/* Mobile: Load More Button */}
+                  {isMobile ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.7rem' }}>
+                        Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount} total rooms)
+                      </Typography>
+                      {pagination.hasNext && (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={handleLoadMore}
+                          disabled={effectiveLoading}
+                          size="small"
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            px: 3,
+                            py: 1
+                          }}
+                        >
+                          {effectiveLoading ? 'Loading...' : 'Load More'}
+                        </Button>
+                      )}
+                    </Box>
+                  ) : (
+                    /* Desktop: Full Pagination */
+                    <>
+                      <Pagination
+                        count={pagination.totalPages}
+                        page={pagination.currentPage}
+                        onChange={handlePageChange}
+                        color="error"
+                        size="small"
+                        showFirstButton
+                        showLastButton
+                        sx={{
+                          '& .MuiPaginationItem-root': {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            fontSize: '0.875rem',
+                          },
+                          '& .Mui-selected': {
+                            backgroundColor: '#ff0000 !important',
+                            color: '#fff',
+                          },
+                        }}
+                      />
+                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem' }}>
+                        {pagination.totalCount} total rooms
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              )}
+
+              {/* Loading status */}
               {roomIds.length > 0 && (
                 <Box sx={{
                   display: 'flex',
@@ -993,7 +1139,7 @@ function OpenGamesTable(props) {
                   mb: 2,
                   color: 'rgba(255, 255, 255, 0.6)'
                 }}>
-                  <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                  <Typography variant="caption" sx={{ fontSize: '0.7rem', textAlign: 'center' }}>
                     {(() => {
                       const loadedCount = Object.values(roomLoadingStates).filter(state => state === 'loaded').length;
                       const totalCount = roomIds.length;
@@ -1002,10 +1148,14 @@ function OpenGamesTable(props) {
                       if (loadingCount > 0) {
                         return `Loading rooms... (${loadedCount}/${totalCount} loaded)`;
                       } else {
-                        return `Showing ${filteredRoomData.filter(item => item.isLoaded).length} rooms`;
+                        const displayCount = filteredRoomData.filter(item => item.isLoaded).length;
+                        if (isSearchMode) {
+                          return `Found ${displayCount} rooms matching "${searchQuery}"`;
+                        } else {
+                          return `Showing ${displayCount} rooms${selectedGameType !== 'All' ? ` for ${selectedGameType}` : ''}${sortBy !== 'default' ? ` sorted by ${sortBy.replace('_', ' ')}` : ''}`;
+                        }
                       }
                     })()}
-                    {selectedGameType !== 'All' && ` for ${selectedGameType}`}
                   </Typography>
                 </Box>
               )}
@@ -1017,4 +1167,4 @@ function OpenGamesTable(props) {
   );
 }
 
-export default OpenGamesTable;
+export default React.memo(OpenGamesTable);

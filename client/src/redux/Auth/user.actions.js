@@ -63,65 +63,6 @@ const handleActionSuccess = (data, successMessage) => {
   return { status: 'success', ...data, message: successMessage };
 };
 
-// AUTHENTICATION ACTIONS
-export const userSignUp = ({
-  userName,
-  password,
-  bio,
-  avatar,
-  referralCode,
-  avatarMethod,
-  recaptchaToken
-}) => async (dispatch) => {
-  try {
-    dispatch({ type: START_LOADING });
-
-    const body = {
-      username: userName,
-      password,
-      bio,
-      avatar,
-      referralCode,
-      avatarMethod,
-      recaptchaToken
-    };
-
-    const res = await axios.post('/user', body);
-    dispatch({ type: END_LOADING });
-
-    if (res.data.success) {
-      dispatch({ type: SET_USERNAME_PASSWORD, payload: { password } });
-      dispatch(setReferralCode(referralCode));
-      return handleActionSuccess(res.data, 'Account created successfully');
-    } else {
-      dispatch({ type: REGISTER_FAIL });
-      dispatch({ type: MSG_ERROR, payload: res.data.error });
-      return { status: 'failed', error: res.data.error };
-    }
-  } catch (err) {
-    dispatch({ type: END_LOADING });
-    return handleActionError(dispatch, err, 'Registration failed');
-  }
-};
-
-export const userSignIn = (body) => async (dispatch) => {
-  try {
-    const res = await axios.post('/auth', body);
-    dispatch({ type: END_LOADING });
-
-    if (res.data.success) {
-      setAuthToken(res.data.token);
-      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
-      dispatch({ type: MSG_SUCCESS, payload: res.data.message });
-      return handleActionSuccess(res.data, res.data.message);
-    } else {
-      dispatch({ type: LOGIN_FAIL });
-      return { status: 'failed' };
-    }
-  } catch (err) {
-    return handleActionError(dispatch, err, 'Login failed');
-  }
-};
 
 export const userSignOut = (clear_token = true, navigate) => async (dispatch) => {
   try {
@@ -135,7 +76,7 @@ export const userSignOut = (clear_token = true, navigate) => async (dispatch) =>
       }
 
       dispatch({ type: LOGOUT });
-      if (navigate) navigate('/');
+
       dispatch({ type: MSG_SUCCESS, payload: data.message });
 
       return { success: true };
@@ -192,18 +133,31 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
   try {
     dispatch({ type: START_LOADING });
 
+    // Add request timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const res = await axios.post('/auth/privy', {
       privyId: privyUser.id,
       email: privyUser.email?.address,
       wallet: privyUser.wallet?.address,
+    }, {
+      signal: controller.signal,
+      timeout: 10000
     });
 
+    clearTimeout(timeoutId);
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
       const token = res.data.token;
-      localStorage.setItem('token', token);
-      localStorage.setItem('isAuthenticated', '1');
+      
+      // Batch localStorage operations
+      requestIdleCallback(() => {
+        localStorage.setItem('token', token);
+        localStorage.setItem('isAuthenticated', '1');
+      });
+      
       setAuthToken(token);
 
       dispatch({
@@ -221,34 +175,15 @@ export const authenticateWithPrivy = (privyUser) => async (dispatch) => {
     }
   } catch (err) {
     dispatch({ type: END_LOADING });
+    
+    if (err.name === 'AbortError') {
+      return handleActionError(dispatch, err, 'Authentication timeout - please try again');
+    }
+    
     return handleActionError(dispatch, err, 'Privy authentication failed');
   }
 };
 
-export const authenticateWithGoogle = (token) => async (dispatch) => {
-  try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.post('/auth/google', { token });
-    dispatch({ type: END_LOADING });
-
-    if (res.data.success) {
-      setAuthToken(res.data.token);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('isAuthenticated', '1');
-
-      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
-      dispatch({ type: MSG_SUCCESS, payload: res.data.message });
-      return handleActionSuccess({ user: res.data.user }, res.data.message);
-    } else {
-      dispatch({ type: LOGIN_FAIL });
-      dispatch({ type: MSG_ERROR, payload: res.data.error });
-      return { status: 'failed' };
-    }
-  } catch (err) {
-    dispatch({ type: END_LOADING });
-    return handleActionError(dispatch, err, 'Google authentication failed');
-  }
-};
 
 // USER DATA ACTIONS
 export const getUser = () => async (dispatch) => {
