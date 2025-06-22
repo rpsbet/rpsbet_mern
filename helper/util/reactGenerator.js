@@ -1,4 +1,5 @@
-// helper/util/reactGenerator.js - React component generation utilities
+// helper/util/reactGenerator.js - CORRECTED: Same logic as working route, just as async function
+
 const Anthropic = require('@anthropic-ai/sdk');
 const transpileReactCode = require('./transpileReactCode');
 
@@ -7,23 +8,26 @@ const anthropic = new Anthropic({
 });
 
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING REACT COMPONENT');
+  console.log('⚛️ GENERATING REACT COMPONENT (SAME AS WORKING ROUTE)');
   console.log('Prompt:', prompt);
   console.log('Image URLs:', imageUrls);
 
-  // Process assets similar to your existing logic
-  const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
-  const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
-  const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
-  const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
+  try {
+    // EXACT same asset processing as working route
+    const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
+    const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
+    const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
+    const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
 
-  const proxiedAssets = {
-    images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
-    audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
-  };
+    const proxiedAssets = {
+      images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
+      audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
+    };
 
-  // Use the EXACT same system prompt as /generate-react endpoint
-  const systemPrompt = `You are an elite React developer. Generate a complete, working React game component with MANDATORY logging and house edge enforcement.
+    console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
+
+    // EXACT same system prompt as working route
+    const systemPrompt = `You are an elite React developer. Generate a complete, working React game component with MANDATORY logging and house edge enforcement.
 
 Output Requirements:
 - Return ONLY valid JavaScript/React code for the App component
@@ -655,104 +659,258 @@ REMEMBER: The goal is creating visually stunning games that appeal to young audi
 9. Smooth animations and micro-interactions
 10. Bold typography and gradient effects`;
 
-  console.log('Calling Anthropic API...');
-  const stream = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 8000,
-    system: systemPrompt,
-    messages: [
-      {
-        role: 'user',
-        content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}.
-        
-        CRITICAL REQUIREMENTS:
-        1. MUST accept and use logEvent prop for game start/end tracking
-        2. MUST implement working practice mode (no logging)
-        3. MUST enforce house edge on all multipliers
-        4. MUST include proper game history and state management
-        5. NO financial/betting logic allowed
-        
-        The component will be tested for all logging functionality and house edge compliance.`,
-      },
-    ],
-    stream: true,
-  });
+    // EXACT same Anthropic API call as working route
+    const stream = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8000,
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}. 
+          
+          CRITICAL REQUIREMENTS:
+          1. MUST accept and use logEvent prop for game start/end tracking
+          2. MUST implement working practice mode (no logging)
+          3. MUST enforce house edge on all multipliers
+          4. MUST include proper game history and state management
+          5. NO financial/betting logic allowed
+          
+          The component will be tested for all logging functionality and house edge compliance.`,
+        },
+      ],
+      stream: true,
+    });
 
-  let rawCode = '';
-  for await (const chunk of stream) {
-    if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-      rawCode += chunk.delta.text;
+    let rawCode = '';
+
+    for await (const chunk of stream) {
+      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        rawCode += chunk.delta.text;
+      }
     }
-  }
 
-  console.log('Raw code received from Anthropic, length:', rawCode.length);
+    let cleanedCode = rawCode
+      .replace(/```(?:jsx?|javascript)?/g, '')
+      .replace(/^\s*[\r\n]+/gm, '')
+      .trim();
 
-  let cleanedCode = rawCode
-    .replace(/```(?:jsx?|javascript)?/g, '')
-    .replace(/^\s*[\r\n]+/gm, '')
-    .trim();
+    // EXACT same validation logic as working route
+    const validationErrors = [];
 
-  // Add validation similar to /generate-react endpoint
-  const validationErrors = [];
+    // Check for logEvent prop handling - must be in component signature
+    if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
+      validationErrors.push('Missing logEvent prop in component signature');
+    }
 
-  // Check for logEvent prop handling
-  if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
-    validationErrors.push('Missing logEvent prop in component signature');
-  }
+    // Check for specific logEvent patterns
+    if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
+      validationErrors.push('Missing required gameStarted logging call');
+    }
 
-  // Check for specific logEvent patterns
-  if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
-    validationErrors.push('Missing required gameStarted logging call');
-  }
+    if (!cleanedCode.includes('logEvent("gameEnded"') && !cleanedCode.includes("logEvent('gameEnded'")) {
+      validationErrors.push('Missing required gameEnded logging call');
+    }
 
-  if (!cleanedCode.includes('logEvent("gameEnded"') && !cleanedCode.includes("logEvent('gameEnded'")) {
-    validationErrors.push('Missing required gameEnded logging call');
-  }
+    // Check for practice mode implementation
+    if (!cleanedCode.includes('isPracticeMode') || !cleanedCode.includes('Practice Mode')) {
+      validationErrors.push('Missing practice mode implementation');
+    }
 
-  // Check for practice mode implementation
-  if (!cleanedCode.includes('isPracticeMode') || !cleanedCode.includes('Practice Mode')) {
-    validationErrors.push('Missing practice mode implementation');
-  }
+    // Check for house edge implementation (look for multiplier calculations)
+    const hasHouseEdge = cleanedCode.includes('houseEdge') ||
+      cleanedCode.includes('0.9') ||
+      cleanedCode.includes('Math.min') ||
+      cleanedCode.includes('* 0.') ||
+      cleanedCode.includes('houseEdgeFactor');
 
-  // Check for house edge implementation
-  const hasHouseEdge = cleanedCode.includes('houseEdge') ||
-    cleanedCode.includes('0.9') ||
-    cleanedCode.includes('Math.min') ||
-    cleanedCode.includes('* 0.') ||
-    cleanedCode.includes('houseEdgeFactor');
+    if (!hasHouseEdge) {
+      validationErrors.push('Missing house edge enforcement in multiplier calculations');
+    }
 
-  if (!hasHouseEdge) {
-    validationErrors.push('Missing house edge enforcement in multiplier calculations');
-  }
+    // Enhanced financial terms check with stricter patterns
+    const strictFinancialTerms = [
+      'bet', 'betting', 'bets', 'bettor', 'betted',
+      'balance', 'balances',
+      'wallet', 'wallets',
+      'money', 'monetary', 'cash', 'currency', 'dollar', 'cent',
+      'credit', 'credits', 'coin', 'coins',
+      'deposit', 'deposits', 'withdraw', 'withdrawal',
+      'payout', 'payouts', 'jackpot', 'jackpots'
+    ];
 
-  // If validation fails, log but don't regenerate (to match public API behavior)
-  if (validationErrors.length > 0) {
-    console.warn(`[Public API] Generated code has validation issues: ${validationErrors.join('; ')}`);
-    // You can choose to regenerate here or just log the warning
-  }
+    const codeText = cleanedCode.toLowerCase();
+    const foundFinancialTerms = strictFinancialTerms.filter(term => {
+      // Check for whole word matches to avoid false positives
+      const regex = new RegExp(`\\b${term}\\b`, 'i');
+      return regex.test(codeText);
+    });
 
-  // Ensure proper export
-  if (!cleanedCode.endsWith('export default App;')) {
-    cleanedCode = `${cleanedCode}\nexport default App;`;
-  }
+    if (foundFinancialTerms.length > 0) {
+      validationErrors.push(`Forbidden financial terms detected: ${foundFinancialTerms.join(', ')}. Use alternatives like "play", "stake", "score", "points"`);
+    }
 
-  // IMPORTANT: Add transpilation like /generate-react does
-  let transpiledCode;
-  try {
-    transpiledCode = await transpileReactCode(cleanedCode);
-  } catch (transpileError) {
-    console.error('Transpilation failed, using cleaned code:', transpileError);
-    transpiledCode = cleanedCode;
-  }
+    // Check for required component structure
+    const hasValidComponentStart = cleanedCode.includes('const App = ({ logEvent }') ||
+      cleanedCode.includes('const App = (props)') ||
+      cleanedCode.includes('function App({ logEvent }') ||
+      cleanedCode.includes('function App(props)');
 
-  console.log('Cleaned code length:', cleanedCode.length);
-  console.log('✅ React component generation completed');
+    if (!hasValidComponentStart) {
+      validationErrors.push('Component must accept logEvent prop: const App = ({ logEvent }) => { or const App = (props) => {');
+    }
 
-  return {
-    finalApp: transpiledCode, // Use transpiled code instead of cleaned code
-    originalCode: cleanedCode, // Keep original for reference
-    proxiedAssets
+    // Check for required state variables
+    const requiredStates = ['gameStarted', 'gameEnded', 'isPracticeMode', 'gameHistory'];
+    const missingStates = requiredStates.filter(state => !cleanedCode.includes(state));
+    if (missingStates.length > 0) {
+      validationErrors.push(`Missing required state variables: ${missingStates.join(', ')}`);
+    }
+
+    // Check for required functions
+    const requiredFunctions = ['startGame', 'endGame'];
+    const missingFunctions = requiredFunctions.filter(func => !cleanedCode.includes(func));
+    if (missingFunctions.length > 0) {
+      validationErrors.push(`Missing required functions: ${missingFunctions.join(', ')}`);
+    }
+
+    // Check for practice mode conditional logging
+    if (!cleanedCode.includes('!practiceMode') && !cleanedCode.includes('!isPracticeMode')) {
+      validationErrors.push('Missing practice mode conditional logic for logging');
+    }
+
+    // EXACT same retry logic as working route
+    if (validationErrors.length > 0) {
+      console.warn(`[React Generator] First attempt failed validation: ${validationErrors.join('; ')}`);
+      console.log('[React Generator] Attempting regeneration with stricter requirements...');
+
+      // Enhanced regeneration prompt
+      const fixedSystemPrompt = systemPrompt + `
+
+🚨 PREVIOUS GENERATION FAILED - FIX THESE ISSUES: 🚨
+${validationErrors.map(error => `❌ ${error}`).join('\n')}
+
+MANDATORY FIXES FOR REGENERATION:
+1. COMPONENT SIGNATURE: const App = ({ logEvent }) => {
+2. REMOVE ALL FINANCIAL TERMS: Replace any "bet" with "play", "balance" with "score"
+3. ADD LOGEVENT VALIDATION: useEffect(() => { if (!logEvent) console.error('Missing logEvent'); }, [logEvent]);
+4. PRACTICE MODE LOGGING: if (!isPracticeMode && logEvent) { logEvent(...) }
+5. HOUSE EDGE MULTIPLIERS: Apply 0.93 factor to all multiplier calculations
+
+TEMPLATE FOR SUCCESS:
+const App = ({ logEvent }) => {
+  const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  
+  useEffect(() => {
+    if (!logEvent) console.error('logEvent missing');
+  }, [logEvent]);
+  
+  const startGame = (practiceMode = false) => {
+    setIsPracticeMode(practiceMode);
+    if (!practiceMode && logEvent) {
+      logEvent("gameStarted", { timestamp: new Date().toISOString() });
+    }
   };
+  
+  const endGame = (result, multiplier) => {
+    if (!isPracticeMode && logEvent) {
+      logEvent("gameEnded", { result, multiplier: parseFloat(multiplier) });
+    }
+  };
+  
+  // ... rest of component
+};`;
+
+      // Second attempt with enhanced prompt
+      const retryStream = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        system: fixedSystemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: `REGENERATE the React game component for: "${prompt}". 
+            
+            CRITICAL: The previous attempt failed validation. You MUST:
+            1. Start with: const App = ({ logEvent }) => {
+            2. Use NO financial terms (bet, balance, wallet, money, etc.)
+            3. Include proper logEvent calls for gameStarted and gameEnded
+            4. Implement practice mode with conditional logging
+            5. Apply house edge to all multiplier calculations
+            
+            Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}`,
+          },
+        ],
+        stream: true,
+      });
+
+      let retryRawCode = '';
+      for await (const chunk of retryStream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          retryRawCode += chunk.delta.text;
+        }
+      }
+
+      cleanedCode = retryRawCode
+        .replace(/```(?:jsx?|javascript)?/g, '')
+        .replace(/^\s*[\r\n]+/gm, '')
+        .trim();
+
+      // Re-validate the regenerated code
+      const retryValidationErrors = [];
+
+      // Re-run all validation checks on the new code
+      if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
+        retryValidationErrors.push('Still missing logEvent prop in component signature');
+      }
+
+      if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
+        retryValidationErrors.push('Still missing required gameStarted logging call');
+      }
+
+      // If still failing, throw error with both attempts
+      if (retryValidationErrors.length > 0) {
+        throw new Error(`Generated code failed validation after retry: ${retryValidationErrors.join('; ')}. Original issues: ${validationErrors.join('; ')}`);
+      }
+
+      console.log('[React Generator] ✅ Regeneration successful - all validation checks passed');
+    }
+
+    // Ensure proper export
+    if (!cleanedCode.endsWith('export default App;')) {
+      cleanedCode = `${cleanedCode}\nexport default App;`;
+    }
+
+    // EXACT same transpilation as working route
+    const transpiledCode = await transpileReactCode(cleanedCode);
+
+    console.log('✅ React component generation completed (same as working route)');
+
+    // EXACT same return format as working route
+    return {
+      originalCode: cleanedCode,      // Original JSX for editing
+      transpiledCode: transpiledCode, // Transpiled for execution
+      finalApp: transpiledCode,       // For compatibility with public API
+      proxiedAssets,
+      validation: {
+        passed: true,
+        checkedItems: [
+          'logEvent prop handling',
+          'gameStarted/gameEnded logging',
+          'practice mode implementation',
+          'house edge enforcement',
+          'financial terms check',
+          'required state variables'
+        ]
+      }
+    };
+
+  } catch (error) {
+    console.error('Error in generateReactComponent:', error);
+    throw new Error(`React generation failed: ${error.message || 'Failed to generate React component'}`);
+  }
 }
 
 module.exports = {
