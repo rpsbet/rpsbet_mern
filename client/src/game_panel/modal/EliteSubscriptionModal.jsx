@@ -326,7 +326,7 @@ function EliteSubscriptionModal({
                 <Card sx={{ ...cardBaseSx, bgcolor: themeColors.backgroundSecondary, borderColor: user?.elite === 'red' ? themeColors.redPlan.main : themeColors.borderColor }}>
                   {user?.elite === 'red' && <Chip label="CURRENT" size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: themeColors.redPlan.main, color: themeColors.redPlan.contrastText, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, height: '18px' }} />}
                   <Box sx={{ ...cardHeaderBaseSx, background: themeColors.redPlan.headerGradient }}>
-                    <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'hue-rotate(132deg)' }}>
+                    {/* <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'hue-rotate(132deg)' }}>
                       <VerifiedIcon
                         sx={{
                           position: 'absolute',
@@ -339,7 +339,7 @@ function EliteSubscriptionModal({
                           borderRadius: '50%', // Make it circular
                         }}
                       />
-                    </Box>
+                    </Box> */}
                     <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Red Elite</Typography>
                   </Box>
                   <CardContent sx={{ p: 1.5, flexGrow: 1 }}>
@@ -402,7 +402,7 @@ function EliteSubscriptionModal({
                   {(!user?.elite || user?.elite === 'red') && <Chip icon={<StarIcon sx={{ fontSize: '0.8rem !important' }} />} label="POPULAR" size="small" sx={{ position: 'absolute', top: 8, left: 8, bgcolor: themeColors.chipPopularBg, color: themeColors.textPrimary, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, '& .MuiChip-icon': { color: themeColors.textPrimary, ml: '3px', height: '18px' } }} />}
                   {user?.elite === 'black' && <Chip label="CURRENT" size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: themeColors.blackPlan.main, color: themeColors.blackPlan.contrastText, fontWeight: 'bold', fontSize: '0.65rem', zIndex: 1, height: '18px' }} />}
                   <Box sx={{ ...cardHeaderBaseSx, background: themeColors.blackPlan.headerBg }}>
-                    <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'grayscale(1)' }}>
+                    {/* <Box sx={{ width: '50px', alignItems: 'center', display: 'flex', justifyContent: 'center', margin: '0 auto 8px', filter: 'grayscale(1)' }}>
                       <VerifiedIcon
                         sx={{
                           position: 'absolute',
@@ -415,7 +415,7 @@ function EliteSubscriptionModal({
                           borderRadius: '50%', // Make it circular
                         }}
                       />
-                    </Box>
+                    </Box> */}
                     <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold', color: themeColors.blackPlan.headerText }}>Black Elite</Typography>
                   </Box>
                   <CardContent sx={{ p: 1.5, flexGrow: 1 }}>

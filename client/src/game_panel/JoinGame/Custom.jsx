@@ -16,7 +16,7 @@ import {
   Box, Slider, Avatar, Chip, Card, Fade, Dialog, DialogContent, DialogContentText,
   DialogActions, DialogTitle, Grid, Divider, Collapse, IconButton, Container,
   Table, TableBody, TableCell, TableHead, TableRow, Badge, Snackbar, Alert,
-  Zoom, Grow, CardContent, CardActions, TableContainer, Checkbox, Modal, FormControlLabel,
+  Zoom, Grow, CardContent, CardActions, TableContainer, LinearProgress, Modal, FormControlLabel,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { convertToCurrency } from '../../util/conversion';
@@ -595,7 +595,7 @@ function Custom(props) {
   // FIXED: Solana deposit handler - now only called when game starts
   const processSolDeposit = useCallback(async () => {
     console.log('[Custom] Processing SOL deposit for game start...');
-    
+
     if (hasDepositedRef.current) {
       console.log('[Custom] Deposit already processed for this game session, skipping.');
       return true;
@@ -780,7 +780,7 @@ function Custom(props) {
   }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange, blockGamePanel, unblockGamePanel]);
 
   // FIXED: Updated logEvent to handle deposit on gameStarted and direct join on gameEnded
-  const logEvent = useCallback((eventType, data) => {
+  const logEvent = useCallback((eventType, data, options = {}) => {
     if (playSound) {
       playSound('select');
     }
@@ -797,6 +797,10 @@ function Custom(props) {
       // For creators: skip deposit but allow game to run
       if (isCreator) {
         console.log('[Custom] Creator mode - skipping deposit');
+        // Immediately call success callback for creators
+        if (options.onDepositSuccess) {
+          setTimeout(() => options.onDepositSuccess(), 100);
+        }
         return;
       }
 
@@ -805,8 +809,22 @@ function Custom(props) {
       processSolDeposit().then(success => {
         if (success) {
           console.log('[Custom] Deposit successful, game can proceed');
+          // Call success callback to notify game component
+          if (options.onDepositSuccess) {
+            options.onDepositSuccess();
+          }
         } else {
           console.log('[Custom] Deposit failed, game cannot proceed');
+          // Call failure callback to notify game component
+          if (options.onDepositFailed) {
+            options.onDepositFailed();
+          }
+        }
+      }).catch(error => {
+        console.error('[Custom] Deposit error:', error);
+        // Call failure callback on error
+        if (options.onDepositFailed) {
+          options.onDepositFailed();
         }
       });
 
@@ -843,7 +861,7 @@ function Custom(props) {
 
         if (hasValidDeposit || hasDepositedRef.current) {
           console.log('[Custom] Game ended - calling join with result:', result, 'multiplier:', multiplier);
-          
+
           // Call join directly with the game result
           joinGame(result, multiplier).then(() => {
             // Clear deposit status after successful bet processing
@@ -874,7 +892,6 @@ function Custom(props) {
       }
     }
   }, [isCreator, playSound, onResultChange, roomInfo._id, gameState.depositStatus, gameState.gameStartedCount, processSolDeposit, joinGame]);
-
   // Game code processing - optimized with useMemo
   const processedGameCode = useMemo(() => {
     if (!roomInfo.gameCode || !Physics || isPhysicsLoading) {
@@ -890,7 +907,7 @@ function Custom(props) {
         return componentFactory(
           React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
           Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
-          Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+          Collapse, DialogContent, DialogTitle, LinearProgress, CircularProgress, logEvent, FontAwesomeIcon,
           TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
           faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
           faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,

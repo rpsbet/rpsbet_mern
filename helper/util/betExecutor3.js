@@ -464,7 +464,7 @@ const validateUserDeposit = async (user, roomId, betAmount) => {
       };
     }
 
-    console.log(`✅ Valid deposit found: ${depositAmount} SOL for user ${user._id}, room ${roomId}`);
+    // console.log(`✅ Valid deposit found: ${depositAmount} SOL for user ${user._id}, room ${roomId}`);
     return { success: true };
 
   } catch (error) {
@@ -585,7 +585,6 @@ const addToQueue = async (req, bot = false) => {
         newTransactionJ,
         newGameLog
       );
-console.log('customResult', customResult);
       game_result = customResult.game_result;
       newTransactionAmount = customResult.newTransactionAmount;
       bet_item = customResult.bet_item;

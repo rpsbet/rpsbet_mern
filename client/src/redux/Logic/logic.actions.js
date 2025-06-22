@@ -600,9 +600,9 @@ export const generateReactGameFromPrompt = (
       clearTimeout(progressInterval);
     }
 
-    // Backend now returns both original and transpiled code
-    const { transpiledCode, proxiedAssets } = response.data;
 
+    const { transpiledCode, proxiedAssets } = response.data;
+console.log(transpiledCode)
     // Use transpiled code for execution
     setGameCode(transpiledCode);
     setProxiedAssets(proxiedAssets);
