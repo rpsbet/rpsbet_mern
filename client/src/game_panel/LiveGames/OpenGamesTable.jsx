@@ -107,10 +107,10 @@ const MobileOptimizedSkeleton = React.memo(({ isError, error, onRetry }) => (
 ));
 
 // Updated AdvancedSearch component - now only handles expanded content
-const AdvancedSearch = React.memo(({ 
-  gameTypeSearch, 
-  setGameTypeSearch, 
-  onSearch, 
+const AdvancedSearch = React.memo(({
+  gameTypeSearch,
+  setGameTypeSearch,
+  onSearch,
   isSearchMode,
   onClearSearch,
   effectiveIsDarkMode,
@@ -140,10 +140,10 @@ const AdvancedSearch = React.memo(({
 
   return (
     <Collapse in={isExpanded}>
-      <Box sx={{ 
-        mt: 2, 
-        p: 2, 
-        border: '1px solid rgba(255, 255, 255, 0.1)', 
+      <Box sx={{
+        mt: 2,
+        p: 2,
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         backgroundColor: 'rgba(255, 255, 255, 0.02)'
       }}>
@@ -246,9 +246,9 @@ const AdvancedSearch = React.memo(({
         </Box>
 
         {isSearchMode && (
-          <Typography variant="caption" sx={{ 
-            display: 'block', 
-            mt: 2, 
+          <Typography variant="caption" sx={{
+            display: 'block',
+            mt: 2,
             color: 'rgba(255, 255, 255, 0.6)',
             fontSize: '0.7rem'
           }}>
@@ -307,7 +307,7 @@ function OpenGamesTable(props) {
 
   // Mobile detection
   const isMobile = useMemo(() => window.innerWidth <= 768, []);
-  
+
   // Local state
   const [selectedGameType, setSelectedGameType] = useState('All');
   const [gameTypeSearch, setGameTypeSearch] = useState('');
@@ -421,19 +421,19 @@ function OpenGamesTable(props) {
   // Handlers
   const handleGameTypeChange = useCallback((gameType) => {
     if (gameType === selectedGameType) return;
-    
+
     setSelectedGameType(gameType);
     setGameTypeSearch('');
-    dispatch(getRoomIds({ 
-      game_type: gameType, 
+    dispatch(getRoomIds({
+      game_type: gameType,
       page: 1,
       sort_by: sortBy !== 'default' ? sortBy : undefined
     }));
   }, [dispatch, selectedGameType, sortBy]);
 
   const handleAdvancedSearch = useCallback((query) => {
-    dispatch(searchRooms({ 
-      query, 
+    dispatch(searchRooms({
+      query,
       game_type: selectedGameType !== 'All' ? selectedGameType : undefined,
       page: 1,
       sort_by: sortBy !== 'default' ? sortBy : undefined
@@ -441,8 +441,8 @@ function OpenGamesTable(props) {
   }, [dispatch, selectedGameType, sortBy]);
 
   const handleClearSearch = useCallback(() => {
-    dispatch(getRoomIds({ 
-      game_type: selectedGameType, 
+    dispatch(getRoomIds({
+      game_type: selectedGameType,
       page: 1,
       sort_by: sortBy !== 'default' ? sortBy : undefined
     }));
@@ -450,18 +450,18 @@ function OpenGamesTable(props) {
 
   const handleSortChange = useCallback((newSortBy) => {
     setSortBy(newSortBy);
-    
+
     // Trigger new fetch with sorting
     if (isSearchMode) {
-      dispatch(searchRooms({ 
+      dispatch(searchRooms({
         query: searchQuery,
         game_type: selectedGameType !== 'All' ? selectedGameType : undefined,
         page: 1,
         sort_by: newSortBy !== 'default' ? newSortBy : undefined
       }));
     } else {
-      dispatch(getRoomIds({ 
-        game_type: selectedGameType, 
+      dispatch(getRoomIds({
+        game_type: selectedGameType,
         page: 1,
         sort_by: newSortBy !== 'default' ? newSortBy : undefined
       }));
@@ -478,15 +478,15 @@ function OpenGamesTable(props) {
 
   const handlePageChange = useCallback((event, page) => {
     if (isSearchMode) {
-      dispatch(searchRooms({ 
+      dispatch(searchRooms({
         query: searchQuery,
         game_type: selectedGameType !== 'All' ? selectedGameType : undefined,
         page,
         sort_by: sortBy !== 'default' ? sortBy : undefined
       }));
     } else {
-      dispatch(getRoomIds({ 
-        game_type: selectedGameType, 
+      dispatch(getRoomIds({
+        game_type: selectedGameType,
         page,
         sort_by: sortBy !== 'default' ? sortBy : undefined
       }));
@@ -577,7 +577,6 @@ function OpenGamesTable(props) {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '16px',
               gap: '8px',
               flexWrap: { xs: 'wrap', sm: 'nowrap' },
             }}
@@ -588,19 +587,16 @@ function OpenGamesTable(props) {
                 display: 'flex',
                 justifyContent: 'flex-start',
                 gap: '8px',
-                overflowX: { xs: 'auto', sm: 'visible' },
-                flexWrap: { xs: 'nowrap', sm: 'wrap' },
-                whiteSpace: { xs: 'nowrap', sm: 'normal' },
+                overflowX: 'auto', // Enable horizontal scroll for all screen sizes
+                flexWrap: 'nowrap', // Prevent wrapping for all screen sizes
                 WebkitOverflowScrolling: 'touch',
-                scrollbarWidth: { xs: 'thin', sm: 'none' },
                 flex: 1,
                 minWidth: 0,
+                // Hide scrollbar for all browsers and screen sizes
+                scrollbarWidth: 'none', // Firefox
                 '&::-webkit-scrollbar': {
-                  height: { xs: '4px', sm: '0px' },
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: { xs: 'rgba(0, 0, 0, 0.15)', sm: 'transparent' },
-                  borderRadius: '2px',
+                  height: '0px', // Chrome, Safari, Edge
+                  display: 'none',
                 },
               }}
             >
@@ -610,11 +606,18 @@ function OpenGamesTable(props) {
                 color={selectedGameType === 'All' ? 'error' : 'default'}
                 variant={selectedGameType === 'All' ? 'filled' : 'outlined'}
                 clickable
-                size={isMobile ? 'small' : 'medium'}
+                size="small" // Force small size for all screen sizes
                 sx={{
                   fontWeight: 600,
-                  letterSpacing: '0.5px',
-                  fontSize: isMobile ? '0.7rem' : '0.875rem',
+                  letterSpacing: '0.3px', // Reduced from 0.5px
+                  fontSize: '0.7rem', // Smaller font for all screen sizes
+                  height: '24px', // Fixed compact height
+                  minWidth: 'auto', // Allow chips to be narrower
+                  borderRadius: '12px', // More compact border radius
+                  '& .MuiChip-label': {
+                    padding: '0 8px', // Reduced horizontal padding
+                    lineHeight: 1,
+                  },
                   '&:hover': {
                     transform: 'translateY(-1px)',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.12)',
@@ -630,11 +633,18 @@ function OpenGamesTable(props) {
                   color={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'error' : 'default'}
                   variant={selectedGameType.toLowerCase() === gameType.toLowerCase() ? 'filled' : 'outlined'}
                   clickable
-                  size={isMobile ? 'small' : 'medium'}
+                  size="small" // Force small size for all screen sizes
                   sx={{
                     fontWeight: 600,
-                    letterSpacing: '0.5px',
-                    fontSize: isMobile ? '0.7rem' : '0.875rem',
+                    letterSpacing: '0.3px', // Reduced from 0.5px
+                    fontSize: '0.7rem', // Smaller font for all screen sizes
+                    height: '24px', // Fixed compact height
+                    minWidth: 'auto', // Allow chips to be narrower
+                    borderRadius: '12px', // More compact border radius
+                    '& .MuiChip-label': {
+                      padding: '0 8px', // Reduced horizontal padding
+                      lineHeight: 1,
+                    },
                     '&:hover': {
                       transform: 'translateY(-1px)',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.12)',
@@ -824,10 +834,10 @@ function OpenGamesTable(props) {
                               <img
                                 src={row.image}
                                 alt={row.name}
-                                style={{ 
-                                  width: isMobile ? 20 : 28, 
-                                  height: isMobile ? 20 : 28, 
-                                  objectFit: 'cover' 
+                                style={{
+                                  width: isMobile ? 20 : 28,
+                                  height: isMobile ? 20 : 28,
+                                  objectFit: 'cover'
                                 }}
                               />
                             </Box>
@@ -1068,10 +1078,10 @@ function OpenGamesTable(props) {
 
               {/* Pagination Controls */}
               {pagination && pagination.totalPages > 1 && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  mt: 4, 
+                <Box sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  mt: 4,
                   mb: 2,
                   flexDirection: { xs: 'column', sm: 'row' },
                   alignItems: 'center',
@@ -1090,7 +1100,7 @@ function OpenGamesTable(props) {
                           onClick={handleLoadMore}
                           disabled={effectiveLoading}
                           size="small"
-                          sx={{ 
+                          sx={{
                             fontSize: '0.75rem',
                             px: 3,
                             py: 1

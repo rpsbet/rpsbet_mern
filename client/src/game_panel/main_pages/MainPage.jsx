@@ -42,10 +42,10 @@ const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModa
 
 // Constants
 const SUGGESTED_PROMPTS = [
-  "Create a dice roll game",
-  "Create a pokemon-battling game where player wins 2x if they beat the house",
-  "Make a stock-simulator game where user starts with $50k balance and add 3 stocks to choose from that fluctuate in price, user has to select one and sell at the right time, whatever they win compared to original is their multiplier.",
-  "Rig a game of chance",
+  "Create a blackjack game where I play against the dealer - hit, stand, double down, with realistic card counting",
+  "Build a 3-reel slot machine with cherries, bells, and sevens - pull the lever and match symbols to win big",
+  "Make a Pokemon battle arena where I choose my fighter and battle the computer - winner takes 2x the bet",
+  "Create a rocket crash game where a rocket flies higher with increasing multipliers - cash out before it explodes",
 ];
 
 const MOBILE_TABS = {
@@ -289,7 +289,7 @@ const CreateRoomPanel = ({
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                maxWidth: { xs: '120px', sm: '150px' },
+                maxWidth: { xs: '120px', sm: '178px' },
                 '& .MuiChip-label': {
                   padding: '0 8px',
                   overflow: 'hidden',
