@@ -1,4 +1,4 @@
-// helper/util/reactGenerator.js - CORRECTED: Same logic as working route, just as async function
+// helper/util/reactGenerator.js - FIXED VERSION with robust code generation and cleaning
 
 const Anthropic = require('@anthropic-ai/sdk');
 const transpileReactCode = require('./transpileReactCode');
@@ -7,13 +7,253 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Enhanced code cleaning and validation function
+function cleanAndValidateCode(rawCode) {
+  console.log('🧹 CLEANING AND VALIDATING GENERATED CODE');
+  console.log('Raw code length:', rawCode.length);
+  
+  // Step 1: Basic cleanup
+  let cleanedCode = rawCode
+    .replace(/```(?:jsx?|javascript|react)?/gi, '') // Remove code blocks
+    .replace(/^\s*[\r\n]+/gm, '') // Remove empty lines at start
+    .trim();
+
+  // Step 2: Remove any explanatory text before or after the code
+  // Find the actual component start
+  const componentStartRegex = /(import React[^;]*;[\s\S]*?)?(const App\s*=|function App\s*\()/;
+  const componentMatch = cleanedCode.match(componentStartRegex);
+  
+  if (componentMatch) {
+    const startIndex = cleanedCode.indexOf(componentMatch[0]);
+    cleanedCode = cleanedCode.substring(startIndex);
+  }
+
+  // Step 3: Remove any trailing explanatory text after export
+  const exportMatch = cleanedCode.match(/(export\s+default\s+App;)/);
+  if (exportMatch) {
+    const exportIndex = cleanedCode.indexOf(exportMatch[0]);
+    const exportEnd = exportIndex + exportMatch[0].length;
+    cleanedCode = cleanedCode.substring(0, exportEnd);
+  }
+
+  // Step 4: Critical fix - remove any stray "App;" statements
+  cleanedCode = cleanedCode.replace(/^\s*App;\s*$/gm, '');
+  cleanedCode = cleanedCode.replace(/\}\s*App;\s*$/gm, '}');
+  cleanedCode = cleanedCode.replace(/App;\s*export/g, 'export');
+
+  // Step 5: Fix incomplete JSX syntax issues
+  const lines = cleanedCode.split('\n');
+  const fixedLines = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Skip empty lines with just "App;"
+    if (line.trim() === 'App;') {
+      console.log(`🗑️ Removing stray "App;" statement at line ${i + 1}`);
+      continue;
+    }
+    
+    // Fix incomplete sx props (the specific issue from your error)
+    if (line.includes('sx={{') && !line.includes('}}')) {
+      // Check if this is an incomplete prop that's causing the syntax error
+      if (line.trim().endsWith(',') && i < lines.length - 1) {
+        const nextLine = lines[i + 1];
+        // If next line looks like "App;" or similar incomplete syntax, fix it
+        if (nextLine.trim() === 'App;' || nextLine.trim() === '' || nextLine.trim() === '}') {
+          console.log(`🔧 Fixing incomplete sx prop at line ${i + 1}`);
+          // Close the sx prop properly
+          fixedLines.push(line.replace(/,\s*$/, ''));
+          fixedLines.push('  }}');
+          // Skip the problematic next line
+          if (lines[i + 1] && lines[i + 1].trim() === 'App;') {
+            i++; // Skip the "App;" line
+          }
+          continue;
+        }
+      }
+    }
+    
+    fixedLines.push(line);
+  }
+  
+  cleanedCode = fixedLines.join('\n');
+
+  // Step 6: Ensure proper component structure
+  if (!cleanedCode.includes('const App = ') && !cleanedCode.includes('function App')) {
+    throw new Error('Generated code does not contain a valid App component declaration');
+  }
+
+  // Step 7: Ensure proper export (but not duplicate)
+  if (!cleanedCode.includes('export default App')) {
+    cleanedCode = cleanedCode.trim();
+    // Make sure the last line ends properly
+    if (!cleanedCode.endsWith(';') && !cleanedCode.endsWith('}')) {
+      cleanedCode += ';';
+    }
+    cleanedCode += '\n\nexport default App;';
+  } else {
+    // Remove any duplicate exports
+    const exportLines = cleanedCode.split('\n').filter(line => line.includes('export default App'));
+    if (exportLines.length > 1) {
+      // Remove all exports and add one at the end
+      cleanedCode = cleanedCode.replace(/export\s+default\s+App;?\s*/g, '');
+      cleanedCode = cleanedCode.trim() + '\n\nexport default App;';
+    }
+  }
+
+  // Step 8: Final syntax validation
+  const openBraces = (cleanedCode.match(/{/g) || []).length;
+  const closeBraces = (cleanedCode.match(/}/g) || []).length;
+  const openParens = (cleanedCode.match(/\(/g) || []).length;
+  const closeParens = (cleanedCode.match(/\)/g) || []).length;
+
+  console.log(`🔍 Syntax check: Braces ${openBraces}/${closeBraces}, Parentheses ${openParens}/${closeParens}`);
+
+  // Try to auto-fix simple brace mismatches
+  if (openBraces > closeBraces) {
+    const diff = openBraces - closeBraces;
+    console.log(`🔧 Auto-fixing ${diff} missing closing braces`);
+    
+    // Add closing braces before the export statement
+    const exportIndex = cleanedCode.lastIndexOf('export default App;');
+    if (exportIndex > -1) {
+      const beforeExport = cleanedCode.substring(0, exportIndex);
+      const afterExport = cleanedCode.substring(exportIndex);
+      cleanedCode = beforeExport + '}'.repeat(diff) + '\n\n' + afterExport;
+    } else {
+      cleanedCode += '\n' + '}'.repeat(diff);
+    }
+  }
+
+  // Step 9: Final cleanup
+  cleanedCode = cleanedCode
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive newlines
+    .replace(/;\s*;/g, ';') // Remove double semicolons
+    .replace(/,\s*,/g, ',') // Remove double commas
+    .trim();
+
+  console.log('✅ Code cleaning completed');
+  console.log('Cleaned code length:', cleanedCode.length);
+  
+  return cleanedCode;
+}
+
+// Enhanced validation function (same as before but with syntax checks)
+function validateReactCode(code) {
+  console.log('🔍 VALIDATING REACT CODE');
+  
+  const validationErrors = [];
+  const codeText = code.toLowerCase();
+  
+  // Basic syntax validation first
+  const openBraces = (code.match(/{/g) || []).length;
+  const closeBraces = (code.match(/}/g) || []).length;
+  if (openBraces !== closeBraces) {
+    validationErrors.push(`Syntax error: Unmatched braces (${openBraces} open, ${closeBraces} close)`);
+  }
+
+  const openParens = (code.match(/\(/g) || []).length;
+  const closeParens = (code.match(/\)/g) || []).length;
+  if (openParens !== closeParens) {
+    validationErrors.push(`Syntax error: Unmatched parentheses (${openParens} open, ${closeParens} close)`);
+  }
+
+  // Check for stray "App;" statements that cause the specific error
+  if (code.match(/^\s*App;\s*$/m)) {
+    validationErrors.push('Found stray "App;" statement that will cause syntax error');
+  }
+
+  // Check for logEvent prop handling
+  if (!code.includes('{ logEvent }') && !code.includes('logEvent') && !code.includes('props.logEvent')) {
+    validationErrors.push('Missing logEvent prop in component signature');
+  }
+
+  // Check for specific logEvent patterns
+  if (!code.includes('logEvent("gameStarted"') && !code.includes("logEvent('gameStarted'")) {
+    validationErrors.push('Missing required gameStarted logging call');
+  }
+
+  if (!code.includes('logEvent("gameEnded"') && !code.includes("logEvent('gameEnded'")) {
+    validationErrors.push('Missing required gameEnded logging call');
+  }
+
+  // Check for practice mode implementation
+  if (!code.includes('isPracticeMode') || !code.includes('Practice Mode')) {
+    validationErrors.push('Missing practice mode implementation');
+  }
+
+  // Check for house edge implementation
+  const hasHouseEdge = code.includes('houseEdge') ||
+    code.includes('0.9') ||
+    code.includes('Math.min') ||
+    code.includes('* 0.') ||
+    code.includes('houseEdgeFactor');
+
+  if (!hasHouseEdge) {
+    validationErrors.push('Missing house edge enforcement in multiplier calculations');
+  }
+
+  // Enhanced financial terms check
+  const strictFinancialTerms = [
+    'bet', 'betting', 'bets', 'bettor', 'betted',
+    'balance', 'balances',
+    'wallet', 'wallets',
+    'money', 'monetary', 'cash', 'currency', 'dollar', 'cent',
+    'credit', 'credits', 'coin', 'coins',
+    'deposit', 'deposits', 'withdraw', 'withdrawal',
+    'payout', 'payouts', 'jackpot', 'jackpots'
+  ];
+
+  const foundFinancialTerms = strictFinancialTerms.filter(term => {
+    const regex = new RegExp(`\\b${term}\\b`, 'i');
+    return regex.test(codeText);
+  });
+
+  if (foundFinancialTerms.length > 0) {
+    validationErrors.push(`Forbidden financial terms detected: ${foundFinancialTerms.join(', ')}`);
+  }
+
+  // Check for required component structure
+  const hasValidComponentStart = code.includes('const App = ({ logEvent }') ||
+    code.includes('const App = (props)') ||
+    code.includes('function App({ logEvent }') ||
+    code.includes('function App(props)');
+
+  if (!hasValidComponentStart) {
+    validationErrors.push('Component must accept logEvent prop');
+  }
+
+  // Check for required state variables
+  const requiredStates = ['gameStarted', 'gameEnded', 'isPracticeMode', 'gameHistory'];
+  const missingStates = requiredStates.filter(state => !code.includes(state));
+  if (missingStates.length > 0) {
+    validationErrors.push(`Missing required state variables: ${missingStates.join(', ')}`);
+  }
+
+  // Check for required functions
+  const requiredFunctions = ['startGame', 'endGame'];
+  const missingFunctions = requiredFunctions.filter(func => !code.includes(func));
+  if (missingFunctions.length > 0) {
+    validationErrors.push(`Missing required functions: ${missingFunctions.join(', ')}`);
+  }
+
+  // Check for practice mode conditional logic
+  if (!code.includes('!practiceMode') && !code.includes('!isPracticeMode')) {
+    validationErrors.push('Missing practice mode conditional logic for logging');
+  }
+
+  console.log(`🔍 Validation completed: ${validationErrors.length} errors found`);
+  return validationErrors;
+}
+
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING REACT COMPONENT (SAME AS WORKING ROUTE)');
+  console.log('⚛️ GENERATING REACT COMPONENT (ENHANCED ERROR PREVENTION)');
   console.log('Prompt:', prompt);
   console.log('Image URLs:', imageUrls);
 
   try {
-    // EXACT same asset processing as working route
+    // Asset processing (same as original)
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
     const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
     const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
@@ -26,7 +266,7 @@ async function generateReactComponent(prompt, imageUrls = []) {
 
     console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
 
-    // EXACT same system prompt as working route
+    // Enhanced system prompt with strict syntax requirements
     const systemPrompt = `You are an elite React developer. Generate a complete, working React game component with MANDATORY logging and house edge enforcement.
 
 Output Requirements:
@@ -659,256 +899,121 @@ REMEMBER: The goal is creating visually stunning games that appeal to young audi
 9. Smooth animations and micro-interactions
 10. Bold typography and gradient effects`;
 
-    // EXACT same Anthropic API call as working route
-    const stream = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8000,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `Create a React game component for: "${prompt}". Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}. 
+    let attempt = 0;
+    const maxAttempts = 3;
+    
+    while (attempt < maxAttempts) {
+      attempt++;
+      console.log(`🔄 Generation attempt ${attempt}/${maxAttempts}`);
+      
+      try {
+        // Generate with enhanced prompt
+        const stream = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 8000,
+          system: systemPrompt,
+          messages: [
+            {
+              role: 'user',
+              content: `Generate a complete, syntactically perfect React game component for: "${prompt}". 
+
+              CRITICAL REQUIREMENTS:
+              1. Every brace { must have a matching }
+              2. Every JSX element must be properly closed
+              3. End with EXACTLY "export default App;" and nothing else
+              4. NO incomplete statements or syntax errors
+              5. Include proper logEvent handling and house edge
+
+              Include proxiedAssets: ${JSON.stringify(proxiedAssets)}
+
+              Generate COMPLETE, working code with perfect syntax.`,
+            },
+          ],
+          stream: true,
+        });
+
+        let rawCode = '';
+
+        for await (const chunk of stream) {
+          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            rawCode += chunk.delta.text;
+          }
+        }
+
+        console.log(`📝 Raw code received (attempt ${attempt}), length: ${rawCode.length}`);
+
+        // Clean and validate the code
+        let cleanedCode;
+        try {
+          cleanedCode = cleanAndValidateCode(rawCode);
+          console.log('✅ Code cleaning successful');
+        } catch (cleanError) {
+          console.error(`❌ Code cleaning failed (attempt ${attempt}):`, cleanError.message);
+          if (attempt === maxAttempts) {
+            throw new Error(`Code cleaning failed after ${maxAttempts} attempts: ${cleanError.message}`);
+          }
+          continue;
+        }
+
+        // Validate the cleaned code
+        const validationErrors = validateReactCode(cleanedCode);
+
+        if (validationErrors.length === 0) {
+          console.log('✅ All validations passed, testing transpilation');
           
-          CRITICAL REQUIREMENTS:
-          1. MUST accept and use logEvent prop for game start/end tracking
-          2. MUST implement working practice mode (no logging)
-          3. MUST enforce house edge on all multipliers
-          4. MUST include proper game history and state management
-          5. NO financial/betting logic allowed
-          
-          The component will be tested for all logging functionality and house edge compliance.`,
-        },
-      ],
-      stream: true,
-    });
-
-    let rawCode = '';
-
-    for await (const chunk of stream) {
-      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-        rawCode += chunk.delta.text;
-      }
-    }
-
-    let cleanedCode = rawCode
-      .replace(/```(?:jsx?|javascript)?/g, '')
-      .replace(/^\s*[\r\n]+/gm, '')
-      .trim();
-
-    // EXACT same validation logic as working route
-    const validationErrors = [];
-
-    // Check for logEvent prop handling - must be in component signature
-    if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
-      validationErrors.push('Missing logEvent prop in component signature');
-    }
-
-    // Check for specific logEvent patterns
-    if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
-      validationErrors.push('Missing required gameStarted logging call');
-    }
-
-    if (!cleanedCode.includes('logEvent("gameEnded"') && !cleanedCode.includes("logEvent('gameEnded'")) {
-      validationErrors.push('Missing required gameEnded logging call');
-    }
-
-    // Check for practice mode implementation
-    if (!cleanedCode.includes('isPracticeMode') || !cleanedCode.includes('Practice Mode')) {
-      validationErrors.push('Missing practice mode implementation');
-    }
-
-    // Check for house edge implementation (look for multiplier calculations)
-    const hasHouseEdge = cleanedCode.includes('houseEdge') ||
-      cleanedCode.includes('0.9') ||
-      cleanedCode.includes('Math.min') ||
-      cleanedCode.includes('* 0.') ||
-      cleanedCode.includes('houseEdgeFactor');
-
-    if (!hasHouseEdge) {
-      validationErrors.push('Missing house edge enforcement in multiplier calculations');
-    }
-
-    // Enhanced financial terms check with stricter patterns
-    const strictFinancialTerms = [
-      'bet', 'betting', 'bets', 'bettor', 'betted',
-      'balance', 'balances',
-      'wallet', 'wallets',
-      'money', 'monetary', 'cash', 'currency', 'dollar', 'cent',
-      'credit', 'credits', 'coin', 'coins',
-      'deposit', 'deposits', 'withdraw', 'withdrawal',
-      'payout', 'payouts', 'jackpot', 'jackpots'
-    ];
-
-    const codeText = cleanedCode.toLowerCase();
-    const foundFinancialTerms = strictFinancialTerms.filter(term => {
-      // Check for whole word matches to avoid false positives
-      const regex = new RegExp(`\\b${term}\\b`, 'i');
-      return regex.test(codeText);
-    });
-
-    if (foundFinancialTerms.length > 0) {
-      validationErrors.push(`Forbidden financial terms detected: ${foundFinancialTerms.join(', ')}. Use alternatives like "play", "stake", "score", "points"`);
-    }
-
-    // Check for required component structure
-    const hasValidComponentStart = cleanedCode.includes('const App = ({ logEvent }') ||
-      cleanedCode.includes('const App = (props)') ||
-      cleanedCode.includes('function App({ logEvent }') ||
-      cleanedCode.includes('function App(props)');
-
-    if (!hasValidComponentStart) {
-      validationErrors.push('Component must accept logEvent prop: const App = ({ logEvent }) => { or const App = (props) => {');
-    }
-
-    // Check for required state variables
-    const requiredStates = ['gameStarted', 'gameEnded', 'isPracticeMode', 'gameHistory'];
-    const missingStates = requiredStates.filter(state => !cleanedCode.includes(state));
-    if (missingStates.length > 0) {
-      validationErrors.push(`Missing required state variables: ${missingStates.join(', ')}`);
-    }
-
-    // Check for required functions
-    const requiredFunctions = ['startGame', 'endGame'];
-    const missingFunctions = requiredFunctions.filter(func => !cleanedCode.includes(func));
-    if (missingFunctions.length > 0) {
-      validationErrors.push(`Missing required functions: ${missingFunctions.join(', ')}`);
-    }
-
-    // Check for practice mode conditional logging
-    if (!cleanedCode.includes('!practiceMode') && !cleanedCode.includes('!isPracticeMode')) {
-      validationErrors.push('Missing practice mode conditional logic for logging');
-    }
-
-    // EXACT same retry logic as working route
-    if (validationErrors.length > 0) {
-      console.warn(`[React Generator] First attempt failed validation: ${validationErrors.join('; ')}`);
-      console.log('[React Generator] Attempting regeneration with stricter requirements...');
-
-      // Enhanced regeneration prompt
-      const fixedSystemPrompt = systemPrompt + `
-
-🚨 PREVIOUS GENERATION FAILED - FIX THESE ISSUES: 🚨
-${validationErrors.map(error => `❌ ${error}`).join('\n')}
-
-MANDATORY FIXES FOR REGENERATION:
-1. COMPONENT SIGNATURE: const App = ({ logEvent }) => {
-2. REMOVE ALL FINANCIAL TERMS: Replace any "bet" with "play", "balance" with "score"
-3. ADD LOGEVENT VALIDATION: useEffect(() => { if (!logEvent) console.error('Missing logEvent'); }, [logEvent]);
-4. PRACTICE MODE LOGGING: if (!isPracticeMode && logEvent) { logEvent(...) }
-5. HOUSE EDGE MULTIPLIERS: Apply 0.93 factor to all multiplier calculations
-
-TEMPLATE FOR SUCCESS:
-const App = ({ logEvent }) => {
-  const [isPracticeMode, setIsPracticeMode] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [gameEnded, setGameEnded] = useState(false);
-  
-  useEffect(() => {
-    if (!logEvent) console.error('logEvent missing');
-  }, [logEvent]);
-  
-  const startGame = (practiceMode = false) => {
-    setIsPracticeMode(practiceMode);
-    if (!practiceMode && logEvent) {
-      logEvent("gameStarted", { timestamp: new Date().toISOString() });
-    }
-  };
-  
-  const endGame = (result, multiplier) => {
-    if (!isPracticeMode && logEvent) {
-      logEvent("gameEnded", { result, multiplier: parseFloat(multiplier) });
-    }
-  };
-  
-  // ... rest of component
-};`;
-
-      // Second attempt with enhanced prompt
-      const retryStream = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 8000,
-        system: fixedSystemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: `REGENERATE the React game component for: "${prompt}". 
+          // Test transpilation to ensure no syntax errors
+          try {
+            const transpiledCode = await transpileReactCode(cleanedCode);
             
-            CRITICAL: The previous attempt failed validation. You MUST:
-            1. Start with: const App = ({ logEvent }) => {
-            2. Use NO financial terms (bet, balance, wallet, money, etc.)
-            3. Include proper logEvent calls for gameStarted and gameEnded
-            4. Implement practice mode with conditional logging
-            5. Apply house edge to all multiplier calculations
-            
-            Include proxiedAssets prop: ${JSON.stringify(proxiedAssets)}`,
-          },
-        ],
-        stream: true,
-      });
+            console.log('✅ React component generation completed successfully');
 
-      let retryRawCode = '';
-      for await (const chunk of retryStream) {
-        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          retryRawCode += chunk.delta.text;
+            return {
+              originalCode: cleanedCode,
+              transpiledCode: transpiledCode,
+              finalApp: transpiledCode,
+              proxiedAssets,
+              validation: {
+                passed: true,
+                attempt: attempt,
+                checkedItems: [
+                  'logEvent prop handling',
+                  'gameStarted/gameEnded logging',
+                  'practice mode implementation',
+                  'house edge enforcement',
+                  'financial terms check',
+                  'required state variables',
+                  'syntax validation',
+                  'transpilation test'
+                ]
+              }
+            };
+            
+          } catch (transpileError) {
+            console.error(`❌ Transpilation test failed (attempt ${attempt}):`, transpileError.message);
+            if (attempt === maxAttempts) {
+              throw new Error(`Generated code failed transpilation after ${maxAttempts} attempts: ${transpileError.message}`);
+            }
+            // Continue to next attempt with more specific feedback
+          }
+        } else {
+          console.warn(`❌ Validation failed (attempt ${attempt}): ${validationErrors.join('; ')}`);
+          if (attempt === maxAttempts) {
+            throw new Error(`Validation failed after ${maxAttempts} attempts: ${validationErrors.join('; ')}`);
+          }
+        }
+
+      } catch (generationError) {
+        console.error(`❌ Generation error (attempt ${attempt}):`, generationError.message);
+        if (attempt === maxAttempts) {
+          throw generationError;
         }
       }
-
-      cleanedCode = retryRawCode
-        .replace(/```(?:jsx?|javascript)?/g, '')
-        .replace(/^\s*[\r\n]+/gm, '')
-        .trim();
-
-      // Re-validate the regenerated code
-      const retryValidationErrors = [];
-
-      // Re-run all validation checks on the new code
-      if (!cleanedCode.includes('{ logEvent }') && !cleanedCode.includes('logEvent') && !cleanedCode.includes('props.logEvent')) {
-        retryValidationErrors.push('Still missing logEvent prop in component signature');
-      }
-
-      if (!cleanedCode.includes('logEvent("gameStarted"') && !cleanedCode.includes("logEvent('gameStarted'")) {
-        retryValidationErrors.push('Still missing required gameStarted logging call');
-      }
-
-      // If still failing, throw error with both attempts
-      if (retryValidationErrors.length > 0) {
-        throw new Error(`Generated code failed validation after retry: ${retryValidationErrors.join('; ')}. Original issues: ${validationErrors.join('; ')}`);
-      }
-
-      console.log('[React Generator] ✅ Regeneration successful - all validation checks passed');
     }
 
-    // Ensure proper export
-    if (!cleanedCode.endsWith('export default App;')) {
-      cleanedCode = `${cleanedCode}\nexport default App;`;
-    }
-
-    // EXACT same transpilation as working route
-    const transpiledCode = await transpileReactCode(cleanedCode);
-
-    console.log('✅ React component generation completed (same as working route)');
-
-    // EXACT same return format as working route
-    return {
-      originalCode: cleanedCode,      // Original JSX for editing
-      transpiledCode: transpiledCode, // Transpiled for execution
-      finalApp: transpiledCode,       // For compatibility with public API
-      proxiedAssets,
-      validation: {
-        passed: true,
-        checkedItems: [
-          'logEvent prop handling',
-          'gameStarted/gameEnded logging',
-          'practice mode implementation',
-          'house edge enforcement',
-          'financial terms check',
-          'required state variables'
-        ]
-      }
-    };
+    throw new Error(`Failed to generate valid React component after ${maxAttempts} attempts`);
 
   } catch (error) {
-    console.error('Error in generateReactComponent:', error);
+    console.error('❌ Fatal error in generateReactComponent:', error);
     throw new Error(`React generation failed: ${error.message || 'Failed to generate React component'}`);
   }
 }
