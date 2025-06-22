@@ -1274,6 +1274,7 @@ REMEMBER: The goal is creating visually stunning games that appeal to young audi
     let cleanedCode = rawCode
       .replace(/```(?:jsx?|javascript)?/g, '')
       .replace(/^\s*[\r\n]+/gm, '')
+      .replace(/^\s*App;\s*$/gm, '')  // ← ADD THIS LINE
       .trim();
 
     // Enhanced validation with more specific checks
@@ -3722,7 +3723,7 @@ router.post('/pump', auth, async (req, res) => {
 
     let pool_id = '';
     // Fetch GameType ID for GameLog later if needed
-    
+
 
 
     if (room.user_bet >= room.endgame_amount) {
@@ -3880,7 +3881,7 @@ router.post('/pump', auth, async (req, res) => {
         if (pool_id) {
           payload.pool_id = pool_id;
         }
-console.log("newLog", newLog)
+        console.log("newLog", newLog)
         req.io.sockets.emit(`UPDATED_BANKROLL_${room._id}`, payload);
         req.io.sockets.emit('NEW_LOG', { newLog });
         req.io.sockets.emit(`NEW_CANDLE_${room._id}`, { newCandle });
