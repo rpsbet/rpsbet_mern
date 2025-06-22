@@ -354,7 +354,6 @@ export default function (state = initialState, action) {
         highlightedRooms: action.payload,
       };
     case UPDATE_CREATOR_PROMPT:
-      console.log('Updating creator prompt:', action.payload);
       return {
         ...state,
         creator_prompt: action.payload,

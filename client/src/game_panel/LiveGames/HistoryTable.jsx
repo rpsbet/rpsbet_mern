@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setHighlightedRooms, clearHighlightedRooms } from '../../redux/Logic/logic.actions';
 import { differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays, isValid } from 'date-fns';
@@ -100,17 +100,10 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
   const theme = useTheme();
 
   // Get values from Redux store
-  const {
-    socket: reduxSocket,
-    history: reduxHistory,
-    userId,
-    solPrice: reduxSolPrice
-  } = useSelector((state) => ({
-    socket: state.auth.socket,
-    history: state.logic.history,
-    userId: state.auth.user?._id,
-    solPrice: state.logic.solPrice,
-  }));
+  const reduxSocket = useSelector((state) => state.auth.socket);
+  const reduxHistory = useSelector((state) => state.logic.history);
+  const userId = useSelector((state) => state.auth.user?._id);
+  const reduxSolPrice = useSelector((state) => state.logic.solPrice);
 
   // Use prop values if provided, otherwise use Redux state
   const socket = propSocket ?? reduxSocket;
@@ -122,9 +115,17 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [isNewItem, setIsNewItem] = useState(false);
+  
+  // Add ref to track if we have a socket update that should take priority
+  const socketUpdateRef = useRef(null);
 
   // Get the most recent history item
   useEffect(() => {
+    // If we have a pending socket update, don't override it with history data
+    if (socketUpdateRef.current) {
+      return;
+    }
+
     let historyArray = [];
 
     if (history) {
@@ -139,18 +140,18 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
 
     if (historyArray.length > 0) {
       const newLatest = historyArray[0];
-      if (latestItem && newLatest._id !== latestItem._id) {
-        setIsNewItem(true);
-        setTimeout(() => setIsNewItem(false), 2000);
+      // Only update if this is actually a different item
+      if (!latestItem || newLatest._id !== latestItem._id) {
+        setLatestItem(newLatest);
       }
-      setLatestItem(newLatest);
     } else {
       setLatestItem(null);
     }
-  }, [history]);
+  }, [history]); // Removed latestItem from dependency array
 
   // Socket event handler for new logs
   const handleNewLog = useCallback((data) => {
+    console.log("data", data)
     const newLogArray = data?.newLog;
     if (!newLogArray || !Array.isArray(newLogArray) || newLogArray.length === 0) return;
 
@@ -162,10 +163,16 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
       setTimeout(() => dispatch(clearHighlightedRooms()), 200);
     }
 
-    // Update to show the newest item with animation
+    // Mark that we have a socket update and set the new item
+    socketUpdateRef.current = firstLog;
     setIsNewItem(true);
     setLatestItem(firstLog);
-    setTimeout(() => setIsNewItem(false), 2000);
+    
+    // Clear the socket update flag after animation and allow history updates again
+    setTimeout(() => {
+      setIsNewItem(false);
+      socketUpdateRef.current = null;
+    }, 2000);
   }, [dispatch]);
 
   // Set up socket connection
@@ -454,9 +461,6 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
           maxWidth: '100%'
         }}
       >
-        {/* Activity indicator dot */}
-        
-
         <Box sx={{ flexGrow: 1, minWidth: 0,}}>
           {buildMessage(latestItem)}
         </Box>

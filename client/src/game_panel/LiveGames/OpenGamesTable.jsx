@@ -605,7 +605,7 @@ function OpenGamesTable(props) {
               }}
             >
               <Chip
-                label="All Games"
+                label="ALL GAMES"
                 onClick={() => handleGameTypeChange('All')}
                 color={selectedGameType === 'All' ? 'error' : 'default'}
                 variant={selectedGameType === 'All' ? 'filled' : 'outlined'}

@@ -19,6 +19,7 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
     if (isProcessing) return; // Prevent clicks while processing
 
     const userId = user._id;
+    const isLiked = localLikes.includes(user._id);
 
     const newLikes = isLiked
       ? localLikes.filter(id => id !== userId)

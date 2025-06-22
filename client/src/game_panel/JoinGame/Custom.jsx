@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faDice, faCoins, faChevronDown, faRocket, faHome, faSpinner, faGem, faTrophy,
@@ -11,7 +11,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { createAccountFromPrivyUser } from '../../util/solana';
 import { usePrivy } from '@privy-io/react-auth';
-import axios from '../../util/Api';
 import {
   Paper, Button, Tooltip, CircularProgress, TextField, useMediaQuery, Typography,
   Box, Slider, Avatar, Chip, Card, Fade, Dialog, DialogContent, DialogContentText,
@@ -19,14 +18,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableRow, Badge, Snackbar, Alert,
   Zoom, Grow, CardContent, CardActions, TableContainer, Checkbox, Modal, FormControlLabel,
 } from '@mui/material';
-import styled from 'styled-components';
+import { styled } from '@mui/material/styles';
 import { convertToCurrency } from '../../util/conversion';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
-import {
-  validateIsAuthenticated,
-  validateBetAmount,
-  validateBankroll,
-} from '../modal/betValidations';
+
 import { sendSolDeposit } from '../../util/solana';
 import { safeDeepEqual, createShallowComparison } from '../../util/safeStateComparison';
 

@@ -384,14 +384,12 @@ export const cleanupOldRooms = () => (dispatch, getState) => {
 
 export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) => {
   if (!gameCode || !gameCode.trim()) {
-    console.log('[AutoPopulate] No game code provided');
     return null;
   }
 
   try {
-    console.log('[AutoPopulate] Starting extraction process...');
 
-    // Step 1: Extract room information from game code
+    // Step 1: Use AI to extract room information from game code
     const extractResponse = await axios.post('/game/extract-room-info', {
       gameCode: gameCode
     });
@@ -401,52 +399,64 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
     }
 
     const { name, ticker, description, gameTheme, confidence } = extractResponse.data;
-    console.log('[AutoPopulate] Extracted info:', { name, ticker, description, gameTheme, confidence });
 
-    // Step 2: Only proceed if we got meaningful data
-    if (name === 'Default Game' || ticker === 'GAME' || confidence < 0.6) {
-      console.log('[AutoPopulate] Low confidence or default values, skipping auto-populate');
+    // Step 2: Be more flexible with confidence levels since AI is more reliable
+    // Even moderate confidence (0.3+) from AI is better than no data
+    if (confidence < 0.2) {
       return null;
     }
 
-    // Step 3: Generate image based on extracted info
+    // Step 3: Generate image based on extracted info (only for higher confidence)
     let imageUrl = null;
-    try {
-      console.log('[AutoPopulate] Generating image for:', name);
+    if (confidence > 0.4) {
+      try {
 
-      const imagePrompt = `Create a clean, modern logo for a game called "${name}". 
-        Game theme: ${gameTheme}. 
-        Style: Simple, bold, professional logo design with solid background. 
-        Gaming aesthetic, high contrast, perfect for use as a coin/token icon. 
-        Square format, minimal design. No text in the image.`;
+        const imagePrompt = `Create a clean, modern logo for a game called "${name}". 
+          Game theme: ${gameTheme}. 
+          Style: Simple, bold, professional logo design with solid background. 
+          Gaming aesthetic, high contrast, perfect for use as a coin/token icon. 
+          Square format, minimal design. No text in the image.`;
 
-      const imageResponse = await axios.post('/game/generate-image', {
-        prompt: imagePrompt,
-        size: '1024x1024',
-        quality: 'standard'
-      });
+        const imageResponse = await axios.post('/game/generate-image', {
+          prompt: imagePrompt,
+          size: '1024x1024',
+          quality: 'standard'
+        });
 
-      if (imageResponse.data?.imageUrl) {
-        imageUrl = imageResponse.data.imageUrl;
-        console.log('[AutoPopulate] Image generated successfully');
+        if (imageResponse.data?.imageUrl) {
+          imageUrl = imageResponse.data.imageUrl;
+        }
+      } catch (imageError) {
+        console.warn('[AutoPopulate] Image generation failed:', imageError.message);
+        // Continue without image - user can upload manually
       }
-    } catch (imageError) {
-      console.warn('[AutoPopulate] Image generation failed:', imageError.message);
-      // Continue without image - user can upload manually
-    }
+    } 
 
-    // Step 4: Prepare updates object
+    // Step 4: Prepare updates object with validation
     const updates = {};
 
-    if (name && name !== 'Default Game' && name.length >= 3 && name.length <= 20) {
+    // More flexible validation for AI-extracted data
+    if (name && 
+        name !== 'Default Game' && 
+        name !== 'Game Master' && 
+        name.length >= 3 && 
+        name.length <= 30) { // Increased max length
       updates.name = name;
     }
 
-    if (ticker && ticker !== 'GAME' && ticker.length >= 2 && ticker.length <= 6) {
+    if (ticker && 
+        ticker !== 'GAME' && 
+        ticker.length >= 2 && 
+        ticker.length <= 6 &&
+        /^[A-Z0-9]+$/.test(ticker)) { // Ensure ticker is alphanumeric
       updates.ticker = ticker;
     }
 
-    if (description && description.length > 20) {
+    if (description && 
+        description.length > 20 && 
+        description.length <= 500 &&
+        !description.includes('undefined') &&
+        !description.includes('null')) {
       updates.description = description;
     }
 
@@ -454,9 +464,9 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
       updates.image = imageUrl;
     }
 
-    // Step 5: Apply updates if any
+    // Step 5: Apply updates if any meaningful data was extracted
     if (Object.keys(updates).length > 0) {
-      console.log('[AutoPopulate] Applying updates:', updates);
+      
       onChangeState(updates);
 
       return {
@@ -464,15 +474,29 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
         ticker: updates.ticker || ticker,
         description: updates.description || description,
         imageUrl,
-        confidence
+        confidence,
+        extractedFields: Object.keys(updates) // Show what was auto-populated
+      };
+    } else {
+      return {
+        name,
+        ticker,
+        description,
+        confidence,
+        extractedFields: [],
+        message: 'AI extracted data but validation failed'
       };
     }
 
-    return null;
-
   } catch (error) {
     console.error('[AutoPopulate] Failed:', error);
-    return null;
+    
+    // Return error info for debugging
+    return {
+      error: true,
+      message: error.message,
+      extractedFields: []
+    };
   }
 };
 

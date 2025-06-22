@@ -744,6 +744,180 @@ Required Imports:
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 
+🚨 MODERN STYLING FOR NEW GENERATION 🚨
+Use cutting-edge design trends that appeal to Gen Z and younger audiences:
+
+CORE DESIGN PRINCIPLES:
+- Dark mode first (always use dark backgrounds)
+- High contrast with vibrant accents
+- Glassmorphism and depth effects
+- Smooth animations and micro-interactions
+- Bold, modern typography
+- RGB/neon color schemes
+- Rounded corners and soft shadows
+- Gradient overlays and holographic effects
+
+MANDATORY STYLING APPROACH:
+- DO NOT use styled-components or the styled() function
+- Use ONLY Material-UI's sx prop for styling
+- Use ONLY inline styles when needed
+- Focus on creating visually stunning, modern interfaces
+
+🎨 MODERN COLOR PALETTES:
+
+// Cyberpunk/Neon Theme (Primary Choice)
+const cyberpunkColors = {
+  background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
+  primary: '#00f5ff',
+  secondary: '#ff0080',
+  accent: '#39ff14',
+  surface: 'rgba(255, 255, 255, 0.05)',
+  glass: 'rgba(255, 255, 255, 0.1)',
+  border: 'rgba(0, 245, 255, 0.3)',
+  glow: '0 0 20px rgba(0, 245, 255, 0.5)'
+};
+
+// Gaming RGB Theme
+const rgbColors = {
+  background: 'linear-gradient(45deg, #1e1e1e 0%, #2d1b69 50%, #11998e 100%)',
+  primary: '#ff6b6b',
+  secondary: '#4ecdc4', 
+  accent: '#45b7d1',
+  rainbow: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7)',
+  glass: 'rgba(255, 255, 255, 0.08)',
+  glow: '0 0 15px rgba(255, 107, 107, 0.4)'
+};
+
+// Y2K Retro Theme
+const retroColors = {
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  primary: '#ff3cac',
+  secondary: '#784ba0', 
+  accent: '#2b86ab',
+  chrome: 'linear-gradient(45deg, #c0c0c0, #f5f5f5, #c0c0c0)',
+  holographic: 'linear-gradient(45deg, #ff006e, #8338ec, #3a86ff)',
+  glow: '0 0 25px rgba(255, 60, 172, 0.6)'
+};
+
+🚨 MODERN COMPONENT STYLING EXAMPLES 🚨
+
+MAIN GAME CONTAINER (Glassmorphism):
+<Box sx={{
+  width: '100%',
+  minHeight: '600px',
+  background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
+  borderRadius: '24px',
+  padding: 4,
+  position: 'relative',
+  overflow: 'hidden',
+  backdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(255, 255, 255, 0.02)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '24px',
+    zIndex: -1
+  }
+}}>
+
+
+{/* Practice Mode Button */}
+<Button 
+  variant="outlined" 
+  onClick={() => startGame(true)}
+  sx={{ 
+    borderColor: '#ffeb3b', 
+    color: '#ffeb3b',
+    borderRadius: '16px',
+    padding: '12px 32px',
+    fontSize: '1.1rem',
+    fontWeight: 700,
+    textTransform: 'none',
+    borderWidth: '2px',
+    transition: 'all 0.3s ease',
+    background: 'rgba(255, 235, 59, 0.05)',
+    backdropFilter: 'blur(10px)',
+    '&:hover': {
+      borderColor: '#fff',
+      color: '#fff',
+      background: 'rgba(255, 235, 59, 0.1)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(255, 235, 59, 0.3)'
+    }
+  }}
+>
+  🎯 Practice Mode
+</Button>
+
+PRACTICE MODE INDICATOR (Enhanced):
+{isPracticeMode && (
+  <Box sx={{
+    background: 'linear-gradient(45deg, rgba(255, 235, 59, 0.1), rgba(255, 235, 59, 0.05))',
+    border: '2px solid #ffeb3b',
+    borderRadius: '16px',
+    padding: 2,
+    textAlign: 'center',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 0 20px rgba(255, 235, 59, 0.3)',
+    animation: 'pulse 2s infinite',
+    '@keyframes pulse': {
+      '0%': { boxShadow: '0 0 20px rgba(255, 235, 59, 0.3)' },
+      '50%': { boxShadow: '0 0 30px rgba(255, 235, 59, 0.6)' },
+      '100%': { boxShadow: '0 0 20px rgba(255, 235, 59, 0.3)' }
+    }
+  }}>
+    <Typography sx={{
+      color: '#ffeb3b',
+      fontWeight: 700,
+      fontSize: '1.1rem',
+      textShadow: '0 0 10px rgba(255, 235, 59, 0.8)'
+    }}>
+      🎯 PRACTICE MODE - Free to Play
+    </Typography>
+  </Box>
+)}
+
+GAME HISTORY TABLE (Modern Dark):
+<Box sx={{
+  background: 'rgba(0, 0, 0, 0.4)',
+  backdropFilter: 'blur(15px)',
+  borderRadius: '16px',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  overflow: 'hidden'
+}}>
+  <Typography sx={{
+    color: '#fff',
+    fontWeight: 600,
+    padding: 2,
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    background: 'rgba(255, 255, 255, 0.05)'
+  }}>
+    📊 Recent Games
+  </Typography>
+  {/* Table content with neon-colored results */}
+</Box>
+
+ANIMATIONS & TRANSITIONS:
+- Use transform: translateY(-2px) for hover states
+- Add box-shadow transitions for depth
+- Implement scale animations for interactions
+- Use backdrop-filter: blur() for glassmorphism
+- Add gradient animations for loading states
+
+MODERN TYPOGRAPHY:
+- Use font weights 600-900 for headings
+- Implement gradient text effects
+- Add text shadows and glows
+- Use letter-spacing for emphasis
+- Implement responsive font sizes
+
 🚨 ABSOLUTE FORBIDDEN TERMS 🚨
 NEVER use these words anywhere in your code (will cause automatic rejection):
 - "bet" (use "wager", "stake", "play" instead)
@@ -838,68 +1012,124 @@ const endGame = useCallback((result, multiplier) => {
 
 5. PRACTICE MODE IMPLEMENTATION - MANDATORY:
 - Add state: const [isPracticeMode, setIsPracticeMode] = useState(false);
-- Include TWO start buttons:
-  
-  {/* Normal Mode Button */}
-  <Button 
-    variant="contained" 
-    onClick={() => startGame(false)}
-    sx={{ 
-      background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-      '&:hover': { background: 'linear-gradient(45deg, #1976D2 30%, #0288D1 90%)' }
-    }}
-  >
-    Start Game
-  </Button>
-  
-  {/* Practice Mode Button */}
-  <Button 
-    variant="outlined" 
-    onClick={() => startGame(true)}
-    sx={{ 
-      borderColor: '#ffeb3b', 
-      color: '#ffeb3b',
-      '&:hover': { borderColor: '#fff', color: '#fff' }
-    }}
-  >
-    🎯 Practice Mode
-  </Button>
+- Include TWO start buttons with modern styling as shown above
 
-6. PRACTICE MODE INDICATOR:
-{isPracticeMode && (
-  <Typography variant="caption" sx={{ 
-    color: '#ffeb3b', 
-    textAlign: 'center',
-    fontWeight: 'bold',
-    backgroundColor: 'rgba(255, 235, 59, 0.1)',
-    padding: 1,
-    borderRadius: 1,
-    border: '1px solid #ffeb3b'
-  }}>
-    🎯 PRACTICE MODE - Free to Play
-  </Typography>
-)}
+🚨 MANDATORY ADVANCED HOUSE EDGE ENFORCEMENT 🚨
+Use sophisticated probability-based calculations that feel generous but maintain 5-8% house edge:
 
-🚨 MANDATORY HOUSE EDGE ENFORCEMENT 🚨
-ALL games must maintain 5-8% house edge to ensure profitability:
+CASINO GAME TYPES require advanced multiplier calculations:
 
-CASINO GAME TYPES (mines, crash, slots, dice, roulette, lottery):
-- Apply house edge factor: 0.92-0.95 (5-8% house edge)
-- Maximum multiplier cap: 50x
-- Example mines calculation:
+MINES GAME - Progressive House Edge:
 const calculateMinesMultiplier = (safeReveals, totalMines, totalSpaces) => {
-  const baseMultiplier = Math.pow((totalSpaces - totalMines) / (totalSpaces - totalMines - safeReveals), safeReveals);
-  const houseEdgeFactor = 0.93; // 7% house edge
-  const finalMultiplier = baseMultiplier * houseEdgeFactor;
-  return Math.min(finalMultiplier, 50).toFixed(2);
+  const totalSafeSpaces = totalSpaces - totalMines;
+  let probability = 1;
+  
+  for (let i = 0; i < safeReveals; i++) {
+    probability *= (totalSafeSpaces - i) / (totalSpaces - i);
+  }
+  
+  const fairMultiplier = 1 / probability;
+  
+  // Progressive house edge - gets harder with more risk
+  let houseEdgeFactor;
+  if (safeReveals <= 2) {
+    houseEdgeFactor = 0.95; // 5% house edge for low risk
+  } else if (safeReveals <= 5) {
+    houseEdgeFactor = 0.93; // 7% house edge for medium risk  
+  } else {
+    houseEdgeFactor = 0.88; // 12% house edge for high risk
+  }
+  
+  const scaledMultiplier = fairMultiplier * houseEdgeFactor;
+  const maxMultiplier = totalMines >= 20 ? 1000 : totalMines >= 15 ? 500 : totalMines >= 10 ? 100 : 50;
+  
+  return Math.min(scaledMultiplier, maxMultiplier).toFixed(2);
 };
 
-CRASH GAME MULTIPLIERS:
+CRASH GAME - Weighted Distribution:
 const generateCrashPoint = () => {
   const random = Math.random();
-  // House-favored crash generation (favors lower multipliers)
-  const crashPoint = 1 / (1 - Math.pow(random, 1.3) * 0.90);
-  return Math.max(crashPoint, 1.01).toFixed(2);
+  let crashPoint;
+  
+  if (random < 0.4) {
+    // 40% chance: 1.00x - 1.99x (most losses)
+    crashPoint = 1 + Math.pow(Math.random(), 2) * 0.99;
+  } else if (random < 0.7) {
+    // 30% chance: 2.00x - 4.99x
+    crashPoint = 2 + Math.pow(Math.random(), 1.5) * 2.99;
+  } else if (random < 0.9) {
+    // 20% chance: 5.00x - 19.99x
+    crashPoint = 5 + Math.pow(Math.random(), 2) * 14.99;
+  } else if (random < 0.98) {
+    // 8% chance: 20.00x - 99.99x
+    crashPoint = 20 + Math.pow(Math.random(), 3) * 79.99;
+  } else {
+    // 2% chance: 100x+ (extremely rare)
+    crashPoint = 100 + Math.pow(Math.random(), 4) * 900;
+  }
+  
+  return Math.max(crashPoint * 0.94, 1.01).toFixed(2); // 6% house edge
+};
+
+DICE GAME - Probability Control:
+const calculateDiceMultiplier = (prediction, rollType = 'under') => {
+  let winProbability = rollType === 'under' ? 
+    (prediction - 1) / 100 : (100 - prediction) / 100;
+  
+  winProbability = Math.max(0.01, Math.min(0.98, winProbability));
+  const fairMultiplier = 1 / winProbability;
+  const houseEdge = winProbability > 0.5 ? 0.98 : 0.95;
+  
+  return Math.min(fairMultiplier * houseEdge, 9999).toFixed(2);
+};
+
+ROULETTE - Standard Casino House Edge:
+const calculateRouletteMultiplier = (betType) => {
+  const multipliers = {
+    'straight': 35 * 0.946,      // Single number: 35:1 with house edge
+    'split': 17 * 0.946,         // Two numbers: 17:1 with house edge
+    'street': 11 * 0.946,        // Three numbers: 11:1 with house edge
+    'corner': 8 * 0.946,         // Four numbers: 8:1 with house edge
+    'line': 5 * 0.946,           // Six numbers: 5:1 with house edge
+    'dozen': 2 * 0.946,          // 12 numbers: 2:1 with house edge
+    'column': 2 * 0.946,         // 12 numbers: 2:1 with house edge
+    'red': 1 * 0.946,            // 18 numbers: 1:1 with house edge
+    'black': 1 * 0.946,          // 18 numbers: 1:1 with house edge
+    'even': 1 * 0.946,           // 18 numbers: 1:1 with house edge
+    'odd': 1 * 0.946             // 18 numbers: 1:1 with house edge
+  };
+  
+  return (multipliers[betType] || 1).toFixed(2);
+};
+
+SLOT MACHINE - Weighted Symbols:
+const generateSlotMultiplier = (reels) => {
+  const symbolValues = {
+    '🍒': 2, '🍋': 3, '🍊': 5, '🍇': 8, '🔔': 15, 
+    '💎': 50, '⭐': 100, '🎰': 500
+  };
+  
+  let multiplier = 1;
+  const symbolCounts = {};
+  
+  reels.forEach(symbol => {
+    symbolCounts[symbol] = (symbolCounts[symbol] || 0) + 1;
+  });
+  
+  Object.entries(symbolCounts).forEach(([symbol, count]) => {
+    if (count >= 2) {
+      const baseValue = symbolValues[symbol] || 1;
+      multiplier += baseValue * Math.pow(count, 1.5);
+    }
+  });
+  
+  return Math.min(multiplier * 0.92, 1000).toFixed(2); // 8% house edge
+};
+
+LOTTERY/SCRATCH - Tiered System:
+const calculateLotteryMultiplier = (matches) => {
+  const multipliers = [0, 0, 2.5, 12, 85, 750, 5000]; // Based on number of matches
+  return (multipliers[matches] || 0).toFixed(2);
 };
 
 SKILL-BASED GAMES (puzzle, platformer, racing):
@@ -922,13 +1152,100 @@ SKILL-BASED GAMES HOUSE EDGE IMPLEMENTATION:
 - Target win rate: 60-70% (30-40% of players should lose completely)
 - For winners: Apply 0.92 factor + 4x max cap
 
-MULTIPLIER VALIDATION - Add this function:
-const validateMultiplier = (multiplier, gameType) => {
-  const numMultiplier = parseFloat(multiplier);
-  if (isNaN(numMultiplier) || numMultiplier < 0) return "0.00";
+🚨 MANDATORY WIN/LOSS DISTRIBUTION 🚨
+Ensure proper psychological balance:
+
+TARGET DISTRIBUTION:
+- 60% of plays: Small loss or tiny win (0x - 1.2x)
+- 25% of plays: Small wins (1.2x - 5x) 
+- 12% of plays: Medium wins (5x - 50x)
+- 2.8% of plays: Big wins (50x - 500x)
+- 0.2% of plays: Huge wins (500x+)
+
+LOSING CONDITIONS (MANDATORY):
+- Include multiple ways to lose completely (0x multiplier)
+- Make high-risk scenarios fail more often
+- Add time pressure or skill requirements
+- Implement progressive difficulty
+
+PSYCHOLOGICAL TECHNIQUES:
+- Show "near misses" frequently
+- Use visual/audio feedback for wins
+- Display recent win history
+- Suggest cashout at strategic moments
+
+🚨 MANDATORY PROGRESSIVE DIFFICULTY 🚨
+Implement win streak tracking and progressive difficulty:
+
+const [winStreak, setWinStreak] = useState(0);
+
+const applyProgressiveDifficulty = (baseMultiplier) => {
+  let difficultyFactor = 1;
+  if (winStreak >= 3) {
+    difficultyFactor = 0.95 - (winStreak * 0.02);
+  }
+  return baseMultiplier * Math.max(0.75, difficultyFactor);
+};
+
+// Update win streak in endGame function
+const endGame = useCallback((result, baseMultiplier) => {
+  const validatedMultiplier = validateMultiplier(baseMultiplier, 'casino'); // or appropriate game type
+  const finalMultiplier = applyProgressiveDifficulty(parseFloat(validatedMultiplier));
   
-  const maxMultiplier = gameType === 'skill' ? 4.0 : 50.0;
-  return Math.min(numMultiplier, maxMultiplier).toFixed(2);
+  if (result === 'win') {
+    setWinStreak(prev => prev + 1);
+  } else {
+    setWinStreak(0);
+  }
+  
+  setGameEnded(true);
+  
+  // CRITICAL: This exact logging pattern is required
+  if (!isPracticeMode && logEvent && typeof logEvent === 'function') {
+    logEvent("gameEnded", { 
+      timestamp: new Date().toISOString(),
+      result: result, // Must be "win", "loss", or "draw"
+      multiplier: finalMultiplier.toFixed(2),
+      gameType: "REPLACE_WITH_ACTUAL_GAME_NAME",
+      practiceMode: false,
+      winStreak: winStreak,
+      sessionData: {
+        duration: Math.round((Date.now() - gameStartTime) / 1000),
+        actionsPerformed: actionCount || 0
+      }
+    });
+  }
+  
+  // Always update game history (both modes)
+  setGameHistory(prev => [...prev.slice(-9), { 
+    id: Date.now(), 
+    result, 
+    multiplier: finalMultiplier.toFixed(2), 
+    timestamp: new Date().toISOString(),
+    practice: isPracticeMode || false
+  }]);
+}, [isPracticeMode, logEvent, gameStartTime, winStreak]);
+
+🚨 MANDATORY VALIDATION FUNCTION 🚨
+Include this exact function:
+
+const validateMultiplier = (multiplier, gameType) => {
+  const num = parseFloat(multiplier);
+  if (isNaN(num) || num < 0) return "0.00";
+  
+  const maxMultipliers = {
+    'mines': 1000, 
+    'crash': 1000, 
+    'dice': 9999,
+    'roulette': 35,
+    'slots': 1000,
+    'lottery': 5000,
+    'skill': 4.0,
+    'default': 50
+  };
+  
+  const max = maxMultipliers[gameType] || maxMultipliers.default;
+  return Math.min(num, max).toFixed(2);
 };
 
 🚨 MANDATORY CODE STRUCTURE 🚨
@@ -940,55 +1257,112 @@ const [isPracticeMode, setIsPracticeMode] = useState(false);
 const [gameHistory, setGameHistory] = useState([]);
 const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
 const [gameStartTime, setGameStartTime] = useState(0);
+const [winStreak, setWinStreak] = useState(0);
+const [actionCount, setActionCount] = useState(0);
 
 REQUIRED FUNCTIONS (all must be present):
 - startGame(practiceMode = false)
 - endGame(result, multiplier) 
 - resetGame()
 - validateMultiplier(multiplier, gameType)
+- applyProgressiveDifficulty(baseMultiplier)
 
 LAYOUT REQUIREMENTS:
-- Main container: width: "100%", height: "100%", minHeight: "400px", padding: "60px 30px"
-- Game title: <Typography id="game-title" variant="h4">GAME NAME</Typography>
+- Main container: Modern glassmorphism styling with gradient backgrounds
+- Game title: <Typography id="game-title" variant="h4">GAME NAME</Typography> with gradient text effect
 - Responsive design with isMobile state
-- Game rules overlay: <Box id="game-rules"> with toggle functionality
+- Game rules overlay: <Box id="game-rules"> with modern modal styling
 
 GAME HISTORY DISPLAY:
-- Show last 10 games in a table format
-- Color code: wins (#48ff00), losses (#ff0000)
-- Include practice mode indicator
-- Display timestamp and multiplier
+- Show last 10 games in a modern dark table format
+- Color code: wins (#39ff14), losses (#ff0080)
+- Include practice mode indicator with neon styling
+- Display timestamp and multiplier with gradient effects
+- Show win streak indicator with glow effects
 
 ERROR PREVENTION:
 - Validate all numeric inputs
 - Handle edge cases (division by zero, negative values)
 - Ensure multiplier never exceeds caps
 - Always return valid multiplier strings with 2 decimal places
+- Implement proper error boundaries
 
 TESTING CHECKLIST (the generated code must pass all):
 ✅ logEvent prop is accepted and used
 ✅ gameStarted event is logged on game start (non-practice)
 ✅ gameEnded event is logged with result and multiplier (non-practice)
 ✅ Practice mode works without logging
-✅ Multipliers respect house edge calculations
+✅ Multipliers respect advanced house edge calculations
+✅ Progressive difficulty system implemented
+✅ Win streak tracking functional
 ✅ Maximum multiplier caps are enforced
 ✅ Game history displays correctly
 ✅ Both game modes (normal/practice) function properly
 ✅ No financial terms or betting logic present
 ✅ Component exports properly
+✅ Advanced probability calculations implemented
+✅ Proper loss distribution maintained
+✅ Modern Gen Z styling implemented
+✅ Glassmorphism and neon effects present
 
 FAILURE CONDITIONS (will cause rejection):
 ❌ Missing logEvent prop handling
 ❌ No game start/end logging
 ❌ Practice mode missing or broken
 ❌ Multipliers too generous (no house edge)
+❌ Missing progressive difficulty system
 ❌ Missing required state variables
 ❌ Broken game history
 ❌ Financial logic present
 ❌ Missing multiplier validation
+❌ Using styled-components instead of sx prop
+❌ Improper probability calculations
+❌ Old/boring styling (must use modern design)
+❌ Missing glassmorphism/neon effects
 
-House Edge Validation Comment:
-// House Edge: 7% | Max Multiplier: 50x | Expected RTP: 93%`;
+🚨 EXAMPLE IMPLEMENTATION STRUCTURE 🚨
+Here's the required component structure with modern styling:
+
+  // MANDATORY: Immediate validation
+  useEffect(() => {
+    if (!logEvent || typeof logEvent !== 'function') {
+      console.error('⚠️ CRITICAL: logEvent prop is missing or invalid');
+    } else {
+      console.log('✅ logEvent prop validated successfully');
+    }
+  }, [logEvent]);
+
+  // REQUIRED STATE VARIABLES
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [gameHistory, setGameHistory] = useState([]);
+  const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
+  const [gameStartTime, setGameStartTime] = useState(0);
+  const [winStreak, setWinStreak] = useState(0);
+  const [actionCount, setActionCount] = useState(0);
+
+  // MANDATORY FUNCTIONS
+  const validateMultiplier = (multiplier, gameType) => { /* implementation */ };
+  const applyProgressiveDifficulty = (baseMultiplier) => { /* implementation */ };
+  const startGame = (practiceMode = false) => { /* implementation */ };
+  const endGame = useCallback((result, multiplier) => { /* implementation */ }, []);
+  
+ 
+House Edge Validation Comment (REQUIRED at end):
+// House Edge: 6-12% progressive | Max Multiplier: 1000x | Expected RTP: 88-94% | Modern Gen Z Styling Applied
+
+REMEMBER: The goal is creating visually stunning games that appeal to young audiences while maintaining mathematical house edge through:
+1. Proper probability calculations
+2. Progressive difficulty 
+3. Weighted random distributions
+4. Smart losing condition placement
+5. Psychological near-miss mechanics
+6. Win streak dampening
+7. Strategic cashout encouragement
+8. Modern glassmorphism and neon styling
+9. Smooth animations and micro-interactions
+10. Bold typography and gradient effects`;
 
   console.log('Calling Anthropic API...');
   const stream = await anthropic.messages.create({
@@ -1091,145 +1465,98 @@ House Edge Validation Comment:
   };
 }
 
-// Replace the extractRoomInfoFromCode function with this simpler, more robust version:
-
-function extractRoomInfoFromCode(gameCode) {
-  console.log('📊 EXTRACTING ROOM INFO FROM CODE');
+async function extractRoomInfoFromCode(gameCode) {
+  console.log('📊 EXTRACTING ROOM INFO FROM CODE USING OPENAI');
   console.log('Code length:', gameCode.length);
 
   try {
+    console.log('🤖 Calling OpenAI for intelligent extraction...');
+
+    const systemPrompt = `You are an expert at analyzing React game code and extracting metadata. 
+
+Your task is to analyze the provided React game code (which may be JSX or transpiled) and extract:
+1. Game Title/Name - Look for the main title displayed in the game
+2. Game Type/Theme - What kind of game is this?
+3. Game Description - Brief description of how to play
+
+IMPORTANT CONTEXT:
+- Look for elements with id="game-title" or similar title indicators first
+- The game title is usually the most prominent text element
+- Look for Typography components with h1-h6 variants or similar title styling
+- Pay attention to text that appears to be the main game name/title
+- Look for emoji indicators (🎮🌆🎯🏆🚀⚡🌟💎🔥🎲) that often accompany game titles
+- Common game title patterns: "NEON NEXUS", "POKER MASTER", "CRASH GAME", etc.
+
+Return ONLY a valid JSON object with:
+{
+  "name": "extracted game title (3-50 characters)",
+  "gameType": "type of game (e.g., poker, puzzle, racing, casino, card)",
+  "description": "brief description of gameplay (20-300 characters)",
+  "confidence": number between 0-1 indicating confidence in extraction
+}
+
+If you cannot find a clear game title, return null for name and set confidence to 0.`;
+
+    const aiResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 500,
+      temperature: 0.1,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: `Analyze this React game code and extract the game title and information:\n\n${gameCode.substring(0, 8000)}`
+        }
+      ]
+    });
+
+    let extractedData;
+    try {
+      const responseText = aiResponse.choices[0].message.content.trim();
+      console.log('🤖 OpenAI raw response:', responseText);
+      
+      // Try to extract JSON from the response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        extractedData = JSON.parse(jsonMatch[0]);
+      } else {
+        // Try parsing the entire response as JSON
+        extractedData = JSON.parse(responseText);
+      }
+    } catch (parseError) {
+      console.error('❌ Failed to parse OpenAI response:', parseError);
+      console.error('Raw response:', aiResponse.choices[0].message.content);
+      throw new Error('Failed to parse AI analysis');
+    }
+
+    console.log('🤖 OpenAI extracted data:', extractedData);
+
+    // Validate and process AI extraction
     let name = '';
     let confidence = 0;
 
-    // Method 1: Look for Typography with id="game-title" 
-    console.log('🔍 Method 1: Looking for Typography with id="game-title"');
-
-    // Simple pattern that captures everything between the tags
-    const gameTitlePattern = /<Typography(?=\s)[^>]*\bid="game-title"[^>]*>\s*([\s\S]*?)\s*<\/Typography>/gi;
-    const gameTitleMatch = gameTitlePattern.exec(gameCode);
-
-    if (gameTitleMatch && gameTitleMatch[1]) {
-      let rawTitle = gameTitleMatch[1];
-      console.log('Raw title found:', JSON.stringify(rawTitle));
-
-      // Clean the title - remove JSX expressions but keep the actual text
-      let cleanTitle = rawTitle;
-      console.log('Cleaned title:', JSON.stringify(cleanTitle));
-      const ternaryMatch = cleanTitle.match(/\{\s*isMobile\s*\?\s*["']([^"']+)["']\s*:\s*["']([^"']+)["']\s*\}/);
-      if (ternaryMatch) {
-        cleanTitle = ternaryMatch[2]; // Use the full name (second option)
-      } else {
-        // Handle simple string literals: {"GAME NAME"}
-        const literalMatch = cleanTitle.match(/\{\s*["']([^"']+)["']\s*\}/);
-        if (literalMatch) {
-          cleanTitle = literalMatch[1];
-        } else {
-          // Remove remaining JSX expressions
-          cleanTitle = cleanTitle.replace(/\{[^}]*\}/g, '');
-        }
-      }
-      // Very basic validation - just check if it's not empty and has reasonable length
-      if (cleanTitle && cleanTitle.length >= 3 && cleanTitle.length <= 200) {
-        name = cleanTitle;
-        confidence = 0.65;
-        console.log('✅ HIGH CONFIDENCE title found:', name);
-      }
-    }
-
-    // Method 2: Fallback - look for Typography with h4 variant
-    if (!name) {
-      console.log('🔍 Method 2: Looking for Typography with h4 variant');
-
-      const h4Pattern = /<Typography[^>]*variant="h4"[^>]*>(.*?)<\/Typography>/gi;
-      const h4Match = h4Pattern.exec(gameCode);
-
-      if (h4Match && h4Match[1]) {
-        let rawTitle = h4Match[1];
-        console.log('H4 title found:', JSON.stringify(rawTitle));
-
-        let cleanTitle = rawTitle
-          .replace(/\{[^}]*\}/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        console.log('Cleaned H4 title:', JSON.stringify(cleanTitle));
-
-        if (cleanTitle && cleanTitle.length >= 3 && cleanTitle.length <= 200) {
-          name = cleanTitle;
-          confidence = 0.8;
-          console.log('✅ MEDIUM CONFIDENCE title found:', name);
-        }
-      }
-    }
-
-    // Method 3: Look for any large Typography elements that might be titles
-    if (!name) {
-      console.log('🔍 Method 3: Looking for any large Typography elements');
-
-      // Look for Typography elements with common game words or that start with emojis/caps
-      const anyTitlePattern = /<Typography[^>]*>((?:[🎮🌆🎯🏆🚀⚡🌟💎🔥🎲🃏♠♥♦♣]|[A-Z])[^<]{5,100}(?:GAME|POKER|NEXUS|MASTER|CHALLENGE|QUEST|ARENA|ZONE|HOLD|TEXAS)[^<]*)<\/Typography>/gi;
-
-      let match;
-      while ((match = anyTitlePattern.exec(gameCode)) !== null) {
-        let rawTitle = match[1];
-        console.log('Potential title found:', JSON.stringify(rawTitle));
-
-        let cleanTitle = rawTitle
-          .replace(/\{[^}]*\}/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        // Skip if it's obviously not a title
-        if (cleanTitle.includes('Game Rules') || cleanTitle.includes('Close') || cleanTitle.includes('Button')) {
-          continue;
-        }
-
-        if (cleanTitle && cleanTitle.length >= 5 && cleanTitle.length <= 200) {
-          name = cleanTitle;
-          confidence = 0.7;
-          console.log('✅ LOW CONFIDENCE title found:', name);
-          break;
-        }
-      }
-    }
-
-    // Method 4: Ultra-simple text search for common patterns
-    if (!name) {
-      console.log('🔍 Method 4: Ultra-simple text search');
-
-      // Look for text patterns that look like game titles
-      const simplePatterns = [
-        /(?:🌆|🎮|🎯|🏆)\s*([A-Z][A-Z\s']{10,50})/gi,
-        /([A-Z]{2,}\s+[A-Z]{2,}\s+[A-Z\s']{5,30})/g,
-        /(NEON\s+NEXUS[^<>\n]{0,30})/gi
-      ];
-
-      for (const pattern of simplePatterns) {
-        const matches = gameCode.match(pattern);
-        if (matches && matches.length > 0) {
-          let cleanTitle = matches[0]
-            .replace(/[{}]/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-
-          if (cleanTitle && cleanTitle.length >= 5) {
-            name = cleanTitle;
-            confidence = 0.6;
-            console.log('✅ PATTERN MATCH title found:', name);
-            break;
-          }
-        }
-      }
-    }
-
-    // Final fallback
-    if (!name) {
-      console.log('⚠️ No title found, using fallback');
-      name = 'Generated Game';
+    if (extractedData.name && extractedData.confidence >= 0.3) {
+      // Clean the extracted name
+      name = extractedData.name
+        .replace(/[{}]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      confidence = extractedData.confidence;
+      console.log('✅ AI EXTRACTION successful:', name, 'confidence:', confidence);
+    } else {
+      console.log('⚠️ AI extraction failed or low confidence, using fallback');
+      
+      // Simple fallback based on game type
+      const gameType = extractedData.gameType || 'interactive';
+      name = gameType.charAt(0).toUpperCase() + gameType.slice(1) + ' Master';
       confidence = 0.3;
     }
 
-    // Generate ticker - much simpler approach
+    // Generate ticker from name - much simpler approach
     let ticker = '';
     if (name && name !== 'Generated Game') {
       // Remove all non-letter characters and take first letters of words
@@ -1246,34 +1573,27 @@ function extractRoomInfoFromCode(gameCode) {
       ticker = 'GAME';
     }
 
-    // Simple description extraction
+    // Use AI-extracted description or create fallback
     let description = '';
-
-    // Look for bullet points or numbered lists that might be rules
-    const rulePattern = /(?:•|\d+\.)\s*([^•\n]{20,200})/g;
-    const ruleMatches = gameCode.match(rulePattern);
-
-    if (ruleMatches && ruleMatches.length >= 2) {
-      description = ruleMatches.slice(0, 3).join(' ').substring(0, 300);
-    }
-
-    // Fallback description
-    if (!description) {
+    if (extractedData.description && extractedData.description.length > 20) {
+      description = extractedData.description
+        .replace(/[{}]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 300);
+    } else {
+      // Fallback description
       description = name && name !== 'Generated Game'
         ? `Experience ${name} with exciting gameplay and multiplier rewards.`
         : 'An engaging game experience with exciting gameplay mechanics.';
     }
 
-    // Simple theme detection
-    const lowerText = (name + ' ' + description + ' ' + gameCode).toLowerCase();
-    let gameTheme = 'interactive game';
-
-    if (lowerText.includes('poker') || lowerText.includes('texas') || lowerText.includes('hold')) {
-      gameTheme = 'poker game';
-    } else if (lowerText.includes('card') || lowerText.includes('deck')) {
-      gameTheme = 'card game';
-    } else if (lowerText.includes('casino') || lowerText.includes('multiplier')) {
-      gameTheme = 'casino game';
+    // Use AI-detected theme or simple detection
+    let gameTheme = extractedData.gameType || 'interactive game';
+    
+    // Add "game" suffix if not present
+    if (!gameTheme.includes('game')) {
+      gameTheme += ' game';
     }
 
     const result = {
@@ -1284,11 +1604,99 @@ function extractRoomInfoFromCode(gameCode) {
       confidence
     };
 
-    console.log('✅ Final extraction result:', result);
+    console.log('✅ Final AI extraction result:', result);
     return result;
 
   } catch (error) {
-    console.error('❌ Error extracting room info:', error);
+    console.error('❌ Error with OpenAI extraction:', error);
+    
+    // Fallback to basic regex extraction if OpenAI fails
+    console.log('🔄 Falling back to basic regex extraction...');
+    return fallbackRegexExtraction(gameCode);
+  }
+}
+
+// Fallback function in case OpenAI fails
+function fallbackRegexExtraction(gameCode) {
+  console.log('🔍 Using fallback regex extraction');
+  
+  try {
+    let name = '';
+    let confidence = 0;
+
+    // Simple pattern for game-title id
+    const gameTitlePattern = /<Typography(?=\s)[^>]*\bid="game-title"[^>]*>\s*([\s\S]*?)\s*<\/Typography>/gi;
+    const gameTitleMatch = gameTitlePattern.exec(gameCode);
+
+    if (gameTitleMatch && gameTitleMatch[1]) {
+      let rawTitle = gameTitleMatch[1];
+      console.log('Raw title found:', JSON.stringify(rawTitle));
+
+      // Clean the title
+      let cleanTitle = rawTitle;
+      const ternaryMatch = cleanTitle.match(/\{\s*isMobile\s*\?\s*["']([^"']+)["']\s*:\s*["']([^"']+)["']\s*\}/);
+      if (ternaryMatch) {
+        cleanTitle = ternaryMatch[2]; // Use the full name (second option)
+      } else {
+        const literalMatch = cleanTitle.match(/\{\s*["']([^"']+)["']\s*\}/);
+        if (literalMatch) {
+          cleanTitle = literalMatch[1];
+        } else {
+          cleanTitle = cleanTitle.replace(/\{[^}]*\}/g, '');
+        }
+      }
+
+      if (cleanTitle && cleanTitle.length >= 3 && cleanTitle.length <= 200) {
+        name = cleanTitle;
+        confidence = 0.6;
+        console.log('✅ REGEX title found:', name);
+      }
+    }
+
+    // Generate ticker
+    let ticker = '';
+    if (name) {
+      const letters = name
+        .replace(/[^\p{L}\s]/gu, '')
+        .split(/\s+/)
+        .filter(word => word.length > 0)
+        .map(word => word[0].toUpperCase())
+        .join('')
+        .substring(0, 6);
+      ticker = letters.length >= 2 ? letters : 'GAME';
+    } else {
+      name = 'Generated Game';
+      ticker = 'GAME';
+      confidence = 0.3;
+    }
+
+    // Simple description
+    const description = name !== 'Generated Game'
+      ? `Experience ${name} with exciting gameplay and multiplier rewards.`
+      : 'An engaging game experience with exciting gameplay mechanics.';
+
+    // Simple theme detection
+    const lowerText = (name + ' ' + gameCode).toLowerCase();
+    let gameTheme = 'interactive game';
+
+    if (lowerText.includes('poker') || lowerText.includes('texas') || lowerText.includes('hold')) {
+      gameTheme = 'poker game';
+    } else if (lowerText.includes('card') || lowerText.includes('deck')) {
+      gameTheme = 'card game';
+    } else if (lowerText.includes('casino') || lowerText.includes('multiplier')) {
+      gameTheme = 'casino game';
+    }
+
+    return {
+      name,
+      ticker,
+      description,
+      gameTheme,
+      confidence
+    };
+
+  } catch (error) {
+    console.error('❌ Fallback extraction also failed:', error);
     return {
       name: 'Generated Game',
       ticker: 'GAME',

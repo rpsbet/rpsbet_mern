@@ -42,6 +42,7 @@ import {
   TableContainer,
   LinearProgress
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
 import { green, yellow, blue, grey } from '@mui/material/colors';
@@ -659,8 +660,18 @@ const SettingsRef = ({
         clearInterval(progressInterval);
       }
 
-      const updatedCode = response.data.finalApp;
+      // FIX: The update endpoint returns different property names than generate
+      console.log('[handleFollowUpPrompt] Update response:', response.data);
+
+      // Use transpiledCode for execution, originalCode as fallback
+      const updatedCode = response.data.transpiledCode || response.data.originalCode || response.data.finalApp;
       const backendAssets = response.data.proxiedAssets || initialProxiedAssets;
+
+      if (!updatedCode) {
+        throw new Error('No updated code received from server');
+      }
+
+      console.log('[handleFollowUpPrompt] Setting updated code:', updatedCode ? 'Code received' : 'No code');
 
       // Update assets if needed
       await preProxyAssets(promptToUse, backendAssets);
@@ -688,11 +699,16 @@ const SettingsRef = ({
       }
 
       console.error('[handleFollowUpPrompt] Error updating React app:', error);
+      console.error('[handleFollowUpPrompt] Error response:', error.response?.data);
+
       const errorMessage = isBackgroundChange
         ? 'Failed to change background: ' + (error.response?.data?.message || error.message || 'Unknown error')
         : `Failed to update game: ${error.response?.data?.message || error.message || 'Unknown error'}`;
       addAIMessage(errorMessage);
-      setGameCode(initialGameCode); // Revert to previous version on error
+
+      // Don't revert to previous version, keep the current game displayed
+      console.log('[handleFollowUpPrompt] Keeping current game code after error');
+
     } finally {
       setSaving(false);
       setGameLoading(false);
@@ -769,8 +785,8 @@ const SettingsRef = ({
   // If this is for CreateGame (no modal), render as embedded component
   if (!rowName && !room_id) {
     return (
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           mt: 2,
           p: 2,
           borderRadius: '8px',
@@ -967,9 +983,9 @@ const SettingsRef = ({
           )}
 
           {/* Prompt Input */}
-          <Box 
-            sx={{ 
-              p: 2, 
+          <Box
+            sx={{
+              p: 2,
               borderRadius: '8px',
               background: '#262626',
               border: '1px solid rgba(255, 255, 255, 0.05)',
@@ -1539,9 +1555,9 @@ const SettingsRef = ({
               </Box>
             )}
 
-            <Box 
-              sx={{ 
-                p: isMobile ? 2 : 3, 
+            <Box
+              sx={{
+                p: isMobile ? 2 : 3,
                 borderRadius: '8px',
                 background: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.05)',
