@@ -310,6 +310,12 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       console.log('Generated code length:', finalGameCode.length);
       console.log('Has validation:', !!reactResult.validation);
       console.log('🔢 Token usage:', reactResult.tokenUsage);
+      
+      // Log the generated game code for debugging
+      console.log('🎮 Generated Game Code (first 1000 chars):');
+      console.log(finalGameCode.substring(0, 1000));
+      console.log('🎮 Generated Game Code (last 1000 chars):');
+      console.log(finalGameCode.substring(Math.max(0, finalGameCode.length - 1000)));
 
     } catch (reactError) {
       console.error('❌ React generation error:', reactError);

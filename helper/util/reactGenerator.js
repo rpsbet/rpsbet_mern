@@ -16,6 +16,16 @@ function detectCriticalErrors(code) {
     console.log('🚨 Found broken useState:', code.match(brokenUseStatePattern));
   }
   
+  // 1b. Check for incorrect React hook declarations
+  if (code.includes('const [') || code.includes('const {')) {
+    errors.push('CRITICAL: Modern React syntax detected (should use var _useState pattern)');
+  }
+  
+  // 1c. Check for JSX syntax (should be React.createElement)
+  if (code.includes('<') && code.includes('>') && !code.includes('React.createElement')) {
+    errors.push('CRITICAL: JSX syntax detected (should use React.createElement)');
+  }
+  
   // 2. TRUNCATED CODE (your exact error)  
   const lastLine = code.split('\n').pop().trim();
   const truncationPatterns = [
@@ -179,12 +189,48 @@ function autoFixCriticalErrors(code) {
   return fixed;
 }
 
-// Minimal system prompt to prevent token limit issues
-const getEnhancedSystemPrompt = (gameType = 'game') => `Generate React game: "${gameType}". Use wrapped function format starting with (function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation, Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip, Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon, TableContainer, Table, TableBody, TableRow, TableCell, TableHead, faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs, faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome, Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence, IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions, Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull, faClock, faBolt, proxiedAssets, faQuestionCircle) {
-Include helper functions _defineProperty and _objectSpread.
-Use useState like: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
-Implement real game mechanics with endGame('win', multiplier) and endGame('loss', '0.00').
-End with: return typeof App !== 'undefined' ? App : null; })`;
+// System prompt based on working code pattern
+const getEnhancedSystemPrompt = (gameType = 'game') => `Generate React game: "${gameType}". 
+
+EXACT FORMAT REQUIRED:
+(function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation, Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip, Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon, TableContainer, Table, TableBody, TableRow, TableCell, TableHead, faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs, faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome, Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence, IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions, Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet, faShieldAlt, faHeart, faSkull, faClock, faBolt, proxiedAssets, faQuestionCircle) {
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+    } else {
+      obj[key] = value;
+    }
+    return obj;
+  }
+
+  function _objectSpread(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+      var ownKeys = Object.keys(source);
+      if (typeof Object.getOwnPropertySymbols === 'function') {
+        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+        }));
+      }
+      ownKeys.forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    }
+    return target;
+  }
+
+  var App = function App(_ref) {
+    var logEvent = _ref.logEvent;
+
+    // useState pattern: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+    // Implement game mechanics with endGame('win', multiplier) or endGame('loss', '0.00')
+    
+    return React.createElement(Container, { /* props */ }, /* content */);
+  };
+
+  return typeof App !== 'undefined' ? App : null;
+})`;
 
 async function generateReactComponent(prompt, imageUrls = []) {
   console.log('⚛️ GENERATING REACT COMPONENT (CRITICAL ERROR PREVENTION)');
@@ -303,6 +349,21 @@ async function generateReactComponent(prompt, imageUrls = []) {
         const endsWithClosingBrace = rawCode.trim().endsWith('})');
         const hasReturnStatement = rawCode.includes('return typeof App');
         console.log(`✅ Response completeness: ends with '})'=${endsWithClosingBrace}, has return=${hasReturnStatement}`);
+        
+        // Log the first and last 500 characters for debugging
+        console.log(`🔍 Code start (500 chars):`);
+        console.log(rawCode.substring(0, 500));
+        console.log(`🔍 Code end (500 chars):`);
+        console.log(rawCode.substring(Math.max(0, rawCode.length - 500)));
+        
+        // Check for specific patterns
+        const hasProperWrapper = rawCode.includes('(function(React, useState');
+        const hasHelperFunctions = rawCode.includes('function _defineProperty') && rawCode.includes('function _objectSpread');
+        const hasAppComponent = rawCode.includes('var App = function App(_ref)');
+        const hasLogEventParam = rawCode.includes('var logEvent = _ref.logEvent');
+        const hasProperState = rawCode.includes('var _useState');
+        
+        console.log(`🔍 Pattern checks: wrapper=${hasProperWrapper}, helpers=${hasHelperFunctions}, app=${hasAppComponent}, logEvent=${hasLogEventParam}, state=${hasProperState}`);
 
         // Clean up any markdown or extra text
         let cleanedCode = rawCode
@@ -345,15 +406,31 @@ async function generateReactComponent(prompt, imageUrls = []) {
           }
         }
 
-        // Check for essential game structure
+        // Check for essential game structure and working pattern
         const hasLogEvent = cleanedCode.includes('logEvent');
         const hasGameStates = cleanedCode.includes('gameStarted') && cleanedCode.includes('gameEnded');
         const hasEndGame = cleanedCode.includes('endGame');
+        
+        // Check for working pattern compliance
+        const hasProperWrapper = cleanedCode.includes('(function(React, useState');
+        const hasHelperFunctions = cleanedCode.includes('function _defineProperty') && cleanedCode.includes('function _objectSpread');
+        const hasAppComponent = cleanedCode.includes('var App = function App(_ref)');
+        const hasLogEventParam = cleanedCode.includes('var logEvent = _ref.logEvent');
+        const hasProperState = cleanedCode.includes('var _useState');
+        const hasProperReturn = cleanedCode.includes('return typeof App !== \'undefined\' ? App : null');
 
         const structureWarnings = [];
         if (!hasLogEvent) structureWarnings.push('Missing logEvent integration');
         if (!hasGameStates) structureWarnings.push('Missing game state management');
         if (!hasEndGame) structureWarnings.push('Missing endGame function');
+        if (!hasProperWrapper) structureWarnings.push('Missing proper function wrapper');
+        if (!hasHelperFunctions) structureWarnings.push('Missing helper functions');
+        if (!hasAppComponent) structureWarnings.push('Missing proper App component definition');
+        if (!hasLogEventParam) structureWarnings.push('Missing logEvent parameter extraction');
+        if (!hasProperState) structureWarnings.push('Missing proper useState pattern');
+        if (!hasProperReturn) structureWarnings.push('Missing proper return statement');
+        
+        console.log(`🎯 Pattern compliance: wrapper=${hasProperWrapper}, helpers=${hasHelperFunctions}, app=${hasAppComponent}, logParam=${hasLogEventParam}, state=${hasProperState}, return=${hasProperReturn}`);
 
         // Success - return the code
         console.log('✅ Code generation successful');
