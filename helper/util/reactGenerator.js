@@ -1,212 +1,192 @@
 // helper/util/reactGenerator.js - REDUCED VALIDATION ERRORS VERSION
 
 const Anthropic = require('@anthropic-ai/sdk');
-const transpileReactCode = require('./transpileReactCode');
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// Enhanced code cleaning with better syntax fixing
-function cleanAndValidateCode(rawCode) {
-  console.log('🧹 CLEANING AND VALIDATING GENERATED CODE');
-  console.log('Raw code length:', rawCode.length);
-  
-  // Step 1: Basic cleanup
-  let cleanedCode = rawCode
-    .replace(/```(?:jsx?|javascript|react)?/gi, '') // Remove code blocks
-    .replace(/^\s*[\r\n]+/gm, '') // Remove empty lines at start
-    .trim();
+// In helper/util/reactGenerator.js - REPLACE validateReactCode function
 
-  // Step 2: Remove any explanatory text before or after the code
-  const componentStartRegex = /(import React[^;]*;[\s\S]*?)?(const App\s*=|function App\s*\()/;
-  const componentMatch = cleanedCode.match(componentStartRegex);
+function validateAndFixCode(code) {
+  console.log('🔍 ENHANCED VALIDATION AND FIXING');
   
-  if (componentMatch) {
-    const startIndex = cleanedCode.indexOf(componentMatch[0]);
-    cleanedCode = cleanedCode.substring(startIndex);
+  const errors = [];
+  const warnings = [];
+  let fixedCode = code;
+
+  // 1. Check for double wrapper (CRITICAL ERROR)
+  const wrapperMatches = code.match(/\(function\(React, useState/g) || [];
+  if (wrapperMatches.length > 1) {
+    errors.push('CRITICAL: Multiple function wrappers detected');
+    console.log('🚨 Fixing double wrapper...');
+    
+    // Find the first wrapper start
+    const firstWrapperIndex = code.indexOf('(function(React, useState');
+    // Find the second wrapper start
+    const secondWrapperIndex = code.indexOf('(function(React, useState', firstWrapperIndex + 1);
+    
+    if (secondWrapperIndex > -1) {
+      // Remove everything before the second wrapper
+      fixedCode = code.substring(secondWrapperIndex);
+      console.log('✅ Removed duplicate wrapper');
+    }
   }
 
-  // Step 3: Remove any trailing explanatory text after export
-  const exportMatch = cleanedCode.match(/(export\s+default\s+App;)/);
-  if (exportMatch) {
-    const exportIndex = cleanedCode.indexOf(exportMatch[0]);
-    const exportEnd = exportIndex + exportMatch[0] + 50; // Add buffer for comments
-    cleanedCode = cleanedCode.substring(0, exportEnd);
+  // 2. Check for incomplete syntax patterns
+  const incompletePatterns = [
+    /sx:\s*{\s*background:\s*$/m,  // Incomplete sx background
+    /sx:\s*{\s*[^}]*$/m,          // Incomplete sx object
+    /React\.createElement\([^)]*$/m, // Incomplete React.createElement
+    /onClick:\s*function\(\)\s*{\s*$/m, // Incomplete onClick handlers
+  ];
+
+  incompletePatterns.forEach((pattern, index) => {
+    if (pattern.test(fixedCode)) {
+      errors.push(`CRITICAL: Incomplete syntax pattern ${index + 1} detected`);
+    }
+  });
+
+  // 3. Check for proper wrapper format
+  if (!fixedCode.trim().startsWith('(function(React, useState')) {
+    errors.push('CRITICAL: Missing proper function wrapper start');
   }
 
-  // Step 4: Critical fix - remove any stray "App;" statements
-  cleanedCode = cleanedCode.replace(/^\s*App;\s*$/gm, '');
-  cleanedCode = cleanedCode.replace(/\}\s*App;\s*$/gm, '}');
-  cleanedCode = cleanedCode.replace(/App;\s*export/g, 'export');
+  if (!fixedCode.trim().endsWith('})')) {
+    errors.push('CRITICAL: Missing proper function wrapper end');
+    console.log('🔧 Attempting to fix wrapper ending...');
+    
+    // Try to fix missing ending
+    if (fixedCode.includes('return typeof App !== \'undefined\' ? App : null')) {
+      // Find the return statement and ensure it ends properly
+      const returnIndex = fixedCode.lastIndexOf('return typeof App !== \'undefined\' ? App : null');
+      if (returnIndex > -1) {
+        const beforeReturn = fixedCode.substring(0, returnIndex);
+        fixedCode = beforeReturn + 'return typeof App !== \'undefined\' ? App : null;\n})';
+        console.log('✅ Fixed wrapper ending');
+      }
+    } else {
+      // Add the missing return and ending
+      fixedCode = fixedCode.trim();
+      if (!fixedCode.endsWith(';')) {
+        fixedCode += ';';
+      }
+      fixedCode += '\n\n  return typeof App !== \'undefined\' ? App : null;\n})';
+      console.log('✅ Added missing return and wrapper ending');
+    }
+  }
 
-  // Step 5: Enhanced syntax fixing
-  const lines = cleanedCode.split('\n');
-  const fixedLines = [];
-  let braceStack = [];
-  let parenStack = [];
-  
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+  // 4. Brace and parentheses validation (ENHANCED)
+  const openBraces = (fixedCode.match(/{/g) || []).length;
+  const closeBraces = (fixedCode.match(/}/g) || []).length;
+  const openParens = (fixedCode.match(/\(/g) || []).length;
+  const closeParens = (fixedCode.match(/\)/g) || []).length;
+
+  console.log(`📊 Syntax balance: Braces ${openBraces}/${closeBraces}, Parens ${openParens}/${closeParens}`);
+
+  if (Math.abs(openBraces - closeBraces) > 2) {
+    errors.push(`CRITICAL: Major brace mismatch (${openBraces} open, ${closeBraces} close)`);
+  } else if (openBraces !== closeBraces) {
+    warnings.push(`Minor brace mismatch (${openBraces} open, ${closeBraces} close)`);
     
-    // Skip empty lines with just "App;"
-    if (line.trim() === 'App;') {
-      console.log(`🗑️ Removing stray "App;" statement at line ${i + 1}`);
-      continue;
-    }
-    
-    // Track braces and parentheses
-    for (let char of line) {
-      if (char === '{') braceStack.push(i);
-      if (char === '}') braceStack.pop();
-      if (char === '(') parenStack.push(i);
-      if (char === ')') parenStack.pop();
-    }
-    
-    // Fix incomplete jsx props
-    if (line.includes('sx={{') && !line.includes('}}')) {
-      if (line.trim().endsWith(',') && i < lines.length - 1) {
-        const nextLine = lines[i + 1];
-        if (nextLine.trim() === 'App;' || nextLine.trim() === '' || nextLine.trim() === '}') {
-          console.log(`🔧 Fixing incomplete sx prop at line ${i + 1}`);
-          line = line.replace(/,\s*$/, '');
-          fixedLines.push(line);
-          fixedLines.push('  }}');
-          if (lines[i + 1] && lines[i + 1].trim() === 'App;') {
-            i++; // Skip the "App;" line
-          }
-          continue;
-        }
+    // Try to auto-fix small brace mismatches
+    if (openBraces > closeBraces) {
+      const diff = openBraces - closeBraces;
+      console.log(`🔧 Auto-fixing ${diff} missing closing braces`);
+      
+      // Find the last meaningful position to add braces
+      const lastReturnIndex = fixedCode.lastIndexOf('return typeof App');
+      if (lastReturnIndex > -1) {
+        const beforeReturn = fixedCode.substring(0, lastReturnIndex);
+        const afterReturn = fixedCode.substring(lastReturnIndex);
+        fixedCode = beforeReturn + '}'.repeat(diff) + '\n\n  ' + afterReturn;
+      } else {
+        fixedCode += '\n' + '}'.repeat(diff);
       }
     }
-    
-    fixedLines.push(line);
-  }
-  
-  cleanedCode = fixedLines.join('\n');
-
-  // Step 6: Auto-fix common syntax issues
-  // Fix unmatched parentheses in function calls
-  cleanedCode = cleanedCode.replace(/(\w+\([^)]*),\s*\n\s*\}/g, '$1)');
-  
-  // Fix unmatched braces in objects
-  cleanedCode = cleanedCode.replace(/{\s*([^}]*),\s*$/gm, '{ $1 }');
-
-  // Step 7: Final brace/paren balancing
-  const openBraces = (cleanedCode.match(/{/g) || []).length;
-  const closeBraces = (cleanedCode.match(/}/g) || []).length;
-  const openParens = (cleanedCode.match(/\(/g) || []).length;
-  const closeParens = (cleanedCode.match(/\)/g) || []).length;
-
-  console.log(`🔍 Syntax check: Braces ${openBraces}/${closeBraces}, Parentheses ${openParens}/${closeParens}`);
-
-  // Auto-fix brace mismatches
-  if (openBraces > closeBraces) {
-    const diff = openBraces - closeBraces;
-    console.log(`🔧 Auto-fixing ${diff} missing closing braces`);
-    const exportIndex = cleanedCode.lastIndexOf('export default App;');
-    if (exportIndex > -1) {
-      const beforeExport = cleanedCode.substring(0, exportIndex);
-      const afterExport = cleanedCode.substring(exportIndex);
-      cleanedCode = beforeExport + '}'.repeat(diff) + '\n\n' + afterExport;
-    } else {
-      cleanedCode += '\n' + '}'.repeat(diff);
-    }
   }
 
-  // Auto-fix parentheses mismatches (more conservative)
-  if (openParens > closeParens) {
-    const diff = openParens - closeParens;
-    if (diff <= 3) { // Only fix small mismatches
-      console.log(`🔧 Auto-fixing ${diff} missing closing parentheses`);
-      cleanedCode += ')'.repeat(diff);
-    }
+  // 5. Check for essential game structure
+  const hasLogEvent = fixedCode.includes('logEvent');
+  const hasGameStates = fixedCode.includes('gameStarted') && fixedCode.includes('gameEnded');
+  const hasEndGame = fixedCode.includes('endGame');
+  const hasStartGame = fixedCode.includes('startGame');
+
+  if (!hasLogEvent) warnings.push('Missing logEvent integration');
+  if (!hasGameStates) warnings.push('Missing game state management');
+  if (!hasEndGame) warnings.push('Missing endGame function');
+  if (!hasStartGame) warnings.push('Missing startGame function');
+
+  // 6. Check for truncation indicators
+  const truncationIndicators = [
+    /sx:\s*{\s*background:\s*$/,
+    /\)\s*;?\s*$/,  // Ends with just a closing paren
+    /,\s*$/,        // Ends with a comma
+    /{\s*$/,        // Ends with an opening brace
+  ];
+
+  const lastLine = fixedCode.split('\n').pop().trim();
+  if (truncationIndicators.some(pattern => pattern.test(lastLine))) {
+    errors.push('CRITICAL: Code appears to be truncated (incomplete ending)');
   }
 
-  // Step 8: Ensure proper component structure
-  if (!cleanedCode.includes('const App = ') && !cleanedCode.includes('function App')) {
-    throw new Error('Generated code does not contain a valid App component declaration');
+  // 7. Final structure validation
+  if (!fixedCode.includes('var App = function App')) {
+    errors.push('CRITICAL: Missing App component definition');
   }
 
-  // Step 9: Ensure proper export
-  if (!cleanedCode.includes('export default App')) {
-    cleanedCode = cleanedCode.trim();
-    if (!cleanedCode.endsWith(';') && !cleanedCode.endsWith('}')) {
-      cleanedCode += ';';
-    }
-    cleanedCode += '\n\nexport default App;';
+  if (!fixedCode.includes('renderGameContent')) {
+    warnings.push('Missing renderGameContent function');
   }
 
-  // Step 10: Final cleanup
-  cleanedCode = cleanedCode
-    .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive newlines
-    .replace(/;\s*;/g, ';') // Remove double semicolons
-    .replace(/,\s*,/g, ',') // Remove double commas
-    .trim();
+  console.log(`📋 Validation complete: ${errors.length} errors, ${warnings.length} warnings`);
 
-  console.log('✅ Code cleaning completed');
-  console.log('Cleaned code length:', cleanedCode.length);
-  
-  return cleanedCode;
-}
-
-// REDUCED validation function - only essential checks
-function validateReactCode(code) {
-  console.log('🔍 VALIDATING REACT CODE (REDUCED CHECKS)');
-  
-  const validationErrors = [];
-  const codeText = code.toLowerCase();
-  
-  // 1. REMOVED: Strict syntax validation - let transpiler handle it
-  // Only check for severe syntax issues
-  const openBraces = (code.match(/{/g) || []).length;
-  const closeBraces = (code.match(/}/g) || []).length;
-  const braceDiff = Math.abs(openBraces - closeBraces);
-  
-  if (braceDiff > 5) { // Only flag large mismatches
-    validationErrors.push(`Major syntax error: Large brace mismatch (${openBraces} open, ${closeBraces} close)`);
-  }
-
-  // 2. REMOVED: Financial terms validation (as requested)
-  // 3. REMOVED: Strict parentheses validation - too many false positives
-
-  // 4. Check for stray "App;" statements (this is a real syntax error)
-  if (code.match(/^\s*App;\s*$/m)) {
-    validationErrors.push('Found stray "App;" statement that will cause syntax error');
-  }
-
-  // 5. Essential logEvent validation (reduced)
-  if (!code.includes('logEvent')) {
-    validationErrors.push('Missing logEvent prop usage');
-  }
-
-  // 6. Basic game structure validation (reduced)
-  if (!code.includes('gameStarted') || !code.includes('gameEnded')) {
-    validationErrors.push('Missing basic game state management');
-  }
-
-  // 7. Component structure validation
-  const hasValidComponentStart = code.includes('const App = ') || code.includes('function App');
-  if (!hasValidComponentStart) {
-    validationErrors.push('Invalid component structure');
-  }
-
-  // 8. Export validation
-  if (!code.includes('export default App')) {
-    validationErrors.push('Missing component export');
-  }
-
-  console.log(`🔍 Validation completed: ${validationErrors.length} errors found`);
-  return validationErrors;
+  return {
+    code: fixedCode,
+    errors: errors,
+    warnings: warnings,
+    isValid: errors.length === 0,
+    autoFixed: fixedCode !== code
+  };
 }
 
 // Enhanced system prompt - reduced restrictions
 // Complete Enhanced System Prompt with Win/Loss Enforcement
 const getEnhancedSystemPrompt = (gameType = 'game') => `You are an elite React developer. Generate a complete, working React game component.
 
-🚨 CRITICAL OUTPUT FORMAT REQUIRED 🚨
-You MUST output code in this EXACT format - NO imports, NO exports, just the wrapped function:
+🚨 CRITICAL OUTPUT FORMAT 🚨
+You MUST output code in this EXACT structure - NO DEVIATIONS:
 
+1. Start with EXACTLY: (function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
+2. Include helper functions after the parameter list
+3. Define the App component with var App = function App(_ref) {
+4. End with EXACTLY: return typeof App !== 'undefined' ? App : null; })
+
+🚨 FORBIDDEN PATTERNS 🚨
+- ❌ NO double function wrappers (only ONE (function... statement)
+- ❌ NO imports or exports anywhere in the code
+- ❌ NO incomplete syntax (every { must have })
+- ❌ NO trailing commas in the last object properties
+- ❌ NO console.log statements for debugging
+- ❌ NO markdown code blocks (\`\`\`)
+
+🚨 COMPLETION REQUIREMENTS 🚨
+- ✅ EVERY React.createElement() call must be complete
+- ✅ EVERY sx prop must be a complete object
+- ✅ EVERY function must have closing braces
+- ✅ EVERY component must be fully rendered
+- ✅ ALL dialog components must be complete
+- ✅ ALL event handlers must be complete
+
+🚨 SYNTAX CHECKLIST BEFORE COMPLETION 🚨
+Before outputting, verify:
+1. Only ONE (function... wrapper at the start
+2. All components are complete (no cut-off mid-sentence)
+3. All sx props are complete objects
+4. All React.createElement calls are properly closed
+5. Ends with exactly: return typeof App !== 'undefined' ? App : null; })
+
+🚨 EXACT TEMPLATE TO FOLLOW 🚨
 (function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
   Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
   Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
@@ -219,185 +199,27 @@ You MUST output code in this EXACT format - NO imports, NO exports, just the wra
   faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
   faShieldAlt, faHeart, faSkull, faClock, faBolt, proxiedAssets, faQuestionCircle) {
   
-  // Add helper functions here if needed
-  function _defineProperty(obj, key, value) {
-    if (key in obj) {
-      Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
-    } else {
-      obj[key] = value;
-    }
-    return obj;
-  }
-  
-  function _objectSpread(target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i] != null ? arguments[i] : {};
-      var ownKeys = Object.keys(source);
-      if (typeof Object.getOwnPropertySymbols === 'function') {
-        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-        }));
-      }
-      ownKeys.forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
-    }
-    return target;
-  }
+  // Helper functions here
+  function _defineProperty(obj, key, value) { /* ... */ }
+  function _objectSpread(target) { /* ... */ }
 
-var App = function App(_ref) {
-  var logEvent = _ref.logEvent;
-  
-  // Validate logEvent prop
-  useEffect(function () {
-    if (!logEvent || typeof logEvent !== 'function') {
-      console.error('⚠️ logEvent prop missing');
-    }
-  }, [logEvent]);
-
-  // Required state variables using var and array destructuring
-  var _useState = useState(false),
-    gameStarted = _useState[0],
-    setGameStarted = _useState[1];
-  var _useState2 = useState(false),
-    gameEnded = _useState2[0],
-    setGameEnded = _useState2[1];
-  var _useState3 = useState(false),
-    isPracticeMode = _useState3[0],
-    setIsPracticeMode = _useState3[1];
-  var _useState4 = useState([]),
-    gameHistory = _useState4[0],
-    setGameHistory = _useState4[1];
-  var _useState5 = useState(false),
-    isProcessingDeposit = _useState5[0],
-    setIsProcessingDeposit = _useState5[1];
-  var _useState6 = useState(null),
-    depositError = _useState6[0],
-    setDepositError = _useState6[1];
-
-  var gameType = "${gameType}";
-
-  // Game functions using var and function expressions
-  var startGame = useCallback(function (practiceMode) {
-    if (practiceMode === void 0) { practiceMode = false; }
-    setGameEnded(false);
-    setIsPracticeMode(practiceMode);
-    setDepositError(null);
+  var App = function App(_ref) {
+    var logEvent = _ref.logEvent;
     
-    if (practiceMode) {
-      setGameStarted(true);
-      return;
-    }
+    // All your game logic here...
+    // Must include complete deposit handling, game mechanics, end game logic
     
-    setIsProcessingDeposit(true);
-    if (logEvent) {
-      logEvent("gameStarted", {
-        timestamp: new Date().toISOString(),
-        gameType: gameType,
-        practiceMode: false
-      }, {
-        onDepositSuccess: function onDepositSuccess() {
-          setIsProcessingDeposit(false);
-          setGameStarted(true);
-        },
-        onDepositFailed: function onDepositFailed() {
-          setIsProcessingDeposit(false);
-          setDepositError("Deposit failed. Please try again.");
-        }
-      });
-    } else {
-      setIsProcessingDeposit(false);
-      setGameStarted(true);
-    }
-  }, [logEvent]);
-
-  var endGame = useCallback(function (result, score) {
-    if (!result || !['win', 'loss'].includes(result)) {
-      console.error('❌ Invalid endGame result:', result);
-      return;
-    }
-    var multiplier = typeof score === 'string' ? score : String(score || '0.00');
-    setGameEnded(true);
-    if (!isPracticeMode && logEvent) {
-      logEvent("gameEnded", {
-        timestamp: new Date().toISOString(),
-        result: result,
-        multiplier: multiplier,
-        gameType: gameType
-      });
-    }
-    setGameHistory(function (prev) {
-      return [].concat(prev.slice(-9), [{
-        result: result,
-        score: multiplier,
-        timestamp: new Date().toISOString(),
-        practice: isPracticeMode
-      }]);
-    });
-  }, [isPracticeMode, logEvent]);
-
-  var resetGame = useCallback(function () {
-    setGameStarted(false);
-    setGameEnded(false);
-    setIsProcessingDeposit(false);
-    setDepositError(null);
-  }, []);
-
-  // Render function
-  var renderGameContent = function renderGameContent() {
-    // [Include all the state handling logic here - deposit processing, errors, start screen, active game, end screen]
-    // Use React.createElement() for all JSX
-    
-    if (isProcessingDeposit) {
-      return React.createElement(Box, {
-        sx: {
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          textAlign: 'center',
-          p: 4
-        }
-      }, React.createElement(CircularProgress, { sx: { mb: 3, color: '#00ff3a' } }),
-         React.createElement(Typography, { variant: "h6", sx: { color: '#fff' } }, "🏦 Processing Deposit..."));
-    }
-    
-    // [Continue with all other states...]
-    
-    return null;
+    return React.createElement(Box, {
+      sx: { /* complete object */ }
+    }, renderGameContent());
   };
 
-  // Main return
-  return React.createElement(Box, {
-    sx: {
-      background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
-      minHeight: '600px',
-      borderRadius: '20px',
-      p: 3,
-      color: '#fff'
-    }
-  }, renderGameContent());
-};
-
-  // Return the App component
   return typeof App !== 'undefined' ? App : null;
 })
 
-🚨 FORMAT REQUIREMENTS 🚨
-- Start with exactly: (function(React, useState, useEffect...
-- End with exactly: return typeof App !== 'undefined' ? App : null; })
-- Use var declarations, not const/let
-- Use function expressions, not arrow functions for main functions
-- Use React.createElement() instead of JSX
-- Use array destructuring for useState: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
-- NO imports or exports anywhere in the code
-- ALL styling must use sx prop with object syntax
+Generate a game for: "${gameType}"
 
-🚨 GAME MECHANICS REQUIREMENTS 🚨
-[Include all your existing game mechanics requirements here...]
-
-Generate a complete game that follows this EXACT format. Do not deviate from the wrapped function structure.
+🚨 CRITICAL: Output ONLY the wrapped function code. No explanations, no markdown, no extra text.
 
 🚨 CRITICAL: PERFECT SYNTAX REQUIRED 🚨
 - Every opening brace { must have a matching closing brace }
@@ -1041,8 +863,10 @@ Generate a COMPLETE, syntactically perfect React component with REAL game mechan
 
 // helper/util/reactGenerator.js - UPDATED GENERATION LOGIC
 
+// In helper/util/reactGenerator.js - REPLACE generateReactComponent function
+
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING REACT COMPONENT (DIRECT WRAPPED FORMAT)');
+  console.log('⚛️ GENERATING REACT COMPONENT (ERROR-RESISTANT VERSION)');
   console.log('Prompt:', prompt);
 
   try {
@@ -1058,29 +882,41 @@ async function generateReactComponent(prompt, imageUrls = []) {
     };
 
     let attempt = 0;
-    const maxAttempts = 2;
+    const maxAttempts = 3; // Increased attempts for better reliability
+    let lastError = null;
     
     while (attempt < maxAttempts) {
       attempt++;
       console.log(`🔄 Generation attempt ${attempt}/${maxAttempts}`);
       
       try {
+        // Enhanced prompt based on previous failure
+        let enhancedPrompt = `Generate a React game component in the EXACT wrapped function format for: "${prompt}".`;
+        
+        if (attempt > 1 && lastError) {
+          enhancedPrompt += `\n\n🚨 CRITICAL: Previous attempt failed with: ${lastError}`;
+          enhancedPrompt += `\nEnsure code is COMPLETE and follows the exact format. Do NOT truncate mid-sentence.`;
+        }
+        
+        if (attempt > 2) {
+          enhancedPrompt += `\n\n🚨 FINAL ATTEMPT: This is the last chance. Generate COMPLETE, valid code.`;
+        }
+
         const stream = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 8000,
+          temperature: attempt > 1 ? 0.3 : 0.7, // Lower temperature for retries
           system: getEnhancedSystemPrompt(),
           messages: [
             {
               role: 'user',
-              content: `Generate a React game component in the EXACT wrapped function format for: "${prompt}". 
-
-              CRITICAL: Output must start with "(function(React, useState..." and end with "})"
+              content: `${enhancedPrompt}
               
-              Requirements:
-              - Use the wrapped function format (no imports/exports)
-              - Use var declarations and React.createElement()
-              - Include proper logEvent integration
-              - Real game mechanics with natural win/loss conditions
+              CRITICAL REQUIREMENTS:
+              - Single function wrapper only
+              - Complete all components 
+              - No truncated syntax
+              - End with exactly: return typeof App !== 'undefined' ? App : null; })
               
               Proxied assets: ${JSON.stringify(proxiedAssets)}`,
             },
@@ -1097,77 +933,78 @@ async function generateReactComponent(prompt, imageUrls = []) {
 
         console.log(`📝 Raw code received (attempt ${attempt}), length: ${rawCode.length}`);
 
-        // Simple cleanup - remove code blocks if present
+        // Clean up any markdown or extra text
         let cleanedCode = rawCode
           .replace(/```(?:jsx?|javascript|react)?/gi, '')
+          .replace(/^[^(]*\(function/m, '(function') // Remove any text before the wrapper
           .trim();
 
-        // Basic format validation - much simpler than before
-        const isCorrectFormat = cleanedCode.startsWith('(function(React, useState') && 
-                               cleanedCode.endsWith('})') &&
-                               cleanedCode.includes('var App = function App') &&
-                               cleanedCode.includes('return typeof App !== \'undefined\' ? App : null');
+        // Enhanced validation and fixing
+        const validationResult = validateAndFixCode(cleanedCode);
+        
+        console.log(`🔍 Validation result: ${validationResult.errors.length} errors, ${validationResult.warnings.length} warnings`);
+        console.log(`🔧 Auto-fixed: ${validationResult.autoFixed}`);
 
-        if (!isCorrectFormat) {
-          console.warn(`⚠️ Generated code is not in correct format (attempt ${attempt})`);
-          if (attempt < maxAttempts) {
-            console.log('🔄 Retrying with format emphasis...');
-            continue;
-          } else {
-            // Try to fix it with transpileReactCode as fallback
-            console.log('🔧 Attempting to fix format with transpiler...');
-            cleanedCode = await transpileReactCode(cleanedCode);
-          }
-        }
-
-        // Minimal validation - just check essential structure
-        const hasLogEvent = cleanedCode.includes('logEvent');
-        const hasGameStates = cleanedCode.includes('gameStarted') && cleanedCode.includes('gameEnded');
-        const hasEndGame = cleanedCode.includes('endGame');
-
-        const validationErrors = [];
-        if (!hasLogEvent) validationErrors.push('Missing logEvent integration');
-        if (!hasGameStates) validationErrors.push('Missing game state management');
-        if (!hasEndGame) validationErrors.push('Missing endGame function');
-
-        if (validationErrors.length === 0 || attempt === maxAttempts) {
-          if (validationErrors.length > 0) {
-            console.warn(`⚠️ Proceeding with ${validationErrors.length} warnings:`, validationErrors.join('; '));
-          }
-
-          console.log('✅ React component generation completed');
+        if (validationResult.errors.length === 0) {
+          // Success! Code is valid
+          console.log('✅ Code generation successful');
 
           return {
             originalCode: cleanedCode,
-            transpiledCode: cleanedCode, // Same since it's already in correct format
-            finalApp: cleanedCode,
+            transpiledCode: validationResult.code,
+            finalApp: validationResult.code,
             proxiedAssets,
             validation: {
-              passed: validationErrors.length === 0,
-              warnings: validationErrors,
+              passed: true,
+              warnings: validationResult.warnings,
+              autoFixed: validationResult.autoFixed,
               attempt: attempt,
-              format: isCorrectFormat ? 'correct' : 'fixed',
               checkedItems: [
-                'wrapped function format',
-                'logEvent integration', 
-                'game state management',
-                'endGame function'
+                'wrapper format',
+                'syntax completion',
+                'brace balance',
+                'component structure',
+                'game mechanics'
               ]
             }
           };
-        } else {
-          console.warn(`❌ Validation failed (attempt ${attempt}): ${validationErrors.join('; ')}`);
+        } 
+        
+        // Code has errors, but if this is the final attempt, try to use it anyway
+        if (attempt === maxAttempts) {
+          console.warn(`⚠️ Final attempt with ${validationResult.errors.length} errors - attempting to use anyway`);
+          
+          return {
+            originalCode: cleanedCode,
+            transpiledCode: validationResult.code,
+            finalApp: validationResult.code,
+            proxiedAssets,
+            validation: {
+              passed: false,
+              errors: validationResult.errors,
+              warnings: validationResult.warnings,
+              autoFixed: validationResult.autoFixed,
+              attempt: attempt,
+              forcedCompletion: true
+            }
+          };
         }
+        
+        // Store error for next attempt
+        lastError = validationResult.errors.join('; ');
+        console.warn(`❌ Attempt ${attempt} failed: ${lastError}`);
 
       } catch (generationError) {
         console.error(`❌ Generation error (attempt ${attempt}):`, generationError.message);
+        lastError = generationError.message;
+        
         if (attempt === maxAttempts) {
           throw generationError;
         }
       }
     }
 
-    throw new Error(`Failed to generate valid React component after ${maxAttempts} attempts`);
+    throw new Error(`Failed to generate valid React component after ${maxAttempts} attempts. Last error: ${lastError}`);
 
   } catch (error) {
     console.error('❌ Fatal error in generateReactComponent:', error);
@@ -1176,5 +1013,6 @@ async function generateReactComponent(prompt, imageUrls = []) {
 }
 
 module.exports = {
-  generateReactComponent
+  generateReactComponent,
+  validateAndFixCode // Export for testing
 };
