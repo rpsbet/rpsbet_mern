@@ -35,9 +35,19 @@ function detectCriticalErrors(code) {
   }
   
   // 3. MISSING PROPER ENDING (your exact error)
-  if (!code.trim().endsWith('return typeof App !== \'undefined\' ? App : null;\n})') && 
-      !code.trim().endsWith('return typeof App !== \'undefined\' ? App : null;\n})')) {
+  const trimmedCode = code.trim();
+  const properEndings = [
+    'return typeof App !== \'undefined\' ? App : null;\n})',
+    'return typeof App !== \'undefined\' ? App : null;\n})',
+    'return typeof App !== \'undefined\' ? App : null; })',
+    'return typeof App !== \'undefined\' ? App : null;})'
+  ];
+  
+  const hasProperEnding = properEndings.some(ending => trimmedCode.endsWith(ending));
+  
+  if (!hasProperEnding) {
     errors.push('CRITICAL: Missing proper function ending');
+    console.log('🚨 Code ends with:', trimmedCode.slice(-100));
   }
   
   // 4. REDUNDANT React DECLARATIONS (your exact error)
@@ -109,7 +119,15 @@ function autoFixCriticalErrors(code) {
   fixed = fixed.replace(/var\s+useRef\s*=\s*React\.useRef;\s*\n?/g, '');
   
   // Fix 5: Handle truncated code
-  if (!fixed.trim().endsWith('})')) {
+  const properEndings = [
+    'return typeof App !== \'undefined\' ? App : null;\n})',
+    'return typeof App !== \'undefined\' ? App : null; })',
+    'return typeof App !== \'undefined\' ? App : null;})'
+  ];
+  
+  const hasProperEnding = properEndings.some(ending => fixed.trim().endsWith(ending));
+  
+  if (!hasProperEnding) {
     console.log('🔧 Fixing truncated ending...');
     
     // Remove any incomplete trailing syntax patterns
@@ -119,13 +137,27 @@ function autoFixCriticalErrors(code) {
     fixed = fixed.replace(/React\.createElement\([^)]*$/g, '');
     fixed = fixed.replace(/\)\s*:\s*React\.createElement\([^)]*$/g, '');
     
-    // Clean up any incomplete trailing elements
+    // More aggressive cleanup for incomplete elements
+    const problematicPatterns = [
+      /\s*,\s*\{[^}]*$/,  // Incomplete object at end
+      /\s*\)[^)]*$/,      // Incomplete closing parenthesis
+      /\s*\([^)]*$/,      // Incomplete opening parenthesis
+      /\s*\{[^}]*$/       // Incomplete opening brace
+    ];
+    
+    problematicPatterns.forEach(pattern => {
+      fixed = fixed.replace(pattern, '');
+    });
+    
+    // Clean up any incomplete trailing elements line by line
     const lines = fixed.split('\n');
     while (lines.length > 0) {
       const lastLine = lines[lines.length - 1].trim();
-      if (lastLine.match(/^\s*[,{]\s*$/) || 
+      if (lastLine.match(/^\s*[,{(\)]\s*$/) || 
           lastLine.match(/sx\s*:\s*{\s*$/) ||
-          lastLine.match(/React\.createElement\([^)]*$/)) {
+          lastLine.match(/React\.createElement\([^)]*$/) ||
+          lastLine.match(/^\s*\)\s*[,;]?\s*$/)) {
+        console.log('🔧 Removing incomplete line:', lastLine);
         lines.pop();
       } else {
         break;
@@ -197,10 +229,13 @@ async function generateReactComponent(prompt, imageUrls = []) {
         let inputTokens = 0;
         let outputTokens = 0;
 
-        const stream = await anthropic.messages.create({
+        // Add timeout wrapper
+        const GENERATION_TIMEOUT = 120000; // 2 minutes max
+        
+        const generationPromise = anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 8192, // Increased from 8000
-          temperature: attempt > 1 ? 0.1 : 0.5, // Even lower temperature for retries
+          max_tokens: 8192,
+          temperature: attempt > 1 ? 0.1 : 0.5,
           system: getEnhancedSystemPrompt(),
           messages: [
             {
@@ -220,24 +255,54 @@ async function generateReactComponent(prompt, imageUrls = []) {
           stream: true,
         });
 
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Generation timeout after 2 minutes')), GENERATION_TIMEOUT);
+        });
+
+        const stream = await Promise.race([generationPromise, timeoutPromise]);
+
         let rawCode = '';
-        for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            rawCode += chunk.delta.text;
-          } else if (chunk.type === 'message_start') {
-            inputTokens = chunk.message.usage?.input_tokens || 0;
-          } else if (chunk.type === 'message_delta') {
-            outputTokens = chunk.delta.usage?.output_tokens || 0;
-            totalTokens = inputTokens + outputTokens;
+        let chunkCount = 0;
+        
+        try {
+          for await (const chunk of stream) {
+            chunkCount++;
+            
+            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+              rawCode += chunk.delta.text;
+              outputTokens += chunk.delta.text.split(' ').length; // Rough token estimate
+            } else if (chunk.type === 'message_start') {
+              inputTokens = chunk.message.usage?.input_tokens || 0;
+            } else if (chunk.type === 'message_delta' && chunk.delta.usage) {
+              outputTokens = chunk.delta.usage.output_tokens || outputTokens;
+            } else if (chunk.type === 'message_stop') {
+              // Final usage data
+              if (chunk.usage) {
+                inputTokens = chunk.usage.input_tokens || inputTokens;
+                outputTokens = chunk.usage.output_tokens || outputTokens;
+              }
+            }
           }
+          
+          totalTokens = inputTokens + outputTokens;
+          
+        } catch (streamError) {
+          console.error('⚠️ Streaming error:', streamError.message);
+          // Continue with whatever we got
         }
 
         const endTime = Date.now();
         const duration = endTime - startTime;
         
         console.log(`📝 Raw code received (attempt ${attempt}), length: ${rawCode.length}`);
+        console.log(`📊 Streaming stats: ${chunkCount} chunks processed`);
         console.log(`🔢 Token usage: ${totalTokens} total (${inputTokens} input, ${outputTokens} output)`);
         console.log(`⏱️ Generation time: ${duration}ms`);
+        
+        // Check if response appears complete
+        const endsWithClosingBrace = rawCode.trim().endsWith('})');
+        const hasReturnStatement = rawCode.includes('return typeof App');
+        console.log(`✅ Response completeness: ends with '})'=${endsWithClosingBrace}, has return=${hasReturnStatement}`);
 
         // Clean up any markdown or extra text
         let cleanedCode = rawCode
