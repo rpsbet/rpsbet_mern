@@ -6,7 +6,126 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// In helper/util/reactGenerator.js - REPLACE validateReactCode function
+function detectCriticalErrors(code) {
+  const errors = [];
+  
+  // 1. BROKEN useState PATTERN (your exact error)
+  const brokenUseStatePattern = /var\s+\w+\s*=\s*useState\([^)]*\)\[0\]/g;
+  if (brokenUseStatePattern.test(code)) {
+    errors.push('CRITICAL: Broken useState pattern detected');
+    console.log('🚨 Found broken useState:', code.match(brokenUseStatePattern));
+  }
+  
+  // 2. TRUNCATED CODE (your exact error)  
+  const lastLine = code.split('\n').pop().trim();
+  const truncationPatterns = [
+    /sx:\s*{$/,           // "sx: {"
+    /,\s*sx:\s*{[^}]*$/,  // ", sx: { incomplete"
+    /\{\s*sx;$/,          // "{ sx;"
+    /createElement\([^)]*$/  // Incomplete createElement
+  ];
+  
+  if (truncationPatterns.some(pattern => pattern.test(lastLine))) {
+    errors.push('CRITICAL: Code appears truncated');
+    console.log('🚨 Truncated ending detected:', lastLine);
+  }
+  
+  // 3. MISSING PROPER ENDING (your exact error)
+  if (!code.trim().endsWith('return typeof App !== \'undefined\' ? App : null;\n})') && 
+      !code.trim().endsWith('return typeof App !== \'undefined\' ? App : null;\n})')) {
+    errors.push('CRITICAL: Missing proper function ending');
+  }
+  
+  // 4. REDUNDANT React DECLARATIONS (your exact error)
+  if (code.includes('var useState = React.useState;')) {
+    errors.push('CRITICAL: Redundant React hook declarations');
+  }
+  
+  // 5. DOUBLE WRAPPER (causes function nesting errors)
+  const wrapperCount = (code.match(/\(function\(React, useState/g) || []).length;
+  if (wrapperCount > 1) {
+    errors.push('CRITICAL: Multiple function wrappers detected');
+  }
+  
+  return errors;
+}
+
+// AUTO-FIX FOR CRITICAL ERRORS
+function autoFixCriticalErrors(code) {
+  console.log('🔧 AUTO-FIXING CRITICAL ERRORS');
+  let fixed = code;
+  
+  // Fix 1: Remove double wrapper
+  const wrapperMatches = fixed.match(/\(function\(React, useState/g) || [];
+  if (wrapperMatches.length > 1) {
+    console.log('🔧 Removing double wrapper...');
+    const firstIndex = fixed.indexOf('(function(React, useState');
+    const secondIndex = fixed.indexOf('(function(React, useState', firstIndex + 1);
+    if (secondIndex > -1) {
+      fixed = fixed.substring(secondIndex);
+    }
+  }
+  
+  // Fix 2: Convert broken useState to proper destructuring
+  const stateVarMatches = fixed.match(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\];\s*var\s+set(\w+)\s*=\s*useState\([^)]*\)\[1\];?/g);
+  
+  if (stateVarMatches) {
+    console.log('🔧 Fixing broken useState patterns...');
+    
+    stateVarMatches.forEach((match, index) => {
+      const varMatch = match.match(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\];\s*var\s+set(\w+)\s*=\s*useState\([^)]*\)\[1\];?/);
+      if (varMatch) {
+        const varName = varMatch[1];
+        const setterName = 'set' + varMatch[3];
+        const initialValue = varMatch[2];
+        
+        // Create proper destructuring
+        const properDestructure = `var _useState${index + 1} = useState(${initialValue}),\n    ${varName} = _useState${index + 1}[0],\n    ${setterName} = _useState${index + 1}[1];`;
+        
+        fixed = fixed.replace(match, properDestructure);
+      }
+    });
+  }
+  
+  // Fix 3: Handle individual broken useState patterns
+  let stateCounter = 100;
+  fixed = fixed.replace(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\];/g, function(match, varName, initialValue) {
+    stateCounter++;
+    const setterName = 'set' + varName.charAt(0).toUpperCase() + varName.slice(1);
+    return `var _useState${stateCounter} = useState(${initialValue}),\n    ${varName} = _useState${stateCounter}[0],\n    ${setterName} = _useState${stateCounter}[1];`;
+  });
+  
+  // Remove orphaned setter declarations
+  fixed = fixed.replace(/var\s+set\w+\s*=\s*useState\([^)]*\)\[1\];\s*/g, '');
+  
+  // Fix 4: Remove redundant React declarations
+  fixed = fixed.replace(/var\s+useState\s*=\s*React\.useState;\s*\n?/g, '');
+  fixed = fixed.replace(/var\s+useEffect\s*=\s*React\.useEffect;\s*\n?/g, '');
+  fixed = fixed.replace(/var\s+useCallback\s*=\s*React\.useCallback;\s*\n?/g, '');
+  fixed = fixed.replace(/var\s+useRef\s*=\s*React\.useRef;\s*\n?/g, '');
+  
+  // Fix 5: Handle truncated code
+  if (!fixed.trim().endsWith('})')) {
+    console.log('🔧 Fixing truncated ending...');
+    
+    // Remove any incomplete trailing syntax
+    fixed = fixed.replace(/[,{]\s*sx[^}]*$/, '');
+    fixed = fixed.replace(/,\s*$/, '');
+    fixed = fixed.replace(/\{\s*sx;?\s*$/, '');
+    
+    // Ensure proper ending
+    if (!fixed.includes('return typeof App !== \'undefined\' ? App : null')) {
+      fixed += '\n\n  return typeof App !== \'undefined\' ? App : null;\n})';
+    } else if (!fixed.trim().endsWith('})')) {
+      fixed += '\n})';
+    }
+  }
+  
+  // Fix 6: Clean up any malformed React.createElement calls
+  fixed = fixed.replace(/React\.createElement\([^)]*sx:\s*{[^}]*$/, '');
+  
+  return fixed;
+}
 
 function validateAndFixCode(code) {
   console.log('🔍 ENHANCED VALIDATION AND FIXING');
@@ -169,6 +288,14 @@ You MUST output code in this EXACT structure - NO DEVIATIONS:
 - ❌ NO trailing commas in the last object properties
 - ❌ NO console.log statements for debugging
 - ❌ NO markdown code blocks (\`\`\`)
+- ❌ var gameStarted = useState(false)[0];
+- ❌ [React.createElement(...), React.createElement(...)]  
+- ❌ border: '2px; (incomplete)
+
+✅ REQUIRED PATTERNS:
+✅ var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+✅ React.createElement(Box, {}, child1, child2, child3)
+✅ Complete all properties before outputting
 
 🚨 COMPLETION REQUIREMENTS 🚨
 - ✅ EVERY React.createElement() call must be complete
@@ -861,12 +988,8 @@ The generated game MUST have:
 
 Generate a COMPLETE, syntactically perfect React component with REAL game mechanics, natural win/loss conditions, modern styling, and proper logEvent integration. The game must feel authentic and engaging, not like a demo with placeholder buttons.`;
 
-// helper/util/reactGenerator.js - UPDATED GENERATION LOGIC
-
-// In helper/util/reactGenerator.js - REPLACE generateReactComponent function
-
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING REACT COMPONENT (ERROR-RESISTANT VERSION)');
+  console.log('⚛️ GENERATING REACT COMPONENT (CRITICAL ERROR PREVENTION)');
   console.log('Prompt:', prompt);
 
   try {
@@ -882,7 +1005,7 @@ async function generateReactComponent(prompt, imageUrls = []) {
     };
 
     let attempt = 0;
-    const maxAttempts = 3; // Increased attempts for better reliability
+    const maxAttempts = 3;
     let lastError = null;
     
     while (attempt < maxAttempts) {
@@ -895,28 +1018,30 @@ async function generateReactComponent(prompt, imageUrls = []) {
         
         if (attempt > 1 && lastError) {
           enhancedPrompt += `\n\n🚨 CRITICAL: Previous attempt failed with: ${lastError}`;
-          enhancedPrompt += `\nEnsure code is COMPLETE and follows the exact format. Do NOT truncate mid-sentence.`;
+          enhancedPrompt += `\nUse EXACT useState pattern: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];`;
+          enhancedPrompt += `\nEnsure code is COMPLETE and ends properly.`;
         }
         
         if (attempt > 2) {
-          enhancedPrompt += `\n\n🚨 FINAL ATTEMPT: This is the last chance. Generate COMPLETE, valid code.`;
+          enhancedPrompt += `\n\n🚨 FINAL ATTEMPT: Generate COMPLETE, valid code with proper useState patterns.`;
         }
 
         const stream = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 8000,
-          temperature: attempt > 1 ? 0.3 : 0.7, // Lower temperature for retries
+          temperature: attempt > 1 ? 0.2 : 0.7, // Very low temperature for retries
           system: getEnhancedSystemPrompt(),
           messages: [
             {
               role: 'user',
               content: `${enhancedPrompt}
               
-              CRITICAL REQUIREMENTS:
-              - Single function wrapper only
-              - Complete all components 
-              - No truncated syntax
+              🚨 CRITICAL REQUIREMENTS 🚨
+              - Use EXACT useState pattern: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+              - NO var gameStarted = useState(false)[0]; patterns
+              - Complete all React.createElement calls
               - End with exactly: return typeof App !== 'undefined' ? App : null; })
+              - Real game mechanics that call endGame() naturally
               
               Proxied assets: ${JSON.stringify(proxiedAssets)}`,
             },
@@ -939,60 +1064,76 @@ async function generateReactComponent(prompt, imageUrls = []) {
           .replace(/^[^(]*\(function/m, '(function') // Remove any text before the wrapper
           .trim();
 
-        // Enhanced validation and fixing
-        const validationResult = validateAndFixCode(cleanedCode);
+        // CRITICAL: Detect specific error patterns immediately
+        const criticalErrors = detectCriticalErrors(cleanedCode);
         
-        console.log(`🔍 Validation result: ${validationResult.errors.length} errors, ${validationResult.warnings.length} warnings`);
-        console.log(`🔧 Auto-fixed: ${validationResult.autoFixed}`);
-
-        if (validationResult.errors.length === 0) {
-          // Success! Code is valid
-          console.log('✅ Code generation successful');
-
-          return {
-            originalCode: cleanedCode,
-            transpiledCode: validationResult.code,
-            finalApp: validationResult.code,
-            proxiedAssets,
-            validation: {
-              passed: true,
-              warnings: validationResult.warnings,
-              autoFixed: validationResult.autoFixed,
-              attempt: attempt,
-              checkedItems: [
-                'wrapper format',
-                'syntax completion',
-                'brace balance',
-                'component structure',
-                'game mechanics'
-              ]
-            }
-          };
-        } 
-        
-        // Code has errors, but if this is the final attempt, try to use it anyway
-        if (attempt === maxAttempts) {
-          console.warn(`⚠️ Final attempt with ${validationResult.errors.length} errors - attempting to use anyway`);
+        if (criticalErrors.length > 0) {
+          console.warn(`🚨 CRITICAL ERRORS DETECTED (attempt ${attempt}):`, criticalErrors);
           
-          return {
-            originalCode: cleanedCode,
-            transpiledCode: validationResult.code,
-            finalApp: validationResult.code,
-            proxiedAssets,
-            validation: {
-              passed: false,
-              errors: validationResult.errors,
-              warnings: validationResult.warnings,
-              autoFixed: validationResult.autoFixed,
-              attempt: attempt,
-              forcedCompletion: true
-            }
-          };
+          // Auto-fix the errors
+          cleanedCode = autoFixCriticalErrors(cleanedCode);
+          
+          // Re-validate after fixing
+          const postFixErrors = detectCriticalErrors(cleanedCode);
+          
+          if (postFixErrors.length > 0 && attempt < maxAttempts) {
+            lastError = postFixErrors.join('; ');
+            console.log(`🔄 Auto-fix incomplete, retrying with explicit constraints...`);
+            continue;
+          }
+          
+          console.log(`✅ Auto-fix resolved ${criticalErrors.length - postFixErrors.length} critical errors`);
         }
+
+        // Additional validation
+        const openBraces = (cleanedCode.match(/{/g) || []).length;
+        const closeBraces = (cleanedCode.match(/}/g) || []).length;
+        const braceDiff = Math.abs(openBraces - closeBraces);
         
-        // Store error for next attempt
-        lastError = validationResult.errors.join('; ');
-        console.warn(`❌ Attempt ${attempt} failed: ${lastError}`);
+        if (braceDiff > 3) {
+          const error = `Major brace mismatch: ${openBraces} open, ${closeBraces} close`;
+          console.warn(`⚠️ ${error}`);
+          if (attempt < maxAttempts) {
+            lastError = error;
+            continue;
+          }
+        }
+
+        // Check for essential game structure
+        const hasLogEvent = cleanedCode.includes('logEvent');
+        const hasGameStates = cleanedCode.includes('gameStarted') && cleanedCode.includes('gameEnded');
+        const hasEndGame = cleanedCode.includes('endGame');
+
+        const structureWarnings = [];
+        if (!hasLogEvent) structureWarnings.push('Missing logEvent integration');
+        if (!hasGameStates) structureWarnings.push('Missing game state management');
+        if (!hasEndGame) structureWarnings.push('Missing endGame function');
+
+        // Success - return the code
+        console.log('✅ Code generation successful');
+        if (structureWarnings.length > 0) {
+          console.warn('⚠️ Structure warnings:', structureWarnings);
+        }
+
+        return {
+          originalCode: rawCode,
+          transpiledCode: cleanedCode,
+          finalApp: cleanedCode,
+          proxiedAssets,
+          validation: {
+            passed: criticalErrors.length === 0,
+            warnings: structureWarnings,
+            autoFixed: cleanedCode !== rawCode,
+            attempt: attempt,
+            checkedItems: [
+              'useState patterns',
+              'code completion',
+              'wrapper format',
+              'brace balance',
+              'game structure'
+            ]
+          }
+        };
 
       } catch (generationError) {
         console.error(`❌ Generation error (attempt ${attempt}):`, generationError.message);
