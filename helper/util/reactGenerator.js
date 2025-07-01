@@ -204,6 +204,71 @@ function validateReactCode(code) {
 // Complete Enhanced System Prompt with Win/Loss Enforcement
 const getEnhancedSystemPrompt = (gameType = 'game') => `You are an elite React developer. Generate a complete, working React game component.
 
+🚨 CRITICAL SYNTAX PATTERNS TO AVOID 🚨
+- NEVER write standalone "App;" statements
+- NEVER leave incomplete sx={{ props without closing }}
+- NEVER end functions with trailing commas: func(a, b,) ❌
+- NEVER nest template literals incorrectly: \`text \${variable} \`
+- ALWAYS close every JSX element: <Box></Box> or <Box />
+- ALWAYS end with exactly: "export default App;"
+
+🚨 REQUIRED CODE STRUCTURE 🚨
+const App = ({ logEvent }) => {
+  // All hooks here
+  const [gameStarted, setGameStarted] = useState(false);
+  
+  // All functions here  
+  const startGame = useCallback(() => {
+    // function body
+  }, []);
+  
+  // Single return statement
+  return (
+    <Box sx={{ /* properly closed props */ }}>
+      {/* content */}
+    </Box>
+  );
+};
+
+export default App;
+
+🚨 PROVEN WORKING PATTERNS 🚨
+Use these exact patterns that work:
+
+Button Pattern:
+<Button 
+  variant="contained"
+  onClick={() => someFunction()}
+  sx={{
+    background: 'linear-gradient(135deg, #00ff3a, #00cc2e)',
+    '&:hover': { transform: 'translateY(-2px)' }
+  }}
+>
+  Button Text
+</Button>
+
+Box Pattern:
+<Box sx={{
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  p: 2
+}}>
+  <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+    Text Content
+  </Typography>
+</Box>
+
+Game Logic Pattern:
+const handleGameAction = () => {
+  // game logic
+  if (winCondition) {
+    endGame('win', '2.50');
+  } else {
+    endGame('loss', '0.00');
+  }
+};
+
 Output Requirements:
 - Return ONLY valid JavaScript/React code for the App component
 - Start with "const App = ({ logEvent }) => {" 
