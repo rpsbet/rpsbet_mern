@@ -192,6 +192,11 @@ async function generateReactComponent(prompt, imageUrls = []) {
           enhancedPrompt += `\n\n🚨 FINAL ATTEMPT: Generate COMPLETE, valid code with proper useState patterns.`;
         }
 
+        const startTime = Date.now();
+        let totalTokens = 0;
+        let inputTokens = 0;
+        let outputTokens = 0;
+
         const stream = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 8192, // Increased from 8000
@@ -219,10 +224,20 @@ async function generateReactComponent(prompt, imageUrls = []) {
         for await (const chunk of stream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
             rawCode += chunk.delta.text;
+          } else if (chunk.type === 'message_start') {
+            inputTokens = chunk.message.usage?.input_tokens || 0;
+          } else if (chunk.type === 'message_delta') {
+            outputTokens = chunk.delta.usage?.output_tokens || 0;
+            totalTokens = inputTokens + outputTokens;
           }
         }
 
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        
         console.log(`📝 Raw code received (attempt ${attempt}), length: ${rawCode.length}`);
+        console.log(`🔢 Token usage: ${totalTokens} total (${inputTokens} input, ${outputTokens} output)`);
+        console.log(`⏱️ Generation time: ${duration}ms`);
 
         // Clean up any markdown or extra text
         let cleanedCode = rawCode
@@ -286,6 +301,13 @@ async function generateReactComponent(prompt, imageUrls = []) {
           transpiledCode: cleanedCode,
           finalApp: cleanedCode,
           proxiedAssets,
+          tokenUsage: {
+            total: totalTokens,
+            input: inputTokens,
+            output: outputTokens,
+            duration: duration,
+            attempt: attempt
+          },
           validation: {
             passed: criticalErrors.length === 0,
             warnings: structureWarnings,

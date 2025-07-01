@@ -284,11 +284,66 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       });
     }
 
-    // Image generation/processing (keep your existing logic)
+    // STEP 1: React component generation (must succeed before other operations)
+    console.log('⚛️ GENERATING REACT COMPONENT (USING REFACTORED UTILITY)');
+    console.log('React prompt:', reactPrompt);
+    console.log('Image URLs for React:', imageUrls);
+
+    let generatedReact = null;
+    let extractedInfo = null;
+    let finalGameCode = '';
+    let reactGenerationSuccessful = false;
+
+    try {
+      // Use your refactored generateReactComponent utility
+      // For now, generate without images to ensure React generation succeeds first
+      const reactResult = await generateReactComponent(
+        reactPrompt, 
+        imageUrls.length > 0 ? imageUrls : []
+      );
+      
+      generatedReact = reactResult;
+      finalGameCode = reactResult.finalApp; // This should be the transpiled code
+      reactGenerationSuccessful = true;
+      
+      console.log('✅ React component generated successfully');
+      console.log('Generated code length:', finalGameCode.length);
+      console.log('Has validation:', !!reactResult.validation);
+      console.log('🔢 Token usage:', reactResult.tokenUsage);
+
+    } catch (reactError) {
+      console.error('❌ React generation error:', reactError);
+      console.error('React error stack:', reactError.stack);
+      // Since React generation is mandatory, fail the request
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to generate required React component: ' + reactError.message,
+        details: {
+          step: 'react_generation',
+          reactPrompt: reactPrompt,
+          imageUrls: imageUrls
+        }
+      });
+    }
+
+    // STEP 2: Extract room info (only if React generation succeeded)
+    if (reactGenerationSuccessful) {
+      console.log('📊 EXTRACTING ROOM INFO (USING REFACTORED UTILITY)');
+      try {
+        extractedInfo = await extractRoomInfoFromCode(finalGameCode);
+        console.log('📊 Extracted info from code:', extractedInfo);
+      } catch (extractError) {
+        console.error('❌ Room info extraction error:', extractError);
+        // Continue without extracted info rather than failing
+        extractedInfo = null;
+      }
+    }
+
+    // STEP 3: Image generation/processing (only if React generation succeeded)
     let finalImageUrl = null;
     let generatedImageInfo = null;
 
-    if (imageUrls.length === 0 && generateImage) {
+    if (reactGenerationSuccessful && imageUrls.length === 0 && generateImage) {
       console.log('🎨 GENERATING IMAGE FROM PROMPT');
       console.log('Image prompt (using reactPrompt):', reactPrompt);
       console.log('Image size:', imageSize);
@@ -333,7 +388,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
           // Continue without image rather than failing the entire request
         }
       }
-    } else if (imageUrls.length > 0) {
+    } else if (reactGenerationSuccessful && imageUrls.length > 0) {
       // Check if provided image is from DALL-E and needs conversion
       const providedImageUrl = imageUrls[0];
       const isDalleImage = providedImageUrl.includes('oaidalleapiprodscus.blob.core.windows.net');
@@ -353,42 +408,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
       }
     }
 
-    // ENHANCED: Generate React code using your refactored utility
-    console.log('⚛️ GENERATING REACT COMPONENT (USING REFACTORED UTILITY)');
-    console.log('React prompt:', reactPrompt);
-    console.log('Image URLs for React:', imageUrls);
-
-    let generatedReact = null;
-    let extractedInfo = null;
-    let finalGameCode = '';
-
-    try {
-      // Use your refactored generateReactComponent utility
-      const reactResult = await generateReactComponent(
-        reactPrompt, 
-        imageUrls.length > 0 ? imageUrls : (finalImageUrl ? [finalImageUrl] : [])
-      );
-      
-      generatedReact = reactResult;
-      finalGameCode = reactResult.finalApp; // This should be the transpiled code
-      console.log('✅ React component generated successfully');
-      console.log('Generated code length:', finalGameCode.length);
-      console.log('Has validation:', !!reactResult.validation);
-
-      // ENHANCED: Extract room info using your refactored utility
-      console.log('📊 EXTRACTING ROOM INFO (USING REFACTORED UTILITY)');
-      extractedInfo = await extractRoomInfoFromCode(finalGameCode);
-      console.log('📊 Extracted info from code:', extractedInfo);
-
-    } catch (reactError) {
-      console.error('❌ React generation error:', reactError);
-      console.error('React error stack:', reactError.stack);
-      // Since React generation is mandatory, fail the request
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to generate required React component: ' + reactError.message
-      });
-    }
+    // React generation and room extraction already completed above
 
     // ENHANCED: Use improved metadata determination
     const metadataResult = determineMetadata(
