@@ -305,7 +305,7 @@ router.post('/privy', async (req, res) => {
         user = new User({
           privyId,
           username,
-          email: email || null,
+          email: email || undefined,
           password: generateRandomPassword(),
           bio: '',
           totalWagered: 0,
@@ -321,7 +321,31 @@ router.post('/privy', async (req, res) => {
           accounts: wallet ? [wallet] : [],
         });
 
-        await user.save();
+        try {
+          await user.save();
+        } catch (saveError) {
+          if (saveError.code === 11000) {
+            // Handle duplicate key error
+            if (saveError.keyPattern?.email) {
+              // Find existing user by email and update with privyId
+              user = await User.findOne({ email });
+              if (user && !user.privyId) {
+                user.privyId = privyId;
+                if (wallet && !user.accounts.includes(wallet)) {
+                  user.accounts.push(wallet);
+                }
+                await user.save();
+              }
+            } else if (saveError.keyPattern?.privyId) {
+              // PrivyId already exists, fetch that user
+              user = await User.findOne({ privyId });
+            } else {
+              throw saveError;
+            }
+          } else {
+            throw saveError;
+          }
+        }
       } else if (wallet && !user.accounts.includes(wallet)) {
         // Update user with new wallet
         user.accounts.push(wallet);

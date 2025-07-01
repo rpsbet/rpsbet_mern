@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
+  privyId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   username: {
     type: String,
     required: true,
@@ -29,7 +34,8 @@ const UserSchema = new Schema({
     type: String,
     required: false,
     unique: true,
-    sparse: true
+    sparse: true,
+    default: undefined
   },
   password: {
     type: String,
