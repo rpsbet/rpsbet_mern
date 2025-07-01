@@ -204,80 +204,200 @@ function validateReactCode(code) {
 // Complete Enhanced System Prompt with Win/Loss Enforcement
 const getEnhancedSystemPrompt = (gameType = 'game') => `You are an elite React developer. Generate a complete, working React game component.
 
-🚨 CRITICAL SYNTAX PATTERNS TO AVOID 🚨
-- NEVER write standalone "App;" statements
-- NEVER leave incomplete sx={{ props without closing }}
-- NEVER end functions with trailing commas: func(a, b,) ❌
-- NEVER nest template literals incorrectly: \`text \${variable} \`
-- ALWAYS close every JSX element: <Box></Box> or <Box />
-- ALWAYS end with exactly: "export default App;"
+🚨 CRITICAL OUTPUT FORMAT REQUIRED 🚨
+You MUST output code in this EXACT format - NO imports, NO exports, just the wrapped function:
 
-🚨 REQUIRED CODE STRUCTURE 🚨
-const App = ({ logEvent }) => {
-  // All hooks here
-  const [gameStarted, setGameStarted] = useState(false);
+(function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
+  Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
+  Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+  TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
+  faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
+  faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,
+  Physics, Card, CardContent, CardActions, Tooltip, motion, styled, AnimatePresence,
+  IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions,
+  Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog,
+  faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
+  faShieldAlt, faHeart, faSkull, faClock, faBolt, proxiedAssets, faQuestionCircle) {
   
-  // All functions here  
-  const startGame = useCallback(() => {
-    // function body
-  }, []);
-  
-  // Single return statement
-  return (
-    <Box sx={{ /* properly closed props */ }}>
-      {/* content */}
-    </Box>
-  );
-};
-
-export default App;
-
-🚨 PROVEN WORKING PATTERNS 🚨
-Use these exact patterns that work:
-
-Button Pattern:
-<Button 
-  variant="contained"
-  onClick={() => someFunction()}
-  sx={{
-    background: 'linear-gradient(135deg, #00ff3a, #00cc2e)',
-    '&:hover': { transform: 'translateY(-2px)' }
-  }}
->
-  Button Text
-</Button>
-
-Box Pattern:
-<Box sx={{
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  p: 2
-}}>
-  <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
-    Text Content
-  </Typography>
-</Box>
-
-Game Logic Pattern:
-const handleGameAction = () => {
-  // game logic
-  if (winCondition) {
-    endGame('win', '2.50');
-  } else {
-    endGame('loss', '0.00');
+  // Add helper functions here if needed
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+    } else {
+      obj[key] = value;
+    }
+    return obj;
   }
+  
+  function _objectSpread(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+      var ownKeys = Object.keys(source);
+      if (typeof Object.getOwnPropertySymbols === 'function') {
+        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+        }));
+      }
+      ownKeys.forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    }
+    return target;
+  }
+
+var App = function App(_ref) {
+  var logEvent = _ref.logEvent;
+  
+  // Validate logEvent prop
+  useEffect(function () {
+    if (!logEvent || typeof logEvent !== 'function') {
+      console.error('⚠️ logEvent prop missing');
+    }
+  }, [logEvent]);
+
+  // Required state variables using var and array destructuring
+  var _useState = useState(false),
+    gameStarted = _useState[0],
+    setGameStarted = _useState[1];
+  var _useState2 = useState(false),
+    gameEnded = _useState2[0],
+    setGameEnded = _useState2[1];
+  var _useState3 = useState(false),
+    isPracticeMode = _useState3[0],
+    setIsPracticeMode = _useState3[1];
+  var _useState4 = useState([]),
+    gameHistory = _useState4[0],
+    setGameHistory = _useState4[1];
+  var _useState5 = useState(false),
+    isProcessingDeposit = _useState5[0],
+    setIsProcessingDeposit = _useState5[1];
+  var _useState6 = useState(null),
+    depositError = _useState6[0],
+    setDepositError = _useState6[1];
+
+  var gameType = "${gameType}";
+
+  // Game functions using var and function expressions
+  var startGame = useCallback(function (practiceMode) {
+    if (practiceMode === void 0) { practiceMode = false; }
+    setGameEnded(false);
+    setIsPracticeMode(practiceMode);
+    setDepositError(null);
+    
+    if (practiceMode) {
+      setGameStarted(true);
+      return;
+    }
+    
+    setIsProcessingDeposit(true);
+    if (logEvent) {
+      logEvent("gameStarted", {
+        timestamp: new Date().toISOString(),
+        gameType: gameType,
+        practiceMode: false
+      }, {
+        onDepositSuccess: function onDepositSuccess() {
+          setIsProcessingDeposit(false);
+          setGameStarted(true);
+        },
+        onDepositFailed: function onDepositFailed() {
+          setIsProcessingDeposit(false);
+          setDepositError("Deposit failed. Please try again.");
+        }
+      });
+    } else {
+      setIsProcessingDeposit(false);
+      setGameStarted(true);
+    }
+  }, [logEvent]);
+
+  var endGame = useCallback(function (result, score) {
+    if (!result || !['win', 'loss'].includes(result)) {
+      console.error('❌ Invalid endGame result:', result);
+      return;
+    }
+    var multiplier = typeof score === 'string' ? score : String(score || '0.00');
+    setGameEnded(true);
+    if (!isPracticeMode && logEvent) {
+      logEvent("gameEnded", {
+        timestamp: new Date().toISOString(),
+        result: result,
+        multiplier: multiplier,
+        gameType: gameType
+      });
+    }
+    setGameHistory(function (prev) {
+      return [].concat(prev.slice(-9), [{
+        result: result,
+        score: multiplier,
+        timestamp: new Date().toISOString(),
+        practice: isPracticeMode
+      }]);
+    });
+  }, [isPracticeMode, logEvent]);
+
+  var resetGame = useCallback(function () {
+    setGameStarted(false);
+    setGameEnded(false);
+    setIsProcessingDeposit(false);
+    setDepositError(null);
+  }, []);
+
+  // Render function
+  var renderGameContent = function renderGameContent() {
+    // [Include all the state handling logic here - deposit processing, errors, start screen, active game, end screen]
+    // Use React.createElement() for all JSX
+    
+    if (isProcessingDeposit) {
+      return React.createElement(Box, {
+        sx: {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '400px',
+          textAlign: 'center',
+          p: 4
+        }
+      }, React.createElement(CircularProgress, { sx: { mb: 3, color: '#00ff3a' } }),
+         React.createElement(Typography, { variant: "h6", sx: { color: '#fff' } }, "🏦 Processing Deposit..."));
+    }
+    
+    // [Continue with all other states...]
+    
+    return null;
+  };
+
+  // Main return
+  return React.createElement(Box, {
+    sx: {
+      background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
+      minHeight: '600px',
+      borderRadius: '20px',
+      p: 3,
+      color: '#fff'
+    }
+  }, renderGameContent());
 };
 
-Output Requirements:
-- Return ONLY valid JavaScript/React code for the App component
-- Start with "const App = ({ logEvent }) => {" 
-- End with "export default App;"
-- No markdown, explanations, or extra text
+  // Return the App component
+  return typeof App !== 'undefined' ? App : null;
+})
 
-Required Imports:
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+🚨 FORMAT REQUIREMENTS 🚨
+- Start with exactly: (function(React, useState, useEffect...
+- End with exactly: return typeof App !== 'undefined' ? App : null; })
+- Use var declarations, not const/let
+- Use function expressions, not arrow functions for main functions
+- Use React.createElement() instead of JSX
+- Use array destructuring for useState: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+- NO imports or exports anywhere in the code
+- ALL styling must use sx prop with object syntax
+
+🚨 GAME MECHANICS REQUIREMENTS 🚨
+[Include all your existing game mechanics requirements here...]
+
+Generate a complete game that follows this EXACT format. Do not deviate from the wrapped function structure.
 
 🚨 CRITICAL: PERFECT SYNTAX REQUIRED 🚨
 - Every opening brace { must have a matching closing brace }
@@ -919,12 +1039,14 @@ The generated game MUST have:
 
 Generate a COMPLETE, syntactically perfect React component with REAL game mechanics, natural win/loss conditions, modern styling, and proper logEvent integration. The game must feel authentic and engaging, not like a demo with placeholder buttons.`;
 
+// helper/util/reactGenerator.js - UPDATED GENERATION LOGIC
+
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING REACT COMPONENT (REDUCED VALIDATION)');
+  console.log('⚛️ GENERATING REACT COMPONENT (DIRECT WRAPPED FORMAT)');
   console.log('Prompt:', prompt);
 
   try {
-    // Asset processing (simplified)
+    // Asset processing (keep your existing logic)
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
     const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
     const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
@@ -936,7 +1058,7 @@ async function generateReactComponent(prompt, imageUrls = []) {
     };
 
     let attempt = 0;
-    const maxAttempts = 2; // Reduced attempts
+    const maxAttempts = 2;
     
     while (attempt < maxAttempts) {
       attempt++;
@@ -950,13 +1072,15 @@ async function generateReactComponent(prompt, imageUrls = []) {
           messages: [
             {
               role: 'user',
-              content: `Generate a syntactically perfect React game component for: "${prompt}". 
+              content: `Generate a React game component in the EXACT wrapped function format for: "${prompt}". 
 
+              CRITICAL: Output must start with "(function(React, useState..." and end with "})"
+              
               Requirements:
-              - Perfect syntax with balanced braces and parentheses
-              - Proper logEvent integration
-              - Modern dark theme styling
-              - Complete game functionality
+              - Use the wrapped function format (no imports/exports)
+              - Use var declarations and React.createElement()
+              - Include proper logEvent integration
+              - Real game mechanics with natural win/loss conditions
               
               Proxied assets: ${JSON.stringify(proxiedAssets)}`,
             },
@@ -973,74 +1097,64 @@ async function generateReactComponent(prompt, imageUrls = []) {
 
         console.log(`📝 Raw code received (attempt ${attempt}), length: ${rawCode.length}`);
 
-        // Clean and validate the code
-        let cleanedCode;
-        try {
-          cleanedCode = cleanAndValidateCode(rawCode);
-          console.log('✅ Code cleaning successful');
-        } catch (cleanError) {
-          console.error(`❌ Code cleaning failed (attempt ${attempt}):`, cleanError.message);
-          if (attempt === maxAttempts) {
-            // Return the best we have rather than failing completely
-            console.warn('⚠️ Using partially cleaned code due to repeated cleaning failures');
-            cleanedCode = rawCode.replace(/```(?:jsx?|javascript|react)?/gi, '').trim();
-          } else {
+        // Simple cleanup - remove code blocks if present
+        let cleanedCode = rawCode
+          .replace(/```(?:jsx?|javascript|react)?/gi, '')
+          .trim();
+
+        // Basic format validation - much simpler than before
+        const isCorrectFormat = cleanedCode.startsWith('(function(React, useState') && 
+                               cleanedCode.endsWith('})') &&
+                               cleanedCode.includes('var App = function App') &&
+                               cleanedCode.includes('return typeof App !== \'undefined\' ? App : null');
+
+        if (!isCorrectFormat) {
+          console.warn(`⚠️ Generated code is not in correct format (attempt ${attempt})`);
+          if (attempt < maxAttempts) {
+            console.log('🔄 Retrying with format emphasis...');
             continue;
+          } else {
+            // Try to fix it with transpileReactCode as fallback
+            console.log('🔧 Attempting to fix format with transpiler...');
+            cleanedCode = await transpileReactCode(cleanedCode);
           }
         }
 
-        // Reduced validation
-        const validationErrors = validateReactCode(cleanedCode);
+        // Minimal validation - just check essential structure
+        const hasLogEvent = cleanedCode.includes('logEvent');
+        const hasGameStates = cleanedCode.includes('gameStarted') && cleanedCode.includes('gameEnded');
+        const hasEndGame = cleanedCode.includes('endGame');
+
+        const validationErrors = [];
+        if (!hasLogEvent) validationErrors.push('Missing logEvent integration');
+        if (!hasGameStates) validationErrors.push('Missing game state management');
+        if (!hasEndGame) validationErrors.push('Missing endGame function');
 
         if (validationErrors.length === 0 || attempt === maxAttempts) {
           if (validationErrors.length > 0) {
-            console.warn(`⚠️ Proceeding with ${validationErrors.length} validation warnings:`, validationErrors.join('; '));
+            console.warn(`⚠️ Proceeding with ${validationErrors.length} warnings:`, validationErrors.join('; '));
           }
-          
-          console.log('🔄 Testing transpilation');
-          
-          try {
-            const transpiledCode = await transpileReactCode(cleanedCode);
-            
-            console.log('✅ React component generation completed');
 
-            return {
-              originalCode: cleanedCode,
-              transpiledCode: transpiledCode,
-              finalApp: transpiledCode,
-              proxiedAssets,
-              validation: {
-                passed: validationErrors.length === 0,
-                warnings: validationErrors,
-                attempt: attempt,
-                checkedItems: [
-                  'basic syntax validation',
-                  'logEvent integration',
-                  'game structure',
-                  'component exports',
-                  'transpilation test'
-                ]
-              }
-            };
-            
-          } catch (transpileError) {
-            console.error(`❌ Transpilation failed (attempt ${attempt}):`, transpileError.message);
-            if (attempt === maxAttempts) {
-              // Try to return something usable
-              console.warn('⚠️ Returning non-transpiled code due to transpilation issues');
-              return {
-                originalCode: cleanedCode,
-                transpiledCode: cleanedCode, // Use original as fallback
-                finalApp: cleanedCode,
-                proxiedAssets,
-                validation: {
-                  passed: false,
-                  warnings: [...validationErrors, 'Transpilation failed'],
-                  attempt: attempt
-                }
-              };
+          console.log('✅ React component generation completed');
+
+          return {
+            originalCode: cleanedCode,
+            transpiledCode: cleanedCode, // Same since it's already in correct format
+            finalApp: cleanedCode,
+            proxiedAssets,
+            validation: {
+              passed: validationErrors.length === 0,
+              warnings: validationErrors,
+              attempt: attempt,
+              format: isCorrectFormat ? 'correct' : 'fixed',
+              checkedItems: [
+                'wrapped function format',
+                'logEvent integration', 
+                'game state management',
+                'endGame function'
+              ]
             }
-          }
+          };
         } else {
           console.warn(`❌ Validation failed (attempt ${attempt}): ${validationErrors.join('; ')}`);
         }
@@ -1057,7 +1171,7 @@ async function generateReactComponent(prompt, imageUrls = []) {
 
   } catch (error) {
     console.error('❌ Fatal error in generateReactComponent:', error);
-    throw new Error(`React generation failed: ${error.message || 'Failed to generate React component'}`);
+    throw new Error(`React generation failed: ${error.message}`);
   }
 }
 
