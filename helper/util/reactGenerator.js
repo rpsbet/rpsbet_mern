@@ -22,7 +22,11 @@ function detectCriticalErrors(code) {
     /sx:\s*{$/,           // "sx: {"
     /,\s*sx:\s*{[^}]*$/,  // ", sx: { incomplete"
     /\{\s*sx;$/,          // "{ sx;"
-    /createElement\([^)]*$/  // Incomplete createElement
+    /createElement\([^)]*$/,  // Incomplete createElement
+    /\)\s*:\s*React\.createElement\([^)]*$/,  // Incomplete ternary with createElement
+    /,\s*React\.createElement\([^)]*$/,  // Incomplete createElement in list
+    /\{\s*textAlign:\s*['"]/,  // Incomplete textAlign property
+    /py:\s*\d+\s*}\s*,?\s*$/  // Cut off after py property
   ];
   
   if (truncationPatterns.some(pattern => pattern.test(lastLine))) {
@@ -108,10 +112,26 @@ function autoFixCriticalErrors(code) {
   if (!fixed.trim().endsWith('})')) {
     console.log('🔧 Fixing truncated ending...');
     
-    // Remove any incomplete trailing syntax
+    // Remove any incomplete trailing syntax patterns
     fixed = fixed.replace(/[,{]\s*sx[^}]*$/, '');
     fixed = fixed.replace(/,\s*$/, '');
     fixed = fixed.replace(/\{\s*sx;?\s*$/, '');
+    fixed = fixed.replace(/React\.createElement\([^)]*$/g, '');
+    fixed = fixed.replace(/\)\s*:\s*React\.createElement\([^)]*$/g, '');
+    
+    // Clean up any incomplete trailing elements
+    const lines = fixed.split('\n');
+    while (lines.length > 0) {
+      const lastLine = lines[lines.length - 1].trim();
+      if (lastLine.match(/^\s*[,{]\s*$/) || 
+          lastLine.match(/sx\s*:\s*{\s*$/) ||
+          lastLine.match(/React\.createElement\([^)]*$/)) {
+        lines.pop();
+      } else {
+        break;
+      }
+    }
+    fixed = lines.join('\n');
     
     // Ensure proper ending
     if (!fixed.includes('return typeof App !== \'undefined\' ? App : null')) {
@@ -353,7 +373,10 @@ Generate a game for: "${gameType}"
 - Every opening parenthesis ( must have a matching closing parenthesis )
 - Every JSX element must be properly closed
 - No incomplete statements or hanging syntax
-- End with EXACTLY "export default App;" on its own line
+- MUST end with EXACTLY "return typeof App !== 'undefined' ? App : null;\n})" on its own line
+- DO NOT truncate or cut off the code mid-sentence
+- Complete ALL React.createElement calls before outputting
+- Finish ALL sx objects completely
 
 🚨 MANDATORY WIN/LOSS GAME MECHANICS 🚨
 EVERY game MUST implement proper win/loss conditions. NO PLACEHOLDER BUTTONS ALLOWED.
@@ -1029,7 +1052,7 @@ async function generateReactComponent(prompt, imageUrls = []) {
         const stream = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 8000,
-          temperature: attempt > 1 ? 0.2 : 0.7, // Very low temperature for retries
+          temperature: attempt > 1 ? 0.1 : 0.5, // Even lower temperature for retries
           system: getEnhancedSystemPrompt(),
           messages: [
             {
