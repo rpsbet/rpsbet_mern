@@ -61,7 +61,7 @@ async function transpileReactCode(code) {
     // Wrap in the correct function format
     const wrappedCode = `(function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
   Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
-  Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+  Collapse, DialogContent, DialogTitle, LinearProgress, CircularProgress, logEvent, FontAwesomeIcon,
   TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
   faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
   faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,

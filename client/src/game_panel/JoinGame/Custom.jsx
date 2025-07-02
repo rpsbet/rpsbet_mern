@@ -7,7 +7,7 @@ import {
   faRedo, faBomb, faStar, faCogs, faExchangeAlt, faInfoCircle, faChevronUp,
   faArrowUp, faArrowDown, faVolumeUp, faVolumeMute, faCog, faExclamationTriangle,
   faCheck, faTimes, faPlay, faHistory, faChartLine, faWallet, faShieldAlt,
-  faHeart, faSkull, faClock, faBolt,
+  faHeart, faSkull, faClock, faBolt, faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { createAccountFromPrivyUser } from '../../util/solana';
 import { usePrivy } from '@privy-io/react-auth';
@@ -915,7 +915,7 @@ function Custom(props) {
           IconButton, Container, Badge, Snackbar, Alert, DialogContentText, DialogActions,
           Zoom, Modal, Grow, faInfoCircle, faChevronUp, faVolumeUp, faVolumeMute, faCog,
           faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
-          faShieldAlt, faHeart, faSkull, faClock, faBolt, componentState.proxiedAssets
+          faShieldAlt, faHeart, faSkull, faClock, faBolt, componentState.proxiedAssets, faQuestionCircle
         );
       } else {
         // Legacy handling for non-transpiled code (shouldn't happen)

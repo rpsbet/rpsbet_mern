@@ -23,7 +23,7 @@ const provider = new Connection(process.env.PROVIDER_URL, 'confirmed');
 const depositConfirmationThreshold = 6;
 let isProcessing = false;
 
-async function checkConfirmations(io) {
+async function checkConfirmations(redisClient, io) {
   try {
     if (isProcessing) return;
     isProcessing = true;
@@ -285,6 +285,32 @@ async function checkConfirmations(io) {
       await saveDocumentWithRetry(user);
       await saveDocumentWithRetry(transaction);
 
+      // Clear user Redis cache to ensure updated elite status is fetched from DB
+      if (redisClient) {
+        try {
+          // Clear Privy-based cache if user has Privy ID
+          if (user.privyId) {
+            const privyKey = `user:privy:${user.privyId}`;
+            await redisClient.del(privyKey);
+            console.log(`✅ Cleared Privy cache for user ${user.username}: ${privyKey}`);
+          }
+          
+          // Clear user ID-based cache
+          const userIdKey = `user_${user._id}`;
+          await redisClient.del(userIdKey);
+          console.log(`✅ Cleared user cache for user ${user.username}: ${userIdKey}`);
+          
+          // Clear any session-based cache (if exists)
+          const sessionKey = `session:${user._id}`;
+          await redisClient.del(sessionKey);
+          console.log(`✅ Cleared session cache for user ${user.username}: ${sessionKey}`);
+          
+        } catch (cacheError) {
+          console.error('Failed to clear user cache after elite subscription:', cacheError);
+          // Don't throw - cache clearing failure shouldn't block the subscription process
+        }
+      }
+
       // Create success notification
       const notification = new Notification({
         from: user._id,
@@ -444,9 +470,13 @@ async function checkConfirmations(io) {
   }
 }
 
-// Run every 10 seconds
-cron.schedule('*/10 * * * * *', () => checkConfirmations());
+// Initialize cron with redis client
+function initializeCron(redisClient) {
+  // Run every 10 seconds
+  cron.schedule('*/10 * * * * *', () => checkConfirmations(redisClient));
+}
 
 module.exports = {
   checkConfirmations,
+  initializeCron,
 };

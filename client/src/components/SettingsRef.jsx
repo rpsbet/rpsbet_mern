@@ -105,7 +105,7 @@ const filterRelevantComments = (comments) => {
     }));
 };
 
-const SettingsRef = ({
+const SettingsRef = React.forwardRef(({
   rank,
   user_id,
   user_credits,
@@ -124,7 +124,7 @@ const SettingsRef = ({
   proxiedAssets: initialProxiedAssets,
   setProxiedAssets,
   isDarkMode
-}) => {
+}, ref) => {
   const dispatch = useDispatch();
   const [gameLoading, setGameLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1180,6 +1180,7 @@ const SettingsRef = ({
     >
       <Fade in={settings_panel_opened}>
         <Box
+          ref={ref}
           sx={{
             width: isMobile ? '95vw' : isTablet ? '95vw' : '90vw',
             maxWidth: 1200,
@@ -1716,6 +1717,6 @@ const SettingsRef = ({
       </Fade>
     </Modal>
   );
-};
+});
 
 export default SettingsRef;

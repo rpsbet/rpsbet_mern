@@ -56,7 +56,7 @@ const io = socketController.socketio(server, redisClient); // <--- MODIFIED LINE
 
 // setTimeout(() => callCronJob.callCronJobs(io), 500);
 setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
-setTimeout(() => cronJob.checkConfirmations(), 5000);
+setTimeout(() => cronJob.initializeCron(redisClient), 5000);
 setTimeout(() => interestCron.updateRoomInterests(io), 11000);
 
 // Attach io instance to each request for easy access

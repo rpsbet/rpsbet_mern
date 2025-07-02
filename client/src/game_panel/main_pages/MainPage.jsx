@@ -44,7 +44,7 @@ const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModa
 const SUGGESTED_PROMPTS = [
   "Create a blackjack game where I play against the dealer - hit, stand, double down, with realistic card counting",
   "Build a 3-reel slot machine with cherries, bells, and sevens - pull the lever and match symbols to win big",
-  "Make a Pokemon battle arena where I choose my fighter and battle the computer - winner takes 2x the bet",
+  "Create a monster battle arena where I choose my creature and battle the computer - winner takes 2x the bet",
   "Create a rocket crash game where a rocket flies higher with increasing multipliers - cash out before it explodes",
 ];
 

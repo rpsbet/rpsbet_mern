@@ -93,7 +93,6 @@ export const userSignOut = (clear_token = true, navigate) => async (dispatch) =>
         setAuthToken();
       }
       dispatch({ type: LOGOUT });
-      if (navigate) navigate('/');
       return { success: true };
     }
 

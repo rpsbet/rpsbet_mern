@@ -1,332 +1,353 @@
-// helper/util/reactGenerator.js - ENHANCED VERSION
+// helper/util/reactGenerator.js - COMPLETE SMART TARGETING + COMPREHENSIVE GAME LOGIC
 
 const Anthropic = require('@anthropic-ai/sdk');
+const transpileReactCode = require('./transpileReactCode');
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-function detectCriticalErrors(code) {
-  const errors = [];
+// Dynamic complexity assessment
+function assessComplexity(prompt) {
+  let complexity = 0;
   
-  // 1. BROKEN useState PATTERN (your exact error)
-  const brokenUseStatePattern = /var\s+\w+\s*=\s*useState\([^)]*\)\[0\]/g;
-  if (brokenUseStatePattern.test(code)) {
-    errors.push('CRITICAL: Broken useState pattern detected');
-    console.log('🚨 Found broken useState:', code.match(brokenUseStatePattern));
-  }
+  // Length factor
+  complexity += Math.min(prompt.length / 100, 3);
   
-  // 2. TRUNCATED CODE (your exact error)  
-  const lastLine = code.split('\n').pop().trim();
-  const truncationPatterns = [
-    /sx:\s*{$/,           // "sx: {"
-    /,\s*sx:\s*{[^}]*$/,  // ", sx: { incomplete"
-    /\{\s*sx;$/,          // "{ sx;"
-    /createElement\([^)]*$/,  // Incomplete createElement
-    /\)\s*:\s*React\.createElement\([^)]*$/,  // Incomplete ternary with createElement
-    /,\s*React\.createElement\([^)]*$/,  // Incomplete createElement in list
-    /\{\s*textAlign:\s*['"]/,  // Incomplete textAlign property
-    /py:\s*\d+\s*}\s*,?\s*$/  // Cut off after py property
+  // Complexity indicators
+  const complexityIndicators = [
+    'battle', 'arena', 'versus', 'multiplayer', 'real-time', 'animation',
+    'physics', 'collision', 'ai', 'strategy', 'multiple', 'levels',
+    'characters', 'inventory', 'combat', 'tournament', 'leaderboard',
+    'crash', 'mines', 'chart', 'graph', 'timer', 'countdown'
   ];
   
-  if (truncationPatterns.some(pattern => pattern.test(lastLine))) {
-    errors.push('CRITICAL: Code appears truncated');
-    console.log('🚨 Truncated ending detected:', lastLine);
+  const foundIndicators = complexityIndicators.filter(indicator => 
+    prompt.toLowerCase().includes(indicator)
+  ).length;
+  
+  complexity += foundIndicators * 0.5;
+  
+  // Interaction complexity
+  if (prompt.includes('choose') || prompt.includes('select')) complexity += 0.5;
+  if (prompt.includes('timer') || prompt.includes('countdown')) complexity += 0.5;
+  if (prompt.includes('score') || prompt.includes('points')) complexity += 0.5;
+  if (prompt.includes('2x') || prompt.includes('multiplier')) complexity += 0.5;
+  
+  return Math.min(complexity, 10); // Cap at 10
+}
+
+// Get progressive token allocation
+function getTokenAllocation(complexity, attempt = 1) {
+  const baseTokens = 8000;
+  const complexityMultiplier = 1 + (complexity * 0.3);
+  const attemptMultiplier = Math.pow(1.3, attempt - 1);
+  
+  return Math.min(baseTokens * complexityMultiplier * attemptMultiplier, 16000);
+}
+
+// Targeted error detection with specific locations
+function detectSpecificErrors(code) {
+  const errors = [];
+  const lines = code.split('\n');
+  
+  // 1. Missing function ending (most critical)
+  if (!code.trim().endsWith('})')) {
+    const lastMeaningfulLine = lines.length - 1;
+    
+    errors.push({
+      type: 'MISSING_ENDING',
+      severity: 'CRITICAL',
+      location: lastMeaningfulLine,
+      description: 'Missing proper function ending',
+      fixable: true
+    });
   }
   
-  // 3. MISSING PROPER ENDING (your exact error)
-  if (!code.trim().endsWith('return typeof App !== \'undefined\' ? App : null;\n})') && 
-      !code.trim().endsWith('return typeof App !== \'undefined\' ? App : null;\n})')) {
-    errors.push('CRITICAL: Missing proper function ending');
+  // 2. Broken useState patterns
+  const brokenStateLines = lines.map((line, index) => {
+    if (line.match(/var\s+\w+\s*=\s*useState\([^)]*\)\[0\]/)) {
+      return { type: 'BROKEN_USESTATE', line: index, content: line, fixable: true };
+    }
+    return null;
+  }).filter(Boolean);
+  
+  if (brokenStateLines.length > 0) {
+    errors.push({
+      type: 'BROKEN_USESTATE',
+      severity: 'CRITICAL',
+      locations: brokenStateLines,
+      description: 'Broken useState destructuring pattern',
+      fixable: true
+    });
   }
   
-  // 4. REDUNDANT React DECLARATIONS (your exact error)
-  if (code.includes('var useState = React.useState;')) {
-    errors.push('CRITICAL: Redundant React hook declarations');
+  // 3. Incomplete React.createElement calls
+  const incompleteCreateElements = lines.map((line, index) => {
+    if (line.match(/React\.createElement\([^)]+$/)) {
+      return { line: index, content: line };
+    }
+    return null;
+  }).filter(Boolean);
+  
+  if (incompleteCreateElements.length > 0) {
+    errors.push({
+      type: 'INCOMPLETE_CREATEELEMENT',
+      severity: 'HIGH',
+      locations: incompleteCreateElements,
+      description: 'Incomplete React.createElement calls',
+      fixable: true
+    });
   }
   
-  // 5. DOUBLE WRAPPER (causes function nesting errors)
-  const wrapperCount = (code.match(/\(function\(React, useState/g) || []).length;
-  if (wrapperCount > 1) {
-    errors.push('CRITICAL: Multiple function wrappers detected');
+  // 4. Missing core requirements (validation only, don't auto-fix)
+  if (!code.includes('logEvent')) {
+    errors.push({
+      type: 'MISSING_LOGEVENT',
+      severity: 'MEDIUM',
+      description: 'Missing logEvent integration',
+      fixable: false
+    });
   }
   
-  // 6. NEW: Check for placeholder buttons (should have real mechanics)
-  if (code.includes('Win Game') && code.includes('Lose Game') && code.includes('Button')) {
-    errors.push('CRITICAL: Placeholder win/loss buttons detected - needs real game mechanics');
+  if (!code.includes('onDepositSuccess')) {
+    errors.push({
+      type: 'MISSING_DEPOSIT_FLOW',
+      severity: 'MEDIUM',
+      description: 'Missing deposit flow handling',
+      fixable: false
+    });
   }
   
-  // 7. NEW: Check for incomplete game mechanics
-  if (!code.includes('Math.random') && !code.includes('setTimeout') && !code.includes('setInterval')) {
-    errors.push('WARNING: No randomization or timing detected - may lack game mechanics');
+  // 5. Potential null reference in array filtering
+  const filterWithIdPatterns = code.match(/\.filter\([^)]*\.id[^)]*\)/g);
+  if (filterWithIdPatterns) {
+    const unsafeFilters = filterWithIdPatterns.filter(pattern => 
+      !pattern.includes('&&') && !pattern.includes('item') && !pattern.includes('monster')
+    );
+    
+    if (unsafeFilters.length > 0) {
+      errors.push({
+        type: 'UNSAFE_FILTER',
+        severity: 'HIGH',
+        description: 'Array filter accessing .id without null check',
+        fixable: true,
+        patterns: unsafeFilters
+      });
+    }
   }
   
   return errors;
 }
 
-// AUTO-FIX FOR CRITICAL ERRORS
-function autoFixCriticalErrors(code) {
-  console.log('🔧 AUTO-FIXING CRITICAL ERRORS');
-  let fixed = code;
+// Targeted fix generation - only fix specific problems
+async function generateTargetedFix(error, codeContext, gameType) {
+  console.log(`🎯 Generating targeted fix for: ${error.type}`);
   
-  // Fix 1: Remove double wrapper
-  const wrapperMatches = fixed.match(/\(function\(React, useState/g) || [];
-  if (wrapperMatches.length > 1) {
-    console.log('🔧 Removing double wrapper...');
-    const firstIndex = fixed.indexOf('(function(React, useState');
-    const secondIndex = fixed.indexOf('(function(React, useState', firstIndex + 1);
-    if (secondIndex > -1) {
-      fixed = fixed.substring(secondIndex);
-    }
+  switch (error.type) {
+    case 'MISSING_ENDING':
+      return `
+  return typeof App !== 'undefined' ? App : null;
+})`;
+    
+    case 'BROKEN_USESTATE':
+      const fixes = error.locations.map((loc, index) => {
+        const match = loc.content.match(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\]/);
+        if (match) {
+          const varName = match[1];
+          const initialValue = match[2];
+          const setterName = 'set' + varName.charAt(0).toUpperCase() + varName.slice(1);
+          return `var _useState${Date.now() + index} = useState(${initialValue}),\n    ${varName} = _useState${Date.now() + index}[0],\n    ${setterName} = _useState${Date.now() + index}[1];`;
+        }
+        return loc.content;
+      });
+      return fixes.join('\n');
+    
+    case 'UNSAFE_FILTER':
+      // Add null checks to filter operations
+      return error.patterns.map(pattern => {
+        return pattern.replace(/\.filter\(([^)]*\.id[^)]*)\)/, '.filter(function(item) { return item && $1; })');
+      }).join('\n');
+    
+    case 'INCOMPLETE_CREATEELEMENT':
+      // For incomplete createElement, generate a simple completion
+      const completions = error.locations.map(loc => {
+        const line = loc.content;
+        // Simple completion - close the createElement call
+        if (line.includes('React.createElement(')) {
+          return line + ')';
+        }
+        return line;
+      });
+      return completions.join('\n');
+    
+    default:
+      return null;
   }
-  
-  // Fix 2: Convert broken useState to proper destructuring
-  const stateVarMatches = fixed.match(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\];\s*var\s+set(\w+)\s*=\s*useState\([^)]*\)\[1\];?/g);
-  
-  if (stateVarMatches) {
-    console.log('🔧 Fixing broken useState patterns...');
-    
-    stateVarMatches.forEach((match, index) => {
-      const varMatch = match.match(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\];\s*var\s+set(\w+)\s*=\s*useState\([^)]*\)\[1\];?/);
-      if (varMatch) {
-        const varName = varMatch[1];
-        const setterName = 'set' + varMatch[3];
-        const initialValue = varMatch[2];
-        
-        // Create proper destructuring
-        const properDestructure = `var _useState${index + 1} = useState(${initialValue}),\n    ${varName} = _useState${index + 1}[0],\n    ${setterName} = _useState${index + 1}[1];`;
-        
-        fixed = fixed.replace(match, properDestructure);
-      }
-    });
-  }
-  
-  // Fix 3: Handle individual broken useState patterns
-  let stateCounter = 100;
-  fixed = fixed.replace(/var\s+(\w+)\s*=\s*useState\(([^)]*)\)\[0\];/g, function(match, varName, initialValue) {
-    stateCounter++;
-    const setterName = 'set' + varName.charAt(0).toUpperCase() + varName.slice(1);
-    return `var _useState${stateCounter} = useState(${initialValue}),\n    ${varName} = _useState${stateCounter}[0],\n    ${setterName} = _useState${stateCounter}[1];`;
-  });
-  
-  // Remove orphaned setter declarations
-  fixed = fixed.replace(/var\s+set\w+\s*=\s*useState\([^)]*\)\[1\];\s*/g, '');
-  
-  // Fix 4: Remove redundant React declarations
-  fixed = fixed.replace(/var\s+useState\s*=\s*React\.useState;\s*\n?/g, '');
-  fixed = fixed.replace(/var\s+useEffect\s*=\s*React\.useEffect;\s*\n?/g, '');
-  fixed = fixed.replace(/var\s+useCallback\s*=\s*React\.useCallback;\s*\n?/g, '');
-  fixed = fixed.replace(/var\s+useRef\s*=\s*React\.useRef;\s*\n?/g, '');
-  fixed = fixed.replace(/var\s+useMemo\s*=\s*React\.useMemo;\s*\n?/g, '');
-  
-  // Fix 5: Handle truncated code
-  if (!fixed.trim().endsWith('})')) {
-    console.log('🔧 Fixing truncated ending...');
-    
-    // Remove any incomplete trailing syntax patterns
-    fixed = fixed.replace(/[,{]\s*sx[^}]*$/, '');
-    fixed = fixed.replace(/,\s*$/, '');
-    fixed = fixed.replace(/\{\s*sx;?\s*$/, '');
-    fixed = fixed.replace(/React\.createElement\([^)]*$/g, '');
-    fixed = fixed.replace(/\)\s*:\s*React\.createElement\([^)]*$/g, '');
-    
-    // Clean up any incomplete trailing elements
-    const lines = fixed.split('\n');
-    while (lines.length > 0) {
-      const lastLine = lines[lines.length - 1].trim();
-      if (lastLine.match(/^\s*[,{]\s*$/) || 
-          lastLine.match(/sx\s*:\s*{\s*$/) ||
-          lastLine.match(/React\.createElement\([^)]*$/)) {
-        lines.pop();
-      } else {
-        break;
-      }
-    }
-    fixed = lines.join('\n');
-    
-    // Ensure proper ending
-    if (!fixed.includes('return typeof App !== \'undefined\' ? App : null')) {
-      fixed += '\n\n  return typeof App !== \'undefined\' ? App : null;\n})';
-    } else if (!fixed.trim().endsWith('})')) {
-      fixed += '\n})';
-    }
-  }
-  
-  // Fix 6: Clean up any malformed React.createElement calls
-  fixed = fixed.replace(/React\.createElement\([^)]*sx:\s*{[^}]*$/, '');
-  
-  return fixed;
 }
 
-function validateAndFixCode(code) {
-  console.log('🔍 ENHANCED VALIDATION AND FIXING');
-  
-  const errors = [];
-  const warnings = [];
+// Apply targeted fixes to specific locations
+function applyTargetedFixes(code, errors, fixes) {
   let fixedCode = code;
-
-  // 1. Check for double wrapper (CRITICAL ERROR)
-  const wrapperMatches = code.match(/\(function\(React, useState/g) || [];
-  if (wrapperMatches.length > 1) {
-    errors.push('CRITICAL: Multiple function wrappers detected');
-    console.log('🚨 Fixing double wrapper...');
+  const lines = fixedCode.split('\n');
+  
+  errors.forEach((error, index) => {
+    const fix = fixes[index];
+    if (!fix) return;
     
-    // Find the first wrapper start
-    const firstWrapperIndex = code.indexOf('(function(React, useState');
-    // Find the second wrapper start
-    const secondWrapperIndex = code.indexOf('(function(React, useState', firstWrapperIndex + 1);
-    
-    if (secondWrapperIndex > -1) {
-      // Remove everything before the second wrapper
-      fixedCode = code.substring(secondWrapperIndex);
-      console.log('✅ Removed duplicate wrapper');
-    }
-  }
-
-  // 2. Check for incomplete syntax patterns
-  const incompletePatterns = [
-    /sx:\s*{\s*background:\s*$/m,  // Incomplete sx background
-    /sx:\s*{\s*[^}]*$/m,          // Incomplete sx object
-    /React\.createElement\([^)]*$/m, // Incomplete React.createElement
-    /onClick:\s*function\(\)\s*{\s*$/m, // Incomplete onClick handlers
-  ];
-
-  incompletePatterns.forEach((pattern, index) => {
-    if (pattern.test(fixedCode)) {
-      errors.push(`CRITICAL: Incomplete syntax pattern ${index + 1} detected`);
+    switch (error.type) {
+      case 'MISSING_ENDING':
+        if (!fixedCode.trim().endsWith('})')) {
+          fixedCode = fixedCode.trim() + '\n\n' + fix;
+        }
+        break;
+      
+      case 'BROKEN_USESTATE':
+        error.locations.forEach((loc, locIndex) => {
+          if (lines[loc.line]) {
+            const fixLines = fix.split('\n');
+            lines[loc.line] = fixLines[locIndex * 2] || fixLines[0]; // Take appropriate line
+          }
+        });
+        fixedCode = lines.join('\n');
+        break;
+      
+      case 'INCOMPLETE_CREATEELEMENT':
+        error.locations.forEach((loc, locIndex) => {
+          if (lines[loc.line]) {
+            const fixLines = fix.split('\n');
+            lines[loc.line] = fixLines[locIndex] || fix;
+          }
+        });
+        fixedCode = lines.join('\n');
+        break;
+      
+      case 'UNSAFE_FILTER':
+        // Replace unsafe filter patterns with safe ones
+        error.patterns.forEach(pattern => {
+          const safePattern = pattern.replace(/\.filter\(([^)]*\.id[^)]*)\)/, '.filter(function(item) { return item && ($1); })');
+          fixedCode = fixedCode.replace(pattern, safePattern);
+        });
+        break;
     }
   });
-
-  // 3. Check for proper wrapper format
-  if (!fixedCode.trim().startsWith('(function(React, useState')) {
-    errors.push('CRITICAL: Missing proper function wrapper start');
-  }
-
-  if (!fixedCode.trim().endsWith('})')) {
-    errors.push('CRITICAL: Missing proper function wrapper end');
-    console.log('🔧 Attempting to fix wrapper ending...');
-    
-    // Try to fix missing ending
-    if (fixedCode.includes('return typeof App !== \'undefined\' ? App : null')) {
-      // Find the return statement and ensure it ends properly
-      const returnIndex = fixedCode.lastIndexOf('return typeof App !== \'undefined\' ? App : null');
-      if (returnIndex > -1) {
-        const beforeReturn = fixedCode.substring(0, returnIndex);
-        fixedCode = beforeReturn + 'return typeof App !== \'undefined\' ? App : null;\n})';
-        console.log('✅ Fixed wrapper ending');
-      }
-    } else {
-      // Add the missing return and ending
-      fixedCode = fixedCode.trim();
-      if (!fixedCode.endsWith(';')) {
-        fixedCode += ';';
-      }
-      fixedCode += '\n\n  return typeof App !== \'undefined\' ? App : null;\n})';
-      console.log('✅ Added missing return and wrapper ending');
-    }
-  }
-
-  // 4. Brace and parentheses validation (ENHANCED)
-  const openBraces = (fixedCode.match(/{/g) || []).length;
-  const closeBraces = (fixedCode.match(/}/g) || []).length;
-  const openParens = (fixedCode.match(/\(/g) || []).length;
-  const closeParens = (fixedCode.match(/\)/g) || []).length;
-
-  console.log(`📊 Syntax balance: Braces ${openBraces}/${closeBraces}, Parens ${openParens}/${closeParens}`);
-
-  if (Math.abs(openBraces - closeBraces) > 2) {
-    errors.push(`CRITICAL: Major brace mismatch (${openBraces} open, ${closeBraces} close)`);
-  } else if (openBraces !== closeBraces) {
-    warnings.push(`Minor brace mismatch (${openBraces} open, ${closeBraces} close)`);
-    
-    // Try to auto-fix small brace mismatches
-    if (openBraces > closeBraces) {
-      const diff = openBraces - closeBraces;
-      console.log(`🔧 Auto-fixing ${diff} missing closing braces`);
-      
-      // Find the last meaningful position to add braces
-      const lastReturnIndex = fixedCode.lastIndexOf('return typeof App');
-      if (lastReturnIndex > -1) {
-        const beforeReturn = fixedCode.substring(0, lastReturnIndex);
-        const afterReturn = fixedCode.substring(lastReturnIndex);
-        fixedCode = beforeReturn + '}'.repeat(diff) + '\n\n  ' + afterReturn;
-      } else {
-        fixedCode += '\n' + '}'.repeat(diff);
-      }
-    }
-  }
-
-  // 5. Check for essential game structure
-  const hasLogEvent = fixedCode.includes('logEvent');
-  const hasGameStates = fixedCode.includes('gameStarted') && fixedCode.includes('gameEnded');
-  const hasEndGame = fixedCode.includes('endGame');
-  const hasStartGame = fixedCode.includes('startGame');
-  const hasRealGameMechanics = fixedCode.includes('Math.random') || fixedCode.includes('setInterval') || fixedCode.includes('setTimeout');
-
-  if (!hasLogEvent) warnings.push('Missing logEvent integration');
-  if (!hasGameStates) warnings.push('Missing game state management');
-  if (!hasEndGame) warnings.push('Missing endGame function');
-  if (!hasStartGame) warnings.push('Missing startGame function');
-  if (!hasRealGameMechanics) warnings.push('May lack real game mechanics');
-
-  // 6. Check for truncation indicators
-  const truncationIndicators = [
-    /sx:\s*{\s*background:\s*$/,
-    /\)\s*;?\s*$/,  // Ends with just a closing paren
-    /,\s*$/,        // Ends with a comma
-    /{\s*$/,        // Ends with an opening brace
-  ];
-
-  const lastLine = fixedCode.split('\n').pop().trim();
-  if (truncationIndicators.some(pattern => pattern.test(lastLine))) {
-    errors.push('CRITICAL: Code appears to be truncated (incomplete ending)');
-  }
-
-  // 7. Final structure validation
-  if (!fixedCode.includes('var App = function App')) {
-    errors.push('CRITICAL: Missing App component definition');
-  }
-
-  if (!fixedCode.includes('renderGameContent')) {
-    warnings.push('Missing renderGameContent function');
-  }
-
-  // 8. Check for placeholder buttons
-  if (fixedCode.includes('"Win Game"') || fixedCode.includes('"Lose Game"')) {
-    warnings.push('Contains placeholder win/loss buttons - should have real game mechanics');
-  }
-
-  console.log(`📋 Validation complete: ${errors.length} errors, ${warnings.length} warnings`);
   
-  if (errors.length > 0) {
-    console.log('🚨 DETAILED ERRORS:');
-    errors.forEach((error, index) => {
-      console.log(`   ${index + 1}. ${error}`);
-    });
-  }
-  
-  if (warnings.length > 0) {
-    console.log('⚠️ DETAILED WARNINGS:');
-    warnings.forEach((warning, index) => {
-      console.log(`   ${index + 1}. ${warning}`);
-    });
-  }
-
-  return {
-    code: fixedCode,
-    errors: errors,
-    warnings: warnings,
-    isValid: errors.length === 0,
-    autoFixed: fixedCode !== code
-  };
+  return fixedCode;
 }
 
-// Simplified focused system prompt
-const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game component. Output ONLY the code in this exact format:
+// Progressive validation with early exits
+function quickValidation(code) {
+  const criticalErrors = [];
+  
+  // Quick checks for showstoppers
+  if (!code.trim().endsWith('})')) {
+    criticalErrors.push('Missing function ending');
+  }
+  
+  if (code.includes('var gameStarted = useState(false)[0]')) {
+    criticalErrors.push('Broken useState pattern');
+  }
+  
+  const openBraces = (code.match(/{/g) || []).length;
+  const closeBraces = (code.match(/}/g) || []).length;
+  if (Math.abs(openBraces - closeBraces) > 2) {
+    criticalErrors.push(`Major brace mismatch (${openBraces}/${closeBraces})`);
+  }
+  
+  return criticalErrors;
+}
 
+// Comprehensive validation for final check
+function validateReactCode(code) {
+  console.log('🔍 COMPREHENSIVE VALIDATION');
+  
+  const validationErrors = [];
+  const codeText = code.toLowerCase();
+  
+  // Basic syntax validation
+  const openBraces = (code.match(/{/g) || []).length;
+  const closeBraces = (code.match(/}/g) || []).length;
+  if (openBraces !== closeBraces) {
+    validationErrors.push(`Syntax error: Unmatched braces (${openBraces} open, ${closeBraces} close)`);
+  }
+
+  // Check for logEvent prop handling
+  if (!code.includes('{ logEvent }') && !code.includes('logEvent') && !code.includes('props.logEvent')) {
+    validationErrors.push('Missing logEvent prop in component signature');
+  }
+
+  // Check for specific logEvent patterns
+  if (!code.includes('logEvent("gameStarted"') && !code.includes("logEvent('gameStarted'")) {
+    validationErrors.push('Missing required gameStarted logging call');
+  }
+
+  if (!code.includes('logEvent("gameEnded"') && !code.includes("logEvent('gameEnded'")) {
+    validationErrors.push('Missing required gameEnded logging call');
+  }
+
+  // Check for practice mode implementation
+  if (!code.includes('isPracticeMode') || !code.includes('Practice Mode')) {
+    validationErrors.push('Missing practice mode implementation');
+  }
+
+  // Check for deposit flow
+  if (!code.includes('onDepositSuccess') || !code.includes('isProcessingDeposit')) {
+    validationErrors.push('Missing deposit flow handling');
+  }
+
+  // Check for house edge implementation
+  const hasHouseEdge = code.includes('houseEdge') ||
+    code.includes('0.9') ||
+    code.includes('Math.min') ||
+    code.includes('* 0.') ||
+    code.includes('houseEdgeFactor') ||
+    code.includes('calculateMultiplier');
+
+  if (!hasHouseEdge) {
+    validationErrors.push('Missing house edge enforcement in multiplier calculations');
+  }
+
+  // Check for potential null reference errors in filtering
+  if (code.includes('.filter(') && code.includes('.id') && !code.includes('&& monster')) {
+    validationErrors.push('Potential null reference error in array filtering - add null checks');
+  }
+
+  // Enhanced financial terms check
+  const strictFinancialTerms = [
+    'balance', 'balances',
+    'wallet', 'wallets',
+    'monetary'
+  ];
+
+  const foundFinancialTerms = strictFinancialTerms.filter(term => {
+    const regex = new RegExp(`\\b${term}\\b`, 'i');
+    return regex.test(codeText);
+  });
+
+  if (foundFinancialTerms.length > 0) {
+    validationErrors.push(`Forbidden financial terms detected: ${foundFinancialTerms.join(', ')}`);
+  }
+
+  // Check for required state variables
+  const requiredStates = ['gameStarted', 'gameEnded', 'isPracticeMode', 'gameHistory'];
+  const missingStates = requiredStates.filter(state => !code.includes(state));
+  if (missingStates.length > 0) {
+    validationErrors.push(`Missing required state variables: ${missingStates.join(', ')}`);
+  }
+
+  console.log(`🔍 Validation completed: ${validationErrors.length} errors found`);
+  return validationErrors;
+}
+
+// Comprehensive system prompt with all casino game logic
+const getComprehensiveSystemPrompt = (gameType = 'game') => `You are an elite React developer creating casino-style games. Generate ONLY the wrapped function code - no explanations, no markdown.
+
+🚨 ULTRA-CRITICAL FORMAT RULES 🚨
+
+1. START WITH EXACTLY THIS (copy-paste it):
 (function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
   Grid, Box, Typography, TextField, Button, Slider, Dialog, Divider, Paper, Chip,
-  Collapse, DialogContent, DialogTitle, CircularProgress, logEvent, FontAwesomeIcon,
+  Collapse, DialogContent, DialogTitle, LinearProgress, CircularProgress, logEvent, FontAwesomeIcon,
   TableContainer, Table, TableBody, TableRow, TableCell, TableHead,
   faDice, faCoins, faPlay, faRocket, faChevronDown, faGem, faSpinner, faCogs,
   faExchangeAlt, faTrophy, faArrowUp, faArrowDown, faRedo, faBomb, faStar, faHome,
@@ -336,6 +357,7 @@ const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game co
   faExclamationTriangle, faCheck, faTimes, faHistory, faChartLine, faWallet,
   faShieldAlt, faHeart, faSkull, faClock, faBolt, proxiedAssets, faQuestionCircle) {
 
+2. ADD HELPER FUNCTIONS:
   function _defineProperty(obj, key, value) {
     if (key in obj) {
       Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
@@ -361,20 +383,34 @@ const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game co
     return target;
   }
 
+3. DEFINE APP COMPONENT:
   var App = function App(_ref) {
     var logEvent = _ref.logEvent;
+    
+    // ALL GAME CODE HERE
+  };
 
-    // useState pattern: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
-    var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+4. END WITH EXACTLY THIS (CRITICAL - NEVER TRUNCATE):
+  return typeof App !== 'undefined' ? App : null;
+})
+
+🚨 USESTATE PATTERN - MEMORIZE THIS 🚨
+❌ NEVER: var gameStarted = useState(false)[0];
+❌ NEVER: var setGameStarted = useState(false)[1];
+✅ ALWAYS: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+
+🚨 MANDATORY CORE STATES 🚨
+ALWAYS include these exact useState declarations:
+    var _useState1 = useState(false), gameStarted = _useState1[0], setGameStarted = _useState1[1];
     var _useState2 = useState(false), gameEnded = _useState2[0], setGameEnded = _useState2[1];
     var _useState3 = useState(false), isPracticeMode = _useState3[0], setIsPracticeMode = _useState3[1];
     var _useState4 = useState([]), gameHistory = _useState4[0], setGameHistory = _useState4[1];
     var _useState5 = useState(false), isProcessingDeposit = _useState5[0], setIsProcessingDeposit = _useState5[1];
     var _useState6 = useState(null), depositError = _useState6[0], setDepositError = _useState6[1];
 
-    var gameType = "${gameType}";
+🚨 MANDATORY DEPOSIT FLOW HANDLING 🚨
+CRITICAL: Include this exact deposit handling pattern:
 
-    // Game functions
     var startGame = useCallback(function(practiceMode) {
       if (practiceMode === void 0) { practiceMode = false; }
       setGameEnded(false);
@@ -383,6 +419,7 @@ const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game co
       
       if (practiceMode) {
         setGameStarted(true);
+        // Start game immediately for practice
         return;
       }
       
@@ -391,25 +428,29 @@ const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game co
       if (logEvent) {
         logEvent("gameStarted", { 
           timestamp: new Date().toISOString(),
-          gameType: gameType,
+          gameType: "${gameType}",
           practiceMode: false
         }, {
           onDepositSuccess: function() {
             setIsProcessingDeposit(false);
             setGameStarted(true);
+            // Start time-sensitive elements HERE
           },
           onDepositFailed: function() {
             setIsProcessingDeposit(false);
             setDepositError("Deposit failed. Please try again.");
           }
         });
-      } else {
-        setIsProcessingDeposit(false);
-        setGameStarted(true);
       }
     }, [logEvent]);
 
+🚨 MANDATORY END GAME PATTERN 🚨
     var endGame = useCallback(function(result, multiplier) {
+      if (!result || !['win', 'loss'].includes(result)) {
+        console.error('❌ Invalid endGame result:', result);
+        return;
+      }
+      
       var finalMultiplier = typeof multiplier === 'string' ? multiplier : String(multiplier || '0.00');
       setGameEnded(true);
       
@@ -418,7 +459,7 @@ const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game co
           timestamp: new Date().toISOString(),
           result: result,
           multiplier: finalMultiplier,
-          gameType: gameType
+          gameType: "${gameType}"
         });
       }
       
@@ -432,32 +473,331 @@ const getEnhancedSystemPrompt = (gameType = 'game') => `Generate a React game co
       });
     }, [isPracticeMode, logEvent]);
 
-    var resetGame = useCallback(function() {
-      setGameStarted(false);
-      setGameEnded(false);
-      setIsProcessingDeposit(false);
-      setDepositError(null);
-    }, []);
+🚨 ADVANCED HOUSE EDGE CALCULATIONS 🚨
 
-    // Render logic with deposit handling, game states, actual game mechanics
-    // MUST naturally call endGame('win', multiplier) or endGame('loss', '0.00')
-    
-    return React.createElement(Container, { maxWidth: "md" }, 
-      // Your game implementation here
-    );
-  };
+CRASH GAME - Real-time multiplier with house edge:
+    var generateCrashPoint = function() {
+      var random = Math.random();
+      var crashPoint;
+      
+      if (random < 0.40) {
+        crashPoint = 1 + Math.pow(Math.random(), 2) * 0.99;
+      } else if (random < 0.70) {
+        crashPoint = 2 + Math.pow(Math.random(), 1.5) * 2.99;
+      } else if (random < 0.90) {
+        crashPoint = 5 + Math.pow(Math.random(), 2) * 14.99;
+      } else if (random < 0.98) {
+        crashPoint = 20 + Math.pow(Math.random(), 3) * 79.99;
+      } else {
+        crashPoint = 100 + Math.pow(Math.random(), 4) * 900;
+      }
+      
+      return Math.max(crashPoint * 0.94, 1.01); // 6% house edge
+    };
 
-  return typeof App !== 'undefined' ? App : null;
-})
+    // Real-time multiplier progression
+    var updateCrashMultiplier = function(startTime, crashPoint) {
+      var timeElapsed = (Date.now() - startTime) / 1000;
+      var k = 0.03; // Growth rate constant
+      var currentMultiplier = Math.exp(k * timeElapsed);
+      
+      if (currentMultiplier >= crashPoint) {
+        return { multiplier: crashPoint, crashed: true };
+      }
+      
+      return { multiplier: currentMultiplier, crashed: false };
+    };
 
-CRITICAL: Use this exact pattern. Include real game mechanics that call endGame() naturally.`;
+MINES GAME - Progressive difficulty:
+    var calculateMinesMultiplier = function(safeReveals, totalMines, totalSpaces) {
+      var totalSafeSpaces = totalSpaces - totalMines;
+      var probability = 1;
+      
+      for (var i = 0; i < safeReveals; i++) {
+        probability *= (totalSafeSpaces - i) / (totalSpaces - i);
+      }
+      
+      var fairMultiplier = 1 / probability;
+      var houseEdgeFactor = safeReveals <= 2 ? 0.95 : safeReveals <= 5 ? 0.93 : 0.88;
+      var scaledMultiplier = fairMultiplier * houseEdgeFactor;
+      var maxMultiplier = totalMines >= 20 ? 1000 : totalMines >= 15 ? 500 : totalMines >= 10 ? 100 : 50;
+      
+      return Math.min(scaledMultiplier, maxMultiplier).toFixed(2);
+    };
 
+DICE GAME - Probability control:
+    var calculateDiceMultiplier = function(prediction, rollType) {
+      var winProbability = rollType === 'under' ? 
+        (prediction - 1) / 100 : (100 - prediction) / 100;
+      
+      winProbability = Math.max(0.01, Math.min(0.98, winProbability));
+      var fairMultiplier = 1 / winProbability;
+      var houseEdge = winProbability > 0.5 ? 0.98 : 0.95;
+      
+      return Math.min(fairMultiplier * houseEdge, 9999).toFixed(2);
+    };
+
+SLOTS GAME - Weighted symbols:
+    var generateSlotMultiplier = function(reels) {
+      var symbolValues = {
+        '🍒': 2, '🍋': 3, '🍊': 5, '🍇': 8, '🔔': 15, 
+        '💎': 50, '⭐': 100, '🎰': 500
+      };
+      
+      var multiplier = 1;
+      var symbolCounts = {};
+      
+      reels.forEach(function(symbol) {
+        symbolCounts[symbol] = (symbolCounts[symbol] || 0) + 1;
+      });
+      
+      Object.entries(symbolCounts).forEach(function(entry) {
+        var symbol = entry[0], count = entry[1];
+        if (count >= 2) {
+          var baseValue = symbolValues[symbol] || 1;
+          multiplier += baseValue * Math.pow(count, 1.5);
+        }
+      });
+      
+      return Math.min(multiplier * 0.92, 1000).toFixed(2); // 8% house edge
+    };
+
+SKILL-BASED GAMES - Performance-based with house edge:
+    var calculateSkillMultiplier = function(score, maxScore) {
+      var performance = Math.min(score / maxScore, 1);
+      var baseMultiplier = 1 + (performance * 2); // Max 3x for perfect score
+      var houseEdgeFactor = 0.92; // 8% house edge
+      
+      return Math.min(baseMultiplier * houseEdgeFactor, 4.0).toFixed(2);
+    };
+
+🚨 MANDATORY UI COMPONENTS 🚨
+
+DEPOSIT PROCESSING UI:
+      if (isProcessingDeposit) {
+        return React.createElement(Box, {
+          sx: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+            textAlign: 'center',
+            p: 4,
+            background: 'rgba(0, 0, 0, 0.1)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }
+        }, 
+          React.createElement(CircularProgress, { sx: { mb: 3, color: '#00ff3a' }, size: 60 }),
+          React.createElement(Typography, { 
+            variant: "h6", 
+            sx: { color: '#fff', mb: 2, fontWeight: 600 }
+          }, '🏦 Processing Deposit...'),
+          React.createElement(Typography, { 
+            variant: "body2", 
+            sx: { color: 'rgba(255,255,255,0.7)', textAlign: 'center' }
+          }, 'Please confirm the transaction in your wallet.', React.createElement('br'), 'Do not refresh or navigate away from this page.')
+        );
+      }
+
+DEPOSIT ERROR UI:
+      if (depositError) {
+        return React.createElement(Box, {
+          sx: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+            textAlign: 'center',
+            p: 4,
+            background: 'rgba(244, 67, 54, 0.1)',
+            borderRadius: '16px',
+            border: '1px solid rgba(244, 67, 54, 0.3)'
+          }
+        },
+          React.createElement(Typography, { 
+            variant: "h5", 
+            sx: { color: '#f44336', mb: 2, fontWeight: 700 }
+          }, '⚠️ Deposit Failed'),
+          React.createElement(Typography, { 
+            variant: "body1", 
+            sx: { color: 'rgba(255,255,255,0.8)', mb: 3, lineHeight: 1.6 }
+          }, depositError),
+          React.createElement(Button, { 
+            variant: "contained",
+            onClick: resetGame,
+            sx: {
+              background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+              fontWeight: 600,
+              px: 4,
+              py: 1.5
+            }
+          }, 'Try Again')
+        );
+      }
+
+GAME START BUTTONS:
+          React.createElement(Box, { sx: { display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' } },
+            React.createElement(Button, { 
+              variant: "contained",
+              onClick: function() { return startGame(false); },
+              disabled: isProcessingDeposit,
+              size: "large",
+              sx: {
+                background: 'linear-gradient(135deg, #00ff3a, #00cc2e)',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                '&:hover': { 
+                  background: 'linear-gradient(135deg, #00cc2e, #009624)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 20px rgba(0, 255, 58, 0.4)'
+                }
+              }
+            }, '🎯 Start Game'),
+            
+            React.createElement(Button, { 
+              variant: "outlined",
+              onClick: function() { return startGame(true); },
+              disabled: isProcessingDeposit,
+              size: "large",
+              sx: {
+                borderColor: '#ffeb3b',
+                color: '#ffeb3b',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                '&:hover': { 
+                  backgroundColor: 'rgba(255, 235, 59, 0.1)',
+                  borderColor: '#ffeb3b',
+                  transform: 'translateY(-2px)'
+                }
+              }
+            }, '🎮 Practice Mode')
+          )
+
+🚨 RESPONSIVE DESIGN REQUIREMENTS 🚨
+- Use Container with maxWidth="sm" for mobile-first
+- Dynamic glassmorphism backgrounds with backdrop-filter: blur()
+- Gradient color schemes that adapt to game theme
+- Box shadows with rgba colors for depth
+- Responsive typography using variant prop
+
+🚨 GAME HISTORY DISPLAY 🚨
+        React.createElement(Box, { sx: { mt: 3 } },
+          React.createElement(Typography, { 
+            variant: "h6", 
+            sx: { color: '#fff', mb: 2, fontWeight: 600 }
+          }, '📊 Recent Games'),
+          React.createElement(Box, { sx: { maxHeight: '200px', overflowY: 'auto' } },
+            gameHistory.length === 0 ? 
+              React.createElement(Typography, { 
+                variant: "body2", 
+                sx: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', py: 2 }
+              }, 'No games played yet') :
+              gameHistory.slice(-5).reverse().map(function(game, index) {
+                return React.createElement(Box, {
+                  key: game.timestamp || index,
+                  sx: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1,
+                    mb: 1,
+                    background: game.result === 'win' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                    borderRadius: '8px',
+                    border: game.result === 'win' ? '1px solid rgba(76, 175, 80, 0.3)' : '1px solid rgba(244, 67, 54, 0.3)'
+                  }
+                },
+                  React.createElement(Typography, { 
+                    variant: "body2", 
+                    sx: { color: game.result === 'win' ? '#4caf50' : '#f44336', fontWeight: 600 }
+                  }, game.result === 'win' ? '🎉 Won' : '💔 Lost'),
+                  React.createElement(Typography, { 
+                    variant: "body2", 
+                    sx: { color: '#fff' }
+                  }, game.score + 'x'),
+                  game.practice && React.createElement(Typography, { 
+                    variant: "caption", 
+                    sx: { color: '#ffeb3b' }
+                  }, '🎮')
+                );
+              })
+          )
+        )
+
+🚨 TRUNCATION PREVENTION RULES 🚨
+- Keep component logic concise but complete
+- Use helper functions to reduce repetition
+- Prioritize core functionality over excessive styling
+- ALWAYS end with the exact closing pattern above
+- If approaching token limits, simplify but maintain all required features
+
+🚨 FORBIDDEN PATTERNS - INSTANT FAILURE 🚨
+❌ Double function wrappers
+❌ var useState = React.useState;
+❌ Incomplete React.createElement calls
+❌ Placeholder "Win Game" / "Lose Game" buttons
+❌ Missing deposit flow handling
+❌ Missing house edge calculations
+❌ Financial terms: bet, balance, wallet, money
+❌ Code that ends abruptly or is truncated
+
+🚨 GAME-SPECIFIC REQUIREMENTS 🚨
+
+CRASH GAME MUST INCLUDE:
+- Real-time multiplier updates with requestAnimationFrame
+- generateCrashPoint() and updateCrashMultiplier() functions
+- Cash out functionality before crash
+- Visual progression display
+- Chart/graph showing crash line
+
+MINES GAME MUST INCLUDE:
+- Grid of clickable tiles (5x5 or customizable)
+- Mine placement with random distribution
+- Progressive multiplier calculation per reveal
+- Auto cash-out on mine hit
+- Reveal animations
+
+DICE GAME MUST INCLUDE:
+- Prediction input (1-99)
+- Over/Under selection
+- Dice roll animation
+- Real-time multiplier calculation
+- Roll history display
+
+SLOTS GAME MUST INCLUDE:
+- Multiple spinning reels (3-5 reels)
+- Symbol combinations and payouts
+- Spin animation effects
+- Progressive jackpot display
+- Symbol value table
+
+SKILL GAMES MUST INCLUDE:
+- Performance-based scoring
+- Time limits or action counters
+- Progressive difficulty
+- Clear win/loss conditions
+- Score-to-multiplier conversion
+
+GAME TYPE: ${gameType}
+
+OUTPUT ONLY THE COMPLETE WRAPPED FUNCTION CODE - NO EXPLANATIONS OR MARKDOWN!`;
+
+// Main generation function with progressive approach
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING REACT COMPONENT (ENHANCED ERROR PREVENTION)');
-  console.log('Prompt:', prompt);
-
+  console.log('⚛️ GENERATING COMPREHENSIVE REACT COMPONENT WITH SMART TARGETING');
+  
   try {
-    // Asset processing (keep your existing logic)
+    // Asset processing
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
     const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
     const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
@@ -468,138 +808,169 @@ async function generateReactComponent(prompt, imageUrls = []) {
       audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
     };
 
-    let attempt = 0;
+    // Dynamic complexity assessment
+    const complexity = assessComplexity(prompt);
+    console.log(`🎯 Assessed complexity: ${complexity.toFixed(1)}/10`);
+
+    // Game type detection
+    const gameType = prompt.toLowerCase().includes('crash') ? 'crash' :
+                    prompt.toLowerCase().includes('mines') ? 'mines' :
+                    prompt.toLowerCase().includes('dice') ? 'dice' :
+                    prompt.toLowerCase().includes('slots') ? 'slots' :
+                    'skill';
+
+    let attempt = 1;
     const maxAttempts = 3;
-    let lastError = null;
+    let currentCode = null;
     
-    while (attempt < maxAttempts) {
-      attempt++;
-      console.log(`🔄 Generation attempt ${attempt}/${maxAttempts}`);
+    while (attempt <= maxAttempts) {
+      console.log(`🔄 Attempt ${attempt}/${maxAttempts}`);
+      
+      const tokenAllocation = getTokenAllocation(complexity, attempt);
+      console.log(`📊 Using ${tokenAllocation} tokens (complexity: ${complexity.toFixed(1)})`);
       
       try {
-        // Enhanced prompt based on previous failure
-        let enhancedPrompt = `Generate a complete React game component for: "${prompt}".
+        if (attempt === 1) {
+          // First attempt: Generate full code
+          const enhancedPrompt = `Generate a complete React ${gameType} game component for: "${prompt}".
 
-🚨 CRITICAL REQUIREMENTS 🚨
-1. Start with EXACTLY: (function(React, useState, useEffect, useRef, useMemo, useCallback, useAnimation,
-2. Use ONLY this useState pattern: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
-3. Include real game mechanics that naturally trigger endGame()
-4. End with EXACTLY: return typeof App !== 'undefined' ? App : null; })
-5. Complete all React.createElement calls before moving to the next
-6. NO placeholder buttons - implement actual gameplay
+🚨 EFFICIENCY REQUIREMENTS 🚨
+- Keep code concise but functional
+- Use helper functions to reduce repetition
+- Prioritize core game mechanics over excessive styling
+- MUST end with: return typeof App !== 'undefined' ? App : null; })
+- Include all required states, deposit flow, and house edge calculations
+
+Required features:
+1. useState pattern: var _useState = useState(false), gameStarted = _useState[0], setGameStarted = _useState[1];
+2. onDepositSuccess/onDepositFailed callback handling
+3. Practice mode with separate button
+4. Real game mechanics that naturally trigger endGame()
+5. House edge calculations for ${gameType} games
+6. Responsive glassmorphism design
+7. Game history display
+
+Include proxiedAssets: ${JSON.stringify(proxiedAssets)}
 
 OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
-        
-        if (attempt > 1 && lastError) {
-          enhancedPrompt += `\n\n🚨 PREVIOUS ATTEMPT FAILED: ${lastError}\n`;
-          enhancedPrompt += `ENSURE: Proper useState destructuring, complete syntax, no truncation.`;
-        }
 
-        const stream = await anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 8000,
-          temperature: attempt > 1 ? 0.1 : 0.3, // Lower temperature on retries
-          system: getEnhancedSystemPrompt(prompt),
-          messages: [
-            {
-              role: 'user',
-              content: enhancedPrompt,
-            },
-          ],
-          stream: true,
-        });
+          const stream = await anthropic.messages.create({
+            model: complexity > 6 ? 'claude-opus-4-20250514' : 'claude-sonnet-4-20250514',
+            max_tokens: tokenAllocation,
+            temperature: 0.3,
+            system: getComprehensiveSystemPrompt(gameType),
+            messages: [{ role: 'user', content: enhancedPrompt }],
+            stream: true,
+          });
 
-        let rawCode = '';
-        for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            rawCode += chunk.delta.text;
+          let rawCode = '';
+          for await (const chunk of stream) {
+            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+              rawCode += chunk.delta.text;
+            }
           }
-        }
 
-        console.log(`📝 Raw code received (attempt ${attempt}), length: ${rawCode.length}`);
-        
-        // Log the start and end of the raw code for debugging
-        console.log('🔍 RAW CODE START (first 800 chars):');
-        console.log(rawCode.substring(0, 800));
-        console.log('🔍 RAW CODE END (last 800 chars):');
-        console.log(rawCode.substring(Math.max(0, rawCode.length - 800)));
+          currentCode = rawCode
+            .replace(/```(?:jsx?|javascript|react)?/gi, '')
+            .replace(/```/g, '')
+            .replace(/^[^(]*(?=\(function)/m, '')
+            .trim();
 
-        // Clean up any markdown or extra text
-        let cleanedCode = rawCode
-          .replace(/```(?:jsx?|javascript|react)?/gi, '')
-          .replace(/```/g, '')
-          .replace(/^[^(]*(?=\(function)/m, '') // Remove anything before (function
-          .trim();
-
-        // CRITICAL: Detect and fix errors immediately
-        const criticalErrors = detectCriticalErrors(cleanedCode);
-        
-        if (criticalErrors.length > 0) {
-          console.warn(`🚨 CRITICAL ERRORS DETECTED (attempt ${attempt}):`, criticalErrors);
+        } else {
+          // Subsequent attempts: Only fix specific errors
+          const specificErrors = detectSpecificErrors(currentCode);
+          const fixableErrors = specificErrors.filter(e => e.fixable);
           
-          // Auto-fix the errors
-          cleanedCode = autoFixCriticalErrors(cleanedCode);
-          
-          // Re-validate after fixing
-          const postFixErrors = detectCriticalErrors(cleanedCode);
-          
-          if (postFixErrors.length > 0 && attempt < maxAttempts) {
-            lastError = postFixErrors.join('; ');
-            console.log(`🔄 Auto-fix incomplete, retrying...`);
-            continue;
+          if (fixableErrors.length === 0) {
+            console.log('✅ No fixable errors found, proceeding with current code');
+            break;
           }
           
-          console.log(`✅ Auto-fix resolved ${criticalErrors.length - postFixErrors.length} errors`);
+          console.log(`🎯 Fixing ${fixableErrors.length} specific errors:`, fixableErrors.map(e => e.type));
+          
+          // Generate targeted fixes
+          const fixes = await Promise.all(
+            fixableErrors.map(error => generateTargetedFix(error, currentCode, gameType))
+          );
+          
+          // Apply fixes
+          currentCode = applyTargetedFixes(currentCode, fixableErrors, fixes);
         }
 
-        // Enhanced validation
-        const validation = validateAndFixCode(cleanedCode);
+        // Quick validation
+        const quickErrors = quickValidation(currentCode);
         
-        if (!validation.isValid && attempt < maxAttempts) {
-          lastError = validation.errors.join('; ');
-          console.log(`🔄 Validation failed, retrying...`);
-          continue;
-        }
-
-        // Success - return the code
-        console.log('✅ Code generation successful');
-        if (validation.warnings.length > 0) {
-          console.warn('⚠️ Warnings:', validation.warnings);
-        }
-
-        return {
-          originalCode: rawCode,
-          transpiledCode: validation.code,
-          finalApp: validation.code,
-          proxiedAssets,
-          validation: {
-            passed: validation.isValid,
-            warnings: validation.warnings,
-            errors: validation.errors,
-            autoFixed: validation.autoFixed,
-            attempt: attempt,
-            checkedItems: [
-              'useState patterns',
-              'code completion',
-              'wrapper format',
-              'brace balance',
-              'game structure',
-              'real game mechanics'
-            ]
+        if (quickErrors.length === 0) {
+          console.log('✅ Quick validation passed');
+          
+          // Final comprehensive validation on last attempt or if quick validation passes
+          let finalValidationErrors = [];
+          if (attempt === maxAttempts || quickErrors.length === 0) {
+            finalValidationErrors = validateReactCode(currentCode);
           }
-        };
+          
+          // Test transpilation if available
+          let transpiledCode = currentCode;
+          try {
+            if (transpileReactCode) {
+              transpiledCode = await transpileReactCode(currentCode);
+            }
+          } catch (transpileError) {
+            console.warn('⚠️ Transpilation test failed:', transpileError.message);
+            if (attempt < maxAttempts) {
+              attempt++;
+              continue;
+            }
+          }
+
+          console.log(`✅ Component generated successfully (attempt ${attempt})`);
+          
+          return {
+            originalCode: currentCode,
+            transpiledCode: transpiledCode,
+            finalApp: transpiledCode,
+            proxiedAssets,
+            validation: {
+              passed: finalValidationErrors.length === 0,
+              warnings: finalValidationErrors.filter(e => e.startsWith('WARNING') || e.includes('Missing')),
+              errors: finalValidationErrors.filter(e => !e.startsWith('WARNING') && !e.includes('Missing')),
+              attempt: attempt,
+              complexity: complexity,
+              tokensUsed: tokenAllocation,
+              gameType: gameType,
+              fixesApplied: attempt > 1,
+              checkedItems: [
+                'Dynamic complexity assessment',
+                'Progressive token allocation',
+                'Targeted error fixing',
+                'useState pattern validation',
+                'Deposit flow integration',
+                'House edge calculations',
+                'Practice mode implementation',
+                'Game mechanics validation',
+                'Responsive design',
+                'Financial terms compliance'
+              ]
+            }
+          };
+        } else {
+          console.log(`❌ Quick validation failed (attempt ${attempt}):`, quickErrors);
+          if (attempt === maxAttempts) {
+            throw new Error(`Validation failed after ${maxAttempts} attempts: ${quickErrors.join('; ')}`);
+          }
+        }
 
       } catch (generationError) {
         console.error(`❌ Generation error (attempt ${attempt}):`, generationError.message);
-        lastError = generationError.message;
-        
         if (attempt === maxAttempts) {
           throw generationError;
         }
       }
+      
+      attempt++;
     }
 
-    throw new Error(`Failed to generate valid React component after ${maxAttempts} attempts. Last error: ${lastError}`);
+    throw new Error(`Failed to generate valid React component after ${maxAttempts} attempts`);
 
   } catch (error) {
     console.error('❌ Fatal error in generateReactComponent:', error);
@@ -609,7 +980,10 @@ OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
 
 module.exports = {
   generateReactComponent,
-  validateAndFixCode,
-  detectCriticalErrors,
-  autoFixCriticalErrors
+  assessComplexity,
+  detectSpecificErrors,
+  generateTargetedFix,
+  quickValidation,
+  validateReactCode,
+  getComprehensiveSystemPrompt
 };

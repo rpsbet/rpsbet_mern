@@ -502,6 +502,33 @@ router.post('/cancel-elite', auth, async (req, res) => {
       { new: true }
     );
 
+    // Clear user Redis cache to ensure updated elite status is fetched from DB
+    const redisClient = req.app.get('redisClient');
+    if (redisClient) {
+      try {
+        // Clear Privy-based cache if user has Privy ID
+        if (updatedUser.privyId) {
+          const privyKey = `user:privy:${updatedUser.privyId}`;
+          await redisClient.del(privyKey);
+          console.log(`✅ Cleared Privy cache after elite cancellation: ${privyKey}`);
+        }
+        
+        // Clear user ID-based cache
+        const userIdKey = `user_${updatedUser._id}`;
+        await redisClient.del(userIdKey);
+        console.log(`✅ Cleared user cache after elite cancellation: ${userIdKey}`);
+        
+        // Clear any session-based cache (if exists)
+        const sessionKey = `session:${updatedUser._id}`;
+        await redisClient.del(sessionKey);
+        console.log(`✅ Cleared session cache after elite cancellation: ${sessionKey}`);
+        
+      } catch (cacheError) {
+        console.error('Failed to clear user cache after elite cancellation:', cacheError);
+        // Don't throw - cache clearing failure shouldn't block the cancellation process
+      }
+    }
+
     // Create new transaction
     const newTransaction = new Transaction({
       user: userId,
