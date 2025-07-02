@@ -137,6 +137,30 @@ function detectSpecificErrors(code) {
     }
   }
   
+  // 6. Check for undefined variables like 'newPos'
+  const commonUndefinedVars = ['newPos', 'oldPos', 'currentPos', 'nextPos', 'position'];
+  const undefinedVars = [];
+  
+  commonUndefinedVars.forEach(varName => {
+    // Check if variable is used but not declared
+    const varUsagePattern = new RegExp(`\\b${varName}\\b`, 'g');
+    const varDeclarationPattern = new RegExp(`(?:var|let|const)\\s+${varName}\\b`);
+    
+    if (code.match(varUsagePattern) && !code.match(varDeclarationPattern)) {
+      undefinedVars.push(varName);
+    }
+  });
+  
+  if (undefinedVars.length > 0) {
+    errors.push({
+      type: 'UNDEFINED_VARIABLE',
+      severity: 'HIGH',
+      description: `Variables used but not declared: ${undefinedVars.join(', ')}`,
+      fixable: true,
+      variables: undefinedVars
+    });
+  }
+  
   return errors;
 }
 
@@ -167,6 +191,16 @@ async function generateTargetedFix(error, codeContext, gameType) {
       // Add null checks to filter operations
       return error.patterns.map(pattern => {
         return pattern.replace(/\.filter\(([^)]*\.id[^)]*)\)/, '.filter(function(item) { return item && $1; })');
+      }).join('\n');
+    
+    case 'UNDEFINED_VARIABLE':
+      // Declare undefined variables with default values
+      return error.variables.map(varName => {
+        let defaultValue = '0';
+        if (varName.toLowerCase().includes('pos')) {
+          defaultValue = '{ x: 0, y: 0 }';
+        }
+        return `var ${varName} = ${defaultValue};`;
       }).join('\n');
     
     case 'INCOMPLETE_CREATEELEMENT':
@@ -227,6 +261,24 @@ function applyTargetedFixes(code, errors, fixes) {
         error.patterns.forEach(pattern => {
           const safePattern = pattern.replace(/\.filter\(([^)]*\.id[^)]*)\)/, '.filter(function(item) { return item && ($1); })');
           fixedCode = fixedCode.replace(pattern, safePattern);
+        });
+        break;
+      
+      case 'UNDEFINED_VARIABLE':
+        // Add variable declarations at the beginning of the function
+        error.variables.forEach(varName => {
+          let defaultValue = '0';
+          if (varName.toLowerCase().includes('pos')) {
+            defaultValue = '{ x: 0, y: 0 }';
+          }
+          const declaration = `var ${varName} = ${defaultValue};`;
+          
+          // Insert after the first line (after function declaration)
+          const lines = fixedCode.split('\n');
+          if (lines.length > 1) {
+            lines.splice(1, 0, `  ${declaration}`);
+            fixedCode = lines.join('\n');
+          }
         });
         break;
     }
