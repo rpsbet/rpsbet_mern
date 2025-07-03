@@ -49,6 +49,18 @@ function getTokenAllocation(complexity, attempt = 1) {
 // Targeted error detection with specific locations
 function detectSpecificErrors(code) {
   const errors = [];
+  
+  // Handle null or undefined code
+  if (!code || typeof code !== 'string') {
+    console.log('⚠️ detectSpecificErrors received null/invalid code:', typeof code);
+    return [{
+      type: 'NULL_CODE',
+      severity: 'CRITICAL',
+      description: 'Code generation returned null or invalid result',
+      fixable: false
+    }];
+  }
+  
   const lines = code.split('\n');
   
   // 1. Missing function ending (most critical)
@@ -922,11 +934,21 @@ OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
             }
           }
 
+          // Validate that we got actual code
+          if (!rawCode || rawCode.trim().length === 0) {
+            throw new Error('Empty response from Anthropic API');
+          }
+
           currentCode = rawCode
             .replace(/```(?:jsx?|javascript|react)?/gi, '')
             .replace(/```/g, '')
             .replace(/^[^(]*(?=\(function)/m, '')
             .trim();
+            
+          // Additional validation for processed code
+          if (!currentCode || currentCode.trim().length === 0) {
+            throw new Error('Code processing resulted in empty content');
+          }
 
         } else {
           // Subsequent attempts: Only fix specific errors
@@ -1013,9 +1035,26 @@ OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
         }
 
       } catch (generationError) {
-        console.error(`❌ Generation error (attempt ${attempt}):`, generationError.message);
+        console.error(`❌ Generation error (attempt ${attempt}):`, generationError);
+        
+        // Handle specific API errors
+        if (generationError.message?.includes('Overloaded') || 
+            generationError.message?.includes('overloaded_error') ||
+            generationError.error?.type === 'overloaded_error') {
+          console.log('🔄 API overloaded, waiting before retry...');
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+        }
+        
         if (attempt === maxAttempts) {
-          throw generationError;
+          // If all attempts failed, provide a more detailed error message
+          const errorMsg = generationError.message || 'Unknown error';
+          if (errorMsg.includes('Overloaded') || errorMsg.includes('overloaded_error')) {
+            throw new Error('AI service is currently overloaded. Please try again in a few minutes.');
+          } else if (errorMsg.includes('Empty response') || errorMsg.includes('empty content')) {
+            throw new Error('AI service returned empty response. Please try a different prompt.');
+          } else {
+            throw new Error(`AI generation failed: ${errorMsg}`);
+          }
         }
       }
       
