@@ -709,7 +709,17 @@ function Custom(props) {
   }, [dispatch, bet_amount, roomInfo._id, roomInfo.name, reduxState.account, reduxState.balance, onChangeState, privyUser]);
 
   // Game join logic - updated to handle both deposits and results
+  // Add ref to track if joinGame is already processing to prevent duplicates
+  const processingRef = useRef(false);
+
   const joinGame = useCallback(async (result, multiplier) => {
+    // Prevent duplicate submissions
+    if (processingRef.current) {
+      console.warn('[Custom] joinGame already processing, ignoring duplicate call');
+      return;
+    }
+
+    processingRef.current = true;
     onChangeState({ result: '' });
     blockGamePanel('Processing game...');
 
@@ -774,7 +784,8 @@ function Custom(props) {
       throw error; // Re-throw so caller can handle
 
     } finally {
-      // Always unblock the game panel, regardless of success or failure
+      // Always unblock the game panel and reset processing flag
+      processingRef.current = false;
       unblockGamePanel();
     }
   }, [bet_amount, join, onChangeState, reduxState.solPrice, playSound, onResultChange, blockGamePanel, unblockGamePanel]);

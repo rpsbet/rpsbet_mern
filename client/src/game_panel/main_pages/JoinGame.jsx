@@ -388,7 +388,7 @@ console.log('JoinGame component mounted with room ID:', id);
       // For game results (win/loss), we don't need to process a new deposit
       // Just submit the bet result directly using the existing deposit
       if (isGameResult) {
-      
+      console.log("finalConnectedAccount", finalConnectedAccount)
         const betResult = await dispatch(
           bet3({
             _id: roomInfo._id,

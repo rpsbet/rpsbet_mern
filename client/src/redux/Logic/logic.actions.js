@@ -925,6 +925,7 @@ export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
 
 // player
 export const bet3 = bet_info => async dispatch => {
+  console.log("bet_info", bet_info)
   try {
     // console.log('Betting info:', bet_info);
     dispatch({ type: START_BET });
