@@ -328,6 +328,23 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   let pool_id = '';
   let message;
 
+  // Check for duplicate bet within the last minute to prevent double processing
+  if (result !== null && result !== undefined) {
+    const existingBet = await CustomBetItem.findOne({
+      room: new ObjectId(req.body._id),
+      joiner: req.user._id,
+      result: result,
+      multiplier: multiplier,
+      bet_amount: bet_amount,
+      created_at: { $gte: new Date(Date.now() - 60000) } // Within last minute
+    });
+
+    if (existingBet) {
+      console.warn(`Duplicate bet detected for user ${req.user._id} in room ${req.body._id}`);
+      throw new Error('Duplicate bet detected - this result has already been processed');
+    }
+  }
+
   // Create new bet item
   let bet_item = new CustomBetItem({
     room: new ObjectId(req.body._id),
@@ -452,9 +469,10 @@ const validateUserDeposit = async (user, roomId, betAmount) => {
         betResult: -1000,
       };
     }
-
     // Additional check: ensure deposit amount is sufficient for the bet
+    console.log("Raw depositTransaction.amount:", depositTransaction.amount);
     const depositAmount = Math.abs(depositTransaction.amount);
+    console.log("depositAmount", depositAmount)
     if (depositAmount < betAmount) {
       console.warn(`Deposit amount ${depositAmount} insufficient for bet ${betAmount}`);
       return {

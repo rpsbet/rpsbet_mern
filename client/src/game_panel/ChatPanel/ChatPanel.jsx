@@ -183,7 +183,6 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
     }
 
     try {
-      console.log('📤 Sending message via socket:', socket.id);
       socket.emit('GLOBAL_CHAT_SEND', message);
     } catch (error) {
       console.error('❌ Failed to send message:', error);
@@ -220,12 +219,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
         };
 
         // 🔍 DEBUG: Log the reply data being sent
-        console.log('📤 Sending message with reply data:', {
-          hasReplyTo: !!message.replyTo,
-          replyToData: message.replyTo,
-          selectedMessage: selectedMessage
-        });
-
+     
         handleSendMessage(message);
         handleClearReply();
         setText('');
@@ -304,8 +298,6 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
         type: 'gif',
         content: gifUrl,
       };
-
-      console.log('📤 Sending GIF via socket:', socket.id);
 
       socket.emit('GLOBAL_CHAT_SEND', {
         sender: user.username || userName, // <-- FIX: Ensure sender is not empty

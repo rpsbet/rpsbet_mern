@@ -18,7 +18,6 @@ import {
 import RankAllowancesTable from '../../components/RankAllowancesTable';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
-import LottieRankIcon from '../LottieAnimations/rankIcon.json';
 
 import { acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import { closeConfirmLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';

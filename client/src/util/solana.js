@@ -122,7 +122,10 @@ export const sendSolDeposit = async (
     // Verify the connected wallet matches the account
     const connectedPubkey = window.solana.publicKey;
     if (!connectedPubkey || connectedPubkey.toString() !== fromUserPublicKey.toString()) {
-        const errorText = 'Connected wallet does not match the expected account. Please check your wallet connection.';
+        const expectedShort = `${fromUserPublicKey.toString().substring(0, 8)}...${fromUserPublicKey.toString().slice(-4)}`;
+        const connectedShort = connectedPubkey ? `${connectedPubkey.toString().substring(0, 8)}...${connectedPubkey.toString().slice(-4)}` : 'None';
+        
+        const errorText = `Wallet account mismatch! Expected: ${expectedShort}, but connected: ${connectedShort}. Please switch to the correct account in your wallet.`;
         console.error('[sendSolDeposit] Wallet Mismatch:', { 
             connected: connectedPubkey?.toString(), 
             expected: fromUserPublicKey.toString() 
