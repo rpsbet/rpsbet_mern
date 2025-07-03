@@ -527,8 +527,8 @@ const addToQueue = async (req, bot = false) => {
         return validation;
       }
 
-      // Check access time
-      const accessAllowed = await check_access_time(req.user._id);
+      // Check access time with bet amount consideration
+      const accessAllowed = await check_access_time(req.user._id, bet_amount);
       if (!accessAllowed) {
         return {
           success: false,
