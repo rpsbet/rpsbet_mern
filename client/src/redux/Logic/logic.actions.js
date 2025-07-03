@@ -594,6 +594,8 @@ export const generateReactGameFromPrompt = (
       prompt: gamePrompt,
       imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl),
       model,
+    }, {
+      timeout: 300000, // 5 minutes timeout for game generation
     });
 
     if (progressInterval) {
