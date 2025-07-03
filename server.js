@@ -49,6 +49,12 @@ const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// Increase timeouts for long-running operations like AI game generation
+server.timeout = 600000; // 10 minutes
+server.keepAliveTimeout = 600000; // 10 minutes  
+server.headersTimeout = 610000; // 10 minutes + 10 seconds
+console.log('⏱️  Server timeouts configured: 10 minutes for AI operations');
+
 // -------------------- Socket.io Setup --------------------
 // Pass the server instance AND the redisClient instance to your socket controller.
 // Your socketController will now be responsible for configuring cors, transports, etc.
