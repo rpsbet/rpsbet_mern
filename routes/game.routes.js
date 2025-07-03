@@ -625,7 +625,7 @@ router.post('/generate-react', auth, async (req, res) => {
 
 router.post('/update-react', auth, async (req, res) => {
   try {
-    const { prompt, currentCode, imageUrls = [], proxiedAssets = {}, model = 'claude-sonnet-4-20250514' } = req.body || {};
+    const { prompt, currentCode, proxiedAssets = {} } = req.body || {};
 
     if (!req.user?._id) {
       throw new Error('User not authenticated');
@@ -639,124 +639,53 @@ router.post('/update-react', auth, async (req, res) => {
       throw new Error('Current code is required and must be a string');
     }
 
-    if (!Array.isArray(imageUrls)) {
-      throw new Error('imageUrls must be an array');
-    }
+    console.log(`[React Update] User: ${req.user._id}, Prompt: ${prompt.substring(0, 100)}...`);
 
-    // Prepare assets (similar to generate route)
-    const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
-    const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
-    const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
-    const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
+    // Use existing proxied assets without modification
+    const finalProxiedAssets = proxiedAssets;
 
-    const updatedProxiedAssets = {
-      images: [
-        ...(proxiedAssets.images || []),
-        ...allImageUrls.map((url, i) => ({ key: `image${proxiedAssets.images?.length || 0 + i}`, proxiedUrl: url }))
-      ],
-      audio: [
-        ...(proxiedAssets.audio || []),
-        ...audioUrls.map((url, i) => ({ key: `audio${proxiedAssets.audio?.length || 0 + i}`, proxiedUrl: url }))
-      ],
-    };
+    const systemPrompt = `You are an expert React developer. You will be given existing React game code and a user's modification request.
 
-    console.log(`[React Update] User: ${req.user._id}, Updated proxied assets:`, JSON.stringify(updatedProxiedAssets));
+CRITICAL INSTRUCTIONS:
+1. **ONLY MODIFY** what the user specifically requests - do not add or change anything else
+2. **PRESERVE EVERYTHING** that is not mentioned in the user's request
+3. **MAINTAIN** all existing functionality, state management, and props
+4. **KEEP** existing multiplier systems, game history, styling, and layout unchanged unless specifically requested
+5. **DO NOT** add financial logic, betting, balance, or wallet features unless explicitly requested
 
-    // Extract and clean the current code
-    const cleanedCurrentCode = currentCode
-      .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
-      .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
-      .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
-      .replace(/export\s+[\w\s]*?\s*;?/g, '')
-      .trim();
+MODIFICATION APPROACH:
+- Read the user's request carefully and implement ONLY what they asked for
+- Preserve all existing code structure, imports, exports, and functionality
+- Make minimal, targeted changes that address the specific request
+- Maintain the exact same component architecture and patterns
 
-    const systemPrompt = `You are an expert React developer specializing in game modification and enhancement. You will be given an existing React game component and a user request for modifications.
-
-      CRITICAL: NO FINANCIAL LOGIC
-      - DO NOT add any bet amount, balance, wallet, or money-related state
-      - DO NOT implement betting mechanics, currency displays, or financial calculations
-      - DO NOT use terms like "bet", "balance", "wallet", "coins", "credits", "money"
-      - Focus purely on game mechanics and user interaction
-      - Financial logic will be handled by external systems
-      
-      CRITICAL: **Never declare a local function or variable named logEvent. Always call the logEvent prop as provided. If you redefine logEvent, your code will break in production.**
-      - The component receives logEvent as a prop - use it directly: logEvent("gameStarted", { ... })
-      - Do NOT create: const logEvent = ..., function logEvent(...), or let logEvent = ...
-      - Always use the prop: props.logEvent or destructured logEvent from props
-      
-      CUSTOM MODAL/EXPANDABLE REQUIREMENTS:
-      - Center modal within the main game container
-      - NO viewport units anywhere
-      
-      SCORE-BASED MULTIPLIER SYSTEM (maintain if exists):
-      - **For skill-based games only**: Keep existing conservative score-to-multiplier conversion
-      - **For casino-style games**: Use direct multiplier values based on game outcomes
-      - Maintain multiplier range: 1.0x to 2.5x (maximum 3x for exceptional skill in skill games)
-      - Preserve existing multiplier formulas and thresholds
-      - If adding new scoring to skill games, use conservative scaling:
-      const calculateMultiplierFromScore = (score) => {
-        let multiplier = 1 + Math.log10(1 + score/100);
-        return Math.min(multiplier, 5).toFixed(2);
-      }
-      
-      MODIFICATION REQUIREMENTS:
-      1. **Preserve Core Structure**: Maintain the original game's architecture and state management
-      2. **Keep Existing Features**: Preserve all working functionality unless specifically requested to change
-      3. **Enhance, Don't Replace**: Add new features while keeping existing ones intact
-      4. **Maintain Props**: Component must accept 'proxiedAssets' and 'logEvent' props
-      5. **Responsive Design**: Ensure any new elements are responsive and fit the container
-      6. **Glassmorphic Theme**: Match the existing dark glassmorphic design (#080808 background)
-      7. **Game History**: Maintain existing game history functionality
-      8. **Multiplier Display**: Preserve existing multiplier display and calculation logic
-      
-      REQUIRED IMPORTS (add these at the start):
-      import React, { useState, useEffect, useRef, useCallback } from 'react';
-      import { Box, Typography, Button } from '@mui/material';
-      
-      OUTPUT REQUIREMENTS:
-      - Return ONLY the complete updated component code
-      - Start with "const App = ..." or "function App"
-      - End with "export default App;"
-      - Include all necessary state, effects, and handlers
-      - Maintain the container structure with proper responsive design
-      - No markdown formatting or explanations
-      - Do not use MUI Modal components
-      
-      CONTAINER REQUIREMENTS:
-      - Main container MUST use: width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%"
-      - Preserve responsive design patterns
-      - Maintain glassmorphic styling consistency
-      
-      CHANGE ANALYSIS:
-      Before making modifications, analyze what the user is requesting:
-      - UI changes (colors, layout, visual elements)
-      - Game logic changes (rules, mechanics, scoring)
-      - New features (modes, levels, characters)
-      - Performance improvements
-      - Bug fixes
-      
-      Make targeted changes that fulfill the request while preserving the game's core functionality, including multiplier systems, game history, and custom modal implementations.`;
+OUTPUT REQUIREMENTS:
+- Return the complete updated component code
+- Preserve exact formatting and structure of original code
+- Only modify the specific parts mentioned in the user's request
+- No markdown formatting or explanations`;
     // Use Claude with streaming for faster response
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 8000,
+      temperature: 0.1, // Lower temperature for more precise modifications
       system: systemPrompt,
       messages: [
         {
           role: 'user',
-          content: `Here is the current React game component:
+          content: `Current React game code:
 
 \`\`\`javascript
-${cleanedCurrentCode}
+${currentCode}
 \`\`\`
 
-User's modification request: "${prompt}"
+User's specific modification request: "${prompt}"
 
-Available proxied assets: ${JSON.stringify(updatedProxiedAssets)}
-
-Please update the component according to the user's request. Maintain all existing functionality including custom modals, multiplier systems, game history, and ensure the component works properly with the provided assets.
-
-IMPORTANT: Do not use MUI Modal components - maintain custom overlay modals. Do not include any betting, balance, or financial logic. Focus on pure game mechanics and user experience improvements while preserving existing multiplier calculations and game state management.`,
+Instructions:
+- Implement ONLY the requested change
+- Preserve ALL existing functionality and code structure
+- Do not modify anything not mentioned in the request
+- Return the complete updated component`,
         },
       ],
       stream: true,
@@ -771,41 +700,14 @@ IMPORTANT: Do not use MUI Modal components - maintain custom overlay modals. Do 
       }
     }
 
-    // Clean the generated code
+    // Clean the generated code minimally
     let cleanedCode = rawCode
       .replace(/```(?:jsx?|javascript)?/g, '')
-      .replace(/^\s*[\r\n]+/gm, '')
       .trim();
 
-    // Validate the updated code
-    if (!cleanedCode.includes('const App') && !cleanedCode.includes('function App')) {
-      throw new Error('Updated code does not contain a valid App component');
-    }
-
-    // Ensure proper export
-    if (!cleanedCode.endsWith('export default App;')) {
-      cleanedCode = `${cleanedCode}\nexport default App;`;
-    }
-
-    // Validate for financial terms
-    const financialTerms = ['bet', 'balance', 'wallet', 'credits', 'coins'];
-    const codeWords = cleanedCode.toLowerCase().split(/\W+/);
-    const foundFinancialTerms = financialTerms.filter(term =>
-      codeWords.some(word => word.includes(term))
-    );
-
-    if (foundFinancialTerms.length > 0) {
-      console.warn('[React Update] Financial terms detected in updated code:', foundFinancialTerms);
-    }
-
-    // Check if the modification appears successful
-    const modificationKeywords = prompt.toLowerCase().split(/\W+/);
-    const codeHasKeywords = modificationKeywords.some(keyword =>
-      keyword.length > 3 && cleanedCode.toLowerCase().includes(keyword)
-    );
-
-    if (!codeHasKeywords && modificationKeywords.length > 0) {
-      console.warn('[React Update] Warning: Modification may not have been applied correctly');
+    // Basic validation only
+    if (!cleanedCode.includes('App')) {
+      throw new Error('Updated code does not contain App component');
     }
 
     console.log(`[React Update] Successfully updated component for user: ${req.user._id}`);
@@ -813,20 +715,11 @@ IMPORTANT: Do not use MUI Modal components - maintain custom overlay modals. Do 
     const transpiledCode = await transpileReactCode(cleanedCode);
 
     res.json({
-      originalCode: cleanedCode,      // Original JSX for editing
-      transpiledCode: transpiledCode, // Transpiled for execution
-      finalApp: transpiledCode,       // Add this for backward compatibility
-      proxiedAssets: updatedProxiedAssets,
-      message: 'Component updated successfully',
-      validation: {
-        passed: true,
-        checkedItems: [
-          'component structure validation',
-          'financial terms check',
-          'modification keywords check',
-          'export statement validation'
-        ]
-      }
+      originalCode: cleanedCode,
+      transpiledCode: transpiledCode,
+      finalApp: transpiledCode,
+      proxiedAssets: finalProxiedAssets,
+      message: 'Component updated successfully'
     });
 
   } catch (error) {
