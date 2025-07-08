@@ -1,0 +1,39 @@
+
+> mern@1.0.0 start
+> node server.js
+
+🔥 =================================
+🔥 CATSINO SERVER STARTING UP
+🔥 Environment: development
+🔥 Port: 5001
+🔥 =================================
+⏱️  Server timeouts configured: 10 minutes for AI operations
+Central Wallet Public Key: 9xDnozdsXgbi7ugacMxGTBmNxPMktPZwUKCv757WwCy4
+(node:12816) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::5001
+    at Server.setupListenHandle [as _listen2] (node:net:1937:16)
+    at listenInCluster (node:net:1994:12)
+    at Server.listen (node:net:2099:7)
+    at Function.listen (/Users/lennybeadle/rpsbet_mern/node_modules/express/lib/application.js:635:24)
+    at Object.<anonymous> (/Users/lennybeadle/rpsbet_mern/server.js:48:20)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1973:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 5001
+}
+
+Node.js v22.13.0

@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setHighlightedRooms, clearHighlightedRooms } from '../../redux/Logic/logic.actions';
+import { setHighlightedRooms, clearHighlightedRooms, moveRoomToFront, loadIndividualRoom } from '../../redux/Logic/logic.actions';
 import { differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays, isValid } from 'date-fns';
 import { Box, Typography, useTheme, alpha, Fade, Chip } from '@mui/material';
 import PlayerModal from '../modal/PlayerModal';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
+import { loggedSocketOn } from '../../utils/socketEventLogger';
 import {
   TrendingUp,
   TrendingDown,
@@ -151,7 +152,7 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
 
   // Socket event handler for new logs
   const handleNewLog = useCallback((data) => {
-    console.log("data", data)
+    console.log("🔔 NEW_LOG received in HistoryTable:", data);
     const newLogArray = data?.newLog;
     if (!newLogArray || !Array.isArray(newLogArray) || newLogArray.length === 0) return;
 
@@ -175,18 +176,67 @@ function HistoryTable({ socket: propSocket, history: propHistory, solPrice: prop
     }, 2000);
   }, [dispatch]);
 
+  // Socket event handler for highlighting first room
+  const handleHighlightFirstRoom = useCallback((data) => {
+    console.log('🎯 HIGHLIGHT_FIRST_ROOM received in HistoryTable:', data);
+    
+    // Apply room highlighting effects if utilities are available
+    if (window.roomHighlightEffects && data?.roomId) {
+      console.log('🎯 HistoryTable: Applying visual highlight to room:', data.roomId);
+      window.roomHighlightEffects.highlightRoom(data.roomId, {
+        result: data.result,
+        username: data.username,
+        betAmount: data.betAmount,
+        intensity: data.intensity || 'violent',
+        duration: data.duration || 8000 // Keep original duration for big wins
+      });
+    }
+    
+    // Also trigger Redux highlighting for the room
+    if (data?.roomId) {
+      // Don't load fresh data - we already received updated data via socket
+      // Just move the room to front and highlight it
+      console.log('🎯 HistoryTable: Moving room to front of Redux roomIds:', data.roomId);
+      dispatch(moveRoomToFront(data.roomId));
+      
+      dispatch(setHighlightedRooms([data.roomId]));
+      setTimeout(() => dispatch(clearHighlightedRooms()), data.duration || 8000); // Keep original duration
+    }
+  }, [dispatch]);
+
+  // Socket event handler for room activity burst
+  const handleRoomActivityBurst = useCallback((data) => {
+    console.log('💥 ROOM_ACTIVITY_BURST received in HistoryTable:', data);
+    
+    // Apply room activity burst effects if utilities are available
+    if (window.roomHighlightEffects && data?.roomId) {
+      window.roomHighlightEffects.highlightRoom(data.roomId, {
+        result: data.result,
+        username: data.user,
+        betAmount: data.amount,
+        intensity: 'violent',
+        duration: 6000
+      });
+    }
+  }, [dispatch]);
+
   // Set up socket connection
   useEffect(() => {
     if (!socket || typeof socket.on !== 'function') return;
 
-    socket.on('NEW_LOG', handleNewLog);
+    // Use logged socket event handlers
+    loggedSocketOn(socket, 'NEW_LOG', handleNewLog, 'HistoryTable');
+    loggedSocketOn(socket, 'HIGHLIGHT_FIRST_ROOM', handleHighlightFirstRoom, 'HistoryTable');
+    loggedSocketOn(socket, 'ROOM_ACTIVITY_BURST', handleRoomActivityBurst, 'HistoryTable');
 
     return () => {
       if (socket && typeof socket.off === 'function') {
         socket.off('NEW_LOG', handleNewLog);
+        socket.off('HIGHLIGHT_FIRST_ROOM', handleHighlightFirstRoom);
+        socket.off('ROOM_ACTIVITY_BURST', handleRoomActivityBurst);
       }
     };
-  }, [socket, handleNewLog]);
+  }, [socket, handleNewLog, handleHighlightFirstRoom, handleRoomActivityBurst]);
 
   const CompactAvatar = ({ userObj, onClick }) => {
     if (!userObj?._id) return null;

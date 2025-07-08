@@ -1666,3 +1666,11 @@ export const selectMainTab = index => dispatch => {
 export const globalChatReceived = data => dispatch => {
   dispatch({ type: GLOBAL_CHAT_RECEIVED, payload: data });
 };
+
+export const updateSingleRoom = (roomData) => dispatch => {
+  dispatch({ type: UPDATE_SINGLE_ROOM, payload: roomData });
+};
+
+export const moveRoomToFront = (roomId) => dispatch => {
+  dispatch({ type: 'MOVE_ROOM_TO_FRONT', payload: roomId });
+};

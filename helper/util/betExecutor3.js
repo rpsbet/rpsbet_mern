@@ -38,7 +38,7 @@ const waitForBlockchainOperation = async (operationPromise, waitTime = 10000) =>
     await setTimeout(waitTime);
     return result;
   } catch (error) {
-    console.error('Blockchain operation failed:', error);
+    log('Blockchain operation failed:', error);
     return null;
   }
 };
@@ -91,7 +91,7 @@ const createTokenAndPool = async (roomInfo) => {
 
     return ammId.toBase58();
   } catch (error) {
-    console.error('Error creating token and pool:', error);
+    log('Error creating token and pool:', error);
     return '';
   }
 };
@@ -155,7 +155,7 @@ const handleNotificationsAndTransactions = async (user, roomInfo, newTransaction
       await saveDocumentWithRetry(message);
       socket.sendNotification(message.to._id, notificationData);
     } catch (error) {
-      console.error('Error saving message:', error);
+      log('Error saving message:', error);
     }
   }
 
@@ -220,7 +220,7 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
     socket.sendNotification(roomInfo['creator']._id, notificationData);
     socket.newTransaction(newTransactionC);
   } catch (error) {
-    console.error('Error processing host payout:', error);
+    log('Error processing host payout:', error);
   }
 };
 
@@ -280,7 +280,7 @@ const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) 
       });
       socket.newTransaction(newTransactionForHost);
     } catch (error) {
-      console.error('Error processing co-host payout:', error);
+      log('Error processing co-host payout:', error);
     }
   });
 
@@ -340,7 +340,7 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     });
 
     if (existingBet) {
-      console.warn(`Duplicate bet detected for user ${req.user._id} in room ${req.body._id}`);
+      log(`Duplicate bet detected for user ${req.user._id} in room ${req.body._id}`);
       throw new Error('Duplicate bet detected - this result has already been processed');
     }
   }
@@ -462,7 +462,7 @@ const validateUserDeposit = async (user, roomId, betAmount) => {
     });
 
     if (!depositTransaction) {
-      console.warn(`No valid deposit found for user ${user._id}, room ${roomId}`);
+      log(`⚠️ No valid deposit found for user ${user._id}, room ${roomId}`);
       return {
         success: false,
         message: 'No valid SOL deposit found for this game. Please deposit SOL first.',
@@ -470,9 +470,9 @@ const validateUserDeposit = async (user, roomId, betAmount) => {
       };
     }
     // Additional check: ensure deposit amount is sufficient for the bet
-    console.log("Raw depositTransaction.amount:", depositTransaction.amount);
+    log("Raw depositTransaction.amount:", depositTransaction.amount);
     const depositAmount = Math.abs(depositTransaction.amount);
-    console.log("depositAmount", depositAmount)
+    log("depositAmount", depositAmount)
     if (depositAmount < betAmount) {
       console.warn(`Deposit amount ${depositAmount} insufficient for bet ${betAmount}`);
       return {

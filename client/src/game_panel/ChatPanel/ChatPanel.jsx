@@ -601,7 +601,7 @@ function ChatPanel({ is_mobile, toggleDrawer, highlightChatId }) {
             p: 1,
             borderRadius: '12px',
             maxWidth: '300px',
-            maxHeight: '400px',
+            maxHeight: '100%',
             overflowY: 'auto',
             bgcolor: 'rgba(25, 25, 25, 0.85)',
             backdropFilter: 'blur(12px)',

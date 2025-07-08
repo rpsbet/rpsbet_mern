@@ -7,6 +7,9 @@ import {
   loadIndividualRoom,
   actionRoom,
   getTopGameTypes,
+  setHighlightedRooms,
+  clearHighlightedRooms,
+  moveRoomToFront,
 } from '../../redux/Logic/logic.actions';
 import {
   TrendingUpOutlined,
@@ -49,6 +52,9 @@ import PlayerModal from '../modal/PlayerModal';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import { LikeDislikeView } from '../../components/LikeDislikeView';
+import { loggedSocketOn } from '../../utils/socketEventLogger';
+import '../../utils/roomHighlightEffects.js';
+import '../../styles/room-highlight-effects.css';
 
 // Mobile-optimized skeleton with reduced complexity
 const MobileOptimizedSkeleton = React.memo(({ isError, error, onRetry }) => (
@@ -292,7 +298,10 @@ function OpenGamesTable(props) {
   // Memoized fallbacks
   const topGameTypes = useMemo(() => topGameTypesRaw || [], [topGameTypesRaw]);
   const highlightedRooms = useMemo(() => highlightedRoomsRaw || new Set(), [highlightedRoomsRaw]);
-  const roomIds = useMemo(() => roomIdsRaw || [], [roomIdsRaw]);
+  const roomIds = useMemo(() => {
+    const ids = roomIdsRaw || [];
+    return ids;
+  }, [roomIdsRaw]);
   const roomsById = useMemo(() => roomsByIdRaw || {}, [roomsByIdRaw]);
   const roomLoadingStates = useMemo(() => roomLoadingStatesRaw || {}, [roomLoadingStatesRaw]);
   const roomErrors = useMemo(() => roomErrorsRaw || {}, [roomErrorsRaw]);
@@ -336,24 +345,31 @@ function OpenGamesTable(props) {
     });
   }, [roomIds, roomsById, roomLoadingStates, roomErrors]);
 
-  // Apply highlighting
+  // Apply highlighting and move highlighted room to index 0
   const processedRoomData = useMemo(() => {
     const highlightId = Array.from(highlightedRooms)[0];
     if (!highlightId) return orderedRoomData;
 
+ 
     const highlightedIndex = orderedRoomData.findIndex(
       item => item.id === highlightId && item.isLoaded
     );
 
+
+    // If room found and it's not already at index 0, move it to the front
     if (highlightedIndex > 0) {
       const reordered = [...orderedRoomData];
       const [highlightedItem] = reordered.splice(highlightedIndex, 1);
       reordered.unshift(highlightedItem);
       return reordered;
+    } else if (highlightedIndex === 0) {
+      return orderedRoomData;
+    } else {
+      // Room doesn't exist at all, just return original order
+      return orderedRoomData;
     }
+  }, [orderedRoomData, highlightedRooms, roomsById]);
 
-    return orderedRoomData;
-  }, [orderedRoomData, highlightedRooms]);
 
   // Client-side filtering (for local search only)
   const filteredRoomData = useMemo(() => {
@@ -417,6 +433,85 @@ function OpenGamesTable(props) {
       mountedRef.current = false;
     };
   }, [dispatch]);
+
+  // Socket event handlers
+  const handleHighlightFirstRoom = useCallback((data) => {
+    
+    // Apply room highlighting effects if utilities are available
+    if (window.roomHighlightEffects && data?.roomId) {
+      window.roomHighlightEffects.highlightRoom(data.roomId, {
+        result: data.result,
+        username: data.username,
+        betAmount: data.betAmount,
+        intensity: data.intensity || 'violent',
+        duration: data.duration || 8000 // Keep original duration for big wins
+      });
+    }
+    
+    // Also trigger Redux highlighting for the room
+    if (data?.roomId) {
+      
+      // Move the room to the front of the list permanently in Redux
+      dispatch(moveRoomToFront(data.roomId));
+      
+      dispatch(setHighlightedRooms([data.roomId]));
+      
+      // Keep the highlighting duration based on bet significance
+      const clearDelay = data.duration || 8000; // Original duration for proper big win highlights
+      setTimeout(() => {
+        dispatch(clearHighlightedRooms());
+      }, clearDelay);
+    }
+  }, [dispatch]);
+
+  const handleRoomActivityBurst = useCallback((data) => {
+    
+    // Apply room activity burst effects if utilities are available
+    if (window.roomHighlightEffects && data?.roomId) {
+      window.roomHighlightEffects.highlightRoom(data.roomId, {
+        result: data.result,
+        username: data.user,
+        betAmount: data.amount,
+        intensity: 'violent',
+        duration: 6000
+      });
+    }
+  }, []);
+
+  const handleNewLog = useCallback((data) => {
+    
+    // Trigger room refresh if needed
+    if (data?.newLog && Array.isArray(data.newLog) && data.newLog.length > 0) {
+      const firstLog = data.newLog[0];
+      if (firstLog?.room?._id) {
+        // Room data is already updated via ROOM_DATA_UPDATE socket event
+      }
+    }
+  }, [dispatch, roomIds]);
+
+  // Socket event listeners
+  useEffect(() => {
+    // Get socket from props or Redux state
+    const socket = props.socket || user?.socket;
+    
+    if (!socket || typeof socket.on !== 'function') {
+      console.warn('No socket available in OpenGamesTable');
+      return;
+    }
+
+    // Use logged socket event handlers
+    loggedSocketOn(socket, 'HIGHLIGHT_FIRST_ROOM', handleHighlightFirstRoom, 'OpenGamesTable');
+    loggedSocketOn(socket, 'ROOM_ACTIVITY_BURST', handleRoomActivityBurst, 'OpenGamesTable');
+    loggedSocketOn(socket, 'NEW_LOG', handleNewLog, 'OpenGamesTable');
+
+    return () => {
+      if (socket && typeof socket.off === 'function') {
+        socket.off('HIGHLIGHT_FIRST_ROOM', handleHighlightFirstRoom);
+        socket.off('ROOM_ACTIVITY_BURST', handleRoomActivityBurst);
+        socket.off('NEW_LOG', handleNewLog);
+      }
+    };
+  }, [handleHighlightFirstRoom, handleRoomActivityBurst, handleNewLog, props.socket, user?.socket]);
 
   // Handlers
   const handleGameTypeChange = useCallback((gameType) => {
@@ -673,7 +768,7 @@ function OpenGamesTable(props) {
                   ml: 0.5,
                   '& .MuiSvgIcon-root': {
                     transform: isFilterExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s',
+                    transition: 'transform 0.1s',
                   }
                 }
               }}
@@ -772,7 +867,8 @@ function OpenGamesTable(props) {
                     ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
                     : 0;
 
-                  const isFirstItem = index === 0 && Array.from(highlightedRooms).includes(row._id);
+                  // Highlight index 0 if there are any highlighted rooms (since highlighted rooms move to index 0)
+                  const isHighlighted = index === 0 && highlightedRooms.size > 0;
 
                   return (
                     <Grid
@@ -784,8 +880,10 @@ function OpenGamesTable(props) {
                       xl={4}
                       key={`room-${item.id}`}
                     >
-                      <Fade in={true} timeout={300}>
+                      <Fade in={true} timeout={100}>
                         <Box
+                          data-room-id={row._id}
+                          className={`room-card ${isHighlighted ? 'first-room' : ''}`}
                           onClick={(event) => {
                             if (!event.defaultPrevented) {
                               joinRoom({
@@ -797,14 +895,14 @@ function OpenGamesTable(props) {
                           sx={{
                             padding: isMobile ? '8px 12px' : '12px 16px',
                             borderRadius: '6px',
-                            background: isFirstItem
+                            background: isHighlighted
                               ? 'linear-gradient(90deg, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.03))'
                               : 'rgba(255, 255, 255, 0.02)',
-                            border: isFirstItem
+                            border: isHighlighted
                               ? '1px solid rgba(255, 0, 0, 0.3)'
                               : '1px solid rgba(255, 255, 255, 0.05)',
                             cursor: 'pointer',
-                            transition: 'all 0.2s ease',
+                            transition: 'all 0.1s ease',
                             position: 'relative',
                             minHeight: isMobile ? '140px' : '160px',
                             '&:hover': {
@@ -1012,7 +1110,7 @@ function OpenGamesTable(props) {
                                     height: '100%',
                                     background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
                                     borderRadius: isMobile ? '2px' : '3px',
-                                    transition: 'width 0.3s ease',
+                                    transition: 'width 0.1s ease',
                                   }}
                                 />
                               </Box>

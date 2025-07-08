@@ -2,8 +2,8 @@
 const axios = require('axios');
 
 async function convertDalleImageToPinata(dalleImageUrl) {
-  console.log('🔄 Converting DALL-E image to Pinata upload...');
-  console.log('DALL-E URL:', dalleImageUrl);
+  log('🔄 Converting DALL-E image to Pinata upload...');
+  log('DALL-E URL:', dalleImageUrl);
 
   try {
     // Download the image from DALL-E

@@ -90,6 +90,9 @@ import {
   getGlobalChatLogs,
   getHistory,
   endLoading,
+  loadIndividualRoom,
+  getRoomIds,
+  updateSingleRoom,
 } from '../redux/Logic/logic.actions.js';
 import PrivyLogin from './modal/PrivyLogin.jsx';
 import { usePrivy } from '@privy-io/react-auth';
@@ -487,6 +490,57 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
           }
         } catch (error) {
           console.error('Error handling room end:', error);
+        }
+      },
+
+      handleRoomDataUpdate: (data) => {
+        try {
+          console.log('🔔 ROOM_DATA_UPDATE received:', data);
+          if (data?.roomId && data?.roomData) {
+            console.log('🔄 Room data received:', {
+              roomId: data.roomId,
+              liquidity: data.roomData.user_bet,
+              battles: data.roomData.battles,
+              likes: Array.isArray(data.roomData.likes) ? data.roomData.likes.length : data.roomData.likes,
+              dislikes: Array.isArray(data.roomData.dislikes) ? data.roomData.dislikes.length : data.roomData.dislikes
+            });
+            
+            // Directly update the Redux store with the provided room data
+            console.log('🔄 Directly updating Redux store for room:', data.roomId);
+            console.log('🔄 Room data being saved:', {
+              name: data.roomData.name,
+              user_bet: data.roomData.user_bet,
+              battles: data.roomData.battles,
+              likes: data.roomData.likes?.length || 'unknown',
+              dislikes: data.roomData.dislikes?.length || 'unknown',
+              updateType: data.updateType
+            });
+            
+            dispatch({
+              type: 'INDIVIDUAL_ROOM_LOADED',
+              payload: {
+                roomId: data.roomId,
+                room: data.roomData
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error handling room data update:', error);
+        }
+      },
+
+      handleRoomsCacheInvalidate: (data) => {
+        try {
+          console.log('🔔 ROOMS_CACHE_INVALIDATE received:', data);
+          if (data?.affectedRoomId) {
+            console.log('🔄 Refreshing ONLY specific room:', data.affectedRoomId);
+            dispatch(loadIndividualRoom(data.affectedRoomId));
+          } else {
+            console.log('🔄 Refreshing all rooms');
+            dispatch(getRoomIds({ game_type: 'All' }));
+          }
+        } catch (error) {
+          console.error('Error handling cache invalidation:', error);
         }
       },
     };

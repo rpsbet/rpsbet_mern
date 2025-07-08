@@ -65,6 +65,14 @@ setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
 setTimeout(() => cronJob.initializeCron(redisClient), 5000);
 setTimeout(() => interestCron.updateRoomInterests(io), 11000);
 
+// Initialize bet simulation cron
+const { initializeBetSimulation } = require('./helper/util/betSimulationCron');
+const settingsRoutes = require('./routes/settings.routes');
+setTimeout(() => {
+  const simulator = initializeBetSimulation(io, redisClient);
+  settingsRoutes.setSimulator(simulator);
+}, 15000); // Start after 15 seconds
+
 // Attach io instance to each request for easy access
 app.use((req, res, next) => {
   req.io = io;

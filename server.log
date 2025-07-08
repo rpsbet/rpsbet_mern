@@ -1,0 +1,111 @@
+
+> mern@1.0.0 start
+> node server.js
+
+🔥 =================================
+🔥 CATSINO SERVER STARTING UP
+🔥 Environment: development
+🔥 Port: 5001
+🔥 =================================
+⏱️  Server timeouts configured: 10 minutes for AI operations
+Central Wallet Public Key: 9xDnozdsXgbi7ugacMxGTBmNxPMktPZwUKCv757WwCy4
+(node:11750) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Server running on port 5001
+Connected to Redis
+*** MongoDB connected
+🚀 Bet simulation cron started - running every 10 seconds
+🎮 Starting 2 bet simulation(s) #1
+✅ Selected room Fractal Betting with liquidity 0.28752412
+🔌 Emitting socket events for room 6863cef4f2b19ee1358e44a4
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6863cef4f2b19ee1358e44a4 to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6863cef4f2b19ee1358e44a4 to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 65d5c08162e7c84a5c03aded
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6863cef4f2b19ee1358e44a4 to 0 room clients
+✅ Simulated bet: Naja lost 0.006115 SOL in Fractal Betting 
+🎮 Starting 2 bet simulation(s) #2
+🔌 Emitting socket events for room 6863cef4f2b19ee1358e44a4
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6863cef4f2b19ee1358e44a4 to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6863cef4f2b19ee1358e44a4 to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 65d5c08162e7c84a5c03aded
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6863cef4f2b19ee1358e44a4 to 0 room clients
+✅ Simulated bet: Naja won 0.069676 SOL in Fractal Betting (3x = 0.194396 SOL)
+✅ Selected room 🌲 Forest Riddles 🌲 with liquidity 0.5541868600000003
+🔌 Emitting socket events for room 6852566e52d5508d08ca488c
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6852566e52d5508d08ca488c to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6852566e52d5508d08ca488c to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 68039ad6acedc6994b4f6ec8
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6852566e52d5508d08ca488c to 0 room clients
+✅ Simulated bet: RPS_4vLAYq lost 0.016677 SOL in 🌲 Forest Riddles 🌲 
+🎮 Starting 1 bet simulation(s) #4
+✅ Selected room Dice Spin with liquidity 1.1726224600000001
+🔌 Emitting socket events for room 684dbb80761580e251f221ee
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_684dbb80761580e251f221ee to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_684dbb80761580e251f221ee to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 67d3a7d339d29a268abfd2f3
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 684dbb80761580e251f221ee to 0 room clients
+✅ Simulated bet: RPS_nCp3aT lost 0.059226 SOL in Dice Spin 
+✅ Selected room Quantum Dough with liquidity 0.18113427000000001
+🔌 Emitting socket events for room 6863f64f762805e30c0261da
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6863f64f762805e30c0261da to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6863f64f762805e30c0261da to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 647b5b227dcb3b72742e5935
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6863f64f762805e30c0261da to 0 room clients
+✅ Simulated bet: Hayounh1 lost 0.039102 SOL in Quantum Dough 
+✅ Set Lawywrs as online for chat simulation
+⚠️ Message too long, regenerating with stricter limits...
+💬 CONVERSATIONAL chat from Lawywrs: "Sure thing! What's up?" (continuing conversation from: "Sure! What’s on your...")
+🎮 Starting 1 bet simulation(s) #6
+✅ Selected room Fractal Betting with liquidity 0.15385907000000001
+🔌 Emitting socket events for room 6863cef4f2b19ee1358e44a4
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6863cef4f2b19ee1358e44a4 to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6863cef4f2b19ee1358e44a4 to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 665bd27df1527f3faf613529
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6863cef4f2b19ee1358e44a4 to 0 room clients
+✅ Simulated bet: 999 won 0.01716 SOL in Fractal Betting (4x = 0.063835 SOL)
+✅ Set 999 as online for chat simulation
+⚠️ Message too long, regenerating with stricter limits...
+📡 Broadcast online users refresh signal
+💬 CONVERSATIONAL simulated chat from 999: "Sure! What's up?" (replying to: "Sure thing! What's u...")
+🎮 Starting 3 bet simulation(s) #7
+✅ Selected room Alchemical Cascades with liquidity 0.5155417499999999
+🔌 Emitting socket events for room 6852020b52d5508d08c9e85c
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6852020b52d5508d08c9e85c to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6852020b52d5508d08c9e85c to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 64106ce118701d016e80b572
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6852020b52d5508d08c9e85c to 0 room clients
+✅ Simulated bet: yuki lost 0.006774 SOL in Alchemical Cascades 
+🎮 Starting 2 bet simulation(s) #8
+✅ Selected room GEM DROP with liquidity 0.40433853
+🔌 Emitting socket events for room 6852020b52d5508d08c9e85c
+📊 Socket io instance exists: true
+📡 Emitting NEW_CANDLE_6852020b52d5508d08c9e85c to 0 connected clients
+💰 Emitting UPDATED_BANKROLL_6852020b52d5508d08c9e85c to 0 connected clients
+📜 Emitting NEW_LOG event to 0 connected clients
+🔔 Sending notification to user 64106ce118701d016e80b572
+🎯 Emitting HIGHLIGHT_FIRST_ROOM event to 0 connected clients
+💥 Emitting ROOM_ACTIVITY_BURST for 6852020b52d5508d08c9e85c to 0 room clients
+✅ Simulated bet: yuki won 0.005229 SOL in Alchemical Cascades (5x = 0.024315 SOL)
+SIGTERM received. Closing server...
+Server closed

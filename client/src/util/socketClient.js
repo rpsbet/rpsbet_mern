@@ -184,6 +184,8 @@ class SocketClient {
       'ROOMS_UPDATED': handlers.handleUpdatedRoomList,
       'ROOM_ENDED': handlers.handleRoomEnded,
       'ROOM_ACTION_UPDATED': handlers.handleRoomActionUpdated,
+      'ROOM_DATA_UPDATE': handlers.handleRoomDataUpdate,
+      'ROOMS_CACHE_INVALIDATE': handlers.handleRoomsCacheInvalidate,
     };
 
     Object.entries(globalEvents).forEach(([event, handler]) => {

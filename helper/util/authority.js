@@ -10,7 +10,7 @@ async function revokeMintAndFreezeAuthorities(mintPk) {
   try {
     const tx = new Transaction();
     const mintInfo = await getMint(connection, mintPk);
-    console.log('This really is a mint:', mintInfo);
+    log('This really is a mint:', mintInfo);
     tx.add(
       createSetAuthorityInstruction(
         mintPk,
@@ -31,9 +31,7 @@ async function revokeMintAndFreezeAuthorities(mintPk) {
     const txSignature = await sendAndConfirmTransaction(connection, tx, [
       owner,
     ]);
-    console.log(
-      `Revoke authorities tx: https://explorer.solana.com/tx/${txSignature}`,
-    );
+    log(`Revoke authorities tx: https://explorer.solana.com/tx/${txSignature}`);
     return txSignature;
   } catch (error) {
     console.error('Error during revoke:', error);

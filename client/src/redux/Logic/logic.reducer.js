@@ -246,10 +246,63 @@ export default function (state = initialState, action) {
         isLoadMore = false
       } = action.payload || {};
 
+      // Check for saved room order from localStorage
+      let finalRoomIds = isLoadMore ? [...state.roomIds, ...roomIds] : roomIds;
+      
+      if (!isLoadMore) {
+        try {
+          const savedOrder = localStorage.getItem('roomOrder');
+          console.log('🔄 ROOM_IDS_LOADED - Checking saved order:', savedOrder);
+          console.log('🔄 Incoming roomIds:', roomIds.slice(0, 5));
+          
+          if (savedOrder) {
+            const { frontRoomId, timestamp } = JSON.parse(savedOrder);
+            const timeExpired = Date.now() - timestamp >= 30 * 60 * 1000;
+            const roomInList = roomIds.includes(frontRoomId);
+            const ageMinutes = (Date.now() - timestamp) / (60 * 1000);
+            
+            console.log('🔄 Room order restoration check:', {
+              frontRoomId,
+              timeExpired,
+              roomInList,
+              ageMinutes: ageMinutes.toFixed(2),
+              roomIdsLength: roomIds.length
+            });
+            
+            // Only apply saved order if it's less than 30 minutes old and room exists
+            if (!timeExpired && roomInList) {
+              const filteredIds = roomIds.filter(id => id !== frontRoomId);
+              finalRoomIds = [frontRoomId, ...filteredIds];
+              console.log('✅ Successfully restored room order from localStorage');
+              console.log('🔄 Original first room:', roomIds[0]);
+              console.log('🔄 New first room:', finalRoomIds[0]);
+            } else {
+              console.log('❌ Not restoring room order:', {
+                timeExpired,
+                roomInList,
+                frontRoomId,
+                ageMinutes: ageMinutes.toFixed(2)
+              });
+              // Clean up expired room order
+              if (timeExpired) {
+                localStorage.removeItem('roomOrder');
+                console.log('🧹 Cleaned up expired room order');
+              }
+            }
+          } else {
+            console.log('🔄 No saved room order found');
+          }
+        } catch (e) {
+          console.warn('Could not restore room order from localStorage:', e);
+          // Clean up corrupted data
+          localStorage.removeItem('roomOrder');
+        }
+      }
+
       return {
         ...state,
         // Append or replace room IDs based on isLoadMore
-        roomIds: isLoadMore ? [...state.roomIds, ...roomIds] : roomIds,
+        roomIds: finalRoomIds,
         pagination: pagination, // Can be null for backward compatibility
         currentGameType: gameType,
         currentSortBy: sortBy, // Store current sort setting
@@ -621,6 +674,57 @@ export default function (state = initialState, action) {
             ? { ...room, ...action.payload }
             : room
         )
+      };
+
+    case 'MOVE_ROOM_TO_FRONT':
+      const roomIdToMove = action.payload;
+      const currentRoomIds = state.roomIds || [];
+      
+      console.log('🔄 MOVE_ROOM_TO_FRONT reducer called:', {
+        roomIdToMove,
+        currentRoomIds: currentRoomIds.slice(0, 3),
+        isRoomInList: currentRoomIds.includes(roomIdToMove)
+      });
+      
+      // Remove the room from its current position and add it to the front
+      const filteredIds = currentRoomIds.filter(id => id !== roomIdToMove);
+      const newRoomIds = [roomIdToMove, ...filteredIds];
+      
+      console.log('🔄 New room order:', {
+        newFirstRoom: newRoomIds[0],
+        oldFirstRoom: currentRoomIds[0],
+        changed: newRoomIds[0] !== currentRoomIds[0]
+      });
+      
+      // Store the room order in localStorage for persistence across refreshes
+      try {
+        localStorage.setItem('roomOrder', JSON.stringify({
+          frontRoomId: roomIdToMove,
+          timestamp: Date.now()
+        }));
+        
+        // Clean up old room order after 30 minutes
+        setTimeout(() => {
+          try {
+            const savedOrder = localStorage.getItem('roomOrder');
+            if (savedOrder) {
+              const { timestamp } = JSON.parse(savedOrder);
+              if (Date.now() - timestamp >= 30 * 60 * 1000) {
+                localStorage.removeItem('roomOrder');
+                console.log('🧹 Cleaned up old room order from localStorage');
+              }
+            }
+          } catch (e) {
+            console.warn('Could not clean up room order from localStorage:', e);
+          }
+        }, 30 * 60 * 1000); // 30 minutes
+      } catch (e) {
+        console.warn('Could not save room order to localStorage:', e);
+      }
+      
+      return {
+        ...state,
+        roomIds: newRoomIds
       };
     case HISTORY_LOADED:
       return {

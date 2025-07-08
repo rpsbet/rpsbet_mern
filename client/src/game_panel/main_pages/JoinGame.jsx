@@ -213,7 +213,6 @@ function JoinGame() {
         console.error('Error in init useEffect:', error);
       }
     };
-console.log('JoinGame component mounted with room ID:', id);
     init();
 
     // Cleanup
@@ -388,7 +387,6 @@ console.log('JoinGame component mounted with room ID:', id);
       // For game results (win/loss), we don't need to process a new deposit
       // Just submit the bet result directly using the existing deposit
       if (isGameResult) {
-      console.log("finalConnectedAccount", finalConnectedAccount)
         const betResult = await dispatch(
           bet3({
             _id: roomInfo._id,
@@ -426,7 +424,6 @@ console.log('JoinGame component mounted with room ID:', id);
         if (depositCheckResponse.data.success && depositCheckResponse.data.hasValidDeposit) {
           const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
           if (depositCheckResponse.data.depositTimestamp > fifteenMinutesAgo) {
-            console.log('[JoinGame] Valid deposit already exists, skipping new deposit');
             needsDeposit = false;
           }
         }
@@ -437,7 +434,6 @@ console.log('JoinGame component mounted with room ID:', id);
 
       // Only process deposit if needed
       if (needsDeposit) {
-        console.log('[JoinGame] Processing new deposit');
         const depositResult = await sendSolDeposit(
           dispatch,
           betInfo.bet_amount,
@@ -458,8 +454,6 @@ console.log('JoinGame component mounted with room ID:', id);
           setGameState(prev => ({ ...prev, betting: false }));
           return { success: false };
         }
-      } else {
-        console.log('[JoinGame] Using existing valid deposit, proceeding to bet submission');
       }
 
       // Submit bet to backend

@@ -184,8 +184,6 @@ function setupSocketIO(server, redisClient) {
 
   // Monitor all socket events for errors
   io.on('connection', async (socket) => {
-
-    // ADD ERROR HANDLERS FOR EACH EVENT
     socket.on('connect_error', (error) => {
       console.error(`❌ Socket ${socket.id} connect_error:`, error);
     });
@@ -194,9 +192,39 @@ function setupSocketIO(server, redisClient) {
       console.error(`❌ Socket ${socket.id} error:`, err);
     });
 
-    // socket.on('disconnect', (reason, details) => {
-    //   console.log(`❌ Socket ${socket.id} disconnected:`, reason, details);
-    // });
+    socket.on('disconnect', async (reason, details) => {
+      console.log(`❌ Socket ${socket.id} disconnected: ${reason} ${details ? JSON.stringify(details) : ''}`);
+      console.log(`📊 Disconnection stats: Total connected before: ${io.engine.clientsCount + 1}, after: ${io.engine.clientsCount}`);
+      
+      try {
+        // Remove socket from manager and get the user ID
+        const userId = socketManager.removeSocketByInstance(socket);
+        
+        if (userId) {
+          console.log(`🔄 Cleaning up disconnect for user ${userId}`);
+          
+          // Update last_seen timestamp in database
+          await User.updateOne(
+            { _id: userId },
+            { last_seen: new Date() }
+          );
+          
+          // Clear Redis cache for user online status
+          if (redisClient) {
+            await redisClient.del(`user:${userId}:online`);
+            await redisClient.del(`user:${userId}:session`);
+          }
+          
+          // Broadcast updated online users list
+          broadcastOnlineUsers(io);
+          
+        } else {
+          console.log(`⚠️ No user ID found for disconnected socket ${socket.id}`);
+        }
+      } catch (error) {
+        console.error('❌ Error handling socket disconnect:', error);
+      }
+    });
 
     // WRAP EACH HANDLER IN TRY-CATCH
     socket.on('STORE_CLIENT_USER_ID', async (data) => {
@@ -374,6 +402,12 @@ function broadcastOnlineUsers(io) {
 module.exports = {
   socketio: setupSocketIO,
   globalChatSend,
+  broadcastOnlineUsers,
+  
+  // Get online users list for simulation integration
+  getOnlineUsers: () => {
+    return socketManager.getAllConnectedUserIds();
+  },
 
   playSound: (toUserId, data) => {
     const sent = socketManager.send('PLAY_SOUND', toUserId, data);

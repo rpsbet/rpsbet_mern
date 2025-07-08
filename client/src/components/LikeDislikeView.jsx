@@ -4,14 +4,17 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 
 export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
-  const [localLikes, setLocalLikes] = useState(row.likes || []);
-  const [localDislikes, setLocalDislikes] = useState(row.dislikes || []);
+  // Ensure likes and dislikes are always arrays
+  const ensureArray = (value) => Array.isArray(value) ? value : [];
+  
+  const [localLikes, setLocalLikes] = useState(ensureArray(row.likes));
+  const [localDislikes, setLocalDislikes] = useState(ensureArray(row.dislikes));
   // This state is the key to the solution
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    setLocalLikes(row.likes || []);
-    setLocalDislikes(row.dislikes || []);
+    setLocalLikes(ensureArray(row.likes));
+    setLocalDislikes(ensureArray(row.dislikes));
   }, [row.likes, row.dislikes]);
 
   const onLike = async (event) => {
@@ -33,8 +36,8 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
     try {
       await handleLike(row);
     } catch (error) {
-      setLocalLikes(row.likes || []);
-      setLocalDislikes(row.dislikes || []);
+      setLocalLikes(ensureArray(row.likes));
+      setLocalDislikes(ensureArray(row.dislikes));
       console.error('Like action failed:', error);
     } finally {
       setIsProcessing(false); // <-- Set back to false in a `finally` block
@@ -60,8 +63,8 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
     try {
       await handleDislike(row);
     } catch (error) {
-      setLocalLikes(row.likes || []);
-      setLocalDislikes(row.dislikes || []);
+      setLocalLikes(ensureArray(row.likes));
+      setLocalDislikes(ensureArray(row.dislikes));
       console.error('Dislike action failed:', error);
     } finally {
       setIsProcessing(false); // <-- Set back to false in a `finally` block

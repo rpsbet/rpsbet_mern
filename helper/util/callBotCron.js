@@ -13,7 +13,7 @@ async function callCronJobs(io) {
   lastExecutionTime = executionTime;
 
   try {
-console.log('🔍eeeeCRON AGGREGATION START:', new Date().toISOString());
+log('🔍eeeeCRON AGGREGATION START:', new Date().toISOString());
 
     const cursor = Room.aggregate([
       { $match: { status: 'open' } },
@@ -186,7 +186,7 @@ console.log('🔍eeeeCRON AGGREGATION START:', new Date().toISOString());
     }
   } catch (err) {
     if (lastExecutionTime === executionTime) {
-      console.error(`[${executionTime}] Error fetching or emitting room:`, err);
+      log(`[${executionTime}] Error fetching or emitting room: ${err}`);
     }
   }
 }

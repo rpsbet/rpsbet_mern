@@ -32,12 +32,12 @@ const initSdk = async (params = { loadToken: false }) => {
   if (raydium) return raydium;
 
   if (connection.rpcEndpoint === clusterApiUrl('mainnet-beta')) {
-    console.warn(
+    log(
       'Using free RPC node might cause unexpected errors. Strongly suggest using a paid RPC node.',
     );
   }
 
-  console.log(`Connecting to RPC ${connection.rpcEndpoint} in ${cluster}`);
+  log(`Connecting to RPC ${connection.rpcEndpoint} in ${cluster}`);
 
   raydium = await Raydium.load({
     owner,

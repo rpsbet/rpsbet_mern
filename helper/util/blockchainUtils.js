@@ -5,14 +5,14 @@ const bs58 = require('bs58');
 // Helper function to check wallet balance
 async function checkWalletBalance(walletAddress) {
   try {
-    console.log('🔗 Connecting to Solana to check balance...');
+    log('🔗 Connecting to Solana to check balance...');
     const connection = new Connection(process.env.PROVIDER_URL, 'confirmed');
     const publicKey = new PublicKey(walletAddress);
 
     const balance = await connection.getBalance(publicKey);
     const solBalance = balance / LAMPORTS_PER_SOL;
 
-    console.log('Wallet balance check:', {
+    log('Wallet balance check:', {
       address: walletAddress,
       lamports: balance,
       sol: solBalance
@@ -104,7 +104,7 @@ async function handleAutomatedDeposit({ privateKey, amount, fromAddress, roomNam
     return result;
 
   } catch (error) {
-    console.error('❌ Automated deposit error:', error);
+    log('❌ Automated deposit error:', error);
     throw new Error(`Deposit failed: ${error.message}`);
   }
 }

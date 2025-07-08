@@ -6,11 +6,11 @@ const openai = new OpenAI({
 });
 
 async function extractRoomInfoFromCode(gameCode) {
-  console.log('📊 EXTRACTING ROOM INFO FROM CODE USING OPENAI');
-  console.log('Code length:', gameCode.length);
+  log('📊 EXTRACTING ROOM INFO FROM CODE USING OPENAI');
+  log('Code length:', gameCode.length);
 
   try {
-    console.log('🤖 Calling OpenAI for intelligent extraction...');
+    log('🤖 Calling OpenAI for intelligent extraction...');
 
     const systemPrompt = `You are an expert at analyzing React game code and extracting metadata. 
 
@@ -56,7 +56,7 @@ If you cannot find a clear game title, return null for name and set confidence t
     let extractedData;
     try {
       const responseText = aiResponse.choices[0].message.content.trim();
-      console.log('🤖 OpenAI raw response:', responseText);
+      log('🤖 OpenAI raw response:', responseText);
       
       // Try to extract JSON from the response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -67,7 +67,7 @@ If you cannot find a clear game title, return null for name and set confidence t
         extractedData = JSON.parse(responseText);
       }
     } catch (parseError) {
-      console.error('❌ Failed to parse OpenAI response:', parseError);
+      log('❌ Failed to parse OpenAI response:', parseError);
       console.error('Raw response:', aiResponse.choices[0].message.content);
       throw new Error('Failed to parse AI analysis');
     }

@@ -67,7 +67,7 @@ Example responses:
     try {
       gameTypes = JSON.parse(result);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', result);
+      log('Failed to parse OpenAI response:', result);
       // Fallback: extract categories from response text
       const availableCategories = [
         'casino', 'skill', 'arcade', 'puzzle', 'strategy', 'sports',

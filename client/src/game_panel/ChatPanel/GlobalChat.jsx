@@ -698,7 +698,7 @@ function GlobalChatComponent(props) {
         )
       ) : (
         <Box sx={{ p: 2 }}>
-          {[...Array(6)].map((_, index) => (
+          {[...Array(11)].map((_, index) => (
             <Fade in timeout={150 * (index + 1)} key={`skeleton-${index}`}>
               <Box sx={{
                 display: 'flex',

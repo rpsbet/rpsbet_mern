@@ -1,0 +1,340 @@
+/* Extremely prominent room highlighting effects for OpenGamesTable */
+
+@keyframes megaShake {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+  5% { transform: translateX(-15px) translateY(-5px) rotate(-2deg) scale(1.05); }
+  10% { transform: translateX(15px) translateY(5px) rotate(2deg) scale(1.05); }
+  15% { transform: translateX(-12px) translateY(-3px) rotate(-1.5deg) scale(1.04); }
+  20% { transform: translateX(12px) translateY(3px) rotate(1.5deg) scale(1.04); }
+  25% { transform: translateX(-10px) translateY(-2px) rotate(-1deg) scale(1.03); }
+  30% { transform: translateX(10px) translateY(2px) rotate(1deg) scale(1.03); }
+  35% { transform: translateX(-8px) translateY(-1px) rotate(-0.8deg) scale(1.02); }
+  40% { transform: translateX(8px) translateY(1px) rotate(0.8deg) scale(1.02); }
+  45% { transform: translateX(-6px) translateY(0px) rotate(-0.6deg) scale(1.015); }
+  50% { transform: translateX(6px) translateY(0px) rotate(0.6deg) scale(1.015); }
+  55% { transform: translateX(-4px) translateY(0px) rotate(-0.4deg) scale(1.01); }
+  60% { transform: translateX(4px) translateY(0px) rotate(0.4deg) scale(1.01); }
+  65% { transform: translateX(-3px) translateY(0px) rotate(-0.3deg) scale(1.005); }
+  70% { transform: translateX(3px) translateY(0px) rotate(0.3deg) scale(1.005); }
+  75% { transform: translateX(-2px) translateY(0px) rotate(-0.2deg) scale(1.002); }
+  80% { transform: translateX(2px) translateY(0px) rotate(0.2deg) scale(1.002); }
+  85% { transform: translateX(-1px) translateY(0px) rotate(-0.1deg) scale(1.001); }
+  90% { transform: translateX(1px) translateY(0px) rotate(0.1deg) scale(1.001); }
+  95% { transform: translateX(-0.5px) translateY(0px) rotate(0deg) scale(1); }
+}
+
+@keyframes rainbowGlow {
+  0% { 
+    box-shadow: 0 0 40px #ff0000, 0 0 80px #ff0000, 0 0 120px #ff0000;
+    border-color: #ff0000;
+  }
+  16% { 
+    box-shadow: 0 0 40px #ff8000, 0 0 80px #ff8000, 0 0 120px #ff8000;
+    border-color: #ff8000;
+  }
+  33% { 
+    box-shadow: 0 0 40px #ffff00, 0 0 80px #ffff00, 0 0 120px #ffff00;
+    border-color: #ffff00;
+  }
+  50% { 
+    box-shadow: 0 0 40px #00ff00, 0 0 80px #00ff00, 0 0 120px #00ff00;
+    border-color: #00ff00;
+  }
+  66% { 
+    box-shadow: 0 0 40px #0080ff, 0 0 80px #0080ff, 0 0 120px #0080ff;
+    border-color: #0080ff;
+  }
+  83% { 
+    box-shadow: 0 0 40px #8000ff, 0 0 80px #8000ff, 0 0 120px #8000ff;
+    border-color: #8000ff;
+  }
+  100% { 
+    box-shadow: 0 0 40px #ff0000, 0 0 80px #ff0000, 0 0 120px #ff0000;
+    border-color: #ff0000;
+  }
+}
+
+@keyframes backgroundFlash {
+  0%, 100% { background: rgba(255, 255, 255, 0.05); }
+  10% { background: rgba(255, 215, 0, 0.8); }
+  20% { background: rgba(255, 255, 255, 0.05); }
+  30% { background: rgba(255, 165, 0, 0.8); }
+  40% { background: rgba(255, 255, 255, 0.05); }
+  50% { background: rgba(255, 215, 0, 0.9); }
+  60% { background: rgba(255, 255, 255, 0.05); }
+  70% { background: rgba(255, 165, 0, 0.7); }
+  80% { background: rgba(255, 255, 255, 0.05); }
+  90% { background: rgba(255, 215, 0, 0.6); }
+}
+
+@keyframes pulseBorder {
+  0%, 100% { 
+    border-width: 2px;
+    border-color: rgba(255, 215, 0, 0.5);
+  }
+  25% { 
+    border-width: 6px;
+    border-color: rgba(255, 215, 0, 1);
+  }
+  50% { 
+    border-width: 4px;
+    border-color: rgba(255, 165, 0, 1);
+  }
+  75% { 
+    border-width: 6px;
+    border-color: rgba(255, 215, 0, 1);
+  }
+}
+
+@keyframes winGlow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(76, 175, 80, 0.8), inset 0 0 30px rgba(76, 175, 80, 0.2);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(139, 195, 74, 0.3));
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(76, 175, 80, 1), inset 0 0 50px rgba(76, 175, 80, 0.4);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.5), rgba(139, 195, 74, 0.5));
+  }
+}
+
+@keyframes lossGlow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(244, 67, 54, 0.8), inset 0 0 30px rgba(244, 67, 54, 0.2);
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.3), rgba(255, 87, 34, 0.3));
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(244, 67, 54, 1), inset 0 0 50px rgba(244, 67, 54, 0.4);
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.5), rgba(255, 87, 34, 0.5));
+  }
+}
+
+/* Main room highlighting classes */
+.room-card-mega-highlight {
+  animation: 
+    megaShake 4s ease-in-out,
+    backgroundFlash 3s ease-in-out,
+    pulseBorder 2s ease-in-out infinite;
+  position: relative !important;
+  z-index: 9999 !important;
+  border: 4px solid #FFD700 !important;
+  border-radius: 12px !important;
+  transform-origin: center !important;
+  overflow: visible !important;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7) !important;
+}
+
+.room-card-mega-highlight::before {
+  content: '🔥 LIVE BET! 🔥';
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(45deg, #ff6b35, #f7931e);
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10000;
+  animation: bounceIn 0.8s ease-out;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.room-card-mega-highlight::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  border-radius: 16px;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+/* Win-specific highlighting */
+.room-card-mega-highlight-win {
+  animation: 
+    megaShake 4s ease-in-out,
+    winGlow 2.5s ease-in-out infinite,
+    pulseBorder 1.8s ease-in-out infinite;
+  border: 4px solid #4CAF50 !important;
+}
+
+.room-card-mega-highlight-win::before {
+  content: '🎉 BIG WIN! 🎉';
+  background: linear-gradient(45deg, #4CAF50, #8BC34A);
+}
+
+/* Loss-specific highlighting */
+.room-card-mega-highlight-loss {
+  animation: 
+    megaShake 4s ease-in-out,
+    lossGlow 2.5s ease-in-out infinite,
+    pulseBorder 1.8s ease-in-out infinite;
+  border: 4px solid #F44336 !important;
+}
+
+.room-card-mega-highlight-loss::before {
+  content: '💔 TOUGH LOSS! 💔';
+  background: linear-gradient(45deg, #F44336, #FF5722);
+}
+
+/* Intensity-specific effects */
+.room-card-legendary {
+  border: 6px solid #FFD700 !important;
+  box-shadow: 
+    0 0 60px rgba(255, 215, 0, 1.0),
+    0 0 120px rgba(255, 215, 0, 0.8),
+    inset 0 0 30px rgba(255, 215, 0, 0.3) !important;
+  animation: 
+    megaShake 6s ease-in-out,
+    rainbowGlow 3s ease-in-out infinite,
+    pulseBorder 1s ease-in-out infinite;
+  transform: scale(1.08) !important;
+}
+
+.room-card-legendary::before {
+  content: '🌟 LEGENDARY! 🌟';
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+}
+
+.room-card-epic {
+  border: 5px solid #FF6B35 !important;
+  box-shadow: 
+    0 0 50px rgba(255, 107, 53, 0.9),
+    0 0 100px rgba(255, 107, 53, 0.7),
+    inset 0 0 25px rgba(255, 107, 53, 0.3) !important;
+  animation: 
+    megaShake 5s ease-in-out,
+    backgroundFlash 2.5s ease-in-out,
+    pulseBorder 1.2s ease-in-out infinite;
+  transform: scale(1.06) !important;
+}
+
+.room-card-epic::before {
+  content: '🔥 EPIC! 🔥';
+  background: linear-gradient(45deg, #FF6B35, #F7931E);
+}
+
+.room-card-violent {
+  border: 4px solid #F44336 !important;
+  box-shadow: 
+    0 0 40px rgba(244, 67, 54, 0.8),
+    0 0 80px rgba(244, 67, 54, 0.6),
+    inset 0 0 20px rgba(244, 67, 54, 0.2) !important;
+  animation: 
+    megaShake 4s ease-in-out,
+    backgroundFlash 2s ease-in-out,
+    pulseBorder 1.5s ease-in-out infinite;
+  transform: scale(1.04) !important;
+}
+
+.room-card-violent::before {
+  content: '💥 BIG BET! 💥';
+  background: linear-gradient(45deg, #F44336, #FF5722);
+}
+
+.room-card-normal {
+  border: 3px solid #4CAF50 !important;
+  box-shadow: 
+    0 0 30px rgba(76, 175, 80, 0.6),
+    0 0 60px rgba(76, 175, 80, 0.4) !important;
+  animation: 
+    megaShake 3s ease-in-out,
+    pulseBorder 2s ease-in-out infinite;
+  transform: scale(1.02) !important;
+}
+
+.room-card-normal::before {
+  content: '⚡ Active! ⚡';
+  background: linear-gradient(45deg, #4CAF50, #66BB6A);
+}
+
+/* First room specific enhancements */
+.first-room-highlight {
+  animation: 
+    megaShake 6s ease-in-out,
+    backgroundFlash 4s ease-in-out,
+    pulseBorder 1.5s ease-in-out infinite;
+  border: 6px solid #FFD700 !important;
+  margin: 10px !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+.first-room-highlight::before {
+  content: '⭐ MOST ACTIVE! ⭐';
+  font-size: 14px;
+  padding: 8px 20px;
+  top: -30px;
+}
+
+/* Activity burst indicator */
+.room-activity-burst {
+  position: relative;
+}
+
+.room-activity-burst::after {
+  content: '💥';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  animation: bounceIn 0.6s ease-out;
+  z-index: 1000;
+}
+
+/* Remove animations after completion */
+.room-highlight-complete {
+  animation: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  z-index: auto !important;
+}
+
+.room-highlight-complete::before,
+.room-highlight-complete::after {
+  display: none !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  @keyframes megaShake {
+    0%, 100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+    10% { transform: translateX(-8px) translateY(-2px) rotate(-1deg) scale(1.03); }
+    20% { transform: translateX(8px) translateY(2px) rotate(1deg) scale(1.03); }
+    30% { transform: translateX(-6px) translateY(-1px) rotate(-0.5deg) scale(1.02); }
+    40% { transform: translateX(6px) translateY(1px) rotate(0.5deg) scale(1.02); }
+    50% { transform: translateX(-4px) translateY(0px) rotate(-0.3deg) scale(1.01); }
+    60% { transform: translateX(4px) translateY(0px) rotate(0.3deg) scale(1.01); }
+    70% { transform: translateX(-2px) translateY(0px) rotate(-0.1deg) scale(1.005); }
+    80% { transform: translateX(2px) translateY(0px) rotate(0.1deg) scale(1.005); }
+    90% { transform: translateX(-1px) translateY(0px) rotate(0deg) scale(1); }
+  }
+  
+  .room-card-mega-highlight::before {
+    font-size: 10px;
+    padding: 3px 10px;
+    top: -20px;
+  }
+}
+
+/* Ensure highest priority */
+.room-card-mega-highlight,
+.room-card-mega-highlight-win,
+.room-card-mega-highlight-loss,
+.first-room-highlight,
+.room-card-legendary,
+.room-card-epic,
+.room-card-violent,
+.room-card-normal {
+  position: relative !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
