@@ -155,9 +155,7 @@ a:hover {
   text-align: center;
   max-width: 400px;
   width: 100%;
-  transition:
-    transform 0.4s,
-    opacity 0.4s;
+  /* Removed transitions - instant appearance */
 }
 
 .accepted {
@@ -173,7 +171,7 @@ a:hover {
 .reward {
   text-align: center;
   margin-top: 10px;
-  animation: fade-in 0.8s ease;
+  /* Removed animation - instant appearance */
 }
 
 
@@ -376,7 +374,7 @@ h4.game_header {
   height: 100%;
   background: linear-gradient(90deg, #cc00ff, #ff00cc);
   /* or any gradient you like */
-  transition: width 0.4s ease;
+  /* Removed transition - instant appearance */
 }
 
 /* Single label, absolutely centered */
@@ -540,15 +538,15 @@ h4.game_header {
 }
 
 .ticker-text {
-  animation: ticker 20s linear infinite;
   white-space: nowrap;
+  /* Removed animation - instant appearance */
 }
 
 .create-room-btn-panel .btn-create-room:active,
 .create-room-btn-panel .btn-create-room.active {
   box-shadow: none !important;
-  transition: 0.1s;
   transform: translateY(0);
+  /* Removed transition - instant appearance */
 }
 
 .debt {
@@ -558,8 +556,8 @@ h4.game_header {
 
 .debt:hover {
   background-color: #FF0000dd !important;
-  transition: 0.1s;
   transform: translateY(-2) !important;
+  /* Removed transition - instant appearance */
 }
 
 /***********************************/
@@ -838,7 +836,7 @@ h6.score {
 }
 
 .slide-in {
-  animation: slideIn 0.25s ease-in-out;
+  /* Removed animation - instant appearance */
   animation-fill-mode: both;
 }
 
@@ -1310,8 +1308,8 @@ svg#delete:hover {
   border-radius: 50%;
   width: 1.5rem;
   height: 1.5rem;
-  animation: spin 1s linear infinite;
   margin: 2rem auto 1rem;
+  /* Removed animation - instant appearance */
 }
 
 @keyframes spin {
@@ -1337,7 +1335,7 @@ svg {
 /*******/
 
 .btn {
-  transition: 0.1s ease-in-out;
+  /* Removed transition - instant appearance */
 }
 
 .cell-joiners .avatar {
@@ -1389,7 +1387,7 @@ h3.game-sub-title {
 }
 
 .highlight {
-  animation: highlight 1s ease-out;
+  /* Removed animation - instant appearance */
 }
 
 @keyframes highlight {
@@ -1496,7 +1494,7 @@ circle {
   stroke-linecap: round;
   stroke-dasharray: 390;
   stroke-dashoffset: 390;
-  transition: stroke-dashoffset 0.5s ease-in-out;
+  /* Removed transition - instant appearance */
 }
 
 .red {
@@ -1843,9 +1841,7 @@ circle {
 .highlighted-row {
   border: 2px solid yellow;
   /* Base border if flicker is mid-cycle */
-  animation:
-    violent-shake 0.4s infinite,
-    flicker-border 1s infinite;
+  /* Removed animations - instant appearance */
 }
 
 .rank-badge {
@@ -1947,12 +1943,12 @@ circle {
   border-radius: 50%;
   position: relative;
   overflow: hidden;
-  transition: transform 4s ease-out;
+  /* Removed transition - instant appearance */
 }
 
 .blur {
   filter: blur(5px);
-  transition: filter 0.1s ease;
+  /* Removed transition - instant appearance */
 }
 
 .modal-footer button.login {
@@ -2128,7 +2124,7 @@ circle {
 /***********************/
 
 .fading-text {
-  animation: fadeInOut 1s ease-in-out infinite;
+  /* Removed animation - instant appearance */
   /* Adjust duration as needed */
 }
 

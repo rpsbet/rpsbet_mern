@@ -226,10 +226,19 @@ router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
     // 5) Extract IPFS hash and form an IPFS gateway URL
     const { IpfsHash } = pinataRes.data;
     const imageUrl = `https://gateway.pinata.cloud/ipfs/${IpfsHash}`;
+    
+    // Also provide alternative gateway URLs in case of rate limiting
+    const alternativeUrls = [
+      `https://ipfs.io/ipfs/${IpfsHash}`,
+      `https://cloudflare-ipfs.com/ipfs/${IpfsHash}`,
+      `https://dweb.link/ipfs/${IpfsHash}`,
+    ];
 
     return res.json({
       success: true,
       imageUrl,
+      ipfsHash: IpfsHash,
+      alternativeUrls,
     });
   } catch (error) {
     console.error('Error uploading to Pinata:', error);

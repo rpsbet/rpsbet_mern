@@ -9,7 +9,6 @@ import {
   Box,
   ButtonBase,
   CircularProgress,
-  Fade,
   Typography,
   Tooltip
 } from '@mui/material';
@@ -157,7 +156,6 @@ const ChatMessageItem = React.memo(({
             ? 'rgba(255, 0, 0, 0.3)' 
             : 'rgba(255, 255, 255, 0.05)',
           opacity: isPending ? 0.7 : 1,
-          transition: 'all 0.2s ease',
           '&:hover': {
             background: isSelected 
               ? 'rgba(255, 0, 0, 0.15)' 
@@ -584,8 +582,7 @@ function GlobalChatComponent(props) {
     >
       {/* New message notification */}
       {showTooltip && newMessages > 0 && (
-        <Fade in>
-          <ButtonBase
+        <ButtonBase
             onClick={handleScrollToBottom}
             sx={{
               position: 'absolute',
@@ -608,7 +605,6 @@ function GlobalChatComponent(props) {
                 background: '#cc0000',
                 transform: 'translateX(-50%) translateY(-2px)',
               },
-              transition: 'all 0.2s ease',
             }}
           >
             <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
@@ -616,7 +612,6 @@ function GlobalChatComponent(props) {
             </Typography>
             <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: '10px' }} />
           </ButtonBase>
-        </Fade>
       )}
 
       {/* Player Modal */}
@@ -699,8 +694,7 @@ function GlobalChatComponent(props) {
       ) : (
         <Box sx={{ p: 2 }}>
           {[...Array(11)].map((_, index) => (
-            <Fade in timeout={150 * (index + 1)} key={`skeleton-${index}`}>
-              <Box sx={{
+            <Box key={`skeleton-${index}`} sx={{
                 display: 'flex',
                 alignItems: 'center',
                 mb: 1.5,
@@ -731,7 +725,6 @@ function GlobalChatComponent(props) {
                   />
                 </Box>
               </Box>
-            </Fade>
           ))}
         </Box>
       )}

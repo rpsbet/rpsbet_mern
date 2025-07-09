@@ -2105,7 +2105,7 @@ Do not start your message with your username.
 Use broken English or sometimes bad english.
 Make it sometimes rude and add swearing.
 Have personality.
-Sometimes make it in a foreign language.
+Sometimes make it in a foreign language like Tegalog or Indonesian.
 Don't use emojis unless laughing /crying face but rarely.
 Sometimes include the Room name.
 No exclamation marks.
@@ -2379,7 +2379,7 @@ Multiplier: ${multiplier}
   }
 
   generateRandomResult() {
-    return Math.random() < 0.52 ? 'win' : 'loss';
+    return Math.random() < 0.51 ? 'win' : 'loss';
   }
 
   generateRandomMultiplier() {
@@ -2439,7 +2439,6 @@ Multiplier: ${multiplier}
 
       const randomIndex = Math.floor(Math.random() * openRooms.length);
       const selectedRoom = openRooms[randomIndex];
-      log(`🎲 Selected room "${selectedRoom.name}" (${selectedRoom.ticker}) - Liquidity: ${selectedRoom.user_bet.toFixed(4)}`);
       return selectedRoom;
     } catch (error) {
       console.error('❌ Error getting random room:', error);
@@ -2836,7 +2835,7 @@ Multiplier: ${multiplier}
 
   async simulateBets() {
     try {
-      const numBets = Math.floor(Math.random() * 4) + 1;
+      const numBets = Math.floor(Math.random() * 6) + 3; // 3-8 bets per cycle (was 1-4)
 
       // 15% chance to add a like/dislike to a random room
       if (Math.random() < 0.1) {
@@ -3114,14 +3113,14 @@ Multiplier: ${multiplier}
         });
 
         // Higher chance of bet-related chat after a bet
-        if (Math.random() < 0.7) {
+        if (Math.random() < 0.05) {
           setTimeout(async () => {
             await this.sendSimulatedChat(user, room, result, betAmount, multiplier);
           }, Math.random() * 2500 + 500);
         }
 
         // Lower chance of conversational chat, but still some
-        if (Math.random() < 0.4) {
+        if (Math.random() < 0.03) {
           setTimeout(async () => {
             await this.sendConversationalChat();
           }, Math.random() * 5000 + 1000);
@@ -3129,8 +3128,6 @@ Multiplier: ${multiplier}
       }
 
       this.simulationCount++;
-
-      log(`✅ Simulated bet: ${user.username} ${result === 'win' ? 'won' : 'lost'} ${betAmount} SOL in ${room.name} ${result === 'win' ? `(${multiplier}x = ${winnings.netWinnings.toFixed(6)} SOL)` : ''}`);
 
     } catch (error) {
       console.error('❌ Error in bet simulation:', error);
@@ -3158,7 +3155,7 @@ Multiplier: ${multiplier}
     // Add dedicated chat simulation every 30 seconds
     this.chatJob = cron.schedule('*/30 * * * * *', async () => {
       // 60% chance to trigger a conversational chat
-      if (Math.random() < 0.4) {
+      if (Math.random() < 0.03) {
         await this.sendConversationalChat();
       }
     }, {

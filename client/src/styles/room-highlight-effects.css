@@ -108,12 +108,8 @@
   }
 }
 
-/* Main room highlighting classes */
+/* Main room highlighting classes - simplified */
 .room-card-mega-highlight {
-  animation: 
-    megaShake 4s ease-in-out,
-    backgroundFlash 3s ease-in-out,
-    pulseBorder 2s ease-in-out infinite;
   position: relative !important;
   z-index: 9999 !important;
   border: 4px solid #FFD700 !important;
@@ -121,6 +117,7 @@
   transform-origin: center !important;
   overflow: visible !important;
   box-shadow: 0 0 25px rgba(255, 215, 0, 0.7) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-mega-highlight::before {
@@ -137,8 +134,8 @@
   font-size: 12px;
   white-space: nowrap;
   z-index: 10000;
-  animation: bounceIn 0.8s ease-out;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  /* Removed animation - instant appearance */
 }
 
 .room-card-mega-highlight::after {
@@ -154,13 +151,12 @@
   opacity: 0.3;
 }
 
-/* Win-specific highlighting */
+/* Win-specific highlighting - simplified */
 .room-card-mega-highlight-win {
-  animation: 
-    megaShake 4s ease-in-out,
-    winGlow 2.5s ease-in-out infinite,
-    pulseBorder 1.8s ease-in-out infinite;
   border: 4px solid #4CAF50 !important;
+  box-shadow: 0 0 30px rgba(76, 175, 80, 0.8) !important;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(139, 195, 74, 0.3)) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-mega-highlight-win::before {
@@ -168,13 +164,12 @@
   background: linear-gradient(45deg, #4CAF50, #8BC34A);
 }
 
-/* Loss-specific highlighting */
+/* Loss-specific highlighting - simplified */
 .room-card-mega-highlight-loss {
-  animation: 
-    megaShake 4s ease-in-out,
-    lossGlow 2.5s ease-in-out infinite,
-    pulseBorder 1.8s ease-in-out infinite;
   border: 4px solid #F44336 !important;
+  box-shadow: 0 0 30px rgba(244, 67, 54, 0.8) !important;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.3), rgba(255, 87, 34, 0.3)) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-mega-highlight-loss::before {
@@ -182,18 +177,13 @@
   background: linear-gradient(45deg, #F44336, #FF5722);
 }
 
-/* Intensity-specific effects */
+/* Intensity-specific effects - simplified */
 .room-card-legendary {
   border: 6px solid #FFD700 !important;
-  box-shadow: 
-    0 0 60px rgba(255, 215, 0, 1.0),
-    0 0 120px rgba(255, 215, 0, 0.8),
-    inset 0 0 30px rgba(255, 215, 0, 0.3) !important;
-  animation: 
-    megaShake 6s ease-in-out,
-    rainbowGlow 3s ease-in-out infinite,
-    pulseBorder 1s ease-in-out infinite;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 1.0) !important;
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2)) !important;
   transform: scale(1.08) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-legendary::before {
@@ -203,15 +193,10 @@
 
 .room-card-epic {
   border: 5px solid #FF6B35 !important;
-  box-shadow: 
-    0 0 50px rgba(255, 107, 53, 0.9),
-    0 0 100px rgba(255, 107, 53, 0.7),
-    inset 0 0 25px rgba(255, 107, 53, 0.3) !important;
-  animation: 
-    megaShake 5s ease-in-out,
-    backgroundFlash 2.5s ease-in-out,
-    pulseBorder 1.2s ease-in-out infinite;
+  box-shadow: 0 0 50px rgba(255, 107, 53, 0.9) !important;
+  background: linear-gradient(45deg, rgba(255, 107, 53, 0.2), rgba(247, 147, 30, 0.2)) !important;
   transform: scale(1.06) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-epic::before {
@@ -221,15 +206,10 @@
 
 .room-card-violent {
   border: 4px solid #F44336 !important;
-  box-shadow: 
-    0 0 40px rgba(244, 67, 54, 0.8),
-    0 0 80px rgba(244, 67, 54, 0.6),
-    inset 0 0 20px rgba(244, 67, 54, 0.2) !important;
-  animation: 
-    megaShake 4s ease-in-out,
-    backgroundFlash 2s ease-in-out,
-    pulseBorder 1.5s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(244, 67, 54, 0.8) !important;
+  background: linear-gradient(45deg, rgba(244, 67, 54, 0.2), rgba(255, 87, 34, 0.2)) !important;
   transform: scale(1.04) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-violent::before {
@@ -239,13 +219,10 @@
 
 .room-card-normal {
   border: 3px solid #4CAF50 !important;
-  box-shadow: 
-    0 0 30px rgba(76, 175, 80, 0.6),
-    0 0 60px rgba(76, 175, 80, 0.4) !important;
-  animation: 
-    megaShake 3s ease-in-out,
-    pulseBorder 2s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(76, 175, 80, 0.6) !important;
+  background: linear-gradient(45deg, rgba(76, 175, 80, 0.2), rgba(102, 187, 106, 0.2)) !important;
   transform: scale(1.02) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .room-card-normal::before {
@@ -255,14 +232,11 @@
 
 /* First room specific enhancements */
 .first-room-highlight {
-  animation: 
-    megaShake 6s ease-in-out,
-    backgroundFlash 4s ease-in-out,
-    pulseBorder 1.5s ease-in-out infinite;
   border: 6px solid #FFD700 !important;
   margin: 10px !important;
   transform: scale(1.05) !important;
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
+  /* Removed all animations - instant appearance */
 }
 
 .first-room-highlight::before {
@@ -283,8 +257,8 @@
   top: 10px;
   right: 10px;
   font-size: 24px;
-  animation: bounceIn 0.6s ease-out;
   z-index: 1000;
+  /* Removed animation - instant appearance */
 }
 
 /* Remove animations after completion */

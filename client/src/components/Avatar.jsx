@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { Box, Avatar as MUIAvatar, Badge } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified'; // Import the MUI icon
 import { getRank } from '../util/getRank';
+import { createIpfsUrl, markGatewayAsFailed, extractIpfsHash } from '../utils/ipfsGateway';
 
 function Avatar(props) {
   const {
@@ -28,6 +29,8 @@ function Avatar(props) {
   const [rank, setRank] = useState(initialRank);
   const [darkMode, setDarkMode] = useState(initialDarkMode);
   const [dominantColor, setDominantColor] = useState(null);
+  const [currentSrc, setCurrentSrc] = useState(initialSrc);
+  const [gatewayAttempt, setGatewayAttempt] = useState(0);
 
   // --------------- SIDE EFFECTS ---------------
   useEffect(() => {
@@ -38,6 +41,14 @@ function Avatar(props) {
     setElite(initialElite);
     setDarkMode(initialDarkMode);
     setDominantColor(null); // If you compute a color from the avatar, do it here
+    
+    // Handle IPFS URLs with gateway fallback
+    if (initialSrc && extractIpfsHash(initialSrc)) {
+      setCurrentSrc(createIpfsUrl(initialSrc, gatewayAttempt));
+    } else {
+      setCurrentSrc(initialSrc);
+    }
+    setGatewayAttempt(0); // Reset attempt counter for new src
   }, [
     initialSrc,
     initialAlt,
@@ -47,6 +58,13 @@ function Avatar(props) {
     initialRank,
     initialDarkMode,
   ]);
+
+  // Handle gateway attempt changes
+  useEffect(() => {
+    if (src && extractIpfsHash(src)) {
+      setCurrentSrc(createIpfsUrl(src, gatewayAttempt));
+    }
+  }, [gatewayAttempt, src]);
 
   // --------------- RENDER LOGIC ---------------
   const isOnline = user_id ? onlineUserList.includes(user_id) : false;
@@ -126,7 +144,7 @@ function Avatar(props) {
         <Box className="player" sx={{ position: 'relative', display: 'inline-block' }}>
           {/* MUI Avatar */}
           <MUIAvatar
-            src={src}
+            src={currentSrc}
             alt={alt}
             className='avatar'
             variant="rounded"
@@ -137,6 +155,20 @@ function Avatar(props) {
               border: 'none',
             }}
             onError={(e) => {
+              // Handle IPFS gateway fallback
+              if (currentSrc && extractIpfsHash(currentSrc)) {
+                markGatewayAsFailed(currentSrc);
+                const newAttempt = gatewayAttempt + 1;
+                const fallbackUrl = createIpfsUrl(src, newAttempt);
+                
+                if (fallbackUrl && fallbackUrl !== currentSrc) {
+                  setGatewayAttempt(newAttempt);
+                  setCurrentSrc(fallbackUrl);
+                  return;
+                }
+              }
+              
+              // Final fallback to local image
               e.target.src = darkMode
                 ? '/img/profile-thumbnail-dark.svg'
                 : '/img/profile-thumbnail.svg';

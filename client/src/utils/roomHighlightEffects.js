@@ -155,7 +155,7 @@ class RoomHighlightEffects {
       white-space: nowrap;
       z-index: 10001;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      animation: bounceIn 0.8s ease-out, fadeOut 2s ease-in-out 6s;
+      /* Removed animations - instant appearance */
       pointer-events: none;
     `;
 
@@ -412,29 +412,7 @@ window.testLosses = () => {
 
 // CSS animation keyframes to add to document
 const additionalCSS = `
-  @keyframes fadeOut {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  
-  @keyframes bounceIn {
-    0% {
-      transform: translateX(-50%) scale(0.3) translateY(-20px);
-      opacity: 0;
-    }
-    50% {
-      transform: translateX(-50%) scale(1.05) translateY(0);
-      opacity: 0.8;
-    }
-    70% {
-      transform: translateX(-50%) scale(0.9) translateY(0);
-      opacity: 0.9;
-    }
-    100% {
-      transform: translateX(-50%) scale(1) translateY(0);
-      opacity: 1;
-    }
-  }
+  /* Removed animations - instant appearance */
 `;
 
 // Inject CSS if not already present
