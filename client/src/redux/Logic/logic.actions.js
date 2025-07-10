@@ -387,7 +387,27 @@ export const autopopulateRoomInfo = async (gameCode, onChangeState, dispatch) =>
     return null;
   }
 
+  // Validate the game code before sending to backend
+  const codeToCheck = gameCode.toLowerCase();
+  const errorIndicators = [
+    'generation failed',
+    'error handling',
+    'failed request',
+    'runtime error',
+    'failed to',
+    'error:',
+    'exception:',
+    'cannot read properties'
+  ];
+
+  if (errorIndicators.some(indicator => codeToCheck.includes(indicator))) {
+    console.warn('[autopopulateRoomInfo] Game code appears to contain error messages, aborting');
+    return null;
+  }
+
   try {
+    console.log('[autopopulateRoomInfo] Sending code to backend, length:', gameCode.length);
+    console.log('[autopopulateRoomInfo] Code preview:', gameCode.substring(0, 200) + '...');
 
     // Step 1: Use AI to extract room information from game code
     const extractResponse = await axios.post('/game/extract-room-info', {

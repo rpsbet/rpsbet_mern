@@ -2379,7 +2379,7 @@ Multiplier: ${multiplier}
   }
 
   generateRandomResult() {
-    return Math.random() < 0.51 ? 'win' : 'loss';
+    return Math.random() < 0.50 ? 'win' : 'loss';
   }
 
   generateRandomMultiplier() {
@@ -2427,7 +2427,7 @@ Multiplier: ${multiplier}
     try {
       const openRooms = await Room.find({
         status: 'open',
-        user_bet: { $gt: 0.03 }
+        user_bet: { $gt: 0.01 }
       })
         .select('name description ticker user_bet host_pr tax status creator battles updated_at joiners image game_type created_at likes dislikes')
         .populate('creator');
@@ -2913,6 +2913,7 @@ Multiplier: ${multiplier}
         commission: winnings.commission,
         game_result: winnings.gameResult,
         winnings: winnings.netWinnings,
+        multiplier: result === 'win' ? multiplier : 1.0,
         host_pr: room.host_pr,
         user_bet: room.user_bet,
         status: 'simulated'
@@ -2952,11 +2953,20 @@ Multiplier: ${multiplier}
         room.host_pr += betAmount * 0.93;
       } else {
         room.host_pr -= betAmount * (multiplier - 1);
-        room.user_bet -= betAmount * (multiplier - 1);
+        room.user_bet = Math.max(0, room.user_bet - betAmount * (multiplier - 1));
       }
 
       if (room.host_pr < 0.01) {
         room.host_pr = 0.01;
+      }
+
+      // Handle room end case - set status to finished when user_bet hits 0
+      if (room.user_bet <= 0.001) {
+        room.status = 'finished';
+        room.user_bet = 0;
+        if (this.io && this.io.sockets) {
+          this.io.sockets.emit('ROOM_ENDED', { roomId: room._id });
+        }
       }
 
       room.battles ??= 0;
@@ -3011,19 +3021,29 @@ Multiplier: ${multiplier}
 
       if (this.io) {
         const now = new Date();
-        const timeBucket = Math.floor(now.getTime() / (60 * 1000));
-        const isBuyTransaction = result === 'win';
+        const timeBucket = Math.floor(now.getTime() / 1000);
+        // From liquidity pool perspective:
+        // - Player wins (result === 'win') = liquidity decreases = sell volume (red candle)
+        // - Player loses (result === 'loss') = liquidity increases = buy volume (green candle)
+        const liquidityIncreases = result === 'loss'; // Player loss = liquidity increase
+
+        // IMPORTANT: room.user_bet already contains the NEW value (after transaction)
+        const currentLiquidity = room.user_bet; // After transaction
+        
+        // The open should be the previous candle's close (which should equal the pre-transaction liquidity)
+        const openValue = currentLiquidity - newTransactionAmount; // Before transaction
+        const closeValue = currentLiquidity; // After transaction
 
         const newCandle = {
           _id: timeBucket,
-          open: room.user_bet + newTransactionAmount,
-          close: room.user_bet,
-          high: Math.max(room.user_bet, room.user_bet + newTransactionAmount),
-          low: Math.min(room.user_bet, room.user_bet + newTransactionAmount),
+          open: openValue,
+          close: closeValue,
+          high: Math.max(closeValue, openValue),
+          low: Math.min(closeValue, openValue),
           volume: Math.abs(newTransactionAmount),
-          buyVolume: isBuyTransaction ? Math.abs(newTransactionAmount) : 0,
-          sellVolume: isBuyTransaction ? 0 : Math.abs(newTransactionAmount),
-          startTime: new Date(timeBucket * 60 * 1000)
+          buyVolume: liquidityIncreases ? Math.abs(newTransactionAmount) : 0,
+          sellVolume: liquidityIncreases ? 0 : Math.abs(newTransactionAmount),
+          startTime: new Date(timeBucket * 1000)
         };
 
         this.io.sockets.emit(`NEW_CANDLE_${room._id}`, { newCandle });

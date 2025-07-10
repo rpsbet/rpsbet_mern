@@ -377,6 +377,8 @@ const SettingsRef = React.forwardRef(({
       if (!hasGenerated && !rowName && !prompt && !initialProxiedAssets?.images?.length) {
         setTimeout(() => {
           if (isMounted) {
+            console.log('[SettingsRef] Auto-populating with initial code, length:', initialGameCode?.length);
+            console.log('[SettingsRef] Initial code preview:', initialGameCode?.substring(0, 200) + '...');
             triggerAutopopulate(initialGameCode);
           }
         }, 1000);
@@ -545,9 +547,12 @@ const SettingsRef = React.forwardRef(({
       // Trigger auto-populate ONLY if we successfully generated a game
       if (response.payload?.finalApp) {
         console.log('[SettingsRef] Triggering auto-populate for generated game');
+        console.log('[SettingsRef] Generated code preview:', response.payload.finalApp.substring(0, 200) + '...');
         setTimeout(async () => {
           await triggerAutopopulate(response.payload.finalApp);
         }, 1000); // Small delay to ensure game code is processed
+      } else {
+        console.warn('[SettingsRef] No finalApp in response payload:', response.payload);
       }
     } catch (error) {
       setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
@@ -569,6 +574,38 @@ const SettingsRef = React.forwardRef(({
     setIsAutopopulating(true);
 
     try {
+      // Validate the game code before sending it to the backend
+      if (!generatedGameCode || typeof generatedGameCode !== 'string') {
+        console.warn('[SettingsRef] Invalid game code for auto-populate:', typeof generatedGameCode);
+        return;
+      }
+
+      // Check if the game code looks like an error message or malformed code
+      const codeToCheck = generatedGameCode.toLowerCase();
+      const errorIndicators = [
+        'generation failed',
+        'error handling',
+        'failed request',
+        'runtime error',
+        'failed to',
+        'error:',
+        'exception:',
+        'cannot read properties'
+      ];
+
+      if (errorIndicators.some(indicator => codeToCheck.includes(indicator))) {
+        console.warn('[SettingsRef] Game code appears to contain error messages, skipping auto-populate');
+        return;
+      }
+
+      // Additional validation - check if it looks like JavaScript code
+      if (!generatedGameCode.includes('function') && !generatedGameCode.includes('=>') && !generatedGameCode.includes('React')) {
+        console.warn('[SettingsRef] Game code does not appear to be valid JavaScript, skipping auto-populate');
+        return;
+      }
+
+      console.log('[SettingsRef] Auto-populating with code length:', generatedGameCode.length);
+
       const extractedInfo = await autopopulateRoomInfo(
         generatedGameCode,
         onChangeState,

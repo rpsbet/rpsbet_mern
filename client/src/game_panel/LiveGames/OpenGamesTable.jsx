@@ -510,6 +510,11 @@ function OpenGamesTable(props) {
         socket.off('ROOM_ACTIVITY_BURST', handleRoomActivityBurst);
         socket.off('NEW_LOG', handleNewLog);
       }
+      
+      // Clear all room highlights when component unmounts
+      if (window.roomHighlightEffects) {
+        window.roomHighlightEffects.clearAllHighlights();
+      }
     };
   }, [handleHighlightFirstRoom, handleRoomActivityBurst, handleNewLog, props.socket, user?.socket]);
 

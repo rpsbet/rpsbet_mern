@@ -27,6 +27,7 @@ async function convertGameLogToHistoryStyle(gameLogList) {
       bet_amount: gameLog.bet_amount ?? 0,
       winnings: gameLog.winnings ?? 0,
       user_bet: gameLog.user_bet ?? 0,
+      multiplier: gameLog.multiplier ?? 1.0,
 
       // Mark an "action" for front-end interpretation
       // e.g. 'won', 'lost', 'rugged', etc.

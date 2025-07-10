@@ -244,9 +244,15 @@ function RoomHistory({
           sx={{
             cursor: 'pointer',
             display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            gap: 0.5,
+            textDecoration: 'none',
+            padding: '4px 8px',
+            borderRadius: 1,
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            },
           }}
           className="room"
         >
@@ -254,9 +260,13 @@ function RoomHistory({
             src={roomObj.image}
             alt={roomObj.image}
             className="game-type-icon"
-            style={{ display: 'inline-block', marginLeft: 6, marginRight: 4 }}
+            style={{ 
+              width: '16px',
+              height: '16px',
+              borderRadius: '2px',
+            }}
           />
-          <Typography variant="body2" sx={{ mr: 0.5 }}>
+          <Typography variant="body2" sx={{ color: '#ccc', fontSize: '0.8rem' }}>
             {displayRoom}
           </Typography>
         </Box>
@@ -269,7 +279,14 @@ function RoomHistory({
         <Box
           component="a"
           onClick={() => handleOpenPlayerModal(userObj._id)}
-          sx={{ cursor: 'pointer' }}
+          sx={{ 
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            '&:hover': {
+              opacity: 0.8,
+            },
+          }}
           className="player"
         >
           <Avatar
@@ -281,7 +298,11 @@ function RoomHistory({
             elite={userObj.elite}
             alt=""
             className="avatar"
-            style={{ display: 'inline-block', marginRight: 6 }}
+            style={{ 
+              display: 'inline-block',
+              width: '28px',
+              height: '28px',
+            }}
           />
         </Box>
       );
@@ -290,17 +311,31 @@ function RoomHistory({
     switch (row.action) {
       case 'won': {
         const totalWinStr = convertToCurrency(winnings, solPrice);
+        const betAmountStr = convertToCurrency(betAmt, solPrice);
+        const multiplier = (row.multiplier || 1.0).toFixed(2);
+        
         return (
           <Box
             sx={{
               fontSize: '0.9rem',
               display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 1,
+              padding: 1,
+              backgroundColor: 'rgba(0, 255, 58, 0.05)',
+              border: '1px solid rgba(0, 255, 58, 0.15)',
+              borderRadius: 1,
+              borderLeft: '3px solid #00ff3a',
             }}
           >
-            {renderUserAvatar(joinedUser)} won {totalWinStr} in {renderRoomInfo(row.room)}
+            {renderUserAvatar(joinedUser)}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ color: '#00ff3a', fontWeight: 'bold' }}>won</Typography>
+              <Typography sx={{ color: '#00ff3a' }}>{totalWinStr}</Typography>
+              <Typography sx={{ color: '#ffeb3b', fontSize: '0.8rem' }}>({multiplier}x)</Typography>
+              <Typography sx={{ color: '#888', fontSize: '0.8rem' }}>from {betAmountStr}</Typography>
+            </Box>
+            <Box sx={{ marginLeft: 'auto' }}>{renderRoomInfo(row.room)}</Box>
           </Box>
         );
       }
@@ -310,12 +345,21 @@ function RoomHistory({
             sx={{
               fontSize: '0.9rem',
               display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 1,
+              padding: 1,
+              backgroundColor: 'rgba(255, 0, 0, 0.05)',
+              border: '1px solid rgba(255, 0, 0, 0.15)',
+              borderRadius: 1,
+              borderLeft: '3px solid #ff0000',
             }}
           >
-            {renderUserAvatar(joinedUser)} lost {betAmtStr} in {renderRoomInfo(row.room)}
+            {renderUserAvatar(joinedUser)}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ color: '#ff0000', fontWeight: 'bold' }}>lost</Typography>
+              <Typography sx={{ color: '#ff0000' }}>{betAmtStr}</Typography>
+            </Box>
+            <Box sx={{ marginLeft: 'auto' }}>{renderRoomInfo(row.room)}</Box>
           </Box>
         );
       case 'rugged':
@@ -336,15 +380,23 @@ function RoomHistory({
         return (
           <Box
             sx={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
+              fontSize: '0.9rem',
               display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 1,
+              padding: 1,
+              backgroundColor: 'rgba(255, 235, 59, 0.05)',
+              border: '1px solid rgba(255, 235, 59, 0.15)',
+              borderRadius: 1,
+              borderLeft: '3px solid #ffeb3b',
             }}
           >
-            {renderUserAvatar(creator)} created {renderRoomInfo(row.room)} with {betAmtStr}
+            {renderUserAvatar(creator)}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ color: '#ffeb3b', fontWeight: 'bold' }}>created</Typography>
+              <Typography sx={{ color: '#fff' }}>{betAmtStr}</Typography>
+            </Box>
+            <Box sx={{ marginLeft: 'auto' }}>{renderRoomInfo(row.room)}</Box>
           </Box>
         );
       case 'split': {
@@ -354,12 +406,21 @@ function RoomHistory({
             sx={{
               fontSize: '0.9rem',
               display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 1,
+              padding: 1,
+              backgroundColor: 'rgba(255, 152, 0, 0.05)',
+              border: '1px solid rgba(255, 152, 0, 0.15)',
+              borderRadius: 1,
+              borderLeft: '3px solid #ff9800',
             }}
           >
-            {renderUserAvatar(joinedUser)} split {splitStr} in {renderRoomInfo(row.room)}
+            {renderUserAvatar(joinedUser)}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ color: '#ff9800', fontWeight: 'bold' }}>split</Typography>
+              <Typography sx={{ color: '#ff9800' }}>{splitStr}</Typography>
+            </Box>
+            <Box sx={{ marginLeft: 'auto' }}>{renderRoomInfo(row.room)}</Box>
           </Box>
         );
       }
@@ -496,43 +557,70 @@ function RoomHistory({
                 row.joined_user?._id === effectiveUserId || row.creator?._id === effectiveUserId;
 
               return (
-                <div
+                <Box
                   key={row._id || key}
                   className={`table-row ${isUserInvolved ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''
                     }`}
-                  style={{
-                    animationDelay: `${key * 0.1}s`,
-                    padding: '10px',
-                    background: 'rgba(20, 20, 20, 0.2)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-          color: '#fff'
-
+                  sx={{
+                    animationDelay: `${key * 0.05}s`,
+                    mb: 1,
+                    position: 'relative',
                   }}
                 >
-                  <div className="table-cell">
-                    <div className="room-id">{row.room?.status}</div>
-                    {row.ai_mode && (
-                      <div>
-                        <span className="room-id" id="ai_mode">
+                  {/* Time and status indicators */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1, 
+                    mb: 0.5,
+                    justifyContent: 'space-between',
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: '#666', 
+                          fontSize: '0.7rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {row.from_now}
+                      </Typography>
+                      {row.ai_mode && (
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: '#ffeb3b', 
+                            fontSize: '0.7rem',
+                            backgroundColor: 'rgba(255, 235, 59, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255, 235, 59, 0.2)',
+                          }}
+                        >
                           {row.ai_mode}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="desktop-only" style={{ marginTop: '5px' }}>
-                      {row.finalMsg}
-                    </div>
-                    <div className="mobile-only" style={{ marginTop: '5px' }}>
-                      {row.finalMsg}
-                    </div>
-                  </div>
-
-                  <div className="table-cell" style={{ whiteSpace: 'nowrap' }}>
-                    {row.from_now}
-                  </div>
-                </div>
+                        </Typography>
+                      )}
+                    </Box>
+                    
+                    {/* Room status */}
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#888', 
+                        fontSize: '0.7rem',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {row.room?.status}
+                    </Typography>
+                  </Box>
+                  
+                  {/* Main content */}
+                  <Box>
+                    {row.finalMsg}
+                  </Box>
+                </Box>
               );
             })}
 

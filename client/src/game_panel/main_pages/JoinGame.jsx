@@ -207,7 +207,7 @@ function JoinGame() {
     // Initialize room data
     const init = async () => {
       try {
-        await dispatch(getTransactionCandles({ roomId: id, timeFrame: '1m' }));
+        await dispatch(getTransactionCandles({ roomId: id, timeFrame: '1s' }));
         await initializeRoomData();
       } catch (error) {
         console.error('Error in init useEffect:', error);

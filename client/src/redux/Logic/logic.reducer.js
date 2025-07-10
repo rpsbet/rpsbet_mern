@@ -435,17 +435,17 @@ export default function (state = initialState, action) {
       const incoming = action.payload;
       const existingCandles = [...state.candles];
 
-      // Convert to a second-based integer or minute-based integer, e.g.:
+      // Convert to a second-based integer, e.g.:
       const incomingStartTimeMs = new Date(incoming.startTime).getTime();
-      const incomingStartTimeMin = Math.floor(incomingStartTimeMs / 60000);
-      // integer representing 'minute bucket'
+      const incomingStartTimeSec = Math.floor(incomingStartTimeMs / 1000);
+      // integer representing 'second bucket'
 
-      // 1) Find if there's an existing candle for that same minute
+      // 1) Find if there's an existing candle for that same second
       let foundIndex = -1;
       for (let i = existingCandles.length - 1; i >= 0; i--) {
         const c = existingCandles[i];
-        const cStart = Math.floor(new Date(c.startTime).getTime() / 60000);
-        if (cStart === incomingStartTimeMin) {
+        const cStart = Math.floor(new Date(c.startTime).getTime() / 1000);
+        if (cStart === incomingStartTimeSec) {
           foundIndex = i;
           break;
         }
@@ -466,6 +466,14 @@ export default function (state = initialState, action) {
         existingCandles[foundIndex] = mergedCandle;
 
       } else {
+        // Fix the open value to match the previous candle's close for continuity
+        if (existingCandles.length > 0) {
+          const lastCandle = existingCandles[existingCandles.length - 1];
+          incoming.open = lastCandle.close;
+          // Recalculate high/low with the corrected open value
+          incoming.high = Math.max(incoming.close, incoming.open);
+          incoming.low = Math.min(incoming.close, incoming.open);
+        }
 
         existingCandles.push(incoming);
         // keep them sorted (if needed, or push in correct position).

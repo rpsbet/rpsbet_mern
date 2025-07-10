@@ -290,20 +290,32 @@ const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) 
 // Update room and emit candle data
 const updateRoomAndEmitData = async (roomInfo, user, newTransactionAmount, req) => {
   const now = new Date();
-  const timeBucket = Math.floor(now.getTime() / (60 * 1000));
-  const isBuyTransaction = newTransactionAmount < 0;
+  const timeBucket = Math.floor(now.getTime() / 1000);
+  // From liquidity pool perspective:
+  // - Player wins (newTransactionAmount > 0) = liquidity decreases = sell volume (red candle)
+  // - Player loses (newTransactionAmount < 0) = liquidity increases = buy volume (green candle)
+  const liquidityIncreases = newTransactionAmount < 0; // Player loss = liquidity increase
+
+  // IMPORTANT: roomInfo.user_bet already contains the NEW value (after transaction)
+  const currentLiquidity = roomInfo.user_bet; // After transaction
+  
+  // The open should be the previous candle's close (which should equal the pre-transaction liquidity)
+  const openValue = currentLiquidity - newTransactionAmount; // Before transaction
+  const closeValue = currentLiquidity; // After transaction
 
   const newCandle = {
     _id: timeBucket,
-    open: roomInfo.user_bet + newTransactionAmount,
-    close: roomInfo.user_bet,
-    high: Math.max(roomInfo.user_bet, roomInfo.user_bet + newTransactionAmount),
-    low: Math.min(roomInfo.user_bet, roomInfo.user_bet + newTransactionAmount),
+    open: openValue,
+    close: closeValue,
+    high: Math.max(closeValue, openValue),
+    low: Math.min(closeValue, openValue),
     volume: Math.abs(newTransactionAmount),
-    buyVolume: isBuyTransaction ? Math.abs(newTransactionAmount) : 0,
-    sellVolume: isBuyTransaction ? 0 : Math.abs(newTransactionAmount),
-    startTime: new Date(timeBucket * 60 * 1000),
+    buyVolume: liquidityIncreases ? Math.abs(newTransactionAmount) : 0,
+    sellVolume: liquidityIncreases ? 0 : Math.abs(newTransactionAmount),
+    startTime: new Date(timeBucket * 1000),
   };
+
+  console.log(`📈 NEW CANDLE: ${roomInfo._id} | Open: ${previousLiquidity} -> Close: ${currentLiquidity} | Player transaction: ${newTransactionAmount} | Liquidity ${liquidityIncreases ? 'INCREASED' : 'DECREASED'} | ${liquidityIncreases ? 'BUY' : 'SELL'} volume: ${Math.abs(newTransactionAmount)}`);
 
   if (req.io && req.io.sockets) {
     req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, { newCandle });
@@ -359,13 +371,14 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   // Determine game result
   if (result === 'win' && multiplier) {
     // Win
+    console.log('🎉 PROCESSING WIN:', { result, multiplier, bet_amount, commission });
     game_result = 1;
     newTransactionAmount += bet_amount * multiplier * ((100 - commission) / 100);
     newGameLog.commission = bet_amount * multiplier * (roomInfo['tax'] / 100);
 
     // Update room values
     roomInfo['host_pr'] -= bet_amount * (multiplier - 1);
-    roomInfo['user_bet'] -= bet_amount * (multiplier - 1);
+    roomInfo['user_bet'] = Math.max(0, roomInfo['user_bet'] - bet_amount * (multiplier - 1));
 
     // Set message
     message = new Notification({
@@ -379,9 +392,10 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
 
   } else {
     // Loss
+    console.log('💀 PROCESSING LOSS:', { result, multiplier, bet_amount });
     game_result = -1;
 
-    roomInfo['user_bet'] += bet_amount * ((100 - tax.value) / 100);
+    roomInfo['user_bet'] = Math.max(0, roomInfo['user_bet'] + bet_amount * ((100 - tax.value) / 100));
     roomInfo['host_pr'] += bet_amount * ((100 - tax.value) / 100);
 
     // Process game end if needed
@@ -404,6 +418,16 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   newGameLog.winnings = newTransactionAmount;
   newGameLog.game_result = game_result;
   newGameLog.endgame_amount = roomInfo['endgame_amount'];
+  newGameLog.multiplier = result === 'win' ? multiplier : 1.0;
+  
+  console.log('📊 GAME LOG BEFORE SAVE:', {
+    game_result: newGameLog.game_result,
+    winnings: newGameLog.winnings,
+    bet_amount: newGameLog.bet_amount,
+    multiplier: newGameLog.multiplier,
+    joined_user: newGameLog.joined_user,
+    room: newGameLog.room
+  });
 
   // Save bet item
   await saveDocumentWithRetry(bet_item);
@@ -434,7 +458,7 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
     game_result = 1;
     message.message = 'Won in ' + roomInfo['name'];
     message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
-    roomInfo['user_bet'] -= roomInfo['user_bet'];
+    roomInfo['user_bet'] = 0;
     newTransactionAmount += roomInfo['user_bet'];
   }
 
@@ -678,6 +702,9 @@ console.log('User req.body.connectedAccount', req.body.connectedAccount);
           host ? saveDocumentWithRetry(host) : Promise.resolve(),
           saveDocumentWithRetry(newGameLog),
         ]);
+      } else {
+        // Always save the gameLog even if special users are present
+        await saveDocumentWithRetry(newGameLog);
       }
 
       // Get and emit game log

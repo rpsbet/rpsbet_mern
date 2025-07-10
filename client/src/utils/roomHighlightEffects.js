@@ -5,10 +5,28 @@ class RoomHighlightEffects {
   constructor() {
     this.activeHighlights = new Map();
     this.timeouts = new Map();
+    this.setupVisibilityHandler();
+  }
+
+  // Setup page visibility change handler to clear highlights when returning to tab
+  setupVisibilityHandler() {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // Tab became visible again - clear any accumulated highlights
+        setTimeout(() => {
+          this.clearAllHighlights();
+        }, 1000); // Small delay to let any pending highlights finish
+      }
+    });
   }
 
   // Apply mega highlighting to a specific room card
   highlightRoom(roomId, options = {}) {
+    // Skip highlighting if tab is not visible to prevent accumulation
+    if (document.hidden) {
+      return;
+    }
+    
     const {
       result = null,
       username = '',
@@ -88,6 +106,11 @@ class RoomHighlightEffects {
 
   // Highlight the first room in the list with extra intensity
   highlightFirstRoom(options = {}) {
+    // Skip highlighting if tab is not visible to prevent accumulation
+    if (document.hidden) {
+      return;
+    }
+    
     const firstRoomCard = this.findFirstRoomCard();
     if (!firstRoomCard) {
       console.warn('First room card not found');
@@ -338,9 +361,52 @@ class RoomHighlightEffects {
 
   // Clear all active highlights
   clearAllHighlights() {
+    console.log('🧹 Clearing all room highlights...');
+    
+    // Clear tracked highlights
     for (const roomId of this.activeHighlights.keys()) {
       this.clearHighlight(roomId);
     }
+    
+    // Also manually clear any remaining highlight classes from DOM
+    const highlightSelectors = [
+      '.room-card-mega-highlight',
+      '.room-card-mega-highlight-win',
+      '.room-card-mega-highlight-loss',
+      '.first-room-highlight',
+      '.room-activity-burst',
+      '.room-card-normal',
+      '.room-card-violent',
+      '.room-card-epic',
+      '.room-card-legendary'
+    ];
+    
+    highlightSelectors.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(element => {
+        element.classList.remove(
+          'room-card-mega-highlight',
+          'room-card-mega-highlight-win',
+          'room-card-mega-highlight-loss',
+          'first-room-highlight',
+          'room-activity-burst',
+          'room-card-normal',
+          'room-card-violent',
+          'room-card-epic',
+          'room-card-legendary'
+        );
+      });
+    });
+    
+    // Clear any floating notifications
+    const notifications = document.querySelectorAll('.floating-bet-notification');
+    notifications.forEach(notification => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    });
+    
+    console.log('✅ All room highlights cleared');
   }
 
   // Get stats about active highlights
@@ -355,6 +421,11 @@ class RoomHighlightEffects {
 
 // Create global instance
 window.roomHighlightEffects = new RoomHighlightEffects();
+
+// Add global function to manually clear all highlights
+window.clearAllRoomHighlights = () => {
+  window.roomHighlightEffects.clearAllHighlights();
+};
 
 // Add test function for manual testing
 window.testRoomHighlight = (intensity = 'epic') => {

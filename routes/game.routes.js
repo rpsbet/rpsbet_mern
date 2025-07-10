@@ -425,6 +425,9 @@ Return ONLY a JSON object with:
 If you cannot find a clear game title, return null for name and set confidence to 0.`;
 
     try {
+      console.log('[Extract] Making OpenAI API call...');
+      console.log('[Extract] Code preview being sent:', gameCode.substring(0, 300) + '...');
+      
       const aiResponse = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         max_tokens: 500,
@@ -440,6 +443,9 @@ If you cannot find a clear game title, return null for name and set confidence t
           }
         ]
       });
+
+      console.log('[Extract] OpenAI API call successful');
+      console.log('[Extract] Response usage:', aiResponse.usage);
 
       let extractedData;
       try {
@@ -512,6 +518,32 @@ If you cannot find a clear game title, return null for name and set confidence t
 
     } catch (openaiError) {
       console.error('[Extract] OpenAI analysis failed:', openaiError);
+      console.error('[Extract] Error details:', {
+        message: openaiError.message,
+        status: openaiError.status,
+        code: openaiError.code,
+        type: openaiError.type
+      });
+
+      // Check if it's a rate limit error
+      if (openaiError.status === 429 || openaiError.message?.includes('rate limit')) {
+        console.error('[Extract] Rate limit exceeded - this is likely the production issue');
+        return res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: 'OpenAI API rate limit exceeded. Please try again later.',
+          isRateLimit: true
+        });
+      }
+
+      // Check if it's a quota error
+      if (openaiError.status === 403 || openaiError.message?.includes('quota')) {
+        console.error('[Extract] Quota exceeded - this is likely the production issue');
+        return res.status(403).json({
+          error: 'Quota exceeded',
+          message: 'OpenAI API quota exceeded. Please check your billing.',
+          isQuotaExceeded: true
+        });
+      }
 
       // Fallback to basic analysis if AI fails
       const fallbackResult = {
@@ -1247,7 +1279,7 @@ router.get('/game-room/:id', async (req, res) => {
 
     // 3️⃣ Fetch logs + count in parallel
     const logsPromise = GameLog.find({ room: roomId })
-      .select('bet_amount created_at creator joined_user')
+      .select('bet_amount created_at creator joined_user game_result multiplier winnings ai_mode hosts commission endgame_amount host_pr user_bet')
       .sort({ created_at: -1 })
       .limit(limit)
       .populate('creator', '_id avatar username accessory elite totalWagered')
@@ -3493,16 +3525,18 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
 
 const getTimeBucket = (timeRange) => {
   switch (timeRange) {
+    case '1s':
+      return 1;
     case '1m':
-      return 1;
+      return 60;
     case '15m':
-      return 15;
+      return 15 * 60;
     case '4h':
-      return 4 * 60;
+      return 4 * 60 * 60;
     case '24h':
-      return 24 * 60;
+      return 24 * 60 * 60;
     default:
-      return 1;
+      return 1; // Default to 1 second
   }
 };
 
@@ -3605,7 +3639,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
 router.get('/candles/:room', async (req, res) => {
   try {
     const room = req.params.room;
-    const { timeRange = '1m' } = req.query;
+    const { timeRange = '1s' } = req.query;
     const bucketSize = getTimeBucket(timeRange);
 
     const roomData = await Room.findById(room);
@@ -3624,15 +3658,15 @@ router.get('/candles/:room', async (req, res) => {
     // Start liquidity at 0 so the first candle open is 0.
     let previousLiquidity = 0;
     const finalCandles = [];
-    const candleMap = new Map(); // Map to group transactions by minute
+    const candleMap = new Map(); // Map to group transactions by second
 
     transactions.forEach((transaction) => {
       const transactionTime = moment(transaction.created_at)
-        .startOf('minute')
+        .startOf('second')
         .toISOString();
       const transactionAmount = -transaction.amount;
 
-      // If no candle exists for this minute, create one
+      // If no candle exists for this second, create one
       if (!candleMap.has(transactionTime)) {
         candleMap.set(transactionTime, {
           _id: `candle_${transactionTime}`,
@@ -3661,11 +3695,25 @@ router.get('/candles/:room', async (req, res) => {
       }
     });
 
-    finalCandles.push(
-      ...Array.from(candleMap.values()).sort(
-        (a, b) => new Date(a.startTime) - new Date(b.startTime),
-      ),
+    const sortedCandles = Array.from(candleMap.values()).sort(
+      (a, b) => new Date(a.startTime) - new Date(b.startTime),
     );
+
+    // CRITICAL FIX: Ensure the last candle's close matches the current room liquidity
+    if (sortedCandles.length > 0) {
+      const lastCandle = sortedCandles[sortedCandles.length - 1];
+      const currentLiquidity = user_bet;
+      
+      // If there's a mismatch, adjust the last candle to match current liquidity
+      if (Math.abs(lastCandle.close - currentLiquidity) > 0.001) {
+        console.log(`🔧 Candle sync fix: Last candle close ${lastCandle.close} -> Current liquidity ${currentLiquidity}`);
+        lastCandle.close = currentLiquidity;
+        lastCandle.high = Math.max(lastCandle.high, currentLiquidity);
+        lastCandle.low = Math.min(lastCandle.low, currentLiquidity);
+      }
+    }
+
+    finalCandles.push(...sortedCandles);
 
     const transactionData = transactions.map((transaction) => ({
       description: transaction.description,

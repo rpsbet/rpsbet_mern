@@ -544,19 +544,19 @@ CRASH GAME - Real-time multiplier with house edge:
       var random = Math.random();
       var crashPoint;
       
-      if (random < 0.40) {
-        crashPoint = 1 + Math.pow(Math.random(), 2) * 0.99;
-      } else if (random < 0.70) {
-        crashPoint = 2 + Math.pow(Math.random(), 1.5) * 2.99;
-      } else if (random < 0.90) {
-        crashPoint = 5 + Math.pow(Math.random(), 2) * 14.99;
-      } else if (random < 0.98) {
-        crashPoint = 20 + Math.pow(Math.random(), 3) * 79.99;
+      if (random < 0.55) {
+        crashPoint = 1 + Math.pow(Math.random(), 2.5) * 0.99;
+      } else if (random < 0.80) {
+        crashPoint = 2 + Math.pow(Math.random(), 2) * 2.99;
+      } else if (random < 0.94) {
+        crashPoint = 5 + Math.pow(Math.random(), 2.5) * 9.99;
+      } else if (random < 0.99) {
+        crashPoint = 15 + Math.pow(Math.random(), 3) * 34.99;
       } else {
-        crashPoint = 100 + Math.pow(Math.random(), 4) * 900;
+        crashPoint = 50 + Math.pow(Math.random(), 4) * 450;
       }
       
-      return Math.max(crashPoint * 0.94, 1.01); // 6% house edge
+      return Math.max(crashPoint * 0.88, 1.01); // 12% house edge
     };
 
     // Real-time multiplier progression
@@ -582,9 +582,9 @@ MINES GAME - Progressive difficulty:
       }
       
       var fairMultiplier = 1 / probability;
-      var houseEdgeFactor = safeReveals <= 2 ? 0.95 : safeReveals <= 5 ? 0.93 : 0.88;
+      var houseEdgeFactor = safeReveals <= 1 ? 0.92 : safeReveals <= 3 ? 0.88 : safeReveals <= 6 ? 0.82 : 0.78;
       var scaledMultiplier = fairMultiplier * houseEdgeFactor;
-      var maxMultiplier = totalMines >= 20 ? 1000 : totalMines >= 15 ? 500 : totalMines >= 10 ? 100 : 50;
+      var maxMultiplier = totalMines >= 20 ? 500 : totalMines >= 15 ? 250 : totalMines >= 10 ? 75 : 25;
       
       return Math.min(scaledMultiplier, maxMultiplier).toFixed(2);
     };
@@ -594,18 +594,18 @@ DICE GAME - Probability control:
       var winProbability = rollType === 'under' ? 
         (prediction - 1) / 100 : (100 - prediction) / 100;
       
-      winProbability = Math.max(0.01, Math.min(0.98, winProbability));
+      winProbability = Math.max(0.01, Math.min(0.95, winProbability));
       var fairMultiplier = 1 / winProbability;
-      var houseEdge = winProbability > 0.5 ? 0.98 : 0.95;
+      var houseEdge = winProbability > 0.6 ? 0.92 : winProbability > 0.4 ? 0.88 : 0.84;
       
-      return Math.min(fairMultiplier * houseEdge, 9999).toFixed(2);
+      return Math.min(fairMultiplier * houseEdge, 1000).toFixed(2);
     };
 
 SLOTS GAME - Weighted symbols:
     var generateSlotMultiplier = function(reels) {
       var symbolValues = {
-        '🍒': 2, '🍋': 3, '🍊': 5, '🍇': 8, '🔔': 15, 
-        '💎': 50, '⭐': 100, '🎰': 500
+        '🍒': 1.5, '🍋': 2, '🍊': 3, '🍇': 4, '🔔': 8, 
+        '💎': 25, '⭐': 50, '🎰': 200
       };
       
       var multiplier = 1;
@@ -619,20 +619,20 @@ SLOTS GAME - Weighted symbols:
         var symbol = entry[0], count = entry[1];
         if (count >= 2) {
           var baseValue = symbolValues[symbol] || 1;
-          multiplier += baseValue * Math.pow(count, 1.5);
+          multiplier += baseValue * Math.pow(count, 1.2);
         }
       });
       
-      return Math.min(multiplier * 0.92, 1000).toFixed(2); // 8% house edge
+      return Math.min(multiplier * 0.82, 500).toFixed(2); // 18% house edge
     };
 
 SKILL-BASED GAMES - Performance-based with house edge:
     var calculateSkillMultiplier = function(score, maxScore) {
       var performance = Math.min(score / maxScore, 1);
-      var baseMultiplier = 1 + (performance * 2); // Max 3x for perfect score
-      var houseEdgeFactor = 0.92; // 8% house edge
+      var baseMultiplier = 1 + (performance * 1.5); // Max 2.5x for perfect score
+      var houseEdgeFactor = 0.85; // 15% house edge
       
-      return Math.min(baseMultiplier * houseEdgeFactor, 4.0).toFixed(2);
+      return Math.min(baseMultiplier * houseEdgeFactor, 2.5).toFixed(2);
     };
 
 🚨 MANDATORY UI COMPONENTS 🚨

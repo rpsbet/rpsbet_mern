@@ -42,6 +42,10 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0.0
     },
+    multiplier: {
+        type: Number,
+        default: 1.0
+    },
     status: {
         type: String,
         default: ''
