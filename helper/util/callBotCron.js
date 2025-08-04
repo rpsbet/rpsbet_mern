@@ -13,7 +13,6 @@ async function callCronJobs(io) {
   lastExecutionTime = executionTime;
 
   try {
-log('🔍eeeeCRON AGGREGATION START:', new Date().toISOString());
 
     const cursor = Room.aggregate([
       { $match: { status: 'open' } },

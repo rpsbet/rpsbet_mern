@@ -444,13 +444,9 @@ If you cannot find a clear game title, return null for name and set confidence t
         ]
       });
 
-      console.log('[Extract] OpenAI API call successful');
-      console.log('[Extract] Response usage:', aiResponse.usage);
-
       let extractedData;
       try {
         const responseText = aiResponse.choices[0].message.content.trim();
-        console.log('[Extract] OpenAI raw response:', responseText);
 
         // Try to extract JSON from the response
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -513,17 +509,10 @@ If you cannot find a clear game title, return null for name and set confidence t
         confidence: extractedData.confidence || 0.3
       };
 
-      console.log('[Extract] ✅ Final Result:', result);
       res.json(result);
 
     } catch (openaiError) {
       console.error('[Extract] OpenAI analysis failed:', openaiError);
-      console.error('[Extract] Error details:', {
-        message: openaiError.message,
-        status: openaiError.status,
-        code: openaiError.code,
-        type: openaiError.type
-      });
 
       // Check if it's a rate limit error
       if (openaiError.status === 429 || openaiError.message?.includes('rate limit')) {
@@ -3676,7 +3665,6 @@ router.get('/candles/:room', async (req, res) => {
     });
     // Start liquidity at the creator's initial bet_amount, not 0
     let previousLiquidity = parseFloat(roomData.bet_amount) || 0;
-    console.log(`📊 Candles for room ${room}: Starting liquidity = ${previousLiquidity} (bet_amount: ${roomData.bet_amount})`);
     const finalCandles = [];
     const candleMap = new Map(); // Map to group transactions by second
 
@@ -3687,11 +3675,6 @@ router.get('/candles/:room', async (req, res) => {
       // transaction.amount: positive = user win (liquidity decreases), negative = user loss (liquidity increases)
       // So we need to subtract the transaction amount from liquidity
       const transactionAmount = -transaction.amount;
-      
-      // Debug logging for first few transactions
-      if (index < 5) {
-        console.log(`🔍 Transaction ${index}: amount=${transaction.amount}, transactionAmount=${transactionAmount}, prevLiquidity=${previousLiquidity}`);
-      }
 
       // If no candle exists for this second, create one
       if (!candleMap.has(transactionTime)) {
@@ -3714,7 +3697,6 @@ router.get('/candles/:room', async (req, res) => {
       
       // Safeguard: Prevent negative liquidity (should never happen in reality)
       if (previousLiquidity < 0) {
-        console.warn(`⚠️  Negative liquidity detected: ${previousLiquidity}, clamping to 0`);
         previousLiquidity = 0;
       }
       
@@ -3741,15 +3723,10 @@ router.get('/candles/:room', async (req, res) => {
       
       // If there's a significant mismatch, adjust the last candle to match current liquidity
       if (difference > 0.001) {
-        console.log(`🔧 Candle sync fix: Last candle close ${lastCandle.close} -> Current liquidity ${currentLiquidity} (diff: ${difference.toFixed(6)})`);
-        console.log(`🔧 This suggests transaction processing discrepancy - investigate transaction amounts`);
-        
         // Apply the correction
         lastCandle.close = currentLiquidity;
         lastCandle.high = Math.max(lastCandle.high, currentLiquidity);
         lastCandle.low = Math.min(lastCandle.low, currentLiquidity);
-      } else {
-        console.log(`✅ Candle sync OK: Last candle close ${lastCandle.close} matches current liquidity ${currentLiquidity}`);
       }
     }
 

@@ -2,20 +2,14 @@
 const axios = require('axios');
 
 async function convertDalleImageToPinata(dalleImageUrl) {
-  log('🔄 Converting DALL-E image to Pinata upload...');
-  log('DALL-E URL:', dalleImageUrl);
-
   try {
     // Download the image from DALL-E
-    console.log('⬇️ Downloading image from DALL-E...');
     const imageResponse = await fetch(dalleImageUrl);
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch DALL-E image: ${imageResponse.status}`);
     }
 
     const imageBuffer = await imageResponse.arrayBuffer();
-    console.log('✅ Image downloaded, size:', imageBuffer.byteLength, 'bytes');
-
     // Convert to Buffer
     const buffer = Buffer.from(imageBuffer);
 
@@ -23,7 +17,6 @@ async function convertDalleImageToPinata(dalleImageUrl) {
     let processedBuffer = buffer;
     try {
       const sharp = require('sharp');
-      console.log('🔧 Resizing image with Sharp...');
       processedBuffer = await sharp(buffer)
         .resize(512, 512, {
           fit: 'inside',
@@ -34,7 +27,6 @@ async function convertDalleImageToPinata(dalleImageUrl) {
           compressionLevel: 6
         })
         .toBuffer();
-      console.log('✅ Image resized, new size:', processedBuffer.byteLength, 'bytes');
     } catch (sharpError) {
       console.log('⚠️ Sharp not available or error, using original size:', sharpError.message);
       processedBuffer = buffer;

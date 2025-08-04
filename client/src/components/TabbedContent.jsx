@@ -91,7 +91,7 @@ function TabbedContent(props) {
   const [roomHistory, setRoomHistory] = useState(
     updateFromNow(roomInfo?.room_history || []),
   );
-  const [activeTabs, setActiveTabs] = useState([0, 1]);
+  const [activeTabs, setActiveTabs] = useState([0]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
 
   // Tab configuration with icons and colors

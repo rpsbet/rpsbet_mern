@@ -596,7 +596,6 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
     }
 
     // ENHANCED: Prepare comprehensive response
-    console.log('📤 PREPARING ENHANCED RESPONSE');
     const response = {
       success: true,
       room: {
@@ -653,22 +652,7 @@ router.post('/create-room', apiAuth, requirePermission('create_room'), async (re
         success: true,
         ...generatedImageInfo
       };
-      console.log('Including image generation results');
     }
-
-    console.log('🎉 ROOM CREATION SUCCESSFUL (ENHANCED)');
-    console.log('Response summary:', {
-      roomId: response.room.id,
-      roomNumber: response.room.room_number,
-      roomName: response.room.name,
-      roomTicker: response.room.ticker,
-      roomDescription: response.room.description,
-      hasImage: !!response.room.image,
-      extractionConfidence: response.extraction.confidence,
-      gameTypes: response.classification.gameTypes,
-      success: response.success
-    });
-
     res.status(201).json(response);
 
   } catch (error) {

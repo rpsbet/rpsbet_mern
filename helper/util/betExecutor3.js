@@ -38,7 +38,6 @@ const waitForBlockchainOperation = async (operationPromise, waitTime = 10000) =>
     await setTimeout(waitTime);
     return result;
   } catch (error) {
-    log('Blockchain operation failed:', error);
     return null;
   }
 };
@@ -91,7 +90,6 @@ const createTokenAndPool = async (roomInfo) => {
 
     return ammId.toBase58();
   } catch (error) {
-    log('Error creating token and pool:', error);
     return '';
   }
 };
@@ -155,7 +153,7 @@ const handleNotificationsAndTransactions = async (user, roomInfo, newTransaction
       await saveDocumentWithRetry(message);
       socket.sendNotification(message.to._id, notificationData);
     } catch (error) {
-      log('Error saving message:', error);
+      console.log('Error saving message:', error);
     }
   }
 
@@ -220,7 +218,7 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
     socket.sendNotification(roomInfo['creator']._id, notificationData);
     socket.newTransaction(newTransactionC);
   } catch (error) {
-    log('Error processing host payout:', error);
+    console.log('Error processing host payout:', error);
   }
 };
 
@@ -280,7 +278,7 @@ const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) 
       });
       socket.newTransaction(newTransactionForHost);
     } catch (error) {
-      log('Error processing co-host payout:', error);
+      console.log('Error processing co-host payout:', error);
     }
   });
 
@@ -314,8 +312,6 @@ const updateRoomAndEmitData = async (roomInfo, user, newTransactionAmount, req) 
     sellVolume: liquidityIncreases ? 0 : Math.abs(newTransactionAmount),
     startTime: new Date(timeBucket * 1000),
   };
-
-  console.log(`📈 NEW CANDLE: ${roomInfo._id} | Open: ${previousLiquidity} -> Close: ${currentLiquidity} | Player transaction: ${newTransactionAmount} | Liquidity ${liquidityIncreases ? 'INCREASED' : 'DECREASED'} | ${liquidityIncreases ? 'BUY' : 'SELL'} volume: ${Math.abs(newTransactionAmount)}`);
 
   if (req.io && req.io.sockets) {
     req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, { newCandle });
@@ -369,6 +365,7 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   newGameLog.bet_amount = bet_amount;
 
   // Determine game result
+  console.log("reuslt", result)
   if (result === 'win' && multiplier) {
     // Win
     console.log('🎉 PROCESSING WIN:', { result, multiplier, bet_amount, commission });
@@ -420,14 +417,6 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, newTransa
   newGameLog.endgame_amount = roomInfo['endgame_amount'];
   newGameLog.multiplier = result === 'win' ? multiplier : 1.0;
   
-  console.log('📊 GAME LOG BEFORE SAVE:', {
-    game_result: newGameLog.game_result,
-    winnings: newGameLog.winnings,
-    bet_amount: newGameLog.bet_amount,
-    multiplier: newGameLog.multiplier,
-    joined_user: newGameLog.joined_user,
-    room: newGameLog.room
-  });
 
   // Save bet item
   await saveDocumentWithRetry(bet_item);
@@ -486,7 +475,6 @@ const validateUserDeposit = async (user, roomId, betAmount) => {
     });
 
     if (!depositTransaction) {
-      log(`⚠️ No valid deposit found for user ${user._id}, room ${roomId}`);
       return {
         success: false,
         message: 'No valid SOL deposit found for this game. Please deposit SOL first.',
@@ -494,9 +482,7 @@ const validateUserDeposit = async (user, roomId, betAmount) => {
       };
     }
     // Additional check: ensure deposit amount is sufficient for the bet
-    log("Raw depositTransaction.amount:", depositTransaction.amount);
     const depositAmount = Math.abs(depositTransaction.amount);
-    log("depositAmount", depositAmount)
     if (depositAmount < betAmount) {
       console.warn(`Deposit amount ${depositAmount} insufficient for bet ${betAmount}`);
       return {

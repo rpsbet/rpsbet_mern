@@ -30,16 +30,18 @@ class SocketEventLogger {
       this.lastEvents.pop();
     }
 
-    // Console log with details
-    console.log(`🔔 [SOCKET EVENT] ${eventName} from ${source}`, {
-      count: currentCount + 1,
-      timestamp,
-      preview: eventInfo.preview,
-      dataSize: eventInfo.dataSize
-    });
+    // Console log with details (development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔔 [SOCKET EVENT] ${eventName} from ${source}`, {
+        count: currentCount + 1,
+        timestamp,
+        preview: eventInfo.preview,
+        dataSize: eventInfo.dataSize
+      });
+    }
 
-    // Special logging for critical events
-    if (['NEW_LOG', 'HIGHLIGHT_FIRST_ROOM', 'UPDATED_BANKROLL'].some(e => eventName.includes(e))) {
+    // Special logging for critical events (development only)
+    if (process.env.NODE_ENV === 'development' && ['NEW_LOG', 'HIGHLIGHT_FIRST_ROOM', 'UPDATED_BANKROLL'].some(e => eventName.includes(e))) {
       console.log(`⚡ [CRITICAL EVENT] ${eventName}:`, data);
     }
   }
@@ -86,16 +88,20 @@ class SocketEventLogger {
     };
   }
 
-  // Print statistics to console
+  // Print statistics to console (development only)
   printStats() {
-    console.log('📊 Socket Event Statistics:', this.getStats());
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 Socket Event Statistics:', this.getStats());
+    }
   }
 
   // Clear statistics
   clear() {
     this.eventCounts.clear();
     this.lastEvents = [];
-    console.log('🧹 Socket event statistics cleared');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🧹 Socket event statistics cleared');
+    }
   }
 }
 
@@ -145,4 +151,4 @@ if (process.env.NODE_ENV === 'development') {
   }, 30000);
 }
 
-console.log('🔧 Socket Event Logger initialized. Use window.socketEventLogger.printStats() to view statistics');
+// Socket Event Logger initialized

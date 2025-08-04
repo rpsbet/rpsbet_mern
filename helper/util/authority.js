@@ -10,7 +10,6 @@ async function revokeMintAndFreezeAuthorities(mintPk) {
   try {
     const tx = new Transaction();
     const mintInfo = await getMint(connection, mintPk);
-    log('This really is a mint:', mintInfo);
     tx.add(
       createSetAuthorityInstruction(
         mintPk,

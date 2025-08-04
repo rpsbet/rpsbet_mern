@@ -55,7 +55,7 @@ async function checkConfirmations(redisClient, io) {
         acc.equals(adminPubkey)
       );
       if (adminIndex === -1) {
-        log('Admin wallet not found in transaction:', txSignature);
+        console.log('Admin wallet not found in transaction:', txSignature);
         continue;
       }
 
@@ -70,7 +70,7 @@ async function checkConfirmations(redisClient, io) {
       if (amountDiff <= epsilon) {
         const user = await User.findById(transaction.user);
         if (!user) {
-          log('User not found for transaction:', transaction._id);
+          console.log('User not found for transaction:', transaction._id);
           continue;
         }
 
@@ -177,7 +177,7 @@ async function checkConfirmations(redisClient, io) {
     for (const transaction of pendingEliteSubscriptions) {
       const txSignature = transaction.txtHash || transaction.hash;
       if (!txSignature) {
-        log('No transaction signature found for elite subscription:', transaction._id);
+        console.log('No transaction signature found for elite subscription:', transaction._id);
         continue;
       }
 
@@ -199,7 +199,7 @@ async function checkConfirmations(redisClient, io) {
 
       // Verify transaction was successful
       if (txInfo.meta.err) {
-        log('Elite subscription transaction failed on blockchain:', txSignature, txInfo.meta.err);
+        console.log('Elite subscription transaction failed on blockchain:', txSignature, txInfo.meta.err);
         transaction.status = 'failed';
         await saveDocumentWithRetry(transaction);
         continue;
@@ -214,7 +214,7 @@ async function checkConfirmations(redisClient, io) {
       );
 
       if (adminIndex === -1) {
-        log('Admin wallet not found in elite subscription transaction:', txSignature);
+        console.log('Admin wallet not found in elite subscription transaction:', txSignature);
         continue;
       }
 

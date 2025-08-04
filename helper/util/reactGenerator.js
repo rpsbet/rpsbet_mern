@@ -858,8 +858,6 @@ OUTPUT ONLY THE COMPLETE WRAPPED FUNCTION CODE - NO EXPLANATIONS OR MARKDOWN!`;
 
 // Main generation function with progressive approach
 async function generateReactComponent(prompt, imageUrls = []) {
-  console.log('⚛️ GENERATING COMPREHENSIVE REACT COMPONENT WITH SMART TARGETING');
-  
   try {
     // Asset processing
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;

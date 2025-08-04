@@ -612,17 +612,17 @@ class BetSimulator {
             message = currentMessage;
             break;
           } else {
-            log(`⚠️ Duplicate/irrelevant message generated for ${user.username}: "${currentMessage}". Retrying...`);
+            console.log(`⚠️ Duplicate/irrelevant message generated for ${user.username}: "${currentMessage}". Retrying...`);
           }
         }
       } catch (error) {
-        log(`❌ Error during message generation attempt: ${error}`);
+        console.log(`❌ Error during message generation attempt: ${error}`);
       }
       attempts++;
     }
 
     if (!message) {
-      log('💬 Failed to generate a unique message after multiple attempts.');
+      console.log('💬 Failed to generate a unique message after multiple attempts.');
       return null;
     }
 
@@ -2411,7 +2411,7 @@ Multiplier: ${multiplier}
         created_at: { $lt: oneYearAgo }
       });
       if (userCount === 0) {
-        log('⚠️ No established users found (created > 1 year ago, totalWagered > 1)');
+        console.log('⚠️ No established users found (created > 1 year ago, totalWagered > 1)');
         return null;
       }
 
@@ -2439,7 +2439,7 @@ Multiplier: ${multiplier}
         .populate('creator');
 
       if (openRooms.length === 0) {
-        log('⚠️ No open rooms found with host_pr > 0.01');
+        console.log('⚠️ No open rooms found with host_pr > 0.01');
         return null;
       }
 
@@ -2909,13 +2909,11 @@ Multiplier: ${multiplier}
           
           if (maxAffordableBet <= 0.001) {
             // Skip this bet entirely if room can't afford even a tiny bet
-            console.log(`⚠️  Skipping simulated bet: Room ${room.name} has insufficient liquidity (${room.user_bet}) for ${multiplier}x multiplier`);
             return;
           }
           
           // Reduce bet amount to what room can afford
           betAmount = Math.max(0.001, parseFloat(maxAffordableBet.toFixed(6)));
-          console.log(`📉 Reduced simulated bet from ${parseFloat(this.generateRandomBetAmount().toFixed(6))} to ${betAmount} to preserve room liquidity`);
         }
       }
 
@@ -3002,11 +3000,6 @@ Multiplier: ${multiplier}
 
       // Handle room end case - set status to finished when user_bet hits 0
       if (room.user_bet <= 0.001) {
-        console.log(`🏁 SIMULATION ROOM ENDED: ${room.name} (ID: ${room._id})`);
-        console.log(`   Final state: user_bet=${room.user_bet}, host_pr=${room.host_pr}`);
-        console.log(`   Last bet: ${betAmount} @ ${multiplier}x = ${result} (${result === 'win' ? 'PAYOUT' : 'LOSS'})`);
-        console.log(`   This should not happen with the new validation logic!`);
-        
         room.status = 'finished';
         room.user_bet = 0;
         if (this.io && this.io.sockets) {
