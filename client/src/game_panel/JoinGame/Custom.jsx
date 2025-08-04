@@ -1186,33 +1186,6 @@ function Custom(props) {
                   View on DEX 🚀
                 </Button>
               </Box>
-            ) : (
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    mb: 2,
-                    color: '#fff',
-                    fontWeight: 600,
-                    fontSize: '1.1rem',
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Game has ended
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    fontSize: '0.95rem',
-                    fontWeight: 400,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  The liquidity pool is being created.
-                  <br />
-                  Check back later for trading details.
-                </Typography>
-              </Box>
             )}
           </CardContent>
         </Card>

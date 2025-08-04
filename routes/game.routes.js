@@ -3680,11 +3680,18 @@ router.get('/candles/:room', async (req, res) => {
     const finalCandles = [];
     const candleMap = new Map(); // Map to group transactions by second
 
-    transactions.forEach((transaction) => {
+    transactions.forEach((transaction, index) => {
       const transactionTime = moment(transaction.created_at)
         .startOf('second')
         .toISOString();
+      // transaction.amount: positive = user win (liquidity decreases), negative = user loss (liquidity increases)
+      // So we need to subtract the transaction amount from liquidity
       const transactionAmount = -transaction.amount;
+      
+      // Debug logging for first few transactions
+      if (index < 5) {
+        console.log(`🔍 Transaction ${index}: amount=${transaction.amount}, transactionAmount=${transactionAmount}, prevLiquidity=${previousLiquidity}`);
+      }
 
       // If no candle exists for this second, create one
       if (!candleMap.has(transactionTime)) {
@@ -3704,6 +3711,13 @@ router.get('/candles/:room', async (req, res) => {
       // Update the existing candle for this minute
       const currentCandle = candleMap.get(transactionTime);
       previousLiquidity += transactionAmount;
+      
+      // Safeguard: Prevent negative liquidity (should never happen in reality)
+      if (previousLiquidity < 0) {
+        console.warn(`⚠️  Negative liquidity detected: ${previousLiquidity}, clamping to 0`);
+        previousLiquidity = 0;
+      }
+      
       currentCandle.high = Math.max(currentCandle.high, previousLiquidity);
       currentCandle.low = Math.min(currentCandle.low, previousLiquidity);
       currentCandle.close = previousLiquidity;
@@ -3723,13 +3737,19 @@ router.get('/candles/:room', async (req, res) => {
     if (sortedCandles.length > 0) {
       const lastCandle = sortedCandles[sortedCandles.length - 1];
       const currentLiquidity = user_bet;
+      const difference = Math.abs(lastCandle.close - currentLiquidity);
       
-      // If there's a mismatch, adjust the last candle to match current liquidity
-      if (Math.abs(lastCandle.close - currentLiquidity) > 0.001) {
-        console.log(`🔧 Candle sync fix: Last candle close ${lastCandle.close} -> Current liquidity ${currentLiquidity}`);
+      // If there's a significant mismatch, adjust the last candle to match current liquidity
+      if (difference > 0.001) {
+        console.log(`🔧 Candle sync fix: Last candle close ${lastCandle.close} -> Current liquidity ${currentLiquidity} (diff: ${difference.toFixed(6)})`);
+        console.log(`🔧 This suggests transaction processing discrepancy - investigate transaction amounts`);
+        
+        // Apply the correction
         lastCandle.close = currentLiquidity;
         lastCandle.high = Math.max(lastCandle.high, currentLiquidity);
         lastCandle.low = Math.min(lastCandle.low, currentLiquidity);
+      } else {
+        console.log(`✅ Candle sync OK: Last candle close ${lastCandle.close} matches current liquidity ${currentLiquidity}`);
       }
     }
 
