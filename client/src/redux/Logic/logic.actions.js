@@ -610,12 +610,15 @@ export const generateReactGameFromPrompt = (
   }
 
   try {
+    // Use shorter timeout for production to avoid gateway timeouts
+    const API_TIMEOUT = process.env.NODE_ENV === 'production' ? 240000 : 300000; // 4 min prod, 5 min dev
+    
     const response = await axios.post('/game/generate-react', {
       prompt: gamePrompt,
       imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl),
       model,
     }, {
-      timeout: 300000, // 5 minutes timeout for game generation
+      timeout: API_TIMEOUT,
     });
 
     if (progressInterval) {

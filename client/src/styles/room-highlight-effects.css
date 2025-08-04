@@ -225,10 +225,10 @@
   /* Removed all animations - instant appearance */
 }
 
-/* .room-card-normal::before {
+.room-card-normal::before {
   content: '⚡ Active! ⚡';
   background: linear-gradient(45deg, #4CAF50, #66BB6A);
-} */
+}
 
 /* First room specific enhancements */
 .first-room-highlight {

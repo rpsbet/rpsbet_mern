@@ -641,8 +641,15 @@ router.post('/generate-react', auth, async (req, res) => {
 
     console.log(`[React Generator] Request from user ${req.user._id}: ${prompt.substring(0, 100)}...`);
 
-    // Call the utility function to do all the heavy lifting
-    const result = await generateReactComponent(prompt, imageUrls);
+    // Add timeout wrapper for production environments to avoid 504 gateway timeouts
+    const GENERATION_TIMEOUT = process.env.NODE_ENV === 'production' ? 230000 : 290000; // 3:50 prod, 4:50 dev
+    
+    const result = await Promise.race([
+      generateReactComponent(prompt, imageUrls),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Generation timeout: Request took too long to complete. Please try with a shorter or simpler prompt.')), GENERATION_TIMEOUT)
+      )
+    ]);
 
     // Log success
     console.log(`[React Generator] ✅ Successfully generated component for user ${req.user._id}`);
@@ -653,9 +660,21 @@ router.post('/generate-react', auth, async (req, res) => {
   } catch (error) {
     console.error(`[React Generator] ❌ Error for user ${req.user?._id}:`, error.message);
     
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message || 'Failed to generate React component',
+    // Determine appropriate status code and user message based on error type
+    let statusCode = 500;
+    let userMessage = error.message || 'Failed to generate React component';
+    
+    if (error.message && error.message.includes('timeout')) {
+      statusCode = 504;
+      userMessage = 'Generation timed out. Please try with a shorter or simpler prompt.';
+    } else if (error.message && error.message.includes('Anthropic API call timed out')) {
+      statusCode = 504;
+      userMessage = 'AI service timed out. Please try again with a simpler prompt.';
+    }
+    
+    res.status(statusCode).json({
+      error: statusCode === 504 ? 'Request timeout' : 'Internal server error',
+      message: userMessage,
       validation: {
         passed: false,
         error: error.message

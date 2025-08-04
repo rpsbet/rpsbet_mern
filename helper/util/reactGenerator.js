@@ -918,7 +918,8 @@ Include proxiedAssets: ${JSON.stringify(proxiedAssets)}
 
 OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
 
-          const stream = await anthropic.messages.create({
+          // Create promise with timeout for streaming API call
+          const streamPromise = anthropic.messages.create({
             model: complexity > 6 ? 'claude-opus-4-20250514' : 'claude-sonnet-4-20250514',
             max_tokens: tokenAllocation,
             temperature: 0.3,
@@ -927,8 +928,26 @@ OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
             stream: true,
           });
 
+          // Add timeout wrapper for production environments
+          const ANTHROPIC_TIMEOUT = process.env.NODE_ENV === 'production' ? 240000 : 300000; // 4 min prod, 5 min dev
+          
+          const stream = await Promise.race([
+            streamPromise,
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Anthropic API call timed out')), ANTHROPIC_TIMEOUT)
+            )
+          ]);
+
           let rawCode = '';
+          const streamStartTime = Date.now();
+          const STREAM_TIMEOUT = 180000; // 3 minutes for streaming
+          
           for await (const chunk of stream) {
+            // Check for streaming timeout
+            if (Date.now() - streamStartTime > STREAM_TIMEOUT) {
+              throw new Error('Streaming response timed out');
+            }
+            
             if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
               rawCode += chunk.delta.text;
             }
@@ -1065,7 +1084,15 @@ OUTPUT ONLY THE WRAPPED FUNCTION CODE - NO EXPLANATIONS!`;
 
   } catch (error) {
     console.error('❌ Fatal error in generateReactComponent:', error);
-    throw new Error(`React generation failed: ${error.message}`);
+    
+    // Provide specific error messages for common timeout scenarios
+    if (error.message && (error.message.includes('timeout') || error.message.includes('timed out'))) {
+      throw new Error('Generation timed out. Please try with a shorter or simpler prompt.');
+    }
+    
+    // Provide helpful error message for other failures
+    const userFriendlyMessage = error.message || 'Unknown generation error';
+    throw new Error(`React generation failed: ${userFriendlyMessage}`);
   }
 }
 

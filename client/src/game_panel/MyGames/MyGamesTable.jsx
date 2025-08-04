@@ -663,7 +663,13 @@ function MyGamesTable() {
                           border: '1px solid rgba(255, 255, 255, 0.1)',
                         },
                       }}
-                      onClick={() => (window.location.href = `/join/${row._id}`)}
+                      onClick={(e) => {
+                        // Don't redirect if clicking on action buttons
+                        if (e.target.closest('button') || e.target.closest('.MuiIconButton-root')) {
+                          return;
+                        }
+                        window.location.href = `/join/${row._id}`;
+                      }}
                     >
                       <Grid container spacing={2} alignItems="center">
                         {/* Game Info */}
@@ -825,6 +831,10 @@ function MyGamesTable() {
                                   color="error"
                                   size="small"
                                   disabled={isClosing}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
                                   onMouseDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
