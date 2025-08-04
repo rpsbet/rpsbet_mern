@@ -1145,7 +1145,7 @@ function Custom(props) {
               Game Ended
             </Typography>
 
-            {roomState.poolId ? (
+            {roomState.poolId && (
               <Box sx={{ textAlign: 'center' }}>
                 <Typography
                   variant="h6"
