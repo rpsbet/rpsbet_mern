@@ -99,33 +99,55 @@ function DefaultBetAmountPanel({
             mb: 2,
           }}
         >
-          {defaultBetAmounts.map((amount) => (
-            <Button
-              key={amount}
-              variant={Number(bet_amount) === amount ? 'contained' : 'outlined'}
-              color="error"
-              size="small"
-              onClick={() => selectBetAmount(amount)}
-              sx={{
-                textTransform: 'none',
-                fontSize: '0.75rem',
-                minWidth: 'auto',
-                px: 1.5,
-                py: 0.5,
-                height: 28,
-                borderColor: Number(bet_amount) === amount ? '#ff0000' : 'rgba(255, 0, 0, 0.3)',
-                color: Number(bet_amount) === amount ? '#fff' : '#ff0000',
-                backgroundColor: Number(bet_amount) === amount ? '#ff0000' : 'transparent',
-                '&:hover': {
-                  borderColor: '#ff0000',
-                  backgroundColor: Number(bet_amount) === amount ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
-                  color: '#fff',
-                },
-              }}
-            >
-              {amount} SOL
-            </Button>
-          ))}
+          {defaultBetAmounts.map((amount) => {
+            const isDisabled = amount > balance;
+            const isSelected = Number(bet_amount) === amount;
+            
+            return (
+              <Button
+                key={amount}
+                variant={isSelected ? 'contained' : 'outlined'}
+                color="error"
+                size="small"
+                disabled={isDisabled}
+                onClick={() => selectBetAmount(amount)}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  minWidth: 'auto',
+                  px: 1.5,
+                  py: 0.5,
+                  height: 28,
+                  borderColor: isDisabled 
+                    ? 'rgba(255, 255, 255, 0.12)' 
+                    : isSelected 
+                      ? '#ff0000' 
+                      : 'rgba(255, 0, 0, 0.3)',
+                  color: isDisabled 
+                    ? 'rgba(255, 255, 255, 0.26)' 
+                    : isSelected 
+                      ? '#fff' 
+                      : '#ff0000',
+                  backgroundColor: isDisabled 
+                    ? 'transparent' 
+                    : isSelected 
+                      ? '#ff0000' 
+                      : 'transparent',
+                  '&:hover': !isDisabled ? {
+                    borderColor: '#ff0000',
+                    backgroundColor: isSelected ? '#cc0000' : 'rgba(255, 0, 0, 0.1)',
+                    color: '#fff',
+                  } : {},
+                  '&.Mui-disabled': {
+                    borderColor: 'rgba(255, 255, 255, 0.12)',
+                    color: 'rgba(255, 255, 255, 0.26)',
+                  },
+                }}
+              >
+                {amount} SOL
+              </Button>
+            );
+          })}
         </Box>
 
         <TextField

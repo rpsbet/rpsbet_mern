@@ -2888,9 +2888,30 @@ Multiplier: ${multiplier}
         return;
       }
 
-      const betAmount = parseFloat(this.generateRandomBetAmount().toFixed(6));
+      let betAmount = parseFloat(this.generateRandomBetAmount().toFixed(6));
       const result = this.generateRandomResult();
       const multiplier = result === 'win' ? this.generateRandomMultiplier() : 1;
+
+      // VALIDATION: Prevent room from ending due to insufficient liquidity
+      if (result === 'win') {
+        const maxPayout = betAmount * (multiplier - 1);
+        const minimumLiquidity = 0.01; // Keep room alive with minimum liquidity
+        
+        // If payout would drain the room below minimum, reduce bet amount
+        if (room.user_bet - maxPayout < minimumLiquidity) {
+          const maxAffordableBet = (room.user_bet - minimumLiquidity) / (multiplier - 1);
+          
+          if (maxAffordableBet <= 0.001) {
+            // Skip this bet entirely if room can't afford even a tiny bet
+            console.log(`⚠️  Skipping simulated bet: Room ${room.name} has insufficient liquidity (${room.user_bet}) for ${multiplier}x multiplier`);
+            return;
+          }
+          
+          // Reduce bet amount to what room can afford
+          betAmount = Math.max(0.001, parseFloat(maxAffordableBet.toFixed(6)));
+          console.log(`📉 Reduced simulated bet from ${parseFloat(this.generateRandomBetAmount().toFixed(6))} to ${betAmount} to preserve room liquidity`);
+        }
+      }
 
       const winnings = this.calculateWinnings(betAmount, result, multiplier, room.tax || 5);
 
@@ -2948,12 +2969,25 @@ Multiplier: ${multiplier}
 
       await transaction.save();
 
+      // Store pre-bet state for debugging
+      const preBetUserBet = room.user_bet;
+      const preBetHostPr = room.host_pr;
+
       if (result === 'loss') {
         room.user_bet += betAmount * 0.93;
         room.host_pr += betAmount * 0.93;
       } else {
-        room.host_pr -= betAmount * (multiplier - 1);
-        room.user_bet = Math.max(0, room.user_bet - betAmount * (multiplier - 1));
+        const payout = betAmount * (multiplier - 1);
+        room.host_pr -= payout;
+        room.user_bet = Math.max(0, room.user_bet - payout);
+        
+        // Additional safety check - this should never trigger with our validation
+        if (room.user_bet < 0.001 && preBetUserBet > 0.01) {
+          console.error(`🚨 CRITICAL: Room ${room.name} unexpectedly drained despite validation!`);
+          console.error(`   Pre-bet: user_bet=${preBetUserBet}, host_pr=${preBetHostPr}`);
+          console.error(`   Bet: ${betAmount} @ ${multiplier}x, Payout: ${payout}`);
+          console.error(`   Post-bet: user_bet=${room.user_bet}, host_pr=${room.host_pr}`);
+        }
       }
 
       if (room.host_pr < 0.01) {
@@ -2962,6 +2996,11 @@ Multiplier: ${multiplier}
 
       // Handle room end case - set status to finished when user_bet hits 0
       if (room.user_bet <= 0.001) {
+        console.log(`🏁 SIMULATION ROOM ENDED: ${room.name} (ID: ${room._id})`);
+        console.log(`   Final state: user_bet=${room.user_bet}, host_pr=${room.host_pr}`);
+        console.log(`   Last bet: ${betAmount} @ ${multiplier}x = ${result} (${result === 'win' ? 'PAYOUT' : 'LOSS'})`);
+        console.log(`   This should not happen with the new validation logic!`);
+        
         room.status = 'finished';
         room.user_bet = 0;
         if (this.io && this.io.sockets) {

@@ -257,8 +257,9 @@
           dispatch(errorMsgBar('ADD AN IMAGE DUMBASS!'));
           return;
         }
+        // Balance validation is now handled in the UI, but keep as safety check
         if (betAmount > balance) {
-          dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
+          dispatch(errorMsgBar('Insufficient balance to create room'));
           return;
         }
         if (isNaN(endgameAmount)) {
@@ -600,28 +601,45 @@
           </Box>
 
           {step === 2 ? (
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => createRoomWithDeposit()}
-              disabled={creatingRoom}
-              sx={{
-                borderRadius: '8px',
-                textTransform: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
+            <Tooltip
+              title={
+                betAmount > balance 
+                  ? `You need ${(betAmount - balance).toFixed(3)} more SOL to create this room`
+                  : !betAmount || betAmount <= 0
+                    ? 'Please enter a valid bet amount greater than 0'
+                    : 'Create your room with this initial bet'
+              }
+              placement="top"
             >
-              {creatingRoom ? (
-                <>
-                  <CircularProgress size={20} color='error' />
-                  Creating...
-                </>
-              ) : (
-                'Create Room'
-              )}
-            </Button>
+              <span>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => createRoomWithDeposit()}
+                  disabled={creatingRoom || betAmount > balance || !betAmount || betAmount <= 0}
+                  sx={{
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  {creatingRoom ? (
+                    <>
+                      <CircularProgress size={20} color='error' />
+                      Creating...
+                    </>
+                  ) : betAmount > balance ? (
+                    'Insufficient Balance'
+                  ) : !betAmount || betAmount <= 0 ? (
+                    'Enter Bet Amount'
+                  ) : (
+                    'Create Room'
+                  )}
+                </Button>
+              </span>
+            </Tooltip>
           ) : (
             <Button
               variant="contained"
