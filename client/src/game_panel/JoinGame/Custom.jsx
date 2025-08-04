@@ -1188,24 +1188,29 @@ function Custom(props) {
               </Box>
             ) : (
               <Box sx={{ textAlign: 'center' }}>
-                <CircularProgress
-                  color='error'
+                <Typography
+                  variant="h6"
                   sx={{
-                    mb: 3,
+                    mb: 2,
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '1.1rem',
+                    lineHeight: 1.5,
                   }}
-                  size={40}
-                />
+                >
+                  Game has ended
+                </Typography>
                 <Typography
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: '1rem',
-                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontSize: '0.95rem',
+                    fontWeight: 400,
                     lineHeight: 1.6,
                   }}
                 >
-                  Pool is being seeded or the room has ended.
+                  The liquidity pool is being created.
                   <br />
-                  Please check back shortly.
+                  Check back later for trading details.
                 </Typography>
               </Box>
             )}

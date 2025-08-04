@@ -3674,8 +3674,9 @@ router.get('/candles/:room', async (req, res) => {
     let transactions = await GameTransaction.find({ room: room }).sort({
       updated_at: 1,
     });
-    // Start liquidity at 0 so the first candle open is 0.
-    let previousLiquidity = 0;
+    // Start liquidity at the creator's initial bet_amount, not 0
+    let previousLiquidity = parseFloat(roomData.bet_amount) || 0;
+    console.log(`📊 Candles for room ${room}: Starting liquidity = ${previousLiquidity} (bet_amount: ${roomData.bet_amount})`);
     const finalCandles = [];
     const candleMap = new Map(); // Map to group transactions by second
 

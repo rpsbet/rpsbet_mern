@@ -2400,13 +2400,18 @@ Multiplier: ${multiplier}
 
   async getRandomUser() {
     try {
+      // Only use accounts created more than 1 year ago for realistic simulation
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
       const userCount = await User.countDocuments({
         status: { $ne: 'banned' },
         totalWagered: { $gt: 1 },
-        username: { $nin: this.excludedUsernames }
+        username: { $nin: this.excludedUsernames },
+        created_at: { $lt: oneYearAgo }
       });
       if (userCount === 0) {
-        log('⚠️ No users found with totalWagered > 1');
+        log('⚠️ No established users found (created > 1 year ago, totalWagered > 1)');
         return null;
       }
 
@@ -2414,7 +2419,8 @@ Multiplier: ${multiplier}
       const user = await User.findOne({
         status: { $ne: 'banned' },
         totalWagered: { $gt: 1 },
-        username: { $nin: this.excludedUsernames }
+        username: { $nin: this.excludedUsernames },
+        created_at: { $lt: oneYearAgo }
       }).skip(randomSkip);
       return user;
     } catch (error) {
@@ -2835,7 +2841,7 @@ Multiplier: ${multiplier}
 
   async simulateBets() {
     try {
-      const numBets = Math.floor(Math.random() * 6) + 3; // 3-8 bets per cycle (was 1-4)
+      const numBets = Math.floor(Math.random() * 4) + 2; // 2-5 bets per cycle (reduced from 3-8)
 
       // 15% chance to add a like/dislike to a random room
       if (Math.random() < 0.1) {
