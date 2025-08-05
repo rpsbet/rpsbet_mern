@@ -557,16 +557,20 @@ const SettingsRef = React.forwardRef(({
     } catch (error) {
       setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
       addAIMessage(`I encountered an error: ${error.message || 'Unknown error'}`);
+      
+      // Reset all streaming states immediately on error
       setIsStreaming(false);
       setProcessingMessage(null);
       setStreamingProgress(0);
+      setStreamingStatus('');
     } finally {
+      // Ensure all loading states are reset
       setSaving(false);
-      if (!isStreaming) {
-        setProcessingMessage(null);
-        setStreamingProgress(0);
-      }
       setGameLoading(false);
+      setIsStreaming(false);
+      setProcessingMessage(null);
+      setStreamingProgress(0);
+      setStreamingStatus('');
     }
   };
 
@@ -637,8 +641,13 @@ const SettingsRef = React.forwardRef(({
       return;
     }
 
+    // Initialize all loading states
     setSaving(true);
     setGameLoading(true);
+    setIsStreaming(true);
+    setStreamingProgress(0);
+    setStreamingStatus('');
+    setProcessingMessage({ type: 'processing', content: 'Initializing game update...' });
     addUserMessage(promptToUse);
 
     // Enhanced progress updates for modifications
@@ -733,6 +742,7 @@ const SettingsRef = React.forwardRef(({
       // Clear progress interval on error
       if (progressInterval) {
         clearInterval(progressInterval);
+        progressInterval = null;
       }
 
       console.error('[handleFollowUpPrompt] Error updating React app:', error);
@@ -743,14 +753,28 @@ const SettingsRef = React.forwardRef(({
         : `Failed to update game: ${error.response?.data?.message || error.message || 'Unknown error'}`;
       addAIMessage(errorMessage);
 
+      // Reset all streaming states immediately on error
+      setIsStreaming(false);
+      setStreamingProgress(0);
+      setStreamingStatus('');
+      setProcessingMessage(null);
+
       // Don't revert to previous version, keep the current game displayed
       console.log('[handleFollowUpPrompt] Keeping current game code after error');
 
     } finally {
+      // Ensure all loading states are reset
       setSaving(false);
       setGameLoading(false);
+      setIsStreaming(false);
+      setStreamingProgress(0);
+      setStreamingStatus('');
+      setProcessingMessage(null);
+      
+      // Final cleanup of progress interval
       if (progressInterval) {
         clearInterval(progressInterval);
+        progressInterval = null;
       }
     }
   };
