@@ -276,7 +276,9 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
       : `http://${window.location.hostname}:5001`;
   }, []);
 
-  const disableSocket = process.env.REACT_APP_DISABLE_SOCKET === 'true';
+  const disableSocket =
+    process.env.REACT_APP_DISABLE_SOCKET === 'true' ||
+    process.env.REACT_APP_USE_MOCK === 'true';
 
   // Only memoize complex calculations that benefit from it
   const processedNotifications = useMemo(() => {
