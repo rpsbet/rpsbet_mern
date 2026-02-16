@@ -264,13 +264,19 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
   const isUnmountedRef = useRef(false);
   const initializationRef = useRef(false);
 
-  // Stable endpoint - only calculate once
-  const endpoint = useMemo(() =>
-    process.env.NODE_ENV === 'production'
-      ? 'https://catsino.fun'
-      : `http://${window.location.hostname}:5001`,
-    []
-  );
+  // Stable socket endpoint - allow override for production/staging
+  const endpoint = useMemo(() => {
+    const override = process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_BASE;
+    if (override && typeof override === 'string' && override.trim() !== '') {
+      return override.trim();
+    }
+
+    return process.env.NODE_ENV === 'production'
+      ? window.location.origin
+      : `http://${window.location.hostname}:5001`;
+  }, []);
+
+  const disableSocket = process.env.REACT_APP_DISABLE_SOCKET === 'true';
 
   // Only memoize complex calculations that benefit from it
   const processedNotifications = useMemo(() => {
@@ -732,20 +738,24 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
         document.addEventListener('mousedown', handleClickOutside);
 
         // Connect socket in background AFTER UI is ready (don't block data loading)
-        setTimeout(async () => {
-          try {
-            const socket = await socketClient.connect(endpoint);
-            if (socket) {
-              dispatch(setSocket(socket));
+        if (!disableSocket) {
+          setTimeout(async () => {
+            try {
+              const socket = await socketClient.connect(endpoint);
+              if (socket) {
+                dispatch(setSocket(socket));
+              }
+            } catch (socketError) {
+              console.error('❌ Socket connection failed during init:', socketError);
+              // Don't block the app if socket fails
             }
-          } catch (socketError) {
-            console.error('❌ Socket connection failed during init:', socketError);
-            // Don't block the app if socket fails
-          }
 
-          // Initialize audio
+            // Initialize audio
+            initializeAudio().catch(console.warn);
+          }, 100); // Small delay to let UI render
+        } else {
           initializeAudio().catch(console.warn);
-        }, 100); // Small delay to let UI render
+        }
 
       } catch (error) {
         console.error('❌ App initialization error:', error);
@@ -763,11 +773,11 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id, endpoint, dispatch]);
+  }, [authState.hasCheckedAuth, authState.isAuthenticated, isInitialized, user?._id, endpoint, dispatch, disableSocket]);
 
 
   useEffect(() => {
-    if (!isInitialized || !authState.hasCheckedAuth) return;
+    if (disableSocket || !isInitialized || !authState.hasCheckedAuth) return;
 
     let isMounted = true;
     let socketConnectionRef = null;
@@ -804,7 +814,7 @@ function SiteWrapper({ children, selectedMobileTab, setSelectedMobileTab }) {
       isMounted = false;
       // Don't disconnect here - let other effects handle cleanup
     };
-  }, [isInitialized, authState.hasCheckedAuth, endpoint, dispatch]);
+  }, [isInitialized, authState.hasCheckedAuth, endpoint, dispatch, disableSocket]);
 
   useEffect(() => {
     if (!socket?.id || !socket.connected) {
