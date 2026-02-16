@@ -38,21 +38,35 @@ const app = express();
 
 
 // -------------------- Redis Client Setup --------------------
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
-});
+let redisClient = null;
+if (isServerless || shouldUseDummyData() || process.env.DISABLE_REDIS === 'true') {
+  console.log('⚠️  Redis disabled (dummy/serverless mode).');
+  // Minimal stub so routes can still call get/setEx/del without crashing.
+  redisClient = {
+    get: async () => null,
+    setEx: async () => {},
+    del: async () => {},
+    connect: async () => {},
+    quit: async () => {},
+    on: () => {},
+  };
+} else {
+  redisClient = redis.createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+  });
 
-redisClient.on('error', (err) => console.error('Redis Client Error:', err));
-redisClient.on('connect', () => console.log('Connected to Redis'));
+  redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+  redisClient.on('connect', () => console.log('Connected to Redis'));
 
-// Connect to Redis
-(async () => {
-  try {
-    await redisClient.connect();
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err);
-  }
-})();
+  // Connect to Redis
+  (async () => {
+    try {
+      await redisClient.connect();
+    } catch (err) {
+      console.error('Failed to connect to Redis:', err);
+    }
+  })();
+}
 
 // Attach redisClient to app for access in routes
 app.set('redisClient', redisClient);
