@@ -59,20 +59,27 @@ app.set('redisClient', redisClient);
 
 // -------------------- Server Setup --------------------
 const PORT = process.env.PORT || 5001;
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+let server = null;
+let io = { sockets: { emit: () => {} } };
 
-// Increase timeouts for long-running operations like AI game generation
-server.timeout = 600000; // 10 minutes
-server.keepAliveTimeout = 600000; // 10 minutes  
-server.headersTimeout = 610000; // 10 minutes + 10 seconds
-console.log('⏱️  Server timeouts configured: 10 minutes for AI operations');
+if (!isServerless) {
+  server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 
-// -------------------- Socket.io Setup --------------------
-// Pass the server instance AND the redisClient instance to your socket controller.
-// Your socketController will now be responsible for configuring cors, transports, etc.
-const io = socketController.socketio(server, redisClient); // <--- MODIFIED LINE
+  // Increase timeouts for long-running operations like AI game generation
+  server.timeout = 600000; // 10 minutes
+  server.keepAliveTimeout = 600000; // 10 minutes
+  server.headersTimeout = 610000; // 10 minutes + 10 seconds
+  console.log('⏱️  Server timeouts configured: 10 minutes for AI operations');
+
+  // -------------------- Socket.io Setup --------------------
+  // Pass the server instance AND the redisClient instance to your socket controller.
+  // Your socketController will now be responsible for configuring cors, transports, etc.
+  io = socketController.socketio(server, redisClient); // <--- MODIFIED LINE
+} else {
+  console.log('⚠️  Serverless mode: skipping HTTP listener + socket.io.');
+}
 
 if (!disableCron) {
   // setTimeout(() => callCronJob.callCronJobs(io), 500);
@@ -326,13 +333,18 @@ app.use('/api/*', (req, res) => {
 // -------------------- Graceful Shutdown --------------------
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Closing server...');
-  server.close(() => {
-    console.log('Server closed');
-  });
+  if (server) {
+    server.close(() => {
+      console.log('Server closed');
+    });
+  }
   await redisClient.quit(); // Close Redis connection
   mongoose.disconnect();
   process.exit(0);
 });
 
 // -------------------- Exports --------------------
-module.exports = { app, server, io };
+module.exports = app;
+module.exports.app = app;
+module.exports.server = server;
+module.exports.io = io;
