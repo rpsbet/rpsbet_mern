@@ -4,6 +4,13 @@ const Message = require('./model/Message');
 const Chat = require('./model/Chat');
 const User = require('./model/User');
 const { format } = require('date-fns');
+const {
+  shouldUseDummyData,
+  appendDummyGlobalChat,
+  addDummyDirectMessage,
+  markDummyMessagesRead,
+  getDummyUnreadCount,
+} = require('./helper/util/dummyData');
 
 
 // Socket connection manager module pattern
@@ -94,6 +101,12 @@ async function globalChatSend(io, data) {
     // Validate required fields
     if (!sender || !senderId || !message) {
       throw new Error('Missing required chat fields');
+    }
+
+    if (shouldUseDummyData()) {
+      const chatData = appendDummyGlobalChat(data);
+      io.sockets.emit('GLOBAL_CHAT_RECEIVED', chatData);
+      return;
     }
 
     let formattedReplyTo = null;
@@ -203,11 +216,13 @@ function setupSocketIO(server, redisClient) {
         if (userId) {
           console.log(`🔄 Cleaning up disconnect for user ${userId}`);
           
-          // Update last_seen timestamp in database
-          await User.updateOne(
-            { _id: userId },
-            { last_seen: new Date() }
-          );
+          if (!shouldUseDummyData()) {
+            // Update last_seen timestamp in database
+            await User.updateOne(
+              { _id: userId },
+              { last_seen: new Date() }
+            );
+          }
           
           // Clear Redis cache for user online status
           if (redisClient) {
@@ -235,10 +250,12 @@ function setupSocketIO(server, redisClient) {
           return;
         }
 
-        await User.updateOne(
-          { _id: userId },
-          { last_seen: new Date() }
-        );
+        if (!shouldUseDummyData()) {
+          await User.updateOne(
+            { _id: userId },
+            { last_seen: new Date() }
+          );
+        }
 
         const existingSocket = socketManager.getSocket(userId);
         if (existingSocket && existingSocket.id !== socket.id) {
@@ -316,8 +333,12 @@ function setupSocketIO(server, redisClient) {
     socket.on('SEND_CHAT', async (data) => {
       try {
         const sent = socketManager.send('SEND_CHAT', data.to, data);
-        const message = new Message(data);
-        await message.save();
+        if (shouldUseDummyData()) {
+          addDummyDirectMessage(data);
+        } else {
+          const message = new Message(data);
+          await message.save();
+        }
       } catch (error) {
         console.error(`❌ SEND_CHAT error for socket ${socket.id}:`, error);
         socket.emit('error', { message: 'Failed to send private message' });
@@ -331,14 +352,18 @@ function setupSocketIO(server, redisClient) {
           return;
         }
 
-        await Message.updateMany(
-          {
-            is_read: false,
-            from: new ObjectId(data.from),
-            to: new ObjectId(data.to),
-          },
-          { $set: { is_read: true } }
-        );
+        if (shouldUseDummyData()) {
+          markDummyMessagesRead(data.from, data.to);
+        } else {
+          await Message.updateMany(
+            {
+              is_read: false,
+              from: new ObjectId(data.from),
+              to: new ObjectId(data.to),
+            },
+            { $set: { is_read: true } }
+          );
+        }
       } catch (error) {
         console.error(`❌ READ_MESSAGE error for socket ${socket.id}:`, error);
       }
@@ -351,10 +376,12 @@ function setupSocketIO(server, redisClient) {
           return;
         }
 
-        const count = await Message.countDocuments({
-          to: data.to,
-          is_read: false,
-        });
+        const count = shouldUseDummyData()
+          ? getDummyUnreadCount(data.to)
+          : await Message.countDocuments({
+              to: data.to,
+              is_read: false,
+            });
 
         socket.emit('SET_UNREAD_MESSAGE_COUNT', count);
       } catch (error) {

@@ -1,10 +1,34 @@
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
+const { shouldUseDummyData, getUserOrFallback } = require('../helper/util/dummyData');
 
 // eslint-disable-next-line consistent-return
 module.exports = async function(req, res, next) {
   // Get token from header
   const token = req.header('x-auth-token');
+
+  if (shouldUseDummyData()) {
+    let userId = 'offline-user';
+    if (token) {
+      try {
+        const decoded = jwt.decode(token) || {};
+        userId = decoded.id || decoded._id || userId;
+      } catch (err) {
+        // Ignore token parsing errors in dummy mode
+      }
+    }
+
+    const dummyUser = getUserOrFallback(userId);
+    req.user = {
+      ...dummyUser,
+      dailyWithdrawals: 0,
+      isWithdrawing: false,
+      totalTraded: 0,
+      tradingProfit: 0,
+      status: 'on',
+    };
+    return next();
+  }
  
   // Check if not token
   if (!token) {

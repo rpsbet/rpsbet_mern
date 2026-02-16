@@ -34,6 +34,21 @@ const saveDocumentWithRetry = require('../helper/util/retrySave');
 const check_access_time = require('../helper/util/checkAccessTime');
 const getUserTokens = require('../helper/util/getUserToken');
 const transpileReactCode = require('../helper/util/transpileReactCode');
+const {
+  shouldUseDummyData,
+  getDummyRoomResponse,
+  getDummyRoomIdsResponse,
+  getDummyRoomSearchResponse,
+  getDummyRoomInfoResponse,
+  getDummyTopGameTypesResponse,
+  getDummyGameTypeListResponse,
+  getDummyMyChatResponse,
+  getDummyChatRoomInfoResponse,
+  getDummyGlobalChatLogsResponse,
+  getDummyHistoryLatestItem,
+  getDummyTopWinsResponse,
+  markDummyMessagesRead,
+} = require('../helper/util/dummyData');
 
 const multer = require('multer');
 const FormData = require('form-data');
@@ -59,6 +74,10 @@ router.get('/game_types/top', async (req, res) => {
   const redisClient = req.app.get('redisClient');
 
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyTopGameTypesResponse());
+    }
+
     const cached = await redisClient.get(cacheKey);
     if (cached) {
       return res.json(JSON.parse(cached));
@@ -111,6 +130,10 @@ router.get('/game_types/top', async (req, res) => {
 
 router.get('/game_types', async (req, res) => {
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyGameTypeListResponse());
+    }
+
     const excludedGameTypes = [
       'roll', // Ensure exclusion is case-insensitive for consistency
       'bang!',
@@ -916,6 +939,10 @@ router.get('/room/:roomId', async (req, res) => {
   const cacheKey = `room:v2:${roomId}`;
 
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyRoomResponse(roomId));
+    }
+
     // Try cache first - individual rooms cached longer
     const cached = await redisClient.get(cacheKey);
     if (cached) {
@@ -1070,6 +1097,15 @@ router.get('/rooms/ids', async (req, res) => {
   const cacheKey = `rooms:ids:${game_type_filter}:${limit}:${page}:${sort_by}`;
 
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyRoomIdsResponse({
+        game_type: game_type_filter,
+        limit,
+        page,
+        sort_by,
+      }));
+    }
+
     // Try cache first
     const cached = await redisClient.get(cacheKey);
     if (cached) {
@@ -1161,6 +1197,16 @@ router.get('/rooms/search', async (req, res) => {
   const cacheKey = `rooms:search:${query}:${game_type}:${limit}:${page}:${sort_by}`;
 
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyRoomSearchResponse({
+        query,
+        game_type,
+        limit,
+        page,
+        sort_by,
+      }));
+    }
+
     // Try cache first
     const cached = await redisClient.get(cacheKey);
     if (cached) {
@@ -1266,6 +1312,10 @@ router.get('/game-room/:id', async (req, res) => {
   }
 
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyRoomInfoResponse(roomId, req.query));
+    }
+
     // 2️⃣ Fetch the room and game code in parallel
     const roomPromise = Room.findById(roomId)
       .select([
@@ -1701,6 +1751,10 @@ router.delete('/comments/:comment_id', async (req, res) => {
 
 router.get('/topWins', async (req, res) => {
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyTopWinsResponse());
+    }
+
     const recentGameLogs = await GameLog.find({})
       .sort({ created_at: -1 })
       .limit(4)
@@ -1731,6 +1785,10 @@ router.get('/topWins', async (req, res) => {
 // ============================================
 const getHistory = async (redisClient = null) => {
   try {
+    if (shouldUseDummyData()) {
+      return { latestItem: getDummyHistoryLatestItem(), cached: false };
+    }
+
     const cacheKey = `history:all`;
     let result = null,
       fromCache = false;
@@ -1823,6 +1881,13 @@ router.get('/history', async (req, res) => {
 // Updated POST /rooms route
 router.post('/rooms', auth, async (req, res) => {
   try {
+    if (shouldUseDummyData()) {
+      return res.json({
+        success: true,
+        message: 'Dummy room created (offline mode).',
+      });
+    }
+
     const {
       bet_amount,
       name,
@@ -3291,6 +3356,10 @@ router.post('/jeet', auth, async (req, res) => {
 
 router.get('/my_chat', auth, async (req, res) => {
   try {
+    if (shouldUseDummyData()) {
+      return res.json(getDummyMyChatResponse(req.user));
+    }
+
     const userId = req.user._id;
 
     const messages1 = await Message.find({ from: userId }).populate({
@@ -3378,6 +3447,13 @@ router.get('/my_chat', auth, async (req, res) => {
 
 router.post('/mark_chat_as_read', auth, async (req, res) => {
   try {
+    if (shouldUseDummyData()) {
+      if (req.body?.fromId && req.user?._id) {
+        markDummyMessagesRead(req.body.fromId, req.user._id.toString());
+      }
+      return res.json({ success: true });
+    }
+
     // Mark all messages from "req.body.fromId" to the current user (req.user._id) as read
     await Message.updateMany(
       {
@@ -3473,6 +3549,10 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
     const { user_id, offset = 0, limit = 20 } = req.body;
 
+    if (shouldUseDummyData()) {
+      return res.json(getDummyChatRoomInfoResponse(req.user?._id?.toString(), user_id, offset, limit));
+    }
+
     const user = await User.findOne({ _id: new ObjectId(user_id) });
 
     // 1) Query messages sorted by newest first:
@@ -3553,6 +3633,10 @@ router.post('/getGlobalChatLogs', async (req, res) => {
     const redisClient = req.app.get('redisClient');
     const cacheKey = 'global:chat:logs';
     const CACHE_TTL = 60; // 1 minute cache
+
+    if (shouldUseDummyData()) {
+      return res.json(getDummyGlobalChatLogsResponse());
+    }
 
     // Try Redis first
     const cachedLogs = await redisClient.get(cacheKey);

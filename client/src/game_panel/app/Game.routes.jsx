@@ -173,6 +173,14 @@ function GameMainRoute() {
               }
             />
             <Route
+              path="t/:id"
+              element={
+                <Suspense fallback={<LoadingComponent />}>
+                  <JoinGame />
+                </Suspense>
+              }
+            />
+            <Route
               path="/"
               element={
                 <Suspense fallback={<LoadingComponent />}>

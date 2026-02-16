@@ -18,6 +18,7 @@ const moment = require('moment');
 
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController');
+const { shouldUseDummyData } = require('./dummyData');
 
 const provider = new Connection(process.env.PROVIDER_URL, 'confirmed');
 const depositConfirmationThreshold = 6;
@@ -25,6 +26,10 @@ let isProcessing = false;
 
 async function checkConfirmations(redisClient, io) {
   try {
+    if (shouldUseDummyData()) {
+      return;
+    }
+
     if (isProcessing) return;
     isProcessing = true;
 

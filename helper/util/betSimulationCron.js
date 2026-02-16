@@ -12,6 +12,7 @@ const socketController = require('../../socketController');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const moment = require('moment');
 const OpenAI = require('openai');
+const { shouldUseDummyData } = require('./dummyData');
 
 const ENABLE_LOGGING = true;
 function log(message) {
@@ -3269,6 +3270,11 @@ Multiplier: ${multiplier}
 }
 
 function initializeBetSimulation(io, redisClient = null) {
+  if (shouldUseDummyData()) {
+    log('⚠️  Dummy mode enabled - skipping bet simulation.');
+    return null;
+  }
+
   const simulator = new BetSimulator(io);
 
   if (redisClient) {

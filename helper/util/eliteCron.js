@@ -8,10 +8,15 @@ const moment = require('moment');
 const Notification = require('../../model/Notification');
 const saveDocumentWithRetry = require('./retrySave');
 const Loan = require('../../model/Loan'); // Assuming this exists
+const { shouldUseDummyData } = require('./dummyData');
 
 let socketio = null;
 
 async function checkSubscriptionPayments(io) {
+  if (shouldUseDummyData()) {
+    return;
+  }
+
   try {
     if (io) {
       socketio = io;

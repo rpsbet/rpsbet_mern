@@ -6,10 +6,15 @@ const Notification = require('../../model/Notification.js');
 const SystemSetting = require('../../model/SystemSetting');
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController.js');
+const { shouldUseDummyData } = require('./dummyData');
 const senderId = '62990fe242ac4d26501dd97f';
 
 let socketio = null;
 async function updateRoomInterests(io) {
+  if (shouldUseDummyData()) {
+    return;
+  }
+
   if (io) {
     socketio = io;
   }
