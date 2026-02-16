@@ -15,10 +15,24 @@ const socketController = require('./socketController.js');
 const helmet = require('helmet'); // Security headers middleware
 const bodyParser = require('body-parser');
 const redis = require('redis');
-const cronJob = require('./helper/util/createCronJob.js');
-const eliteCron = require('./helper/util/eliteCron.js');
-const callCronJob = require('./helper/util/callBotCron.js');
-const interestCron = require('./helper/util/interestCron.js');
+const { shouldUseDummyData } = require('./helper/util/dummyData');
+
+const isServerless = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+const disableCron = shouldUseDummyData() || isServerless || process.env.DISABLE_CRON === 'true';
+
+let cronJob = null;
+let eliteCron = null;
+let callCronJob = null;
+let interestCron = null;
+
+if (!disableCron) {
+  cronJob = require('./helper/util/createCronJob.js');
+  eliteCron = require('./helper/util/eliteCron.js');
+  callCronJob = require('./helper/util/callBotCron.js');
+  interestCron = require('./helper/util/interestCron.js');
+} else {
+  console.log('⚠️  Cron jobs disabled (dummy/serverless mode).');
+}
 
 const app = express();
 
@@ -60,18 +74,22 @@ console.log('⏱️  Server timeouts configured: 10 minutes for AI operations');
 // Your socketController will now be responsible for configuring cors, transports, etc.
 const io = socketController.socketio(server, redisClient); // <--- MODIFIED LINE
 
-// setTimeout(() => callCronJob.callCronJobs(io), 500);
-setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
-setTimeout(() => cronJob.initializeCron(redisClient), 5000);
-setTimeout(() => interestCron.updateRoomInterests(io), 11000);
+if (!disableCron) {
+  // setTimeout(() => callCronJob.callCronJobs(io), 500);
+  setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
+  setTimeout(() => cronJob.initializeCron(redisClient), 5000);
+  setTimeout(() => interestCron.updateRoomInterests(io), 11000);
+}
 
 // Initialize bet simulation cron
-const { initializeBetSimulation } = require('./helper/util/betSimulationCron');
 const settingsRoutes = require('./routes/settings.routes');
-setTimeout(() => {
-  const simulator = initializeBetSimulation(io, redisClient);
-  settingsRoutes.setSimulator(simulator);
-}, 15000); // Start after 15 seconds
+if (!disableCron) {
+  const { initializeBetSimulation } = require('./helper/util/betSimulationCron');
+  setTimeout(() => {
+    const simulator = initializeBetSimulation(io, redisClient);
+    settingsRoutes.setSimulator(simulator);
+  }, 15000); // Start after 15 seconds
+}
 
 // Attach io instance to each request for easy access
 app.use((req, res, next) => {
