@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build --prefix client",
+  "buildCommand": "npm install --prefix client && npm run build --prefix client",
   "outputDirectory": "client/build",
   "framework": null
 }
