@@ -16,7 +16,24 @@ const bs58 = require('bs58');
 // const ganacheEndpoint = 'http://localhost:7544';
 const jwt = require('jsonwebtoken');
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
-const connection = new Connection(process.env.PROVIDER_URL);
+let connection = null;
+let connectionWarned = false;
+
+const isValidHttpUrl = (url) => typeof url === 'string' && /^https?:\/\//i.test(url);
+
+const getConnection = () => {
+  if (connection) return connection;
+  const url = process.env.PROVIDER_URL;
+  if (!isValidHttpUrl(url)) {
+    if (!connectionWarned) {
+      console.warn('⚠️  PROVIDER_URL missing or invalid. Solana payouts disabled.');
+      connectionWarned = true;
+    }
+    return null;
+  }
+  connection = new Connection(url);
+  return connection;
+};
 const walletKey = process.env.wk;
 const API_KEY = process.env.API_KEY;
 
@@ -918,7 +935,10 @@ router.post('/withdraw_request', auth, async (req, res) => {
     const walletKeyPair = Keypair.fromSecretKey(secretKey);
 
     // Connect to Solana
-    const connection = new Connection(process.env.PROVIDER_URL);
+    const connection = getConnection();
+    if (!connection) {
+      return res.status(500).json({ success: false, message: 'Solana RPC unavailable' });
+    }
 
     // Convert to lamports
     const lamports = Math.floor(requestedAmount * LAMPORTS_PER_SOL);
@@ -1044,7 +1064,10 @@ router.post('/get_gasfee', auth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Amount and recipient address are required' });
     }
 
-    const connection = new Connection(process.env.PROVIDER_URL);
+    const connection = getConnection();
+    if (!connection) {
+      return res.status(500).json({ success: false, message: 'Solana RPC unavailable' });
+    }
     const { blockhash } = await connection.getLatestBlockhash();
     // Use the provided wallet address as fee payer.
     const feePayer = new PublicKey(addressTo);

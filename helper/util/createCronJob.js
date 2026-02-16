@@ -20,13 +20,35 @@ const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController');
 const { shouldUseDummyData } = require('./dummyData');
 
-const provider = new Connection(process.env.PROVIDER_URL, 'confirmed');
+let provider = null;
+let providerWarned = false;
+
+const isValidHttpUrl = (url) => typeof url === 'string' && /^https?:\/\//i.test(url);
+
+const getProvider = () => {
+  if (provider) return provider;
+  const url = process.env.PROVIDER_URL;
+  if (!isValidHttpUrl(url)) {
+    if (!providerWarned) {
+      console.warn('⚠️  PROVIDER_URL missing or invalid. Skipping Solana confirmations.');
+      providerWarned = true;
+    }
+    return null;
+  }
+  provider = new Connection(url, 'confirmed');
+  return provider;
+};
 const depositConfirmationThreshold = 6;
 let isProcessing = false;
 
 async function checkConfirmations(redisClient, io) {
   try {
     if (shouldUseDummyData()) {
+      return;
+    }
+
+    const providerInstance = getProvider();
+    if (!providerInstance) {
       return;
     }
 
@@ -41,12 +63,12 @@ async function checkConfirmations(redisClient, io) {
 
     for (const transaction of pendingDeposits) {
       const txSignature = transaction.hash;
-      const txInfo = await provider.getTransaction(txSignature, { commitment: 'confirmed' });
+      const txInfo = await providerInstance.getTransaction(txSignature, { commitment: 'confirmed' });
       if (!txInfo || !txInfo.slot || !txInfo.meta) {
         continue;
       }
 
-      const currentSlot = await provider.getSlot('confirmed');
+      const currentSlot = await providerInstance.getSlot('confirmed');
       const confirmationCount = currentSlot - txInfo.slot;
 
       if (confirmationCount < depositConfirmationThreshold) {
@@ -187,14 +209,14 @@ async function checkConfirmations(redisClient, io) {
       }
 
       // Get transaction info from blockchain
-      const txInfo = await provider.getTransaction(txSignature, { commitment: 'confirmed' });
+      const txInfo = await providerInstance.getTransaction(txSignature, { commitment: 'confirmed' });
       if (!txInfo || !txInfo.slot || !txInfo.meta) {
         console.log('Elite subscription transaction not yet confirmed:', txSignature);
         continue;
       }
 
       // Check confirmations
-      const currentSlot = await provider.getSlot('confirmed');
+      const currentSlot = await providerInstance.getSlot('confirmed');
       const confirmationCount = currentSlot - txInfo.slot;
 
       if (confirmationCount < depositConfirmationThreshold) {
@@ -406,7 +428,7 @@ async function checkConfirmations(redisClient, io) {
       const walletKeyPair = Keypair.fromSecretKey(secretKey);
       const lamports = Math.floor(withdrawal.amount * LAMPORTS_PER_SOL);
 
-      const { blockhash, lastValidBlockHeight } = await provider.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } = await providerInstance.getLatestBlockhash();
       const tx = new Transaction({
         recentBlockhash: blockhash,
         feePayer: walletKeyPair.publicKey,
@@ -420,8 +442,8 @@ async function checkConfirmations(redisClient, io) {
 
       let signature;
       try {
-        signature = await provider.sendTransaction(tx, [walletKeyPair]);
-        await provider.confirmTransaction({ signature, blockhash, lastValidBlockHeight });
+        signature = await providerInstance.sendTransaction(tx, [walletKeyPair]);
+        await providerInstance.confirmTransaction({ signature, blockhash, lastValidBlockHeight });
       } catch (err) {
         console.error('Error sending withdrawal transaction:', err);
         continue;
@@ -457,7 +479,7 @@ async function checkConfirmations(redisClient, io) {
 
       // Send updated balance
       try {
-        const solBalLamports = await provider.getBalance(toPubkey);
+        const solBalLamports = await providerInstance.getBalance(toPubkey);
         const solBalance = solBalLamports / LAMPORTS_PER_SOL;
         socketController.sendBalanceUpdate(user._id, { solanaBalance: solBalance });
       } catch (balanceErr) {
