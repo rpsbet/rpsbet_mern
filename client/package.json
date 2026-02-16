@@ -15,6 +15,7 @@
     "@mui/styled-engine-sc": "^7.1.0",
     "@privy-io/react-auth": "^2.13.7",
     "@solana/web3.js": "^1.95.4",
+    "@solana/spl-token": "^0.4.9",
     "ajv-keywords": "^3.5.2",
     "axios": "^1.6.2",
     "cross-env": "^7.0.3",
