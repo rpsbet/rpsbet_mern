@@ -198,7 +198,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Updated API documentation endpoint
+// Updated API doc umentation endpoint
 app.get('/api/docs', (req, res) => {
   res.json({
     name: 'Game Creation API',
