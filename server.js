@@ -167,20 +167,24 @@ app.use(
 app.use('/img', express.static(path.join(__dirname, 'public/img')));
 
 // -------------------- MongoDB Connection --------------------
-const connectWithRetry = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      maxPoolSize: 20,
-      serverSelectionTimeoutMS: 5000, 
-    });
-    console.log('*** MongoDB connected');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    console.log('Retrying MongoDB connection in 5 seconds...');
-    setTimeout(connectWithRetry, 5000); // Retry connection after 5 seconds
-  }
-};
-connectWithRetry();
+if (isServerless || shouldUseDummyData() || process.env.DISABLE_MONGO === 'true') {
+  console.log('⚠️  MongoDB disabled (dummy/serverless mode).');
+} else {
+  const connectWithRetry = async () => {
+    try {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        maxPoolSize: 20,
+        serverSelectionTimeoutMS: 5000, 
+      });
+      console.log('*** MongoDB connected');
+    } catch (error) {
+      console.error('MongoDB connection error:', error);
+      console.log('Retrying MongoDB connection in 5 seconds...');
+      setTimeout(connectWithRetry, 5000); // Retry connection after 5 seconds
+    }
+  };
+  connectWithRetry();
+}
 
 // -------------------- Routes --------------------
 // Existing routes
