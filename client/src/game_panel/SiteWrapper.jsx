@@ -38,7 +38,6 @@ import {
 import { ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LoadingOverlay from 'react-loading-overlay';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram } from '@fortawesome/free-brands-svg-icons';
 
@@ -109,7 +108,6 @@ const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal.jsx'));
 const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal.jsx'));
 
 // Constants and utilities
-LoadingOverlay.propTypes = undefined;
 
 const CUSTOM_TEXT_FIELD_STYLES = {
   MuiOutlinedInput: {
